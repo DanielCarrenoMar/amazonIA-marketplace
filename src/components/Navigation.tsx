@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import logo from 'figma:asset/ace68de9acb2259307e16907ceb10ff04c569a46.png';
+import logo from '../assets/logo.png';
 
 export function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
