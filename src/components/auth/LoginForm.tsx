@@ -4,9 +4,10 @@ import { useAuth } from '@/hooks/useAuth'
 interface LoginFormProps {
   onSuccess: () => void
   onSwitchToRegister: () => void
+  onClose?: () => void
 }
 
-export function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) {
+export function LoginForm({ onSuccess, onSwitchToRegister, onClose }: LoginFormProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -19,11 +20,17 @@ export function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) {
     setLoading(true)
     setError('')
 
+    console.log('🔐 Iniciando login...', { email });
+
     const { error } = await signIn(email, password)
     
+    console.log('🔄 Resultado del signIn:', { error });
+    
     if (error) {
+      console.error('❌ Error en el login:', error);
       setError(error.message)
     } else {
+      console.log('✅ Login exitoso desde el formulario');
       onSuccess()
     }
     
@@ -32,9 +39,22 @@ export function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) {
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <h2 className="text-2xl font-bold text-center mb-6 text-gray-900">
-        Iniciar Sesión
-      </h2>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-gray-900">
+          Iniciar Sesión
+        </h2>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-1 transition-colors"
+            aria-label="Cerrar"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        )}
+      </div>
       
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (

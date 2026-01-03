@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { ProductDetail } from './ProductDetail';
+import { AuthModal } from './auth/AuthModal';
+import { useAuth } from '@/hooks/useAuth';
 
 export function Marketplace() {
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -10,6 +12,11 @@ export function Marketplace() {
   const [selectedRating, setSelectedRating] = useState<number>(0);
   const [selectedBadges, setSelectedBadges] = useState<string[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<number | null>(null);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('register');
+  const [defaultUserType, setDefaultUserType] = useState<'vendedor' | 'comprador' | undefined>(undefined);
+  
+  const { user } = useAuth();
 
   const categories = [
     { id: 'all', label: 'Todos los Productos', icon: '🌐' },
@@ -217,6 +224,26 @@ export function Marketplace() {
   };
 
   const currentProduct = selectedProduct ? products.find(p => p.id === selectedProduct) : null;
+
+  const handleRegisterAsSeller = () => {
+    if (user) {
+      // Si ya está logueado, redirigir a dashboard o perfil
+      alert('Ya estás logueado. Aquí podrías redirigir al dashboard del vendedor.');
+    } else {
+      // Si no está logueado, abrir modal de registro con tipo vendedor
+      setAuthMode('register');
+      setDefaultUserType('vendedor');
+      setAuthModalOpen(true);
+    }
+  };
+
+  const handleMoreInfo = () => {
+    // Scroll to a specific section or open info modal
+    const featuresSection = document.getElementById('features');
+    if (featuresSection) {
+      featuresSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   return (
     <section id="marketplace" className="py-20 bg-gradient-to-br from-teal-50 via-emerald-50 to-cyan-50">
@@ -604,14 +631,28 @@ export function Marketplace() {
             Sin intermediarios, con precios justos y apoyo técnico.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <button className="bg-emerald-600 text-white px-8 py-3 rounded-lg hover:bg-emerald-700 transition-colors shadow-lg">
+            <button 
+              onClick={handleRegisterAsSeller}
+              className="bg-emerald-600 text-white px-8 py-3 rounded-lg hover:bg-emerald-700 transition-colors shadow-lg"
+            >
               Registrarme como Vendedor
             </button>
-            <button className="bg-gray-100 text-gray-700 px-8 py-3 rounded-lg hover:bg-gray-200 transition-colors">
+            <button 
+              onClick={handleMoreInfo}
+              className="bg-gray-100 text-gray-700 px-8 py-3 rounded-lg hover:bg-gray-200 transition-colors"
+            >
               Más Información
             </button>
           </div>
         </div>
+        
+        {/* Auth Modal */}
+        <AuthModal
+          isOpen={authModalOpen}
+          onClose={() => setAuthModalOpen(false)}
+          initialMode={authMode}
+          defaultUserType={defaultUserType}
+        />
       </div>
     </section>
   );

@@ -4,16 +4,18 @@ import { useAuth } from '@/hooks/useAuth'
 interface RegisterFormProps {
   onSuccess: () => void
   onSwitchToLogin: () => void
+  onClose?: () => void
+  defaultUserType?: 'vendedor' | 'comprador'
 }
 
-export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) {
+export function RegisterForm({ onSuccess, onSwitchToLogin, onClose, defaultUserType }: RegisterFormProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [nombre, setNombre] = useState('')
   const [telefono, setTelefono] = useState('')
   const [direccion, setDireccion] = useState('')
-  const [tipo, setTipo] = useState<'comprador' | 'vendedor'>('comprador')
+  const [tipo, setTipo] = useState<'comprador' | 'vendedor'>(defaultUserType || 'comprador')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -44,6 +46,14 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
       return
     }
 
+    console.log('📝 Datos del formulario:', {
+      email,
+      nombre: nombre.trim(),
+      tipo,
+      telefono: telefono.trim() || undefined,
+      direccion: direccion.trim() || undefined
+    });
+
     const { error } = await signUp(email, password, {
       nombre: nombre.trim(),
       tipo: tipo,
@@ -51,9 +61,13 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
       direccion: direccion.trim() || undefined
     })
     
+    console.log('🔄 Resultado del signUp:', { error });
+    
     if (error) {
+      console.error('❌ Error en el registro:', error);
       setError(error.message)
     } else {
+      console.log('✅ Registro exitoso desde el formulario');
       setSuccess('¡Registro exitoso! Revisa tu correo para confirmar tu cuenta.')
       setTimeout(() => {
         onSuccess()
@@ -65,9 +79,22 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <h2 className="text-2xl font-bold text-center mb-6 text-gray-900">
-        Crear Cuenta
-      </h2>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-gray-900">
+          Crear Cuenta
+        </h2>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-1 transition-colors"
+            aria-label="Cerrar"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        )}
+      </div>
       
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
@@ -194,7 +221,7 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
         >
           {loading ? 'Creando cuenta...' : 'Crear Cuenta'}
         </button>
-      </form>
+        </form>
       
       <div className="mt-6 text-center">
         <p className="text-sm text-gray-600">
