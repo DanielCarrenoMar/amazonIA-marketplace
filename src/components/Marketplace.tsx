@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { ProductDetail } from './ProductDetail';
 import { AuthModal } from './auth/AuthModal';
 import { useAuth } from '@/hooks/useAuth';
+import { AddProductoModal } from './forms/productos/AddProductoModal';
+
 
 export function Marketplace() {
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -15,8 +17,11 @@ export function Marketplace() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('register');
   const [defaultUserType, setDefaultUserType] = useState<'vendedor' | 'comprador' | undefined>(undefined);
-  
-  const { user } = useAuth();
+  const [addProductoModalOpen, setAddProductoModalOpen] = useState(false);
+  const { user, profile } = useAuth();
+
+
+
 
   const categories = [
     { id: 'all', label: 'Todos los Productos', icon: '🌐' },
@@ -48,6 +53,7 @@ export function Marketplace() {
     '100% Natural',
   ];
 
+  
   const products = [
     {
       id: 1,
@@ -237,6 +243,25 @@ export function Marketplace() {
     }
   };
 
+  const handleAddProducto = () => {
+    // Verificar si el usuario está logueado
+    if (!user) {
+      // No está logueado, abrir modal de login
+      setAuthMode('login');
+      setAuthModalOpen(true);
+      return;
+    }
+
+    // Verificar si es vendedor
+    if (profile?.tipo !== 'vendedor') {
+      alert('Solo los vendedores pueden agregar productos. Por favor, regístrate como vendedor.');
+      return;
+    }
+
+    // Abrir modal para agregar producto
+    setAddProductoModalOpen(true);
+  };
+
   const handleMoreInfo = () => {
     // Scroll to a specific section or open info modal
     const featuresSection = document.getElementById('features');
@@ -294,11 +319,25 @@ export function Marketplace() {
               </svg>
               <span className="text-gray-700">{cart.length}</span>
             </div>
+
+            {/* Barra para registrar nuevos productos */}
+            { user && (
+              <div>
+                
+                <button 
+                  onClick={handleAddProducto}
+                  className="bg-emerald-600 text-white px-8 py-3 rounded-lg hover:bg-emerald-700 transition-colors shadow-lg">
+                    Agregar Producto
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
+        
+
         {/* Main Content: Sidebar + Products */}
-        <div className="flex flex-col lg:flex-row gap-8">
+        <div className="flex flex-col lg:flex-row gap-8 mt-12">
           {/* Left Sidebar - Filters */}
           <aside className="lg:w-72 flex-shrink-0">
             <div className="bg-white rounded-xl shadow-lg p-6 sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto">
@@ -652,6 +691,12 @@ export function Marketplace() {
           onClose={() => setAuthModalOpen(false)}
           initialMode={authMode}
           defaultUserType={defaultUserType}
+        />
+
+        {/* Add Producto Modal */}
+        <AddProductoModal
+          isOpen={addProductoModalOpen}
+          onClose={() => setAddProductoModalOpen(false)}
         />
       </div>
     </section>
