@@ -9,7 +9,7 @@ export function Navigation() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   
-  const { user, profile, loading, signOut } = useAuth();
+  const { user, profile, loading, signOut, clearSession } = useAuth();
 
   const handleLogin = () => {
     setAuthMode('login');
@@ -22,7 +22,15 @@ export function Navigation() {
   };
 
   const handleSignOut = async () => {
-    await signOut();
+    try {
+      await signOut();
+      // Forzar limpieza adicional si es necesario
+      clearSession();
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+      // Limpiar sesión local aunque falle el logout remoto
+      clearSession();
+    }
   };
 
   const navItems = [
@@ -106,6 +114,14 @@ export function Navigation() {
                       className="text-gray-700 hover:text-emerald-600 px-4 py-2 rounded-lg transition-colors"
                     >
                       Cerrar Sesión
+                    </button>
+                    {/* Botón temporal de debug */}
+                    <button 
+                      onClick={clearSession}
+                      className="text-red-600 hover:text-red-700 px-2 py-1 text-xs rounded border border-red-300 hover:border-red-400 transition-colors"
+                      title="Limpiar sesión forzadamente"
+                    >
+                      🧹
                     </button>
                   </div>
                 ) : (

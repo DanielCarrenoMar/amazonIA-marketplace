@@ -4,7 +4,7 @@ import { ProductDetail } from './ProductDetail';
 import { AuthModal } from './auth/AuthModal';
 import { useAuth } from '@/hooks/useAuth';
 import { AddProductoModal } from './forms/productos/AddProductoModal';
-
+import { getProductos } from '@/hooks/productos/useProducto';
 
 export function Marketplace() {
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -21,6 +21,11 @@ export function Marketplace() {
   const { user, profile } = useAuth();
 
 
+  //función para obtener todos los productos registrados 
+
+  //const productos = getProductos(); 
+
+  //console.log(productos); 
 
 
   const categories = [

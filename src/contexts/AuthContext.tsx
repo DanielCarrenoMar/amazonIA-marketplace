@@ -28,6 +28,7 @@ interface AuthContextType {
   signOut: () => Promise<{ error: any }>
   updateProfile: (updates: Partial<UserProfile>) => Promise<{ data: any, error: any }>
   fetchUserProfile: (userId: string) => Promise<UserProfile | null>
+  clearSession: () => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -42,16 +43,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     console.log('🔍 Buscando perfil para usuario:', userId)
     
     try {
-      const { data, error } = await Promise.race([
-        supabase
-          .from('usuarios')
-          .select('*')
-          .eq('id', userId)
-          .single(),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Timeout buscando perfil')), 5000)
-        )
-      ]) as any
+      const { data, error } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('id', userId)
+        .single()
 
       if (error) {
         console.error('❌ Error fetching profile:', error)
@@ -69,18 +65,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       return data
     } catch (err) {
-      console.error('❌ Error o timeout obteniendo perfil:', err)
+      console.error('❌ Error obteniendo perfil:', err)
       return null
     }
   }
 
   useEffect(() => {
+    let mounted = true; // Flag para evitar actualizaciones de estado si el componente se desmonta
+    
     // Obtener sesión actual
     const getSession = async () => {
       console.log('🔄 AuthProvider: Obteniendo sesión actual...');
       
       try {
         const { data: { session }, error } = await supabase.auth.getSession()
+        
+        if (!mounted) return; // Evitar actualizaciones si el componente se desmontó
         
         if (error) {
           console.error('❌ Error obteniendo sesión:', error)
@@ -92,15 +92,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         setUser(session?.user ?? null)
         
-        if (session?.user) {
+        if (session?.user && mounted) {
           console.log('👤 AuthProvider: Usuario encontrado en sesión, buscando perfil...');
           const userProfile = await fetchUserProfile(session.user.id)
-          setProfile(userProfile)
+          if (mounted) {
+            setProfile(userProfile)
+          }
+        } else if (mounted) {
+          setProfile(null)
         }
       } catch (error) {
         console.error('❌ Error en getSession:', error)
       } finally {
-        setLoading(false)
+        if (mounted) {
+          setLoading(false)
+        }
       }
     }
 
@@ -109,25 +115,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Escuchar cambios de autenticación
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (!mounted) return; // Evitar actualizaciones si el componente se desmontó
+        
         console.log('🔔 AuthProvider: Cambio de autenticación:', { event, session: session ? { user: session.user.id, email: session.user.email } : 'No session' });
         
         setUser(session?.user ?? null)
         
-        if (session?.user) {
+        if (session?.user && mounted) {
           console.log('👤 AuthProvider: Usuario en cambio de auth, buscando perfil...');
           const userProfile = await fetchUserProfile(session.user.id)
-          setProfile(userProfile)
-        } else {
+          if (mounted) {
+            setProfile(userProfile)
+          }
+        } else if (mounted) {
           console.log('🚪 AuthProvider: Usuario deslogueado, limpiando perfil...');
           setProfile(null)
         }
         
-        setLoading(false)
+        if (mounted) {
+          setLoading(false)
+        }
       }
     )
 
     return () => {
       console.log('🧹 AuthProvider: Limpiando suscripción')
+      mounted = false; // Marcar como desmontado
       subscription.unsubscribe()
     }
   }, [])
@@ -187,27 +200,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     console.log('📧 AuthProvider: Resultado auth.signInWithPassword:', { data, error });
     
-    if (data.user && !error) {
-      console.log('✅ AuthProvider: Usuario autenticado, buscando perfil...', data.user.id);
-      
-      // Intentar obtener el perfil inmediatamente después del login
-      const userProfile = await fetchUserProfile(data.user.id);
-      if (userProfile) {
-        console.log('👤 AuthProvider: Perfil obtenido en signIn:', userProfile);
-        setProfile(userProfile);
-      }
-    }
+    // No necesitamos buscar el perfil aquí porque onAuthStateChange se encargará
+    // Esto evita llamadas duplicadas
     
     return { data, error }
   }
 
   const signOut = async () => {
     console.log('🚪 AuthProvider: Cerrando sesión...')
+    
+    // Limpiar estado local inmediatamente
+    setUser(null)
+    setProfile(null)
+    
+    // Cerrar sesión en Supabase
     const { error } = await supabase.auth.signOut()
-    if (!error) {
-      setProfile(null)
+    
+    if (error) {
+      console.error('❌ AuthProvider: Error cerrando sesión:', error)
+    } else {
       console.log('✅ AuthProvider: Sesión cerrada exitosamente')
+      
+      // Limpiar cualquier dato persistente adicional
+      localStorage.removeItem('supabase.auth.token')
+      sessionStorage.clear()
     }
+    
     return { error }
   }
 
@@ -231,6 +249,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { data, error }
   }
 
+  const clearSession = () => {
+    console.log('🧹 AuthProvider: Limpiando sesión manualmente...')
+    setUser(null)
+    setProfile(null)
+    
+    // Limpiar múltiples posibles ubicaciones de datos de sesión
+    try {
+      localStorage.removeItem('supabase.auth.token')
+      localStorage.removeItem('sb-zuopyvxzqdywldtyjpop-auth-token')
+      sessionStorage.clear()
+      
+      // Forzar logout en Supabase sin esperar
+      supabase.auth.signOut().catch(err => 
+        console.log('Error en signOut durante clearSession:', err)
+      )
+    } catch (error) {
+      console.error('Error limpiando sesión:', error)
+    }
+  }
+
   const value = {
     user,
     profile,
@@ -240,6 +278,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signOut,
     updateProfile,
     fetchUserProfile,
+    clearSession,
   }
 
   return (
