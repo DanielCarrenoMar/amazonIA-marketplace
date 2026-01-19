@@ -3,38 +3,38 @@ export function Features() {
     {
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
         </svg>
       ),
-      title: 'Base de Datos Documental',
-      description: 'Utiliza MongoDB o Couchbase para almacenar registros como documentos JSON/BSON sin esquema fijo.',
+      title: 'Marketplace Especializado',
+      description: 'Plataforma de comercio electrónico diseñada para productos artesanales y agroindustriales amazónicos.',
     },
     {
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
         </svg>
       ),
-      title: 'Consultas Geoespaciales',
-      description: 'Búsquedas complejas por ubicación: "Especies de flora medicinal en un radio de 50km del río Putumayo".',
+      title: 'Reconocimiento de Imágenes',
+      description: 'IA entrenada para identificar especies de plantas y animales mediante fotografías tomadas in-situ.',
     },
     {
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
         </svg>
       ),
-      title: 'División Política Amazónica',
-      description: 'Organización por estados amazónicos de Brasil, Perú, Venezuela, Colombia, Ecuador y otros países.',
+      title: 'Traductor de Texto Jivi',
+      description: 'Algoritmos de NLP para traducir documentos y mensajes entre Español y Jivi con alta precisión.',
     },
     {
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
         </svg>
       ),
-      title: 'Búsqueda Optimizada',
-      description: 'Integración con Elasticsearch para consultas rápidas y eficientes sobre millones de registros.',
+      title: 'Traductor de Audio (STT/TTS)',
+      description: 'Conversión voz-texto-voz para romper la barrera del analfabetismo y facilitar la comunicación oral.',
     },
   ];
 
@@ -46,16 +46,16 @@ export function Features() {
             Características Técnicas
           </span>
           <h2 className="text-gray-900 mb-4">
-            Tecnología de Vanguardia
+            Herramientas al Servicio de la Comunidad
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Una pila tecnológica NoSQL optimizada para los desafíos únicos de la información amazónica
+            Innovación tecnológica aplicada para resolver problemas reales de comunicación y comercio
           </p>
         </div>
 
         <div className="grid md:grid-cols-2 gap-8">
           {features.map((feature, index) => (
-            <div 
+            <div
               key={index}
               className="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-all hover:-translate-y-1"
             >
@@ -78,10 +78,10 @@ export function Features() {
 
         {/* Tech Stack Badges */}
         <div className="mt-16 text-center">
-          <p className="text-gray-600 mb-6">Tecnologías consideradas:</p>
+          <p className="text-gray-600 mb-6">Tecnologías Implementadas:</p>
           <div className="flex flex-wrap justify-center gap-3">
-            {['MongoDB', 'Couchbase', 'Elasticsearch', 'ArangoDB', 'GeoJSON', 'REST APIs'].map((tech) => (
-              <span 
+            {['React', 'Python', 'TensorFlow', 'OpenAI Whisper', 'FastAPI', 'Supabase'].map((tech) => (
+              <span
                 key={tech}
                 className="bg-white px-6 py-2 rounded-full border-2 border-emerald-200 text-gray-700 hover:border-emerald-400 transition-colors"
               >
