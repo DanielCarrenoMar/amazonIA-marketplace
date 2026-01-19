@@ -19,7 +19,7 @@ export function RegisterForm({ onSuccess, onSwitchToLogin, onClose, defaultUserT
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-  
+
   const { signUp } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -60,9 +60,9 @@ export function RegisterForm({ onSuccess, onSwitchToLogin, onClose, defaultUserT
       telefono: telefono.trim() || undefined,
       direccion: direccion.trim() || undefined
     })
-    
+
     console.log('🔄 Resultado del signUp:', { error });
-    
+
     if (error) {
       console.error('❌ Error en el registro:', error);
       setError(error.message)
@@ -73,12 +73,12 @@ export function RegisterForm({ onSuccess, onSwitchToLogin, onClose, defaultUserT
         onSuccess()
       }, 2000)
     }
-    
+
     setLoading(false)
   }
 
   return (
-    <div className="w-full max-w-md mx-auto">
+    <div className="w-full">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900">
           Crear Cuenta
@@ -86,7 +86,7 @@ export function RegisterForm({ onSuccess, onSwitchToLogin, onClose, defaultUserT
         {onClose && (
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-1 transition-colors"
+            className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg w-8 h-8 flex items-center justify-center transition-colors"
             aria-label="Cerrar"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -95,20 +95,20 @@ export function RegisterForm({ onSuccess, onSwitchToLogin, onClose, defaultUserT
           </button>
         )}
       </div>
-      
+
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg">
             {error}
           </div>
         )}
-        
+
         {success && (
           <div className="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-lg">
             {success}
           </div>
         )}
-        
+
         <div>
           <label htmlFor="nombre" className="block text-sm font-medium text-gray-700 mb-1">
             Nombre completo
@@ -123,10 +123,10 @@ export function RegisterForm({ onSuccess, onSwitchToLogin, onClose, defaultUserT
             placeholder="Tu nombre completo"
           />
         </div>
-        
+
         <div>
           <label htmlFor="telefono" className="block text-sm font-medium text-gray-700 mb-1">
-            Teléfono 
+            Teléfono
           </label>
           <input
             required
@@ -138,7 +138,7 @@ export function RegisterForm({ onSuccess, onSwitchToLogin, onClose, defaultUserT
             placeholder="Tu número de teléfono"
           />
         </div>
-        
+
         <div>
           <label htmlFor="direccion" className="block text-sm font-medium text-gray-700 mb-1">
             Dirección
@@ -153,7 +153,7 @@ export function RegisterForm({ onSuccess, onSwitchToLogin, onClose, defaultUserT
             placeholder="Tu dirección"
           />
         </div>
-        
+
         <div>
           <label htmlFor="tipo" className="block text-sm font-medium text-gray-700 mb-1">
             Tipo de usuario
@@ -168,7 +168,7 @@ export function RegisterForm({ onSuccess, onSwitchToLogin, onClose, defaultUserT
             <option value="vendedor">Vendedor</option>
           </select>
         </div>
-        
+
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
             Correo electrónico
@@ -183,7 +183,7 @@ export function RegisterForm({ onSuccess, onSwitchToLogin, onClose, defaultUserT
             placeholder="tu@email.com"
           />
         </div>
-        
+
         <div>
           <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
             Contraseña
@@ -198,7 +198,7 @@ export function RegisterForm({ onSuccess, onSwitchToLogin, onClose, defaultUserT
             placeholder="••••••••"
           />
         </div>
-        
+
         <div>
           <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
             Confirmar Contraseña
@@ -213,7 +213,7 @@ export function RegisterForm({ onSuccess, onSwitchToLogin, onClose, defaultUserT
             placeholder="••••••••"
           />
         </div>
-        
+
         <button
           type="submit"
           disabled={loading}
@@ -221,8 +221,8 @@ export function RegisterForm({ onSuccess, onSwitchToLogin, onClose, defaultUserT
         >
           {loading ? 'Creando cuenta...' : 'Crear Cuenta'}
         </button>
-        </form>
-      
+      </form>
+
       <div className="mt-6 text-center">
         <p className="text-sm text-gray-600">
           ¿Ya tienes cuenta?{' '}

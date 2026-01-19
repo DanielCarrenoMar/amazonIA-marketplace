@@ -12,7 +12,7 @@ export function LoginForm({ onSuccess, onSwitchToRegister, onClose }: LoginFormP
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  
+
   const { signIn } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -23,9 +23,9 @@ export function LoginForm({ onSuccess, onSwitchToRegister, onClose }: LoginFormP
     console.log('🔐 Iniciando login...', { email });
 
     const { error } = await signIn(email, password)
-    
+
     console.log('🔄 Resultado del signIn:', { error });
-    
+
     if (error) {
       console.error('❌ Error en el login:', error);
       setError(error.message)
@@ -33,12 +33,12 @@ export function LoginForm({ onSuccess, onSwitchToRegister, onClose }: LoginFormP
       console.log('✅ Login exitoso desde el formulario');
       onSuccess()
     }
-    
+
     setLoading(false)
   }
 
   return (
-    <div className="w-full max-w-md mx-auto">
+    <div className="w-full">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900">
           Iniciar Sesión
@@ -46,7 +46,7 @@ export function LoginForm({ onSuccess, onSwitchToRegister, onClose }: LoginFormP
         {onClose && (
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-1 transition-colors"
+            className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg w-8 h-8 flex items-center justify-center transition-colors"
             aria-label="Cerrar"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -55,14 +55,14 @@ export function LoginForm({ onSuccess, onSwitchToRegister, onClose }: LoginFormP
           </button>
         )}
       </div>
-      
+
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg">
             {error}
           </div>
         )}
-        
+
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
             Correo electrónico
@@ -77,7 +77,7 @@ export function LoginForm({ onSuccess, onSwitchToRegister, onClose }: LoginFormP
             placeholder="tu@email.com"
           />
         </div>
-        
+
         <div>
           <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
             Contraseña
@@ -92,7 +92,7 @@ export function LoginForm({ onSuccess, onSwitchToRegister, onClose }: LoginFormP
             placeholder="••••••••"
           />
         </div>
-        
+
         <button
           type="submit"
           disabled={loading}
@@ -101,8 +101,8 @@ export function LoginForm({ onSuccess, onSwitchToRegister, onClose }: LoginFormP
           {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
         </button>
       </form>
-      
-      <div className="mt-6 text-center">
+
+      <div className="mt-4 text-center">
         <p className="text-sm text-gray-600">
           ¿No tienes cuenta?{' '}
           <button

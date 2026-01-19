@@ -183,240 +183,255 @@ export function AddProductoModal({ isOpen, onClose, onProductAdded }: AddProduct
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
       {/* Modal Content */}
       <form
         onSubmit={handleSubmit}
-        className="bg-white rounded-2xl shadow-2xl w-[500px] max-h-[90vh] flex flex-col overflow-hidden"
+        className="bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden relative"
+        style={{ width: '1100px', maxWidth: '95vw', height: '85vh' }}
       >
         {/* Header */}
-        <div className="flex-shrink-0 bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-3 flex items-center justify-between border-b border-gray-200">
-          <h2 className="text-lg font-bold text-white">Agregar Producto</h2>
+        <div className="flex-shrink-0 bg-gradient-to-r from-emerald-600 to-teal-600 px-8 py-6 flex items-center justify-between border-b border-gray-200">
+          <h2 className="text-3xl font-bold text-white">Agregar Producto</h2>
           <button
             type="button"
             onClick={onClose}
-            className="text-white hover:bg-white/20 rounded-lg p-1.5 transition-colors"
+            className="text-white hover:bg-white/20 rounded-xl p-2 transition-colors"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
-        {/* Form Content - Scrollable */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-4 space-y-3">
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-sm">
-                {error}
+        {/* Form Content - Scrollable Single Column */}
+        <div className="flex-1 overflow-y-auto min-h-0 p-10 lg:p-14 scroll-smooth">
+          {error && (
+            <div className="mb-12 bg-red-50 border border-red-200 text-red-700 px-8 py-5 rounded-2xl text-base shadow-sm font-medium">
+              {error}
+            </div>
+          )}
+
+          <div className="max-w-4xl mx-auto space-y-24">
+            {/* Sección 1: Información Básica */}
+            <section className="space-y-10 pt-4">
+              <h3 className="text-3xl font-extrabold text-gray-900 border-b-2 border-emerald-50 pb-6 flex items-center gap-4">
+                <span className="w-3 h-10 bg-emerald-500 rounded-full shadow-sm"></span>
+                Información del Producto
+              </h3>
+
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Nombre del Producto *
+                  </label>
+                  <input
+                    type="text"
+                    name="nombre"
+                    value={formData.nombre}
+                    onChange={handleInputChange}
+                    placeholder="Ej: Canasta Tejida a Mano"
+                    className="w-full px-5 py-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all text-base"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Descripción *
+                  </label>
+                  <textarea
+                    name="descripcion"
+                    value={formData.descripcion}
+                    onChange={handleInputChange}
+                    placeholder="Describe tu producto detalladamente..."
+                    rows={5}
+                    className="w-full px-5 py-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all resize-none text-base"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Categoría *
+                  </label>
+                  <select
+                    name="categoria"
+                    value={formData.categoria}
+                    onChange={handleInputChange}
+                    className="w-full px-5 py-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all text-base appearance-none bg-white"
+                    style={{
+                      backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%236B7280\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\' /%3E%3C/svg%3E")',
+                      backgroundRepeat: 'no-repeat',
+                      backgroundPosition: 'right 1.5rem center',
+                      backgroundSize: '1.2em'
+                    }}
+                  >
+                    {categories.map(cat => (
+                      <option key={cat.id} value={cat.id}>{cat.label}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
-            )}
+            </section>
 
-            {/* Nombre del Producto */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Nombre del Producto *
-              </label>
-              <input
-                type="text"
-                name="nombre"
-                value={formData.nombre}
-                onChange={handleInputChange}
-                placeholder="Ej: Canasta Tejida a Mano"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
-                required
-              />
-            </div>
-
-            {/* Descripción */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Descripción *
-              </label>
-              <textarea
-                name="descripcion"
-                value={formData.descripcion}
-                onChange={handleInputChange}
-                placeholder="Describe tu producto detalladamente..."
-                rows={2}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none text-sm"
-                required
-              />
-            </div>
-
-            {/* Cuidados del Producto */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Cuidados del Producto
-              </label>
-              <textarea
-                name="cuidados"
-                value={formData.cuidados}
-                onChange={handleInputChange}
-                placeholder="Ej: Lavar a mano con agua fría..."
-                rows={2}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none text-sm"
-              />
-            </div>
-
-            {/* Peso y Dimensiones - Misma línea */}
-            <div className="grid grid-cols-2 gap-2">
+            {/* Sección 2: Multimedia */}
+            <section className="space-y-10 pt-4">
+              <h3 className="text-3xl font-extrabold text-gray-900 border-b-2 border-emerald-50 pb-6 flex items-center gap-4">
+                <span className="w-3 h-10 bg-emerald-500 rounded-full shadow-sm"></span>
+                Imagen de Presentación
+              </h3>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Peso
-                </label>
-                <input
-                  type="text"
-                  name="peso"
-                  value={formData.peso}
-                  onChange={handleInputChange}
-                  placeholder="250g"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+                <ImageUpload
+                  onImageUploaded={(url) => setFormData(prev => ({ ...prev, imagen_url: url }))}
+                  currentImageUrl={formData.imagen_url}
+                  className="w-full"
                 />
               </div>
+            </section>
+
+            {/* Sección 3: Precio y Disponibilidad */}
+            <section className="space-y-10 pt-4">
+              <h3 className="text-3xl font-extrabold text-gray-900 border-b-2 border-emerald-50 pb-6 flex items-center gap-4">
+                <span className="w-3 h-10 bg-emerald-500 rounded-full shadow-sm"></span>
+                Precio y Stock
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Precio ($) *
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">$</span>
+                    <input
+                      type="number"
+                      name="precio"
+                      value={formData.precio}
+                      onChange={handleInputChange}
+                      placeholder="15.99"
+                      step="0.01"
+                      min="0"
+                      className="w-full px-8 py-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all text-lg font-bold"
+                      required
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Unidades Disponibles *
+                  </label>
+                  <input
+                    type="number"
+                    name="stock"
+                    value={formData.stock}
+                    onChange={handleInputChange}
+                    placeholder="10"
+                    min="0"
+                    className="w-full px-5 py-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all text-base"
+                    required
+                  />
+                </div>
+              </div>
+            </section>
+
+            {/* Sección 4: Detalles Técnicos */}
+            <section className="space-y-10 pt-4">
+              <h3 className="text-3xl font-extrabold text-gray-900 border-b-2 border-emerald-50 pb-6 flex items-center gap-4">
+                <span className="w-3 h-10 bg-emerald-500 rounded-full shadow-sm"></span>
+                Detalles Técnicos
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Peso
+                  </label>
+                  <input
+                    type="text"
+                    name="peso"
+                    value={formData.peso}
+                    onChange={handleInputChange}
+                    placeholder="Ej: 250g"
+                    className="w-full px-5 py-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all text-base"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Dimensiones
+                  </label>
+                  <input
+                    type="text"
+                    name="dimensiones"
+                    value={formData.dimensiones}
+                    onChange={handleInputChange}
+                    placeholder="Ej: 30x20x15 cm"
+                    className="w-full px-5 py-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all text-base"
+                  />
+                </div>
+              </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Dimensiones
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Cuidados y Recomendaciones
                 </label>
-                <input
-                  type="text"
-                  name="dimensiones"
-                  value={formData.dimensiones}
+                <textarea
+                  name="cuidados"
+                  value={formData.cuidados}
                   onChange={handleInputChange}
-                  placeholder="30x20x15 cm"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+                  placeholder="Ej: Lavar a mano con agua fría..."
+                  rows={3}
+                  className="w-full px-5 py-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all resize-none text-base"
                 />
               </div>
-            </div>
+            </section>
 
-            {/* Precio, Stock y Categoría - Misma línea */}
-            <div className="grid grid-cols-3 gap-2">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Precio *
-                </label>
-                <input
-                  type="number"
-                  name="precio"
-                  value={formData.precio}
-                  onChange={handleInputChange}
-                  placeholder="45.99"
-                  step="0.01"
-                  min="0"
-                  className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Stock *
-                </label>
-                <input
-                  type="number"
-                  name="stock"
-                  value={formData.stock}
-                  onChange={handleInputChange}
-                  placeholder="10"
-                  min="0"
-                  className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Categoría *
-                </label>
-                <select
-                  name="categoria"
-                  value={formData.categoria}
-                  onChange={handleInputChange}
-                  className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
-                >
-                  {categories.map(cat => (
-                    <option key={cat.id} value={cat.id}>{cat.label}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Imagen del Producto */}
-            <ImageUpload 
-              onImageUploaded={(url) => setFormData(prev => ({ ...prev, imagen_url: url }))}
-              currentImageUrl={formData.imagen_url}
-              className="mb-2"
-            />
-
-            {/* Características del Producto - 3 columnas */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Características del Producto
-              </label>
-              <div className="grid grid-cols-3 gap-1 border border-gray-200 rounded-lg p-2">
-                {/* Primera columna - 4 opciones */}
-                <div className="space-y-1">
-                  {allBadges.slice(0, 4).map(badge => (
-                    <label key={badge} className="flex items-center gap-1 cursor-pointer">
+            {/* Sección 5: Características */}
+            <section className="space-y-10 pt-4 pb-6">
+              <h3 className="text-3xl font-extrabold text-gray-900 border-b-2 border-emerald-50 pb-6 flex items-center gap-4">
+                <span className="w-3 h-10 bg-emerald-500 rounded-full shadow-sm"></span>
+                Atributos Especiales
+              </h3>
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-6 bg-gray-50/50 rounded-2xl p-8 border border-gray-100">
+                {allBadges.map(badge => (
+                  <label key={badge} className="flex items-center gap-4 cursor-pointer group">
+                    <div className="relative flex items-center">
                       <input
                         type="checkbox"
                         checked={formData.badges.includes(badge)}
                         onChange={() => handleBadgeToggle(badge)}
-                        className="w-3 h-3 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                        className="w-6 h-6 rounded-lg border-gray-300 text-emerald-600 focus:ring-emerald-500 focus:ring-offset-0 transition-all cursor-pointer shadow-sm"
                       />
-                      <span className="text-xs text-gray-700">{badge}</span>
-                    </label>
-                  ))}
-                </div>
-
-                {/* Segunda columna - 4 opciones */}
-                <div className="space-y-1">
-                  {allBadges.slice(4, 8).map(badge => (
-                    <label key={badge} className="flex items-center gap-1 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={formData.badges.includes(badge)}
-                        onChange={() => handleBadgeToggle(badge)}
-                        className="w-3 h-3 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
-                      />
-                      <span className="text-xs text-gray-700">{badge}</span>
-                    </label>
-                  ))}
-                </div>
-
-                {/* Tercera columna - 2 opciones */}
-                <div className="space-y-1">
-                  {allBadges.slice(8, 10).map(badge => (
-                    <label key={badge} className="flex items-center gap-1 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={formData.badges.includes(badge)}
-                        onChange={() => handleBadgeToggle(badge)}
-                        className="w-3 h-3 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
-                      />
-                      <span className="text-xs text-gray-700">{badge}</span>
-                    </label>
-                  ))}
-                </div>
+                    </div>
+                    <span className="text-base text-gray-600 group-hover:text-gray-900 transition-colors">{badge}</span>
+                  </label>
+                ))}
               </div>
-            </div>
+            </section>
           </div>
         </div>
 
-        {/* Fixed Footer with Buttons - Misma línea */}
-        <div className="flex-shrink-0 border-t border-gray-200 p-3">
-          <div className="flex gap-2">
+        {/* Fixed Footer with Buttons */}
+        <div className="flex-shrink-0 border-t border-gray-200 p-6 bg-gray-50/50">
+          <div className="flex gap-4">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm"
+              className="px-8 py-3 bg-white border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-semibold text-sm shadow-sm"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg hover:from-emerald-700 hover:to-teal-700 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              className="flex-1 px-8 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl hover:from-emerald-700 hover:to-teal-700 transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed text-sm shadow-md"
             >
-              {loading ? 'Agregando...' : 'Agregar'}
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Procesando...
+                </span>
+              ) : 'Publicar Producto'}
             </button>
           </div>
         </div>
