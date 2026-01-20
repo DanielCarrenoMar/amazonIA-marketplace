@@ -3,47 +3,47 @@ export function Objetivos() {
     {
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
         </svg>
       ),
-      title: 'Modelo de Datos NoSQL',
-      description: 'Diseñar un modelo flexible basado en documentos para albergar Flora, Fauna e Individuos/Comunidades.',
+      title: 'Marketplace Responsable',
+      description: 'Crear un canal de venta directo y seguro para productores indígenas, eliminando intermediarios.',
     },
     {
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
         </svg>
       ),
-      title: 'Pila Tecnológica',
-      description: 'Seleccionar e implementar tecnología NoSQL optimizada para búsquedas geoespaciales (MongoDB, Elasticsearch, ArangoDB).',
+      title: 'IA Visual Amazónica',
+      description: 'Entrenar modelos de visión por computador para reconocer especies de flora y fauna endémicas.',
     },
     {
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
         </svg>
       ),
-      title: 'Mecanismos de Ingesta',
-      description: 'Desarrollar APIs y formularios para poblar la base de datos desde investigadores, datos públicos y ONGs.',
+      title: 'Preservación Lingüística',
+      description: 'Desarrollar traductores neuronales (texto y audio) para lenguas como el Jivi, facilitando la comunicación.',
     },
     {
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       ),
-      title: 'Clasificación Geopolítica',
-      description: 'Crear sistema de clasificación basado en División Política Amazónica (Estados de Brasil, Departamentos de Perú, etc.).',
+      title: 'Economía Circular',
+      description: 'Fomentar un ciclo económico que beneficie directamente a las comunidades y promueva la sostenibilidad.',
     },
     {
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
         </svg>
       ),
-      title: 'Consultas Complejas',
-      description: 'Garantizar capacidad para consultas avanzadas: especies por ubicación, radio geográfico, características específicas.',
+      title: 'Innovación Abierta',
+      description: 'Poner la tecnología más avanzada al servicio del conocimiento ancestral sin explotarlo.',
     },
   ];
 
@@ -62,10 +62,10 @@ export function Objetivos() {
             Objetivos del Proyecto
           </span>
           <h2 className="text-white mb-4">
-            Una Visión Clara y Ambiciosa
+            Tecnología con Propósito Social
           </h2>
           <p className="text-xl text-emerald-100 max-w-3xl mx-auto">
-            Establecer las bases tecnológicas para la conservación y el conocimiento de la Amazonía
+            Integrando el comercio digital y la inteligencia artificial para un futuro sostenible
           </p>
         </div>
 
@@ -82,11 +82,11 @@ export function Objetivos() {
                 Objetivo General
               </span>
               <h3 className="text-white mb-3">
-                Sistema de Referencia Centralizado
+                Integración Económica y Tecnológica
               </h3>
               <p className="text-emerald-50 text-lg">
-                Implementar un sistema de información NoSQL robusto y centralizado que sirva como referencia 
-                para la clasificación y consulta de datos biológicos y demográficos de los estados amazónicos.
+                Establecer una plataforma integral que combine un marketplace de comercio justo para las comunidades amazónicas
+                con herramientas avanzadas de IA para la preservación de su biodiversidad y lengua.
               </p>
             </div>
           </div>
@@ -95,11 +95,11 @@ export function Objetivos() {
         {/* Objetivos Específicos */}
         <div className="mb-12">
           <h3 className="text-white mb-8 text-center">
-            Objetivos Específicos
+            Pilares Estratégicos
           </h3>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {objetivosEspecificos.map((objetivo, index) => (
-              <div 
+              <div
                 key={index}
                 className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20 hover:bg-white/20 transition-all hover:-translate-y-1"
               >
@@ -120,17 +120,21 @@ export function Objetivos() {
         {/* Example Query */}
         <div className="bg-gradient-to-r from-teal-600/30 to-emerald-600/30 backdrop-blur-md rounded-2xl p-8 border border-white/20">
           <h4 className="text-white mb-4">
-            Ejemplo de Consulta Compleja
+            Ejemplo de Impacto Real
           </h4>
-          <div className="bg-gray-900/50 rounded-lg p-6 font-mono text-sm overflow-x-auto">
-            <code className="text-emerald-300">
-              {`"Mostrar todas las especies de flora medicinal\nusadas por comunidades indígenas en un radio\nde 50km del río Putumayo"`}
-            </code>
-          </div>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <span className="bg-white/20 px-3 py-1 rounded-full text-xs text-white">Búsqueda geoespacial</span>
-            <span className="bg-white/20 px-3 py-1 rounded-full text-xs text-white">Filtros múltiples</span>
-            <span className="bg-white/20 px-3 py-1 rounded-full text-xs text-white">Datos relacionados</span>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="bg-gray-900/50 rounded-lg p-6">
+              <p className="text-emerald-300 font-mono text-sm mb-2">// Interacción de Usuario</p>
+              <p className="text-white italic">"Quiero comprar una cesta tejida y saber qué planta se usó."</p>
+            </div>
+            <div className="bg-gray-900/50 rounded-lg p-6">
+              <p className="text-teal-300 font-mono text-sm mb-2">// Respuesta de la Plataforma</p>
+              <p className="text-white text-sm">
+                1. Muestra producto del artesano Jivi.<br />
+                2. IA identifica la fibra: "Palma de Cumare".<br />
+                3. Traduce la descripción del Jivi al Español.
+              </p>
+            </div>
           </div>
         </div>
       </div>

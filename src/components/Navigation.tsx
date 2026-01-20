@@ -50,8 +50,8 @@ export function Navigation() {
             <div className="flex items-center gap-3">
               <img src={logo} alt="Arapaima Logo" className="h-14 w-14" />
               <div>
-                <div className="text-emerald-800">Arapaima</div>
-                <div className="text-xs text-gray-600">Sistema de Clasificación Amazónica</div>
+                <div className="text-emerald-800">Amazonia IA</div>
+                <div className="text-xs text-gray-600">Marketplace & Herramientas Amazónicas</div>
               </div>
             </div>
 
