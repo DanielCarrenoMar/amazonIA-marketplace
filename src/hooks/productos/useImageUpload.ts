@@ -7,6 +7,7 @@ export function useImageUpload() {
 
   const uploadImage = async (file: File): Promise<string | null> => {
     try {
+      console.log('Iniciando subida de imagen:', file.name);
       setUploading(true);
       setUploadError(null);
 
@@ -25,10 +26,27 @@ export function useImageUpload() {
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = `productos/${fileName}`;
 
-      // Subir el archivo al storage
-      const { error: uploadError } = await supabase.storage
+      console.log('Intentando subir a Supabase Storage:', filePath);
+
+      // Subir el archivo al storage con timeout manual
+      const uploadPromise = supabase.storage
         .from('productos-imagenes')
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      // Timeout de 20 segundos
+      const timeoutPromise = new Promise<{ data: any; error: any }>((_, reject) =>
+        setTimeout(() => reject(new Error('La subida ha tardado demasiado, revisa tu conexión')), 20000)
+      );
+
+      const { error: uploadError, data: uploadData } = await Promise.race([
+        uploadPromise,
+        timeoutPromise
+      ]) as { data: any; error: any };
+
+      console.log('Respuesta de subida:', { uploadError, uploadData });
 
       if (uploadError) {
         throw uploadError;
@@ -39,13 +57,16 @@ export function useImageUpload() {
         .from('productos-imagenes')
         .getPublicUrl(filePath);
 
+      console.log('URL obtenida:', data.publicUrl);
+
       return data.publicUrl;
     } catch (error) {
+      console.error('Error en catch de uploadImage:', error);
       const errorMessage = error instanceof Error ? error.message : 'Error al subir la imagen';
       setUploadError(errorMessage);
-      console.error('Error uploading image:', error);
       return null;
     } finally {
+      console.log('Finalizando proceso de subida (finally)');
       setUploading(false);
     }
   };

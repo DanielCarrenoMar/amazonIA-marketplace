@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/lib/supabase';
 import { ImageUpload } from './ImageUpload';
+import { useQueryClient } from '@tanstack/react-query';
 
 
 interface AddProductoModalProps {
@@ -12,6 +13,7 @@ interface AddProductoModalProps {
 
 export function AddProductoModal({ isOpen, onClose, onProductAdded }: AddProductoModalProps) {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
     nombre: '',
     descripcion: '',
@@ -119,7 +121,8 @@ export function AddProductoModal({ isOpen, onClose, onProductAdded }: AddProduct
           cantidad: productoData.stock,
           precio: productoData.precio,
           img: productoData.imagen_url,
-          caracteristicas: caracteristicasJson,
+          badges: caracteristicasJson,
+          category: productoData.categoria,
         })
         .select()
         .single();
@@ -156,6 +159,9 @@ export function AddProductoModal({ isOpen, onClose, onProductAdded }: AddProduct
       }
       alert('Producto agregado exitosamente (Demo)');
 
+      // Invalidate queries to refresh the list
+      queryClient.invalidateQueries({ queryKey: ['productos'] });
+
       // Reset form
       setFormData({
         nombre: '',
@@ -187,6 +193,7 @@ export function AddProductoModal({ isOpen, onClose, onProductAdded }: AddProduct
       {/* Modal Content */}
       <form
         onSubmit={handleSubmit}
+        noValidate
         className="bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden relative"
         style={{ width: '1100px', maxWidth: '95vw', height: '85vh' }}
       >

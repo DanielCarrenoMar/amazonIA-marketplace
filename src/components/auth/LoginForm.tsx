@@ -28,7 +28,13 @@ export function LoginForm({ onSuccess, onSwitchToRegister, onClose }: LoginFormP
 
     if (error) {
       console.error('❌ Error en el login:', error);
-      setError(error.message)
+      if (error.message.includes('Email not confirmed')) {
+        setError('Por favor confirma tu correo electrónico antes de iniciar sesión.');
+      } else if (error.message.includes('Invalid login credentials')) {
+        setError('Correo o contraseña incorrectos.');
+      } else {
+        setError('Error al iniciar sesión. Inténtalo de nuevo.');
+      }
     } else {
       console.log('✅ Login exitoso desde el formulario');
       onSuccess()

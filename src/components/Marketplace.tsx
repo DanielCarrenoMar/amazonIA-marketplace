@@ -4,6 +4,7 @@ import { ProductDetail } from './ProductDetail';
 import { AuthModal } from './auth/AuthModal';
 import { useAuth } from '@/hooks/useAuth';
 import { AddProductoModal } from './forms/productos/AddProductoModal';
+import { useQuery } from '@tanstack/react-query';
 import { getProductos } from '@/hooks/productos/useProducto';
 
 export function Marketplace() {
@@ -20,12 +21,17 @@ export function Marketplace() {
   const [addProductoModalOpen, setAddProductoModalOpen] = useState(false);
   const { user, profile } = useAuth();
 
+  // Implementación con TanStack Query
+  const { data: dbProducts = [], isLoading: isLoadingProducts } = useQuery({
+    queryKey: ['productos'],
+    queryFn: getProductos,
+  });
 
-  //función para obtener todos los productos registrados 
-
-  //const productos = getProductos(); 
-
-  //console.log(productos); 
+  useEffect(() => {
+    if (dbProducts.length > 0) {
+      console.log("✅ Productos actualizados (React Query):", dbProducts);
+    }
+  }, [dbProducts]);
 
 
   const categories = [
@@ -58,10 +64,37 @@ export function Marketplace() {
     '100% Natural',
   ];
 
-  
-  const products = [
+
+  // Mapear productos de la BD al formato del componente
+  const mappedDbProducts = dbProducts.map((p: any) => {
+    let parsedBadges = [];
+    try {
+      parsedBadges = JSON.parse(p.badges || '[]');
+    } catch (e) {
+      console.warn('Error parsing badges for product', p.id, e);
+      parsedBadges = [];
+    }
+
+    return {
+      id: p.id,
+      name: p.nombre,
+      description: p.descripcion,
+      price: p.precio,
+      currency: 'USD',
+      category: p.category || 'artesanias',
+      image: p.img,
+      seller: 'Vendedor Local', // Placeholder por ahora
+      location: 'Amazonas, Región', // Placeholder por ahora
+      stock: p.cantidad,
+      badges: Array.isArray(parsedBadges) ? parsedBadges : [],
+      rating: p.puntuacion || 5.0,
+      reviews: 0,
+    };
+  });
+
+  const staticProducts = [
     {
-      id: 1,
+      id: 101, // ID alto para evitar colisiones con BD
       name: 'Canasta Tejida a Mano',
       description: 'Hermosa canasta tejida con fibras naturales de la selva por artesanos de la comunidad Tikuna.',
       price: 45.99,
@@ -76,7 +109,7 @@ export function Marketplace() {
       reviews: 24,
     },
     {
-      id: 2,
+      id: 102,
       name: 'Pirarucú Seco (1kg)',
       description: 'Filete de pirarucú (arapaima) secado de forma tradicional. Rico en proteínas y sabor único amazónico.',
       price: 32.50,
@@ -91,7 +124,7 @@ export function Marketplace() {
       reviews: 56,
     },
     {
-      id: 3,
+      id: 103,
       name: 'Collar de Semillas Amazónicas',
       description: 'Joyería artesanal elaborada con semillas nativas: huayruro, ojo de buey y tagua. Diseño tradicional Shipibo.',
       price: 28.00,
@@ -106,7 +139,7 @@ export function Marketplace() {
       reviews: 31,
     },
     {
-      id: 4,
+      id: 104,
       name: 'Harina de Pescado Premium',
       description: 'Harina de pescado de alta calidad para consumo humano y animal. Procesada artesanalmente.',
       price: 18.75,
@@ -121,7 +154,7 @@ export function Marketplace() {
       reviews: 19,
     },
     {
-      id: 5,
+      id: 105,
       name: 'Manta Tejida Tradicional',
       description: 'Hermosa manta tejida con técnicas ancestrales, patrones geométricos tradicionales y colores naturales.',
       price: 85.00,
@@ -136,7 +169,7 @@ export function Marketplace() {
       reviews: 14,
     },
     {
-      id: 6,
+      id: 106,
       name: 'Mix de Especias Amazónicas',
       description: 'Mezcla única de especias y hierbas aromáticas de la selva: ají charapita, sacha culantro y más.',
       price: 15.50,
@@ -151,7 +184,7 @@ export function Marketplace() {
       reviews: 42,
     },
     {
-      id: 7,
+      id: 107,
       name: 'Bowl de Madera Tallada',
       description: 'Tazón artesanal tallado en madera de caoba amazónica con diseños tradicionales.',
       price: 52.00,
@@ -166,7 +199,7 @@ export function Marketplace() {
       reviews: 18,
     },
     {
-      id: 8,
+      id: 108,
       name: 'Frutas Tropicales Deshidratadas',
       description: 'Mix de frutas amazónicas deshidratadas: aguaje, camu camu, copoazú y açaí. Sin azúcar añadida.',
       price: 22.00,
@@ -182,9 +215,11 @@ export function Marketplace() {
     },
   ];
 
+  const products = [...mappedDbProducts, ...staticProducts];
+
   const toggleBadge = (badge: string) => {
-    setSelectedBadges(prev => 
-      prev.includes(badge) 
+    setSelectedBadges(prev =>
+      prev.includes(badge)
         ? prev.filter(b => b !== badge)
         : [...prev, badge]
     );
@@ -193,11 +228,11 @@ export function Marketplace() {
   const filteredProducts = products.filter(product => {
     // Category filter
     const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
-    
+
     // Search filter
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         product.description.toLowerCase().includes(searchTerm.toLowerCase());
-    
+    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.description.toLowerCase().includes(searchTerm.toLowerCase());
+
     // Price filter
     let matchesPrice = true;
     if (selectedPriceRange !== 'all') {
@@ -211,14 +246,14 @@ export function Marketplace() {
         matchesPrice = product.price >= 100;
       }
     }
-    
+
     // Rating filter
     const matchesRating = selectedRating === 0 || product.rating >= selectedRating;
-    
+
     // Badges filter
-    const matchesBadges = selectedBadges.length === 0 || 
-                         selectedBadges.every(badge => product.badges.includes(badge));
-    
+    const matchesBadges = selectedBadges.length === 0 ||
+      selectedBadges.every(badge => product.badges.includes(badge));
+
     return matchesCategory && matchesSearch && matchesPrice && matchesRating && matchesBadges;
   });
 
@@ -279,7 +314,7 @@ export function Marketplace() {
     <section id="marketplace" className="py-20 bg-gradient-to-br from-teal-50 via-emerald-50 to-cyan-50">
       {/* Product Detail Modal */}
       {currentProduct && (
-        <ProductDetail 
+        <ProductDetail
           product={currentProduct}
           onClose={() => setSelectedProduct(null)}
           onAddToCart={(id) => {
@@ -288,7 +323,7 @@ export function Marketplace() {
           }}
         />
       )}
-      
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
@@ -326,20 +361,20 @@ export function Marketplace() {
             </div>
 
             {/* Barra para registrar nuevos productos */}
-            { user && (
+            {user && (
               <div>
-                
-                <button 
+
+                <button
                   onClick={handleAddProducto}
                   className="bg-emerald-600 text-white px-8 py-3 rounded-lg hover:bg-emerald-700 transition-colors shadow-lg">
-                    Agregar Producto
+                  Agregar Producto
                 </button>
               </div>
             )}
           </div>
         </div>
 
-        
+
 
         {/* Main Content: Sidebar + Products */}
         <div className="flex flex-col lg:flex-row gap-8 mt-12">
@@ -348,7 +383,7 @@ export function Marketplace() {
             <div className="bg-white rounded-xl shadow-lg p-6 sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-gray-900">Filtros</h3>
-                <button 
+                <button
                   onClick={clearFilters}
                   className="text-sm text-emerald-600 hover:text-emerald-700 transition-colors"
                 >
@@ -364,11 +399,10 @@ export function Marketplace() {
                     <button
                       key={category.id}
                       onClick={() => setSelectedCategory(category.id)}
-                      className={`w-full text-left px-4 py-2.5 rounded-lg transition-all flex items-center gap-3 ${
-                        selectedCategory === category.id
-                          ? 'bg-emerald-600 text-white shadow-md'
-                          : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
-                      }`}
+                      className={`w-full text-left px-4 py-2.5 rounded-lg transition-all flex items-center gap-3 ${selectedCategory === category.id
+                        ? 'bg-emerald-600 text-white shadow-md'
+                        : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                        }`}
                     >
                       <span className="text-lg">{category.icon}</span>
                       <span className="text-sm">{category.label}</span>
@@ -410,15 +444,14 @@ export function Marketplace() {
                     <button
                       key={rating}
                       onClick={() => setSelectedRating(selectedRating === rating ? 0 : rating)}
-                      className={`w-full text-left px-4 py-2 rounded-lg transition-all flex items-center gap-2 ${
-                        selectedRating === rating
-                          ? 'bg-emerald-50 border-2 border-emerald-600'
-                          : 'bg-gray-50 hover:bg-gray-100'
-                      }`}
+                      className={`w-full text-left px-4 py-2 rounded-lg transition-all flex items-center gap-2 ${selectedRating === rating
+                        ? 'bg-emerald-50 border-2 border-emerald-600'
+                        : 'bg-gray-50 hover:bg-gray-100'
+                        }`}
                     >
                       <div className="flex items-center">
                         {[...Array(5)].map((_, i) => (
-                          <svg 
+                          <svg
                             key={i}
                             className={`w-4 h-4 ${i < rating ? 'text-amber-400' : 'text-gray-300'}`}
                             fill="currentColor"
@@ -479,7 +512,7 @@ export function Marketplace() {
             {filteredProducts.length > 0 ? (
               <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6 mb-12">
                 {filteredProducts.map((product) => (
-                  <div 
+                  <div
                     key={product.id}
                     className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all hover:-translate-y-1 overflow-hidden border border-gray-100"
                   >
@@ -493,7 +526,7 @@ export function Marketplace() {
                       {/* Badges */}
                       <div className="absolute top-3 left-3 flex flex-col gap-2">
                         {product.badges.slice(0, 2).map((badge, index) => (
-                          <span 
+                          <span
                             key={index}
                             className="bg-emerald-600 text-white text-xs px-3 py-1 rounded-full shadow-lg"
                           >
@@ -522,7 +555,7 @@ export function Marketplace() {
                       <div className="flex items-center gap-2 mb-3">
                         <div className="flex items-center">
                           {[...Array(5)].map((_, i) => (
-                            <svg 
+                            <svg
                               key={i}
                               className={`w-4 h-4 ${i < Math.floor(product.rating) ? 'text-amber-400' : 'text-gray-300'}`}
                               fill="currentColor"
@@ -562,7 +595,7 @@ export function Marketplace() {
                           <div className="text-gray-900">${product.price.toFixed(2)}</div>
                           <div className="text-xs text-gray-500">+ envío</div>
                         </div>
-                        <button 
+                        <button
                           onClick={() => setSelectedProduct(product.id)}
                           className="bg-emerald-600 text-white px-6 py-2 rounded-lg hover:bg-emerald-700 transition-colors flex items-center gap-2"
                         >
@@ -585,7 +618,7 @@ export function Marketplace() {
                 <p className="text-gray-600 mb-4">
                   Intenta ajustar tus filtros o realiza una nueva búsqueda
                 </p>
-                <button 
+                <button
                   onClick={clearFilters}
                   className="bg-emerald-600 text-white px-6 py-2 rounded-lg hover:bg-emerald-700 transition-colors"
                 >
@@ -671,17 +704,17 @@ export function Marketplace() {
             ¿Eres Productor Amazónico?
           </h3>
           <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
-            Únete a nuestra plataforma y vende tus productos directamente a clientes de todo el mundo. 
+            Únete a nuestra plataforma y vende tus productos directamente a clientes de todo el mundo.
             Sin intermediarios, con precios justos y apoyo técnico.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <button 
+            <button
               onClick={handleRegisterAsSeller}
               className="bg-emerald-600 text-white px-8 py-3 rounded-lg hover:bg-emerald-700 transition-colors shadow-lg"
             >
               Registrarme como Vendedor
             </button>
-            <button 
+            <button
               onClick={handleMoreInfo}
               className="bg-gray-100 text-gray-700 px-8 py-3 rounded-lg hover:bg-gray-200 transition-colors"
             >
@@ -689,7 +722,7 @@ export function Marketplace() {
             </button>
           </div>
         </div>
-        
+
         {/* Auth Modal */}
         <AuthModal
           isOpen={authModalOpen}
