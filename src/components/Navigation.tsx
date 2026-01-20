@@ -116,14 +116,7 @@ export function Navigation() {
                     >
                       Cerrar Sesión
                     </button>
-                    {/* Botón temporal de debug */}
-                    <button
-                      onClick={clearSession}
-                      className="text-red-600 hover:text-red-700 px-2 py-1 text-xs rounded border border-red-300 hover:border-red-400 transition-colors"
-                      title="Limpiar sesión forzadamente"
-                    >
-                      🧹
-                    </button>
+
                   </div>
                 ) : (
                   <>
