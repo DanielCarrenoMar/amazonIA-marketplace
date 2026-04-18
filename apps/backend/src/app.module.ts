@@ -8,9 +8,10 @@ import { SellerModule } from './seller/seller.module';
 import { ProductCategoryModule } from './product-category/product-category.module';
 import { ProductModule } from './product/product.module';
 import { ProductOrderModule } from './product-order/product-order.module';
+import { ProductRatingModule } from './product-rating/product-rating.module';
 
 @Module({
-  imports: [PrismaModule, UserAccountModule, TribeModule, SellerModule, ProductCategoryModule, ProductModule, ProductOrderModule],
+  imports: [PrismaModule, UserAccountModule, TribeModule, SellerModule, ProductCategoryModule, ProductModule, ProductOrderModule, ProductRatingModule],
   controllers: [AppController],
   providers: [AppService],
 })
