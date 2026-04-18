@@ -13,10 +13,37 @@ export class ProductService {
     });
   }
 
-  async findAll() {
-    return this.prisma.product.findMany({
-      include: { seller: true, category: true }, // Expand seller and category details
-    });
+  async findAll(query: import('./dto/find-products.dto').FindProductsDto) {
+    const { page = 1, limit = 10, search, categoryId } = query;
+    const skip = (page - 1) * limit;
+
+    // Prisma Where conditions
+    const where: import('../generated/prisma/client').Prisma.ProductWhereInput = {
+      ...(categoryId ? { categoryId } : {}),
+      ...(search ? { name: { contains: search, mode: 'insensitive' } } : {}),
+    };
+
+    // Run count and findMany in parallel via transaction
+    const [total, data] = await this.prisma.$transaction([
+      this.prisma.product.count({ where }),
+      this.prisma.product.findMany({
+        where,
+        skip,
+        take: limit,
+        include: { seller: true, category: true },
+        orderBy: { createdAt: 'desc' }, // Newest first
+      }),
+    ]);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async findOne(id: string) {
