@@ -1,26 +1,42 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateProductCategoryDto } from './dto/create-product-category.dto';
 import { UpdateProductCategoryDto } from './dto/update-product-category.dto';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class ProductCategoryService {
-  create(createProductCategoryDto: CreateProductCategoryDto) {
-    return 'This action adds a new productCategory';
+  constructor(private readonly prisma: PrismaService) {}
+
+  async create(createProductCategoryDto: CreateProductCategoryDto) {
+    return this.prisma.productCategory.create({
+      data: createProductCategoryDto,
+    });
   }
 
-  findAll() {
-    return `This action returns all productCategory`;
+  async findAll() {
+    return this.prisma.productCategory.findMany();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} productCategory`;
+  async findOne(id: number) {
+    const category = await this.prisma.productCategory.findUnique({
+      where: { id },
+    });
+    if (!category) throw new NotFoundException(`ProductCategory with id ${id} not found`);
+    return category;
   }
 
-  update(id: number, updateProductCategoryDto: UpdateProductCategoryDto) {
-    return `This action updates a #${id} productCategory`;
+  async update(id: number, updateProductCategoryDto: UpdateProductCategoryDto) {
+    await this.findOne(id); // Ensures it exists first
+    return this.prisma.productCategory.update({
+      where: { id },
+      data: updateProductCategoryDto,
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} productCategory`;
+  async remove(id: number) {
+    await this.findOne(id); // Ensures it exists first
+    return this.prisma.productCategory.delete({
+      where: { id },
+    });
   }
 }
