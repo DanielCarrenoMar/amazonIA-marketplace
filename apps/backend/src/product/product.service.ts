@@ -7,9 +7,26 @@ import { PrismaService } from '../prisma/prisma.service';
 export class ProductService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(createProductDto: CreateProductDto) {
-    return this.prisma.product.create({
-      data: createProductDto,
+  async create(createProductDto: import('./dto/create-product.dto').CreateProductDto) {
+    const { coords, ...rest } = createProductDto;
+
+    // Use $transaction so we don't end up with orphaned rows if the spatial query fails
+    return this.prisma.$transaction(async (tx) => {
+      // 1. Create the standard product record
+      const product = await tx.product.create({
+        data: rest,
+      });
+
+      // 2. If coordinates are provided, perform a raw SQL update to inject Geography Point
+      if (coords && coords.latitude != null && coords.longitude != null) {
+        await tx.$executeRaw`
+          UPDATE product 
+          SET "locationCoords" = ST_SetSRID(ST_MakePoint(${coords.longitude}, ${coords.latitude}), 4326)
+          WHERE id = ${product.id}::uuid;
+        `;
+      }
+
+      return product;
     });
   }
 

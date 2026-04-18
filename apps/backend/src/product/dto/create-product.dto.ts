@@ -1,4 +1,6 @@
-import { IsString, IsNotEmpty, IsOptional, MaxLength, IsNumber, Min, IsUUID, IsInt } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, MaxLength, IsNumber, Min, IsUUID, IsInt, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
+import { LocationCoordsDto } from './location-coords.dto';
 
 export class CreateProductDto {
   @IsUUID()
@@ -49,4 +51,10 @@ export class CreateProductDto {
   @IsOptional()
   @MaxLength(100)
   locationRegion?: string;
+
+  // Spatial coordinates passed from frontend (e.g. Mapbox click)
+  @ValidateNested()
+  @Type(() => LocationCoordsDto)
+  @IsOptional()
+  coords?: LocationCoordsDto;
 }
