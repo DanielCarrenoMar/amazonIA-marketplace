@@ -63,6 +63,48 @@ export class ProductService {
     };
   }
 
+  async findNearby(query: import('./dto/find-nearby.dto').FindNearbyDto) {
+    const { lat, lng, radius = 10 } = query;
+    // PostGIS geography ST_DWithin works in meters
+    const radiusMeters = radius * 1000;
+
+    // $queryRaw with tagged templates → parameterized query (SQL-injection safe)
+    // ST_MakePoint(longitude, latitude) — note the order: lng first, then lat
+    // ST_DWithin returns TRUE if two geographies are within the given distance
+    // ST_Distance returns the exact distance in meters between the two points
+    const rows = await this.prisma.$queryRaw<any[]>`
+      SELECT
+        p.id,
+        p.name,
+        p.description,
+        p.price,
+        p.stock_available   AS "stockAvailable",
+        p.average_rating    AS "averageRating",
+        p.location_city     AS "locationCity",
+        p.location_region   AS "locationRegion",
+        ROUND(
+          ST_Distance(
+            p.location_coords,
+            ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)
+          )::numeric / 1000,
+          2
+        ) AS "distanceKm"
+      FROM product p
+      WHERE p.location_coords IS NOT NULL
+        AND ST_DWithin(
+          p.location_coords,
+          ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326),
+          ${radiusMeters}
+        )
+      ORDER BY "distanceKm" ASC;
+    `;
+
+    return {
+      data: rows,
+      meta: { lat, lng, radiusKm: radius, total: rows.length },
+    };
+  }
+
   async findOne(id: string) {
     const product = await this.prisma.product.findUnique({
       where: { id },

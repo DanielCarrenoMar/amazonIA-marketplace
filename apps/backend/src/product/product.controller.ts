@@ -6,6 +6,7 @@ import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { FindProductsDto } from './dto/find-products.dto';
+import { FindNearbyDto } from './dto/find-nearby.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('product')
@@ -23,6 +24,12 @@ export class ProductController {
   @Get()
   findAll(@Query() query: FindProductsDto) {
     return this.productService.findAll(query);
+  }
+
+  // Public — anyone can view a single product
+  @Get('nearby')
+  findNearby(@Query() query: FindNearbyDto) {
+    return this.productService.findNearby(query);
   }
 
   // Public — anyone can view a single product
