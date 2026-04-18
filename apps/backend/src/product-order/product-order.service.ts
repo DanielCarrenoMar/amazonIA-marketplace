@@ -32,7 +32,7 @@ export class ProductOrderService {
 
   // changedByUserId comes from the JWT token (req.user.id), NOT from the client body
   async update(id: string, changedByUserId: string, updateProductOrderDto: UpdateProductOrderDto) {
-    const order = await this.findOne(id);
+    const order = await this.findOne(id); // Already includes { product: true }
 
     const { statusNote, ...orderData } = updateProductOrderDto;
     const statusChanged = orderData.currentStatus && orderData.currentStatus !== order.currentStatus;
@@ -44,6 +44,7 @@ export class ProductOrderService {
         data: orderData,
       });
 
+      // 1. Audit Log: Log status changes
       if (statusChanged) {
         await tx.orderStatusHistory.create({
           data: {
@@ -54,6 +55,31 @@ export class ProductOrderService {
             statusNote: statusNote,
           },
         });
+      }
+
+      // 2. Seller Rating: If the buyer left a rating for the seller, recalculate the seller's global rating
+      if (orderData.sellerRatingValue !== undefined && order.product?.sellerId) {
+        const sellerId = order.product.sellerId;
+        
+        // Find the mathematical average of all completed ratings for this seller
+        const aggregate = await tx.productOrder.aggregate({
+          where: { 
+            product: { sellerId },
+            sellerRatingValue: { not: null }
+          },
+          _avg: { sellerRatingValue: true },
+        });
+
+        const newAverageRaw = aggregate._avg.sellerRatingValue;
+
+        // The schema restricts seller.rating to an INTEGER between 1 and 5
+        if (newAverageRaw !== null) {
+          const roundedRating = Math.round(newAverageRaw);
+          await tx.seller.update({
+            where: { id: sellerId },
+            data: { rating: roundedRating },
+          });
+        }
       }
 
       return updatedOrder;
