@@ -1,26 +1,46 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateSellerDto } from './dto/create-seller.dto';
 import { UpdateSellerDto } from './dto/update-seller.dto';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class SellerService {
-  create(createSellerDto: CreateSellerDto) {
-    return 'This action adds a new seller';
+  constructor(private readonly prisma: PrismaService) {}
+
+  async create(createSellerDto: CreateSellerDto) {
+    return this.prisma.seller.create({
+      data: createSellerDto,
+    });
   }
 
-  findAll() {
-    return `This action returns all seller`;
+  async findAll() {
+    return this.prisma.seller.findMany({
+      include: { user: true, tribe: true }, // Helpful to pull user details
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} seller`;
+  async findOne(id: string) {
+    const seller = await this.prisma.seller.findUnique({
+      where: { id },
+      include: { user: true, tribe: true },
+    });
+    
+    if (!seller) throw new NotFoundException(`Seller with ID ${id} not found`);
+    return seller;
   }
 
-  update(id: number, updateSellerDto: UpdateSellerDto) {
-    return `This action updates a #${id} seller`;
+  async update(id: string, updateSellerDto: UpdateSellerDto) {
+    await this.findOne(id); // Check existence
+    return this.prisma.seller.update({
+      where: { id },
+      data: updateSellerDto,
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} seller`;
+  async remove(id: string) {
+    await this.findOne(id); // Check existence
+    return this.prisma.seller.delete({
+      where: { id },
+    });
   }
 }
