@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -127,6 +127,29 @@ export class ProductService {
     await this.findOne(id); // Check existence
     return this.prisma.product.delete({
       where: { id },
+    });
+  }
+
+  async findBySeller(sellerId: string) {
+    return this.prisma.product.findMany({
+      where: { sellerId },
+      include: { seller: true, category: true },
+    });
+  }
+
+  async updateStock(id: string, quantity: number) {
+    const product = await this.findOne(id); // Check existence
+    const newStock = product.stockAvailable + quantity;
+
+    if (newStock < 0) {
+      throw new BadRequestException(
+        `Insufficient stock. Current: ${product.stockAvailable}, attempted change: ${quantity}`,
+      );
+    }
+
+    return this.prisma.product.update({
+      where: { id },
+      data: { stockAvailable: newStock },
     });
   }
 }
