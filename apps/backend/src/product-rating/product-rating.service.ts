@@ -7,9 +7,10 @@ import { PrismaService } from '../prisma/prisma.service';
 export class ProductRatingService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(createProductRatingDto: CreateProductRatingDto) {
+  // userAccountId comes from the JWT token (req.user.id), NOT from the client body
+  async create(userAccountId: string, createProductRatingDto: CreateProductRatingDto) {
     return this.prisma.productRating.create({
-      data: createProductRatingDto,
+      data: { ...createProductRatingDto, userAccountId },
     });
   }
 
@@ -19,15 +20,10 @@ export class ProductRatingService {
 
   async findOne(productId: string, userAccountId: string) {
     const rating = await this.prisma.productRating.findUnique({
-      where: {
-        productId_userAccountId: {
-          productId,
-          userAccountId,
-        },
-      },
+      where: { productId_userAccountId: { productId, userAccountId } },
       include: { user: true },
     });
-    
+
     if (!rating) throw new NotFoundException('ProductRating not found');
     return rating;
   }
@@ -35,12 +31,7 @@ export class ProductRatingService {
   async update(productId: string, userAccountId: string, updateProductRatingDto: UpdateProductRatingDto) {
     await this.findOne(productId, userAccountId); // Check existence
     return this.prisma.productRating.update({
-      where: {
-        productId_userAccountId: {
-          productId,
-          userAccountId,
-        },
-      },
+      where: { productId_userAccountId: { productId, userAccountId } },
       data: updateProductRatingDto,
     });
   }
@@ -48,12 +39,7 @@ export class ProductRatingService {
   async remove(productId: string, userAccountId: string) {
     await this.findOne(productId, userAccountId); // Check existence
     return this.prisma.productRating.delete({
-      where: {
-        productId_userAccountId: {
-          productId,
-          userAccountId,
-        },
-      },
+      where: { productId_userAccountId: { productId, userAccountId } },
     });
   }
 }

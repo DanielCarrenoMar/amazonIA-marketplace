@@ -6,9 +6,7 @@ export class CreateProductOrderDto {
   @IsNotEmpty()
   productId: string;
 
-  @IsUUID()
-  @IsNotEmpty()
-  buyerId: string;
+  // buyerId is NOT accepted from the client — injected automatically from the JWT token
 
   @IsInt()
   @Min(1)

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateProductOrderDto } from './dto/create-product-order.dto';
 import { UpdateProductOrderDto } from './dto/update-product-order.dto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -7,9 +7,10 @@ import { PrismaService } from '../prisma/prisma.service';
 export class ProductOrderService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(createProductOrderDto: CreateProductOrderDto) {
+  // buyerId comes from the JWT token (req.user.id), NOT from the client body
+  async create(buyerId: string, createProductOrderDto: CreateProductOrderDto) {
     return this.prisma.productOrder.create({
-      data: createProductOrderDto,
+      data: { ...createProductOrderDto, buyerId },
     });
   }
 
@@ -29,16 +30,12 @@ export class ProductOrderService {
     return order;
   }
 
-  async update(id: string, updateProductOrderDto: UpdateProductOrderDto) {
+  // changedByUserId comes from the JWT token (req.user.id), NOT from the client body
+  async update(id: string, changedByUserId: string, updateProductOrderDto: UpdateProductOrderDto) {
     const order = await this.findOne(id);
 
-    const { changedByUserId, statusNote, ...orderData } = updateProductOrderDto;
+    const { statusNote, ...orderData } = updateProductOrderDto;
     const statusChanged = orderData.currentStatus && orderData.currentStatus !== order.currentStatus;
-
-    // If status is changing, a changedByUserId must be provided for the audit log
-    if (statusChanged && !changedByUserId) {
-      throw new BadRequestException('changedByUserId is required when changing order status');
-    }
 
     // Use a transaction to keep the order update and history log atomic
     return this.prisma.$transaction(async (tx) => {
@@ -51,7 +48,7 @@ export class ProductOrderService {
         await tx.orderStatusHistory.create({
           data: {
             orderId: id,
-            changedByUserId: changedByUserId!,
+            changedByUserId,
             previousStatus: order.currentStatus,
             newStatus: orderData.currentStatus!,
             statusNote: statusNote,
@@ -67,8 +64,8 @@ export class ProductOrderService {
     await this.findOne(id); // Verify the order exists first
     return this.prisma.orderStatusHistory.findMany({
       where: { orderId: id },
-      orderBy: { createdAt: 'asc' }, // Chronological order
-      include: { changedByUser: true }, // Expand user details
+      orderBy: { createdAt: 'asc' },
+      include: { changedByUser: true },
     });
   }
 

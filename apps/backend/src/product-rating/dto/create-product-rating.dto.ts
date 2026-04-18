@@ -1,13 +1,11 @@
-import { IsNotEmpty, IsUUID, IsInt, Min, Max } from 'class-validator';
+import { IsUUID, IsInt, Min, Max, IsNotEmpty } from 'class-validator';
 
 export class CreateProductRatingDto {
   @IsUUID()
   @IsNotEmpty()
   productId: string;
 
-  @IsUUID()
-  @IsNotEmpty()
-  userAccountId: string;
+  // userAccountId is NOT accepted from the client — injected automatically from the JWT token
 
   @IsInt()
   @Min(1)
