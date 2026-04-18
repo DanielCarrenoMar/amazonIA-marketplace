@@ -7,10 +7,34 @@ import { PrismaService } from '../prisma/prisma.service';
 export class ProductRatingService {
   constructor(private readonly prisma: PrismaService) {}
 
+  // Recalculates the exact average rating of a product using Prisma's aggregate
+  private async recalculateProductAverage(tx: any, productId: string) {
+    const aggregate = await tx.productRating.aggregate({
+      where: { productId },
+      _avg: { ratingValue: true },
+    });
+
+    const newAverage = aggregate._avg.ratingValue;
+    
+    // Update the parent Product with the newly calculated mathematical average
+    await tx.product.update({
+      where: { id: productId },
+      data: { averageRating: newAverage },
+    });
+  }
+
   // userAccountId comes from the JWT token (req.user.id), NOT from the client body
   async create(userAccountId: string, createProductRatingDto: CreateProductRatingDto) {
-    return this.prisma.productRating.create({
-      data: { ...createProductRatingDto, userAccountId },
+    const { productId, ratingValue } = createProductRatingDto;
+
+    return this.prisma.$transaction(async (tx) => {
+      const newRating = await tx.productRating.create({
+        data: { productId, userAccountId, ratingValue },
+      });
+
+      // Recalculate average and inject it into the product
+      await this.recalculateProductAverage(tx, productId);
+      return newRating;
     });
   }
 
@@ -30,16 +54,31 @@ export class ProductRatingService {
 
   async update(productId: string, userAccountId: string, updateProductRatingDto: UpdateProductRatingDto) {
     await this.findOne(productId, userAccountId); // Check existence
-    return this.prisma.productRating.update({
-      where: { productId_userAccountId: { productId, userAccountId } },
-      data: updateProductRatingDto,
+
+    return this.prisma.$transaction(async (tx) => {
+      const updatedRating = await tx.productRating.update({
+        where: { productId_userAccountId: { productId, userAccountId } },
+        data: updateProductRatingDto,
+      });
+
+      // Recalculate average since the rating amount changed
+      await this.recalculateProductAverage(tx, productId);
+      return updatedRating;
     });
   }
 
   async remove(productId: string, userAccountId: string) {
     await this.findOne(productId, userAccountId); // Check existence
-    return this.prisma.productRating.delete({
-      where: { productId_userAccountId: { productId, userAccountId } },
+
+    return this.prisma.$transaction(async (tx) => {
+      const deletedRating = await tx.productRating.delete({
+        where: { productId_userAccountId: { productId, userAccountId } },
+      });
+
+      // Recalculate average since one rating was dropped
+      await this.recalculateProductAverage(tx, productId);
+      return deletedRating;
     });
   }
 }
+
