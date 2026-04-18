@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe } from '@nestjs/common';
 import { TribeService } from './tribe.service';
 import { CreateTribeDto } from './dto/create-tribe.dto';
 import { UpdateTribeDto } from './dto/update-tribe.dto';
@@ -18,17 +18,17 @@ export class TribeController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.tribeService.findOne(+id);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.tribeService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateTribeDto: UpdateTribeDto) {
-    return this.tribeService.update(+id, updateTribeDto);
+  update(@Param('id', ParseIntPipe) id: number, @Body() updateTribeDto: UpdateTribeDto) {
+    return this.tribeService.update(id, updateTribeDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.tribeService.remove(+id);
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.tribeService.remove(id);
   }
 }

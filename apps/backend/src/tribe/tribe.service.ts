@@ -1,26 +1,43 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateTribeDto } from './dto/create-tribe.dto';
 import { UpdateTribeDto } from './dto/update-tribe.dto';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class TribeService {
-  create(createTribeDto: CreateTribeDto) {
-    return 'This action adds a new tribe';
+  constructor(private readonly prisma: PrismaService) {}
+
+  async create(createTribeDto: CreateTribeDto) {
+    return this.prisma.tribe.create({
+      data: createTribeDto,
+    });
   }
 
-  findAll() {
-    return `This action returns all tribe`;
+  async findAll() {
+    return this.prisma.tribe.findMany();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} tribe`;
+  async findOne(id: number) {
+    const tribe = await this.prisma.tribe.findUnique({
+      where: { id },
+    });
+    
+    if (!tribe) throw new NotFoundException(`Tribe with ID ${id} not found`);
+    return tribe;
   }
 
-  update(id: number, updateTribeDto: UpdateTribeDto) {
-    return `This action updates a #${id} tribe`;
+  async update(id: number, updateTribeDto: UpdateTribeDto) {
+    await this.findOne(id); // Check existence
+    return this.prisma.tribe.update({
+      where: { id },
+      data: updateTribeDto,
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} tribe`;
+  async remove(id: number) {
+    await this.findOne(id); // Check existence
+    return this.prisma.tribe.delete({
+      where: { id },
+    });
   }
 }
