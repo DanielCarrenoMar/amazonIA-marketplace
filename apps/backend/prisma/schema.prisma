@@ -1,7 +1,8 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
+// =============================================================================
+// AmazonIA Marketplace — Prisma Schema
+// generator : prisma-client (Prisma 7)
+// datasource: PostgreSQL + PostGIS
+// =============================================================================
 
 generator client {
   provider = "prisma-client"
@@ -10,4 +11,213 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  // URL is injected at runtime via prisma.config.ts → process.env.DATABASE_URL
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  DELIVERED
+  CANCELED
+  REFUNDED
+
+  @@map("order_status_enum")
+}
+
+// ---------------------------------------------------------------------------
+// UserAccount
+// ---------------------------------------------------------------------------
+
+model UserAccount {
+  id                       String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  username                 String?   @unique @db.VarChar(50)
+  fullName                 String    @db.VarChar(255)
+  nationalId               String    @unique @db.VarChar(50)
+  age                      Int?
+  nationality              String?   @db.VarChar(100)
+  passwordHash             String    @db.VarChar(255)
+  email                    String    @unique @db.VarChar(255)
+  phonePrimary             String?   @db.VarChar(50)
+  phoneSecondary           String?   @db.VarChar(50)
+  walletHash               String?   @db.VarChar(255)
+
+  // Spatial — PostGIS type not natively supported by Prisma
+  locationCoords           Unsupported("geography(Point, 4326)")?
+  locationMapboxId         String?   @db.VarChar(100)
+  locationFormattedAddress String?
+  locationCity             String?   @db.VarChar(100)
+  locationRegion           String?   @db.VarChar(100)
+
+  createdAt                DateTime  @default(now()) @db.Timestamptz
+
+  // Relations
+  seller                   Seller?
+  productRatings           ProductRating[]
+  buyerOrders              ProductOrder[]         @relation("BuyerOrders")
+  orderStatusChanges       OrderStatusHistory[]   @relation("ChangedByUser")
+
+  @@index([locationCoords], type: Gist)
+  @@map("user_account")
+}
+
+// ---------------------------------------------------------------------------
+// Tribe
+// ---------------------------------------------------------------------------
+
+model Tribe {
+  id                       Int       @id @default(autoincrement())
+  name                     String    @db.VarChar(255)
+  description              String?
+
+  // Spatial
+  locationCoords           Unsupported("geography(Point, 4326)")?
+  locationMapboxId         String?   @db.VarChar(100)
+  locationFormattedAddress String?
+
+  // Relations
+  sellers                  Seller[]
+
+  @@map("tribe")
+}
+
+// ---------------------------------------------------------------------------
+// Seller  (1-to-1 extension of UserAccount)
+// ---------------------------------------------------------------------------
+
+model Seller {
+  // Shares the same UUID as the parent UserAccount row
+  id          String   @id @db.Uuid
+  tribeId     Int?
+  rating      Int?
+  description String?
+
+  // Relations
+  user        UserAccount @relation(fields: [id], references: [id], onDelete: Cascade)
+  tribe       Tribe?      @relation(fields: [tribeId], references: [id], onDelete: SetNull)
+  products    Product[]
+
+  @@map("seller")
+}
+
+// ---------------------------------------------------------------------------
+// ProductCategory
+// ---------------------------------------------------------------------------
+
+model ProductCategory {
+  id              Int       @id @default(autoincrement())
+  categoryName    String    @db.VarChar(100)
+  subcategoryName String?   @db.VarChar(100)
+
+  // Relations
+  products        Product[]
+
+  @@map("product_category")
+}
+
+// ---------------------------------------------------------------------------
+// Product
+// ---------------------------------------------------------------------------
+
+model Product {
+  id                       String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sellerId                 String    @db.Uuid
+  categoryId               Int
+  name                     String    @db.VarChar(255)
+  description              String?
+  price                    Decimal   @db.Decimal(12, 2)
+  stockAvailable           Int       @default(0)
+  averageRating            Decimal?  @db.Decimal(3, 2)
+
+  // Spatial
+  locationCoords           Unsupported("geography(Point, 4326)")?
+  locationMapboxId         String?   @db.VarChar(100)
+  locationFormattedAddress String?
+  locationCity             String?   @db.VarChar(100)
+  locationRegion           String?   @db.VarChar(100)
+
+  createdAt                DateTime  @default(now()) @db.Timestamptz
+  updatedAt                DateTime  @updatedAt @db.Timestamptz
+
+  // Relations
+  seller                   Seller          @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  category                 ProductCategory @relation(fields: [categoryId], references: [id])
+  ratings                  ProductRating[]
+  orders                   ProductOrder[]
+
+  @@index([sellerId])
+  @@index([locationCoords], type: Gist)
+  @@map("product")
+}
+
+// ---------------------------------------------------------------------------
+// ProductRating  (composite PK: one rating per user per product)
+// ---------------------------------------------------------------------------
+
+model ProductRating {
+  productId     String   @db.Uuid
+  userAccountId String   @db.Uuid
+  ratingValue   Int
+  createdAt     DateTime @default(now()) @db.Timestamptz
+
+  // Relations
+  product       Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user          UserAccount @relation(fields: [userAccountId], references: [id], onDelete: Cascade)
+
+  @@id([productId, userAccountId])
+  @@map("product_rating")
+}
+
+// ---------------------------------------------------------------------------
+// ProductOrder
+// ---------------------------------------------------------------------------
+
+model ProductOrder {
+  id                String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productId         String      @db.Uuid
+  buyerId           String      @db.Uuid
+  quantity          Int
+  totalAmount       Decimal     @db.Decimal(12, 2)
+  orderNotes        String?
+  sellerRatingValue Int?
+  buyerRatingValue  Int?
+  transactionHash   String?     @db.VarChar(255)
+  currentStatus     OrderStatus @default(PENDING)
+
+  createdAt         DateTime    @default(now()) @db.Timestamptz
+  updatedAt         DateTime    @updatedAt @db.Timestamptz
+
+  // Relations
+  product           Product              @relation(fields: [productId], references: [id])
+  buyer             UserAccount          @relation("BuyerOrders", fields: [buyerId], references: [id])
+  statusHistory     OrderStatusHistory[]
+
+  @@index([buyerId])
+  @@index([currentStatus])
+  @@map("product_order")
+}
+
+// ---------------------------------------------------------------------------
+// OrderStatusHistory  (append-only audit log)
+// ---------------------------------------------------------------------------
+
+model OrderStatusHistory {
+  id              Int         @id @default(autoincrement())
+  orderId         String      @db.Uuid
+  changedByUserId String      @db.Uuid
+  previousStatus  OrderStatus?
+  newStatus       OrderStatus
+  statusNote      String?
+  createdAt       DateTime    @default(now()) @db.Timestamptz
+
+  // Relations
+  order           ProductOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  changedByUser   UserAccount  @relation("ChangedByUser", fields: [changedByUserId], references: [id])
+
+  @@index([orderId, createdAt])
+  @@map("order_status_history")
 }

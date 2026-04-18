@@ -31,6 +31,58 @@
 $ pnpm install
 ```
 
+## Database (Prisma)
+
+### 1. Configure the connection
+
+Copy the example and fill in your PostgreSQL credentials:
+
+```bash
+# apps/backend/.env
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DB_NAME?schema=public"
+```
+
+> **Requirement:** The database must have the **PostGIS** extension installed.
+> ```sql
+> CREATE EXTENSION IF NOT EXISTS postgis;
+> ```
+
+### 2. Apply migrations (first time or after schema changes)
+
+```bash
+# Create a new migration and apply it to the database
+$ pnpm prisma migrate dev --name init
+
+# Apply pending migrations only (no new migration created)
+$ pnpm prisma migrate deploy
+```
+
+### 3. Generate the Prisma Client
+
+This runs automatically after `migrate dev`, but you can force it:
+
+```bash
+$ pnpm prisma generate
+```
+
+### 4. Apply the SQL schema directly (without migrations)
+
+Useful in development if you prefer using the raw DDL instead of the migration flow:
+
+```bash
+$ psql -U <user> -d <database> -f database/schema.sql
+```
+
+### 5. Explore the database with Prisma Studio
+
+```bash
+$ pnpm prisma studio
+```
+
+Opens a UI at `http://localhost:5555` to browse and edit data.
+
+---
+
 ## Compile and run the project
 
 ```bash
