@@ -2,6 +2,8 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
+import { UserAccountService } from '../user-account/user-account.service';
+import { CreateUserAccountDto } from '../user-account/dto/create-user-account.dto';
 import { LoginDto } from './dto/login.dto';
 import { JwtPayload } from './jwt.strategy';
 
@@ -10,6 +12,7 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
+    private readonly userAccountService: UserAccountService,
   ) {}
 
   // Centralized token generation — called on login and on refresh
@@ -25,6 +28,24 @@ export class AuthService {
       }),
     ]);
     return { accessToken, refreshToken };
+  }
+
+  // Registers a new user and immediately issues a token pair — no separate login required
+  async register(createUserAccountDto: CreateUserAccountDto) {
+    const user = await this.userAccountService.create(createUserAccountDto);
+
+    const payload: JwtPayload = { sub: user.id, email: user.email };
+    const tokens = await this.generateTokens(payload);
+
+    return {
+      ...tokens,
+      user: {
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName,
+        username: user.username,
+      },
+    };
   }
 
   async login(loginDto: LoginDto) {

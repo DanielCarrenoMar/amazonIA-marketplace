@@ -3,10 +3,17 @@ import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RefreshDto } from './dto/refresh.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
+import { CreateUserAccountDto } from '../user-account/dto/create-user-account.dto';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+  // Public — creates a user and returns an immediate token pair (no separate login needed)
+  @Post('register')
+  register(@Body() createUserAccountDto: CreateUserAccountDto) {
+    return this.authService.register(createUserAccountDto);
+  }
 
   // Returns both accessToken (15m) and refreshToken (7d)
   @Post('login')
