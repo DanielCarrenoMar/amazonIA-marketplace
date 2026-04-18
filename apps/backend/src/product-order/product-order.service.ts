@@ -1,26 +1,46 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateProductOrderDto } from './dto/create-product-order.dto';
 import { UpdateProductOrderDto } from './dto/update-product-order.dto';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class ProductOrderService {
-  create(createProductOrderDto: CreateProductOrderDto) {
-    return 'This action adds a new productOrder';
+  constructor(private readonly prisma: PrismaService) {}
+
+  async create(createProductOrderDto: CreateProductOrderDto) {
+    return this.prisma.productOrder.create({
+      data: createProductOrderDto,
+    });
   }
 
-  findAll() {
-    return `This action returns all productOrder`;
+  async findAll() {
+    return this.prisma.productOrder.findMany({
+      include: { product: true, buyer: true, statusHistory: true },
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} productOrder`;
+  async findOne(id: string) {
+    const order = await this.prisma.productOrder.findUnique({
+      where: { id },
+      include: { product: true, buyer: true, statusHistory: true },
+    });
+    
+    if (!order) throw new NotFoundException(`ProductOrder with ID ${id} not found`);
+    return order;
   }
 
-  update(id: number, updateProductOrderDto: UpdateProductOrderDto) {
-    return `This action updates a #${id} productOrder`;
+  async update(id: string, updateProductOrderDto: UpdateProductOrderDto) {
+    await this.findOne(id); // Check existence
+    return this.prisma.productOrder.update({
+      where: { id },
+      data: updateProductOrderDto,
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} productOrder`;
+  async remove(id: string) {
+    await this.findOne(id); // Check existence
+    return this.prisma.productOrder.delete({
+      where: { id },
+    });
   }
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe } from '@nestjs/common';
 import { ProductOrderService } from './product-order.service';
 import { CreateProductOrderDto } from './dto/create-product-order.dto';
 import { UpdateProductOrderDto } from './dto/update-product-order.dto';
@@ -18,17 +18,17 @@ export class ProductOrderController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.productOrderService.findOne(+id);
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
+    return this.productOrderService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateProductOrderDto: UpdateProductOrderDto) {
-    return this.productOrderService.update(+id, updateProductOrderDto);
+  update(@Param('id', ParseUUIDPipe) id: string, @Body() updateProductOrderDto: UpdateProductOrderDto) {
+    return this.productOrderService.update(id, updateProductOrderDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.productOrderService.remove(+id);
+  remove(@Param('id', ParseUUIDPipe) id: string) {
+    return this.productOrderService.remove(id);
   }
 }
