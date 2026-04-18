@@ -5,7 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class ProductService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async create(createProductDto: import('./dto/create-product.dto').CreateProductDto) {
     const { coords, ...rest } = createProductDto;
@@ -35,7 +35,7 @@ export class ProductService {
     const skip = (page - 1) * limit;
 
     // Prisma Where conditions
-    const where: import('../generated/prisma/client').Prisma.ProductWhereInput = {
+    const where: import('@prisma/client').Prisma.ProductWhereInput = {
       ...(categoryId ? { categoryId } : {}),
       ...(search ? { name: { contains: search, mode: 'insensitive' } } : {}),
     };
@@ -110,7 +110,7 @@ export class ProductService {
       where: { id },
       include: { seller: true, category: true },
     });
-    
+
     if (!product) throw new NotFoundException(`Product with ID ${id} not found`);
     return product;
   }

@@ -244,8 +244,8 @@ async function main() {
 
   const ratingsData = [
     { productId: prodSamsung.id, userAccountId: buyer1.id, ratingValue: 5 },
-    { productId: prodIphone.id,  userAccountId: buyer1.id, ratingValue: 4 },
-    { productId: prodNike.id,    userAccountId: buyer1.id, ratingValue: 5 },
+    { productId: prodIphone.id, userAccountId: buyer1.id, ratingValue: 4 },
+    { productId: prodNike.id, userAccountId: buyer1.id, ratingValue: 5 },
   ];
 
   for (const ratingData of ratingsData) {
@@ -285,10 +285,10 @@ async function main() {
 
   await prisma.orderStatusHistory.createMany({
     data: [
-      { orderId: order1.id, changedByUserId: buyer1.id,    previousStatus: null,        newStatus: 'PENDING',   statusNote: 'Orden creada' },
-      { orderId: order1.id, changedByUserId: sellerUser1.id, previousStatus: 'PENDING', newStatus: 'PAID',      statusNote: 'Pago confirmado' },
-      { orderId: order1.id, changedByUserId: sellerUser1.id, previousStatus: 'PAID',    newStatus: 'SHIPPED',   statusNote: 'Paquete enviado via MRW' },
-      { orderId: order1.id, changedByUserId: buyer1.id,    previousStatus: 'SHIPPED',   newStatus: 'DELIVERED', statusNote: 'Recibido en perfectas condiciones' },
+      { orderId: order1.id, changedByUserId: buyer1.id, previousStatus: null, newStatus: 'PENDING', statusNote: 'Orden creada' },
+      { orderId: order1.id, changedByUserId: sellerUser1.id, previousStatus: 'PENDING', newStatus: 'PAID', statusNote: 'Pago confirmado' },
+      { orderId: order1.id, changedByUserId: sellerUser1.id, previousStatus: 'PAID', newStatus: 'SHIPPED', statusNote: 'Paquete enviado via MRW' },
+      { orderId: order1.id, changedByUserId: buyer1.id, previousStatus: 'SHIPPED', newStatus: 'DELIVERED', statusNote: 'Recibido en perfectas condiciones' },
     ],
   });
 
@@ -317,7 +317,7 @@ async function main() {
 
   await prisma.orderStatusHistory.createMany({
     data: [
-      { orderId: order2.id, changedByUserId: buyer1.id,    previousStatus: null,      newStatus: 'PENDING', statusNote: 'Orden creada' },
+      { orderId: order2.id, changedByUserId: buyer1.id, previousStatus: null, newStatus: 'PENDING', statusNote: 'Orden creada' },
       { orderId: order2.id, changedByUserId: sellerUser2.id, previousStatus: 'PENDING', newStatus: 'PAID', statusNote: 'Transferencia recibida' },
     ],
   });

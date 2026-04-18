@@ -1,5 +1,5 @@
 import { IsString, IsNotEmpty, IsOptional, MaxLength, IsNumber, Min, IsUUID, IsInt, IsEnum } from 'class-validator';
-import { OrderStatus } from '../../generated/prisma/client';
+import { OrderStatus } from '@prisma/client';
 
 export class CreateProductOrderDto {
   @IsUUID()

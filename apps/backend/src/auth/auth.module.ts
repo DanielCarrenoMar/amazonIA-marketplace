@@ -17,7 +17,7 @@ import { UserAccountModule } from '../user-account/user-account.module';
     UserAccountModule, // Needed so AuthService can inject UserAccountService for registration
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, JwtAuthGuard],
   exports: [JwtAuthGuard],
 })
 export class AuthModule {}
