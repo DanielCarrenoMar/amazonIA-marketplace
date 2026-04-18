@@ -31,49 +31,44 @@
 $ pnpm install
 ```
 
-## Database (Prisma)
+## Database (SQL-First Workflow)
+
+This project uses a **SQL-First** approach. `database/schema.sql` is the absolute source of truth for the database schema (useful for advanced features like PostGIS and Triggers). Prisma is strictly used as the ORM client to interact with the data. 
+
+**Do not use `prisma migrate` in this project.**
 
 ### 1. Configure the connection
 
-Copy the example and fill in your PostgreSQL credentials:
+Create your environment variables and fill in your PostgreSQL credentials:
 
 ```bash
 # apps/backend/.env
-DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DB_NAME?schema=public"
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DB_NAME?sslmode=require"
 ```
 
-> **Requirement:** The database must have the **PostGIS** extension installed.
-> ```sql
-> CREATE EXTENSION IF NOT EXISTS postgis;
-> ```
+### 2. Apply the SQL schema to the database
 
-### 2. Apply migrations (first time or after schema changes)
+Any time you modify `database/schema.sql` (to add tables, columns, or extensions), execute it directly against your database using the Prisma CLI:
 
 ```bash
-# Create a new migration and apply it to the database
-$ pnpm prisma migrate dev --name init
-
-# Apply pending migrations only (no new migration created)
-$ pnpm prisma migrate deploy
+$ pnpm prisma db execute --file database/schema.sql
 ```
 
-### 3. Generate the Prisma Client
+### 3. Sync the Prisma Schema
 
-This runs automatically after `migrate dev`, but you can force it:
+If you modified tables or columns in your SQL, you must manually mirror those changes in `prisma/schema.prisma`. *Fidelity is key!* Both files must match perfectly.
+
+### 4. Generate the Prisma Client
+
+After updating your database and your `schema.prisma`, regenerate the TypeScript ORM client so NestJS can see the new types:
 
 ```bash
 $ pnpm prisma generate
 ```
 
-### 4. Apply the SQL schema directly (without migrations)
-
-Useful in development if you prefer using the raw DDL instead of the migration flow:
-
-```bash
-$ psql -U <user> -d <database> -f database/schema.sql
-```
-
 ### 5. Explore the database with Prisma Studio
+
+Need to see the data inside your tables?
 
 ```bash
 $ pnpm prisma studio
