@@ -22,6 +22,12 @@ export class ProductOrderController {
     return this.productOrderService.findOne(id);
   }
 
+  // Must be declared before :id routes to avoid route conflicts
+  @Get(':id/history')
+  findHistory(@Param('id', ParseUUIDPipe) id: string) {
+    return this.productOrderService.findHistory(id);
+  }
+
   @Patch(':id')
   update(@Param('id', ParseUUIDPipe) id: string, @Body() updateProductOrderDto: UpdateProductOrderDto) {
     return this.productOrderService.update(id, updateProductOrderDto);
