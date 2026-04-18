@@ -1,12 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe, UseGuards } from '@nestjs/common';
 import { SellerService } from './seller.service';
 import { CreateSellerDto } from './dto/create-seller.dto';
 import { UpdateSellerDto } from './dto/update-seller.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('seller')
 export class SellerController {
   constructor(private readonly sellerService: SellerService) {}
 
+  @UseGuards(JwtAuthGuard)
   @Post()
   create(@Body() createSellerDto: CreateSellerDto) {
     return this.sellerService.create(createSellerDto);
@@ -22,11 +24,13 @@ export class SellerController {
     return this.sellerService.findOne(id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Patch(':id')
   update(@Param('id', ParseUUIDPipe) id: string, @Body() updateSellerDto: UpdateSellerDto) {
     return this.sellerService.update(id, updateSellerDto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.sellerService.remove(id);
