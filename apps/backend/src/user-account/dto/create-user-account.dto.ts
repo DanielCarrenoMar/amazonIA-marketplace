@@ -29,7 +29,7 @@ export class CreateUserAccountDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
-  passwordHash: string; // Will be hashed by the server before saving, but the DTO accepts the raw string
+  password: string; // Plain text — will be hashed by the service before saving to the database
 
   @IsEmail()
   @IsNotEmpty()
