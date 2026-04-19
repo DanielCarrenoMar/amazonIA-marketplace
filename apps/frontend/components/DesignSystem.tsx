@@ -18,12 +18,17 @@ import {
   Search,
   Mail,
   Lock,
-  MapPin
+  MapPin,
+  Info
 } from "lucide-react";
 import { Button } from "./ui/Button";
 import { Badge } from "./ui/Badge";
 import { Input } from "./ui/Input";
 import { Select } from "./ui/Select";
+import { Tooltip } from "./ui/Tooltip";
+import { Checkbox } from "./ui/Checkbox";
+import { Switch } from "./ui/Switch";
+import { Radio } from "./ui/Radio";
 import {
   Card,
   CardHeader,
@@ -337,6 +342,104 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
                 </div>
               </div>
             </div>
+
+            {/* Separador */}
+            <div className="w-full h-px bg-border my-10" />
+
+            {/* Checkboxes */}
+            <div>
+              <h3 className="text-sm font-semibold text-muted uppercase tracking-wider mb-6">Checkboxes</h3>
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <Checkbox 
+                  label="Recordar mi sesión" 
+                  defaultChecked 
+                />
+                
+                <Checkbox 
+                  label="Términos y reglas" 
+                  description="Al aceptar nos permites operar tu info."
+                />
+
+                <Checkbox 
+                  label="Recibir correos" 
+                  description="Deshabilitado temporalmente."
+                  defaultChecked
+                  disabled
+                />
+
+                <Checkbox 
+                  label="Confirmar compra" 
+                  error="Debes marcar esta casilla."
+                />
+              </div>
+            </div>
+
+            {/* Separador */}
+            <div className="w-full h-px bg-border my-10" />
+
+            {/* Radio Buttons */}
+            <div>
+              <h3 className="text-sm font-semibold text-muted uppercase tracking-wider mb-6">Radio Buttons</h3>
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <Radio 
+                  name="plan"
+                  label="Plan Básico" 
+                  description="Ideal para empezar."
+                />
+                
+                <Radio 
+                  name="plan"
+                  label="Plan Premium" 
+                  description="Todas las comisiones incluidas."
+                  defaultChecked
+                />
+
+                <Radio 
+                  name="status"
+                  label="Vendedor Verificado" 
+                  description="Insignia asignada."
+                  defaultChecked
+                  disabled
+                />
+
+                <Radio 
+                  name="status"
+                  label="Vendedor Suspendido" 
+                  error="Requiere apelación."
+                />
+              </div>
+            </div>
+
+            {/* Separador */}
+            <div className="w-full h-px bg-border my-10" />
+
+            {/* Switches */}
+            <div>
+              <h3 className="text-sm font-semibold text-muted uppercase tracking-wider mb-6">Toggles / Switches</h3>
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <Switch 
+                  label="Perfil Público" 
+                />
+                
+                <Switch 
+                  label="Notificaciones Push" 
+                  description="Recibe alertas en tu teléfono sobre ventas."
+                  defaultChecked
+                />
+
+                <Switch 
+                  label="Seguridad Extendida" 
+                  description="Protección activa indisponible."
+                  defaultChecked
+                  disabled
+                />
+
+                <Switch 
+                  label="Modo Oscuro" 
+                  disabled
+                />
+              </div>
+            </div>
           </Card>
         </section>
 
@@ -492,6 +595,42 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
               </Card>
             </div>
           </div>
+        </section>
+
+        {/* Tooltips section */}
+        <section className="space-y-6">
+          <h2 className="text-2xl font-outfit font-semibold border-l-4 border-brand-accent pl-4">Tooltips</h2>
+          <Card padding="lg" rounded="3xl" overflowVisible>
+            <div className="space-y-4">
+              <p className="text-muted mb-8">
+                Componente sumamente liviano en performance (basado en selectores de grupo CSS de Tailwind) con 4 posiciones que aparece al hacer hover sobre cualquier elemento.
+              </p>
+              <div className="flex flex-wrap gap-12 items-center py-6">
+                <Tooltip content="Tooltip superior ideal para menús" position="top">
+                  <Button variant="outline">Top (Arriba)</Button>
+                </Tooltip>
+
+                <Tooltip content="Se muestra hacia la derecha" position="right">
+                  <Button variant="outline">Right (Derecha)</Button>
+                </Tooltip>
+                
+                <Tooltip content="Se muestra por debajo" position="bottom">
+                  <Button variant="outline">Bottom (Abajo)</Button>
+                </Tooltip>
+
+                <Tooltip content="Se muestra hacia la izquierda" position="left">
+                  <Button variant="outline">Left (Izquierda)</Button>
+                </Tooltip>
+
+                <Tooltip content="Despacho en 48 horas laborales" position="top" className="bg-brand-primary-dark">
+                  <span className="cursor-help flex items-center text-sm font-medium text-brand-primary hover:text-brand-primary-dark transition-colors">
+                    <Info className="w-5 h-5 mr-1.5" />
+                    Info. de Envío
+                  </span>
+                </Tooltip>
+              </div>
+            </div>
+          </Card>
         </section>
 
         {/* Modal section */}
