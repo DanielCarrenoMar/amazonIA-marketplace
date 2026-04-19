@@ -35,23 +35,6 @@
   --foreground: #111827;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #f3f4f6;
-  }
-  
-  @theme {
-    --color-background: #0a0a0a;
-    --color-foreground: #f3f4f6;
-    --color-muted: #9ca3af;
-    --color-border: #374151;
-    --color-brand-nature-bg: #022c22;
-    --color-brand-nature-content: #d1fae5;
-  }
-}
-
-
 body {
   background-color: var(--background);
   color: var(--foreground);

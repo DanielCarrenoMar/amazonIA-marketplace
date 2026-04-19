@@ -101,7 +101,7 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
           {/* Components section */}
           <section className="space-y-6">
             <h2 className="text-2xl font-outfit font-semibold border-l-4 border-brand-accent pl-4">Componentes Base</h2>
-            <div className="bg-white dark:bg-zinc-900 p-8 rounded-3xl border border-border shadow-sm space-y-8">
+            <div className="bg-white p-8 rounded-3xl border border-border shadow-sm space-y-8">
               <div className="flex items-center gap-2 p-4 bg-brand-primary-light rounded-xl border border-brand-primary/20">
                 <div className="w-8 h-8 rounded-full bg-brand-primary flex items-center justify-center text-white">
                   <Globe className="w-5 h-5" />
@@ -121,11 +121,11 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
         {/* Icons section */}
         <section className="space-y-6">
           <h2 className="text-2xl font-outfit font-semibold border-l-4 border-brand-primary-dark pl-4">Iconografía</h2>
-          <div className="bg-white dark:bg-zinc-900 p-8 rounded-3xl border border-border shadow-sm">
+          <div className="bg-white p-8 rounded-3xl border border-border shadow-sm">
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-8">
               {icons.map(({ Icon, label, color }, idx) => (
                 <div key={idx} className="flex flex-col items-center gap-3">
-                  <div className={`p-4 rounded-2xl bg-gray-50 dark:bg-zinc-800 ${color} transition-transform hover:scale-110`}>
+                  <div className={`p-4 rounded-2xl bg-gray-50 ${color} transition-transform hover:scale-110`}>
                     <Icon className="w-8 h-8" />
                   </div>
                   <span className="text-xs font-medium text-muted">{label}</span>
@@ -138,7 +138,7 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
         {/* Buttons section */}
         <section className="space-y-6">
           <h2 className="text-2xl font-outfit font-semibold border-l-4 border-brand-accent pl-4">Botones</h2>
-          <div className="bg-white dark:bg-zinc-900 p-8 rounded-3xl border border-border shadow-sm space-y-10">
+          <div className="bg-white p-8 rounded-3xl border border-border shadow-sm space-y-10">
             
             {/* Variantes */}
             <div className="space-y-3">
@@ -188,7 +188,7 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
         {/* Badges section */}
         <section className="space-y-6">
           <h2 className="text-2xl font-outfit font-semibold border-l-4 border-brand-secondary pl-4">Badges</h2>
-          <div className="bg-white dark:bg-zinc-900 p-8 rounded-3xl border border-border shadow-sm space-y-10">
+          <div className="bg-white p-8 rounded-3xl border border-border shadow-sm space-y-10">
             
             {/* Variantes */}
             <div className="space-y-3">

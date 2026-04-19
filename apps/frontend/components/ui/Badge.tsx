@@ -17,7 +17,7 @@ export function Badge({
   const variants = {
     primary: "bg-brand-primary/15 text-brand-primary",
     secondary: "bg-brand-secondary/15 text-brand-secondary",
-    accent: "bg-brand-accent/20 text-amber-700 dark:text-brand-accent",
+    accent: "bg-brand-accent/20 text-amber-700",
     danger: "bg-brand-urgency/15 text-brand-urgency",
     outline: "border border-border text-muted",
     nature: "bg-brand-nature-bg text-brand-nature-content border border-brand-primary-light",
