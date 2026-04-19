@@ -8,13 +8,17 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { FindProductsDto } from './dto/find-products.dto';
 import { FindNearbyDto } from './dto/find-nearby.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '@prisma/client';
 
 @Controller('product')
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
-  // Requires login — only authenticated sellers can create products
-  @UseGuards(JwtAuthGuard)
+  // Only authenticated sellers or admins can create products
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SELLER, UserRole.ADMIN)
   @Post()
   create(@Body() createProductDto: CreateProductDto) {
     return this.productService.create(createProductDto);
@@ -38,15 +42,17 @@ export class ProductController {
     return this.productService.findOne(id);
   }
 
-  // Requires login — only authenticated users can update products
-  @UseGuards(JwtAuthGuard)
+  // Only authenticated sellers or admins can update products
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SELLER, UserRole.ADMIN)
   @Patch(':id')
   update(@Param('id', ParseUUIDPipe) id: string, @Body() updateProductDto: UpdateProductDto) {
     return this.productService.update(id, updateProductDto);
   }
 
-  // Requires login — only authenticated users can delete products
-  @UseGuards(JwtAuthGuard)
+  // Only Admins can delete products
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @Delete(':id')
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.productService.remove(id);

@@ -3,8 +3,10 @@ packages:
 
 onlyBuiltDependencies:
   - '@nestjs/core'
+  - '@prisma/engines'
   - '@swc/core'
   - bcrypt
   - esbuild
+  - prisma
   - sharp
   - unrs-resolver

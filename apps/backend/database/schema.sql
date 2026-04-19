@@ -10,6 +10,7 @@ CREATE EXTENSION IF NOT EXISTS postgis;      -- spatial data support
 -- ---------------------------------------------------------------------------
 DO $$
 BEGIN
+    -- Order Status
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'order_status_enum') THEN
         CREATE TYPE order_status_enum AS ENUM (
             'PENDING',
@@ -18,6 +19,15 @@ BEGIN
             'DELIVERED',
             'CANCELED',
             'REFUNDED'
+        );
+    END IF;
+
+    -- User Roles
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role_enum') THEN
+        CREATE TYPE user_role_enum AS ENUM (
+            'BUYER',
+            'SELLER',
+            'ADMIN'
         );
     END IF;
 END$$;
@@ -35,6 +45,7 @@ CREATE TABLE IF NOT EXISTS user_account (
     nationality                 VARCHAR(100),
     password_hash               VARCHAR(255)             NOT NULL,
     email                       VARCHAR(255)             UNIQUE NOT NULL,
+    role                        user_role_enum           NOT NULL DEFAULT 'BUYER',
     phone_primary               VARCHAR(50),
     phone_secondary             VARCHAR(50),
     wallet_hash                 VARCHAR(255),

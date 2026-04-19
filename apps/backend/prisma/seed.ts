@@ -13,7 +13,7 @@
  */
 
 import 'dotenv/config';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, UserRole } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import * as bcrypt from 'bcrypt';
 
@@ -47,7 +47,7 @@ async function main() {
   console.log('  → UserAccounts...');
   const password = await bcrypt.hash('Password123!', SALT_ROUNDS);
 
-  const [buyer1, sellerUser1, sellerUser2] = await Promise.all([
+  const [buyer1, sellerUser1, sellerUser2, admin1] = await Promise.all([
     prisma.userAccount.upsert({
       where: { email: 'comprador@amazonia.com' },
       update: {},
@@ -57,6 +57,7 @@ async function main() {
         email: 'comprador@amazonia.com',
         passwordHash: password,
         username: 'carlospz',
+        role: UserRole.BUYER,
         age: 30,
         nationality: 'Venezolano',
         phonePrimary: '+58 412 1000001',
@@ -74,6 +75,7 @@ async function main() {
         email: 'vendedor1@amazonia.com',
         passwordHash: password,
         username: 'mariagonz',
+        role: UserRole.SELLER,
         age: 35,
         nationality: 'Venezolana',
         phonePrimary: '+58 414 2000002',
@@ -91,12 +93,25 @@ async function main() {
         email: 'vendedor2@amazonia.com',
         passwordHash: password,
         username: 'joserod',
+        role: UserRole.SELLER,
         age: 42,
         nationality: 'Venezolano',
         phonePrimary: '+58 416 3000003',
         locationCity: 'Valencia',
         locationRegion: 'Carabobo',
         locationFormattedAddress: 'Av. Bolívar Norte, Valencia',
+      },
+    }),
+    prisma.userAccount.upsert({
+      where: { email: 'admin@amazonia.com' },
+      update: {},
+      create: {
+        fullName: 'Administrador Sistema',
+        nationalId: 'V-00000000',
+        email: 'admin@amazonia.com',
+        passwordHash: password,
+        username: 'admin',
+        role: UserRole.ADMIN,
       },
     }),
   ]);
@@ -331,6 +346,7 @@ async function main() {
   console.log(`  🛒 Comprador : comprador@amazonia.com`);
   console.log(`  🏪 Vendedor 1: vendedor1@amazonia.com  (Electrónica · Caracas)`);
   console.log(`  🏪 Vendedor 2: vendedor2@amazonia.com  (Moda · Valencia)`);
+  console.log(`  ⚙️ Admin     : admin@amazonia.com`);
 }
 
 main()
