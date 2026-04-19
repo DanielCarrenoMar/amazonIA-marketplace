@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { CreateProductOrderDto } from './dto/create-product-order.dto';
 import { UpdateProductOrderDto } from './dto/update-product-order.dto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -9,8 +9,35 @@ export class ProductOrderService {
 
   // buyerId comes from the JWT token (req.user.id), NOT from the client body
   async create(buyerId: string, createProductOrderDto: CreateProductOrderDto) {
-    return this.prisma.productOrder.create({
-      data: { ...createProductOrderDto, buyerId },
+    return this.prisma.$transaction(async (tx) => {
+      // 1. Get the current stock
+      const product = await tx.product.findUnique({
+        where: { id: createProductOrderDto.productId },
+        select: { stockAvailable: true },
+      });
+
+      if (!product) {
+        throw new NotFoundException(`Product with ID ${createProductOrderDto.productId} not found`);
+      }
+
+      // 2. Validate and calculate new stock
+      const newStock = product.stockAvailable - createProductOrderDto.quantity;
+      if (newStock < 0) {
+        throw new BadRequestException(
+          `Insufficient stock. Current: ${product.stockAvailable}, needed: ${createProductOrderDto.quantity}`,
+        );
+      }
+
+      // 3. Update stock
+      await tx.product.update({
+        where: { id: createProductOrderDto.productId },
+        data: { stockAvailable: newStock },
+      });
+
+      // 4. Create the order
+      return tx.productOrder.create({
+        data: { ...createProductOrderDto, buyerId },
+      });
     });
   }
 
