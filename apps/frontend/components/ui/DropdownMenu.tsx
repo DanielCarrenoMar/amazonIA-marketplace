@@ -68,7 +68,7 @@ export function DropdownMenu({
                   onSelect(option.value);
                   onClose();
                 }}
-                className={`flex items-center gap-2 w-full px-3 py-2.5 text-sm cursor-pointer rounded-lg transition-colors
+                className={`flex items-center gap-3 w-full px-3 py-2.5 text-sm cursor-pointer rounded-lg transition-colors
                   ${isSelected 
                     ? 'bg-brand-primary/10 text-brand-primary font-medium' 
                     : 'text-foreground hover:bg-brand-nature-bg hover:text-brand-primary-dark'

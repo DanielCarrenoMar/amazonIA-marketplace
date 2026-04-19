@@ -50,7 +50,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         <div className={`${baseStyles} ${stateStyles}`}>
           {/* Left Icon (optional) */}
           {leftIcon && (
-            <div className="pl-3.5 pr-1 flex items-center text-muted pointer-events-none">
+            <div className="pl-4 pr-3 flex items-center text-muted pointer-events-none">
               {leftIcon}
             </div>
           )}

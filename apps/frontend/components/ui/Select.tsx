@@ -92,12 +92,12 @@ export const Select = React.forwardRef<HTMLDivElement, SelectProps>(
               id={selectId}
               disabled={disabled}
               onClick={() => setIsOpen(!isOpen)}
-              className={`${baseStyles} ${stateStyles} cursor-pointer ${leftIcon ? "py-3 pl-11" : "py-3 pl-4"} pr-10`}
+              className={`${baseStyles} ${stateStyles} cursor-pointer ${leftIcon ? "py-3 pl-12" : "py-3 pl-4"} pr-10`}
               aria-haspopup="listbox"
               aria-expanded={isOpen}
             >
               {leftIcon && (
-                <div className="absolute left-3.5 flex items-center text-muted pointer-events-none">
+                <div className="absolute left-4 flex items-center text-muted pointer-events-none">
                   {leftIcon}
                 </div>
               )}
