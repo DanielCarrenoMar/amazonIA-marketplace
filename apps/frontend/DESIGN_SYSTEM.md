@@ -30,23 +30,24 @@ Nuestros colores están inspirados en el ecosistema amazónico: la selva (Esmera
 
 ## ✍️ Tipografía
 
-Usamos una combinación de fuentes modernas y legibles compatibles con entornos multilingües (incluyendo soporte para glifos extendidos si es necesario).
+Usamos una combinación de fuentes modernas y legibles que refuerzan la identidad tecnológica y amigable del proyecto.
 
-*   **Principal:** Inter / Geist Sans (San Serif)
-    *   *Uso:* Interfaz de usuario, botones, campos de texto.
-*   **Encabezados:** Tipografía con peso semi-bold o bold para jerarquía clara.
+*   **Principal:** **Poppins** (Sans Serif)
+    *   *Uso:* Cuerpo de texto, botones, componentes de UI y navegación. Proporciona una lectura clara y geométrica.
+*   **Secundaria / Display:** **Outfit** (Sans Serif)
+    *   *Uso:* Encabezados (`h1`, `h2`, `h3`), títulos de secciones y elementos destacados. Aporta un toque moderno y distintivo.
 
 ---
 
 ## 🛠️ Uso en Código (Tailwind CSS v4)
 
-Los colores están registrados en `app/globals.css` bajo el bloque `@theme`. Puedes usarlos directamente con utilidades de Tailwind:
+Los colores y fuentes están registrados en `app/globals.css` bajo el bloque `@theme`.
 
 ```tsx
-// Ejemplo de uso en un botón
-<button className="bg-brand-primary hover:bg-brand-primary-dark text-white px-4 py-2 rounded-lg">
-  Comenzar
-</button>
+// Ejemplo de uso de fuentes
+<h1 className="font-outfit text-brand-primary-dark">Título en Outfit</h1>
+<p className="font-sans">Cuerpo de texto en Poppins</p>
+```
 
 // Ejemplo de una tarjeta con fondo natural
 <div className="bg-brand-nature-bg border border-brand-primary-light p-6 rounded-xl">

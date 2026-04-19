@@ -20,7 +20,7 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
     <div className="min-h-screen bg-background p-8 md:p-20 font-sans">
       <header className="max-w-6xl mx-auto mb-16 flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">
         <div className="flex items-center gap-4">
-          <h1 className="text-4xl font-bold tracking-tight text-brand-primary-dark">
+          <h1 className="text-4xl font-outfit font-bold tracking-tight text-brand-primary-dark">
             Amazonia IA <span className="text-brand-primary">Design System</span>
           </h1>
         </div>
@@ -36,7 +36,7 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
         {/* Color Palette section */}
         <section>
           <div className="flex items-center gap-3 mb-8">
-            <h2 className="text-2xl font-semibold border-l-4 border-brand-primary pl-4">Paleta de Colores</h2>
+            <h2 className="text-2xl font-outfit font-semibold border-l-4 border-brand-primary pl-4">Paleta de Colores</h2>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
             {colors.map((color) => (
@@ -55,23 +55,23 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
         <div className="grid md:grid-cols-2 gap-12">
           {/* Typography section */}
           <section className="space-y-6">
-            <h2 className="text-2xl font-semibold border-l-4 border-brand-secondary pl-4">Tipografía</h2>
-            <div className="bg-brand-nature-bg p-8 rounded-3xl border border-brand-primary-light space-y-4">
-              <h1 className="text-5xl font-extrabold text-brand-nature-content">Heading 1</h1>
-              <h2 className="text-4xl font-bold text-brand-nature-content">Heading 2</h2>
-              <h3 className="text-3xl font-semibold text-brand-nature-content">Heading 3</h3>
+            <h2 className="text-2xl font-outfit font-semibold border-l-4 border-brand-secondary pl-4">Tipografía</h2>
+            <div className="bg-brand-nature-bg p-8 rounded-3xl border border-brand-primary-light space-y-4 font-sans">
+              <h1 className="text-5xl font-outfit font-extrabold text-brand-nature-content">Heading 1</h1>
+              <h2 className="text-4xl font-outfit font-bold text-brand-nature-content">Heading 2</h2>
+              <h3 className="text-3xl font-outfit font-semibold text-brand-nature-content">Heading 3</h3>
               <p className="text-lg text-foreground leading-relaxed">
-                Este es un ejemplo de cuerpo de texto. Amazonia IA utiliza una estética orgánica para conectar a los usuarios con la biodiversidad del Amazonas.
+                Este es un ejemplo de cuerpo de texto en Poppins. Amazonia IA utiliza una estética orgánica para conectar a los usuarios con la biodiversidad del Amazonas.
               </p>
               <p className="text-sm text-brand-nature-content italic">
-                Soporte para lenguas nativas y glifos extendidos.
+                Títulos en Outfit para mayor claridad y modernidad.
               </p>
             </div>
           </section>
 
           {/* Components section */}
           <section className="space-y-6">
-            <h2 className="text-2xl font-semibold border-l-4 border-brand-accent pl-4">Componentes Base</h2>
+            <h2 className="text-2xl font-outfit font-semibold border-l-4 border-brand-accent pl-4">Componentes Base</h2>
             <div className="bg-white dark:bg-zinc-900 p-8 rounded-3xl border border-border shadow-sm space-y-8">
               <div className="flex flex-wrap gap-4">
                 <button className="bg-brand-primary text-white px-6 py-3 rounded-full font-medium hover:bg-brand-primary-dark transition-all transform hover:scale-105 active:scale-95 shadow-md">
