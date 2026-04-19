@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { 
   Leaf, 
   Trees, 
@@ -26,6 +26,7 @@ import {
   CardBody,
   CardFooter,
 } from "./ui/Card";
+import { Modal } from "./ui/Modal";
 
 interface DesignSystemProps {
   onBack: () => void;
@@ -33,6 +34,8 @@ interface DesignSystemProps {
 
 
 export function DesignSystem({ onBack }: DesignSystemProps) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const colors = [
     { name: "Primary (Emerald)", class: "bg-brand-primary", text: "text-white", hex: "#059669" },
     { name: "Primary Dark", class: "bg-brand-primary-dark", text: "text-white", hex: "#064e3b" },
@@ -395,6 +398,35 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
               </Card>
             </div>
           </div>
+        </section>
+
+        {/* Modal section */}
+        <section className="space-y-6">
+          <h2 className="text-2xl font-outfit font-semibold border-l-4 border-brand-accent pl-4">Modales</h2>
+          <Card padding="lg" rounded="3xl">
+            <div className="space-y-4">
+              <p className="text-muted">
+                Este componente se encarga de bloquear el scroll, atrapar el foco, cerrar con teclado (tecla ESC), clic en el fondo oscuro y gestionar variantes de tamaños.
+              </p>
+              <Button onClick={() => setIsModalOpen(true)}>Abrir Modal de Ejemplo</Button>
+            </div>
+            <Modal
+              isOpen={isModalOpen}
+              onClose={() => setIsModalOpen(false)}
+              size="md"
+              title="New Collection"
+              footer={
+                <>
+                  <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+                  <Button onClick={() => setIsModalOpen(false)}>Create Collection</Button>
+                </>
+              }
+            >
+              <div className="py-2 text-foreground">
+                Este es un modal de prueba.
+              </div>
+            </Modal>
+          </Card>
         </section>
 
       </main>
