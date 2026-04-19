@@ -17,11 +17,13 @@ import {
   Users,
   Search,
   Mail,
-  Lock
+  Lock,
+  MapPin
 } from "lucide-react";
 import { Button } from "./ui/Button";
 import { Badge } from "./ui/Badge";
 import { Input } from "./ui/Input";
+import { Select } from "./ui/Select";
 import {
   Card,
   CardHeader,
@@ -252,9 +254,9 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
 
         {/* Form Inputs section */}
         <section className="space-y-6">
-          <h2 className="text-2xl font-outfit font-semibold border-l-4 border-brand-primary pl-4">Formularios (Inputs)</h2>
-          <Card padding="lg" rounded="3xl">
-            <div className="grid md:grid-cols-2 gap-10">
+          <h2 className="text-2xl font-outfit font-semibold border-l-4 border-brand-primary pl-4">Formularios (Inputs & Selects)</h2>
+          <Card padding="lg" rounded="3xl" overflowVisible>
+            <div className="grid lg:grid-cols-3 gap-8">
               {/* Basic Inputs */}
               <div className="space-y-6">
                 <h3 className="text-sm font-semibold text-muted uppercase tracking-wider mb-4">Estados Básicos</h3>
@@ -286,6 +288,51 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
                     type="password" 
                     placeholder="••••••••" 
                     leftIcon={<Lock className="w-5 h-5" />} 
+                  />
+                </div>
+              </div>
+
+              {/* Selects */}
+              <div className="space-y-6">
+                <h3 className="text-sm font-semibold text-muted uppercase tracking-wider mb-4">Selects</h3>
+                <div className="space-y-4">
+                  <Select 
+                    label="Categoría" 
+                    placeholder="Selecciona categoría..."
+                    options={[
+                      { value: "artesanias", label: "Artesanías" },
+                      { value: "alimentos", label: "Café y Cacao" },
+                      { value: "textiles", label: "Textiles" }
+                    ]}
+                  />
+                  
+                  <Select 
+                    label="Comunidad (Icono)" 
+                    leftIcon={<MapPin className="w-5 h-5" />}
+                    placeholder="Selecciona comunidad..."
+                    options={[
+                      { value: "amazonas", label: "Achuar, Perú", icon: <Globe className="w-4 h-4"/> },
+                      { value: "loreto", label: "Kichwa, Loreto", icon: <Leaf className="w-4 h-4"/> }
+                    ]}
+                  />
+
+                  <Select 
+                    label="Estatus" 
+                    disabled 
+                    value="1"
+                    options={[
+                      { value: "1", label: "Cuenta Inactiva" }
+                    ]}
+                  />
+
+                  <Select 
+                    label="Talla Producto" 
+                    error="Debes seleccionar una opción." 
+                    placeholder="Elige tu medida..."
+                    options={[
+                      { value: "s", label: "Pequeña" },
+                      { value: "m", label: "Mediana" }
+                    ]}
                   />
                 </div>
               </div>

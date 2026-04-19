@@ -8,6 +8,7 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   padding?: "none" | "sm" | "md" | "lg";
   rounded?: "md" | "lg" | "xl" | "2xl" | "3xl";
   hoverable?: boolean;
+  overflowVisible?: boolean;
 }
 
 export const Card = React.forwardRef<HTMLDivElement, CardProps>(
@@ -18,12 +19,13 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
       padding = "md",
       rounded = "2xl",
       hoverable = false,
+      overflowVisible = false,
       children,
       ...props
     },
     ref
   ) => {
-    const baseStyles = "relative overflow-hidden transition-all duration-300";
+    const baseStyles = `relative transition-all duration-300 ${!overflowVisible ? "overflow-hidden" : ""}`;
 
     const variants = {
       default: "bg-white border border-border shadow-sm",
