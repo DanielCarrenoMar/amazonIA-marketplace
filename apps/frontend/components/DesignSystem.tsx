@@ -10,12 +10,15 @@ import {
   ShieldCheck, 
   Heart, 
   Star, 
-  ArrowLeft 
+  ArrowLeft,
+  ShoppingBag
 } from "lucide-react";
+import { Button } from "./ui/Button";
 
 interface DesignSystemProps {
   onBack: () => void;
 }
+
 
 export function DesignSystem({ onBack }: DesignSystemProps) {
   const colors = [
@@ -46,13 +49,15 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
             Amazonia IA <span className="text-brand-primary">Design System</span>
           </h1>
         </div>
-        <button 
+        <Button 
           onClick={onBack}
-          className="px-6 cursor-pointer py-2 rounded-full border-2 border-brand-primary text-brand-primary font-semibold hover:bg-brand-primary hover:text-white transition-all order-first md:order-last flex items-center gap-2"
+          variant="outline"
+          size="sm"
+          leftIcon={<ArrowLeft className="w-4 h-4" />}
+          className="order-first md:order-last"
         >
-          <ArrowLeft className="w-4 h-4" />
           Volver al Inicio
-        </button>
+        </Button>
       </header>
 
       <main className="max-w-6xl mx-auto space-y-20">
@@ -96,22 +101,12 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
           <section className="space-y-6">
             <h2 className="text-2xl font-outfit font-semibold border-l-4 border-brand-accent pl-4">Componentes Base</h2>
             <div className="bg-white dark:bg-zinc-900 p-8 rounded-3xl border border-border shadow-sm space-y-8">
-              <div className="flex flex-wrap gap-4">
-                <button className="bg-brand-primary text-white px-6 py-3 rounded-full font-medium hover:bg-brand-primary-dark transition-all transform hover:scale-105 active:scale-95 shadow-md">
-                  Botón Primario
-                </button>
-                <button className="border-2 border-brand-secondary text-brand-secondary px-6 py-3 rounded-full font-medium hover:bg-brand-secondary hover:text-white transition-all">
-                  Secundario
-                </button>
-              </div>
-              
               <div className="flex items-center gap-2 p-4 bg-brand-primary-light rounded-xl border border-brand-primary/20">
                 <div className="w-8 h-8 rounded-full bg-brand-primary flex items-center justify-center text-white">
                   <Globe className="w-5 h-5" />
                 </div>
                 <p className="text-sm text-brand-primary-dark font-medium">Información sobre comercio justo cargada.</p>
               </div>
-
               <div className="flex items-center gap-1">
                 {[1, 2, 3, 4, 5].map((i) => (
                   <Star key={i} className="w-6 h-6 text-brand-accent fill-current" />
@@ -138,6 +133,57 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
             </div>
           </div>
         </section>
+
+        {/* Buttons section */}
+        <section className="space-y-6">
+          <h2 className="text-2xl font-outfit font-semibold border-l-4 border-brand-accent pl-4">Botones</h2>
+          <div className="bg-white dark:bg-zinc-900 p-8 rounded-3xl border border-border shadow-sm space-y-10">
+            
+            {/* Variantes */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold text-muted uppercase tracking-wider">Variantes</h3>
+              <div className="flex flex-wrap gap-4 items-center">
+                <Button variant="primary">Primary</Button>
+                <Button variant="secondary">Secondary</Button>
+                <Button variant="outline">Outline</Button>
+                <Button variant="ghost">Ghost</Button>
+                <Button variant="danger">Danger</Button>
+              </div>
+            </div>
+
+            {/* Tamaños */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold text-muted uppercase tracking-wider">Tamaños</h3>
+              <div className="flex flex-wrap gap-4 items-center">
+                <Button size="sm">Small</Button>
+                <Button size="md">Medium</Button>
+                <Button size="lg">Large</Button>
+                <Button size="icon"><Leaf className="w-5 h-5" /></Button>
+              </div>
+            </div>
+
+            {/* Con iconos */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold text-muted uppercase tracking-wider">Con Iconos</h3>
+              <div className="flex flex-wrap gap-4 items-center">
+                <Button leftIcon={<ShoppingBag className="w-4 h-4" />}>Marketplace</Button>
+                <Button variant="secondary" rightIcon={<Globe className="w-4 h-4" />}>Explorar</Button>
+                <Button variant="outline" leftIcon={<Heart className="w-4 h-4" />}>Favorito</Button>
+              </div>
+            </div>
+
+            {/* Estados */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold text-muted uppercase tracking-wider">Estados</h3>
+              <div className="flex flex-wrap gap-4 items-center">
+                <Button isLoading>Cargando...</Button>
+                <Button disabled>Deshabilitado</Button>
+                <Button variant="danger" isLoading>Procesando</Button>
+              </div>
+            </div>
+          </div>
+        </section>
+
       </main>
     </div>
   );

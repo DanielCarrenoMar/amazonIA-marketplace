@@ -10,11 +10,13 @@
 
   /* Brand Colors - Water (Teal/Cyan) */
   --color-brand-secondary: #0d9488;
+  --color-brand-secondary-dark: #0f766e;
   --color-brand-secondary-light: #f0fdfa;
 
   /* Accent Colors */
   --color-brand-accent: #fbbf24;
   --color-brand-urgency: #ef4444;
+  --color-brand-urgency-dark: #dc2626;
 
   /* System Colors */
   --color-background: #ffffff;

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { DesignSystem } from "../components/DesignSystem";
+import { Button } from "../components/ui/Button";
 
 export default function Home() {
   const [showDesignSystem, setShowDesignSystem] = useState(false);
@@ -17,12 +18,14 @@ export default function Home() {
         <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-brand-primary/10 rounded-full blur-3xl" />
         <div className="relative z-10 flex flex-col items-center text-center space-y-10 max-w-4xl">
           <div className="flex flex-col sm:flex-row gap-5 justify-center w-full pt-4">
-            <button 
+            <Button 
               onClick={() => setShowDesignSystem(true)}
-              className="bg-brand-nature-bg cursor-pointer text-brand-nature-content border-2 border-brand-primary-light px-10 py-5 rounded-2xl text-xl font-bold hover:bg-brand-primary-light transition-all transform hover:-translate-y-1"
+              variant="outline"
+              size="lg"
+              className="bg-brand-nature-bg hover:bg-brand-primary-light"
             >
-              Guía de Estilos
-            </button>
+              🎨 Guía de Estilos
+            </Button>
           </div>
         </div>
       </main>
