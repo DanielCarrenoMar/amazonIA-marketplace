@@ -30,6 +30,7 @@ import { Checkbox } from "./ui/Checkbox";
 import { Switch } from "./ui/Switch";
 import { Radio } from "./ui/Radio";
 import { FileDrop } from "./ui/FileDrop";
+import { Textarea } from "./ui/Textarea";
 import {
   Card,
   CardHeader,
@@ -344,8 +345,25 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
               </div>
             </div>
 
+            {/* Fila intermedia de Form Inputs: Textareas */}
+            <div className="mt-8 pt-6 border-t border-border border-dashed">
+              <h3 className="text-sm font-semibold text-muted uppercase tracking-wider mb-6">Textareas</h3>
+              <div className="grid md:grid-cols-2 gap-8">
+                <Textarea 
+                  label="Biografía / Descripción del Vendedor"
+                  placeholder="Menciona historia, locación y especialidad..."
+                  helperText="Este texto será el perfil público que verán los compradores."
+                />
+                <Textarea 
+                  label="Detalle Interno"
+                  error="La justificación de rechazo no puede estar vacía."
+                  placeholder="Por favor elabora por qué..."
+                />
+              </div>
+            </div>
+
             {/* Fila inferior de Form Inputs: File Uploads */}
-            <div className="mt-8">
+            <div className="mt-8 pt-6 border-t border-border border-dashed">
               <h3 className="text-sm font-semibold text-muted uppercase tracking-wider mb-6">Carga y Subida de Archivos</h3>
               <div className="grid md:grid-cols-2 gap-8">
                 <FileDrop 
