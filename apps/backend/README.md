@@ -31,6 +31,53 @@
 $ pnpm install
 ```
 
+## Database (SQL-First Workflow)
+
+This project uses a **SQL-First** approach. `database/schema.sql` is the absolute source of truth for the database schema (useful for advanced features like PostGIS and Triggers). Prisma is strictly used as the ORM client to interact with the data. 
+
+**Do not use `prisma migrate` in this project.**
+
+### 1. Configure the connection
+
+Create your environment variables and fill in your PostgreSQL credentials:
+
+```bash
+# apps/backend/.env
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DB_NAME?sslmode=require"
+```
+
+### 2. Apply the SQL schema to the database
+
+Any time you modify `database/schema.sql` (to add tables, columns, or extensions), execute it directly against your database using the Prisma CLI:
+
+```bash
+$ pnpm prisma db execute --file database/schema.sql
+```
+
+### 3. Sync the Prisma Schema
+
+If you modified tables or columns in your SQL, you must manually mirror those changes in `prisma/schema.prisma`. *Fidelity is key!* Both files must match perfectly.
+
+### 4. Generate the Prisma Client
+
+After updating your database and your `schema.prisma`, regenerate the TypeScript ORM client so NestJS can see the new types:
+
+```bash
+$ pnpm prisma generate
+```
+
+### 5. Explore the database with Prisma Studio
+
+Need to see the data inside your tables?
+
+```bash
+$ pnpm prisma studio
+```
+
+Opens a UI at `http://localhost:5555` to browse and edit data.
+
+---
+
 ## Compile and run the project
 
 ```bash
