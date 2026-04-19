@@ -139,9 +139,8 @@ export class ProductService {
 
   async updateStock(id: string, quantity: number) {
     const product = await this.findOne(id); // Check existence
-    const newStock = product.stockAvailable + quantity;
 
-    if (newStock < 0) {
+    if (product.stockAvailable + quantity < 0) {
       throw new BadRequestException(
         `Insufficient stock. Current: ${product.stockAvailable}, attempted change: ${quantity}`,
       );
@@ -149,7 +148,7 @@ export class ProductService {
 
     return this.prisma.product.update({
       where: { id },
-      data: { stockAvailable: newStock },
+      data: { stockAvailable: { increment: quantity } },
     });
   }
 }

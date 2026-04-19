@@ -20,18 +20,17 @@ export class ProductOrderService {
         throw new NotFoundException(`Product with ID ${createProductOrderDto.productId} not found`);
       }
 
-      // 2. Validate and calculate new stock
-      const newStock = product.stockAvailable - createProductOrderDto.quantity;
-      if (newStock < 0) {
+      // 2. Validate stock
+      if (product.stockAvailable < createProductOrderDto.quantity) {
         throw new BadRequestException(
           `Insufficient stock. Current: ${product.stockAvailable}, needed: ${createProductOrderDto.quantity}`,
         );
       }
 
-      // 3. Update stock
+      // 3. Update stock atomically
       await tx.product.update({
         where: { id: createProductOrderDto.productId },
-        data: { stockAvailable: newStock },
+        data: { stockAvailable: { decrement: createProductOrderDto.quantity } },
       });
 
       // 4. Create the order
