@@ -34,7 +34,7 @@ export class AuthService {
   async register(createUserAccountDto: CreateUserAccountDto) {
     const user = await this.userAccountService.create(createUserAccountDto);
 
-    const payload: JwtPayload = { sub: user.id, email: user.email };
+    const payload: JwtPayload = { sub: user.id, email: user.email, role: user.role };
     const tokens = await this.generateTokens(payload);
 
     return {
@@ -60,7 +60,7 @@ export class AuthService {
     if (!passwordMatch) throw new UnauthorizedException('Invalid credentials');
 
     // 3. Sign and return both tokens
-    const payload: JwtPayload = { sub: user.id, email: user.email };
+    const payload: JwtPayload = { sub: user.id, email: user.email, role: user.role };
     const tokens = await this.generateTokens(payload);
 
     return {
@@ -82,7 +82,7 @@ export class AuthService {
       });
 
       // Issue a brand new pair of tokens (rotation — the old refresh token becomes invalid)
-      const newPayload: JwtPayload = { sub: payload.sub, email: payload.email };
+      const newPayload: JwtPayload = { sub: payload.sub, email: payload.email, role: payload.role };
       return this.generateTokens(newPayload);
     } catch {
       throw new UnauthorizedException('Invalid or expired refresh token');
