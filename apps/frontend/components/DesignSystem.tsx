@@ -1,6 +1,17 @@
 "use client";
 
 import React from "react";
+import { 
+  Leaf, 
+  Trees, 
+  Waves, 
+  Store, 
+  Globe, 
+  ShieldCheck, 
+  Heart, 
+  Star, 
+  ArrowLeft 
+} from "lucide-react";
 
 interface DesignSystemProps {
   onBack: () => void;
@@ -16,6 +27,17 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
     { name: "Nature BG", class: "bg-brand-nature-bg", text: "text-brand-nature-content", border: "border-brand-primary-light", hex: "#ecfdf5" },
   ];
 
+  const icons = [
+    { Icon: Leaf, label: "Naturaleza", color: "text-brand-primary" },
+    { Icon: Trees, label: "Selva", color: "text-brand-primary-dark" },
+    { Icon: Waves, label: "Ríos", color: "text-brand-secondary" },
+    { Icon: Store, label: "Mercado", color: "text-brand-primary" },
+    { Icon: Globe, label: "Global", color: "text-brand-secondary" },
+    { Icon: ShieldCheck, label: "Seguridad", color: "text-brand-primary-dark" },
+    { Icon: Heart, label: "Justicia", color: "text-brand-urgency" },
+    { Icon: Star, label: "Calidad", color: "text-brand-accent" }
+  ];
+
   return (
     <div className="min-h-screen bg-background p-8 md:p-20 font-sans">
       <header className="max-w-6xl mx-auto mb-16 flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">
@@ -26,9 +48,10 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
         </div>
         <button 
           onClick={onBack}
-          className="px-6 cursor-pointer py-2 rounded-full border-2 border-brand-primary text-brand-primary font-semibold hover:bg-brand-primary hover:text-white transition-all order-first md:order-last"
+          className="px-6 cursor-pointer py-2 rounded-full border-2 border-brand-primary text-brand-primary font-semibold hover:bg-brand-primary hover:text-white transition-all order-first md:order-last flex items-center gap-2"
         >
-          ← Volver al Inicio
+          <ArrowLeft className="w-4 h-4" />
+          Volver al Inicio
         </button>
       </header>
 
@@ -84,22 +107,37 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
               
               <div className="flex items-center gap-2 p-4 bg-brand-primary-light rounded-xl border border-brand-primary/20">
                 <div className="w-8 h-8 rounded-full bg-brand-primary flex items-center justify-center text-white">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                  <Globe className="w-5 h-5" />
                 </div>
                 <p className="text-sm text-brand-primary-dark font-medium">Información sobre comercio justo cargada.</p>
               </div>
 
               <div className="flex items-center gap-1">
                 {[1, 2, 3, 4, 5].map((i) => (
-                  <svg key={i} className="w-6 h-6 text-brand-accent fill-current" viewBox="0 0 24 24">
-                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                  </svg>
+                  <Star key={i} className="w-6 h-6 text-brand-accent fill-current" />
                 ))}
                 <span className="ml-2 text-sm text-muted font-medium">5.0 (24 reviews)</span>
               </div>
             </div>
           </section>
         </div>
+
+        {/* Icons section */}
+        <section className="space-y-6">
+          <h2 className="text-2xl font-outfit font-semibold border-l-4 border-brand-primary-dark pl-4">Iconografía</h2>
+          <div className="bg-white dark:bg-zinc-900 p-8 rounded-3xl border border-border shadow-sm">
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-8">
+              {icons.map(({ Icon, label, color }, idx) => (
+                <div key={idx} className="flex flex-col items-center gap-3">
+                  <div className={`p-4 rounded-2xl bg-gray-50 dark:bg-zinc-800 ${color} transition-transform hover:scale-110`}>
+                    <Icon className="w-8 h-8" />
+                  </div>
+                  <span className="text-xs font-medium text-muted">{label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
       </main>
     </div>
   );
