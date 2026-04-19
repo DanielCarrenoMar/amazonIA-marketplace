@@ -14,6 +14,7 @@ import {
   ShoppingBag
 } from "lucide-react";
 import { Button } from "./ui/Button";
+import { Badge } from "./ui/Badge";
 
 interface DesignSystemProps {
   onBack: () => void;
@@ -179,6 +180,47 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
                 <Button isLoading>Cargando...</Button>
                 <Button disabled>Deshabilitado</Button>
                 <Button variant="danger" isLoading>Procesando</Button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Badges section */}
+        <section className="space-y-6">
+          <h2 className="text-2xl font-outfit font-semibold border-l-4 border-brand-secondary pl-4">Badges</h2>
+          <div className="bg-white dark:bg-zinc-900 p-8 rounded-3xl border border-border shadow-sm space-y-10">
+            
+            {/* Variantes */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold text-muted uppercase tracking-wider">Variantes</h3>
+              <div className="flex flex-wrap gap-3 items-center">
+                <Badge variant="primary">Sostenible</Badge>
+                <Badge variant="secondary">Artesanal</Badge>
+                <Badge variant="accent">Destacado</Badge>
+                <Badge variant="danger">Agotado</Badge>
+                <Badge variant="outline">General</Badge>
+                <Badge variant="nature">Orgánico</Badge>
+              </div>
+            </div>
+
+            {/* Tamaños */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold text-muted uppercase tracking-wider">Tamaños</h3>
+              <div className="flex flex-wrap gap-3 items-center">
+                <Badge size="sm">Small</Badge>
+                <Badge size="md">Medium</Badge>
+                <Badge variant="secondary" size="sm">Teal SM</Badge>
+                <Badge variant="accent" size="md">Amber MD</Badge>
+              </div>
+            </div>
+
+            {/* Ejemplo de uso */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold text-muted uppercase tracking-wider">Ejemplo de Uso</h3>
+              <div className="flex items-center gap-3 p-4 bg-brand-nature-bg rounded-xl border border-brand-primary-light">
+                <span className="text-brand-nature-content font-medium">Cacao Amazónico Premium</span>
+                <Badge variant="primary" size="sm">Comercio Justo</Badge>
+                <Badge variant="nature" size="sm">100% Natural</Badge>
               </div>
             </div>
           </div>
