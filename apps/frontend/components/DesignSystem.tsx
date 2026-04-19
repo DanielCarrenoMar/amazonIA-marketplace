@@ -14,10 +14,14 @@ import {
   ShoppingBag,
   Package,
   TrendingUp,
-  Users
+  Users,
+  Search,
+  Mail,
+  Lock
 } from "lucide-react";
 import { Button } from "./ui/Button";
 import { Badge } from "./ui/Badge";
+import { Input } from "./ui/Input";
 import {
   Card,
   CardHeader,
@@ -240,6 +244,49 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
                   <span className="text-brand-nature-content font-medium">Cacao Amazónico Premium</span>
                   <Badge variant="primary" size="sm">Comercio Justo</Badge>
                   <Badge variant="nature" size="sm">100% Natural</Badge>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </section>
+
+        {/* Form Inputs section */}
+        <section className="space-y-6">
+          <h2 className="text-2xl font-outfit font-semibold border-l-4 border-brand-primary pl-4">Formularios (Inputs)</h2>
+          <Card padding="lg" rounded="3xl">
+            <div className="grid md:grid-cols-2 gap-10">
+              {/* Basic Inputs */}
+              <div className="space-y-6">
+                <h3 className="text-sm font-semibold text-muted uppercase tracking-wider mb-4">Estados Básicos</h3>
+                <div className="space-y-4">
+                  <Input label="Nombre completo" placeholder="Ej. María Fernández" />
+                  <Input label="Correo electrónico" type="email" placeholder="maria@ejemplo.com" helperText="Nunca compartiremos tu correo con externos." />
+                  <Input label="Bio" value="Amante de la naturaleza" disabled />
+                  <Input label="Nombre de usuario" error="Este usuario ya está en uso." defaultValue="maria_amazonia" />
+                </div>
+              </div>
+
+              {/* Inputs with Icons */}
+              <div className="space-y-6">
+                <h3 className="text-sm font-semibold text-muted uppercase tracking-wider mb-4">Con Iconos</h3>
+                <div className="space-y-4">
+                  <Input 
+                    label="Buscar productos" 
+                    placeholder="Café, cacao, artesanías..." 
+                    leftIcon={<Search className="w-5 h-5" />} 
+                  />
+                  <Input 
+                    label="Doble Icono" 
+                    placeholder="Ingresa tu email" 
+                    leftIcon={<Mail className="w-5 h-5" />} 
+                    rightIcon={<div className="w-6 h-6 bg-brand-primary/10 rounded flex items-center justify-center"><Search className="w-3 h-3 text-brand-primary" /></div>}
+                  />
+                  <Input 
+                    label="Contraseña" 
+                    type="password" 
+                    placeholder="••••••••" 
+                    leftIcon={<Lock className="w-5 h-5" />} 
+                  />
                 </div>
               </div>
             </div>
