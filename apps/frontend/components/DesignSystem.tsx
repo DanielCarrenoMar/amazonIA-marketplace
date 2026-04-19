@@ -29,6 +29,7 @@ import { Tooltip } from "./ui/Tooltip";
 import { Checkbox } from "./ui/Checkbox";
 import { Switch } from "./ui/Switch";
 import { Radio } from "./ui/Radio";
+import { FileDrop } from "./ui/FileDrop";
 import {
   Card,
   CardHeader,
@@ -340,6 +341,26 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
                     ]}
                   />
                 </div>
+              </div>
+            </div>
+
+            {/* Fila inferior de Form Inputs: File Uploads */}
+            <div className="mt-8">
+              <h3 className="text-sm font-semibold text-muted uppercase tracking-wider mb-6">Carga y Subida de Archivos</h3>
+              <div className="grid md:grid-cols-2 gap-8">
+                <FileDrop 
+                  label="Subir documento legal"
+                  accept=".pdf, .docx, .jpg, .jpeg, .png"
+                  maxSizeMB={5}
+                  helperText="Formatos: PDF, Word o Imágenes (JPG/PNG). Menos de 5MB."
+                />
+                <FileDrop 
+                  label="Galería del Producto"
+                  accept="image/*"
+                  multiple
+                  maxFiles={3}
+                  helperText="Puedes seleccionar y arrastrar hasta 3 imágenes."
+                />
               </div>
             </div>
 
