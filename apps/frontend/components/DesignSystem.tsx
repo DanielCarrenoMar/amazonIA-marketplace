@@ -40,10 +40,32 @@ import {
   CardFooter,
 } from "./ui/Card";
 import { Modal } from "./ui/Modal";
+import { Avatar } from "./ui/Avatar";
+import { ToastProvider, useToast } from "./ui/Toast";
 
 interface DesignSystemProps {
   onBack: () => void;
 }
+
+const ToastShowcase = () => {
+  const { toast } = useToast();
+  return (
+    <div className="flex flex-wrap gap-4">
+      <Button onClick={() => toast({ title: "Acción exitosa", description: "Los cambios se guardaron.", variant: "success" })}>
+        Toast de Éxito
+      </Button>
+      <Button variant="outline" onClick={() => toast({ title: "Error de conexión", description: "Fallo al validar credenciales.", variant: "error" })}>
+        Toast de Error
+      </Button>
+      <Button variant="secondary" onClick={() => toast({ title: "Información", description: "Tienes 3 mensajes nuevos sin leer.", variant: "info" })}>
+        Toast de Info
+      </Button>
+      <Button variant="ghost" onClick={() => toast({ title: "Cuidado", description: "La imagen pesa mucho pero fue aceptada.", variant: "warning" })}>
+        Toast de Alerta
+      </Button>
+    </div>
+  );
+};
 
 
 export function DesignSystem({ onBack }: DesignSystemProps) {
@@ -70,7 +92,8 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
   ];
 
   return (
-    <div className="min-h-screen bg-background p-8 md:p-20 font-sans">
+    <ToastProvider>
+      <div className="min-h-screen bg-background p-8 md:p-20 font-sans">
       <header className="max-w-6xl mx-auto mb-16 flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">
         <div className="flex items-center gap-4">
           <h1 className="text-4xl font-outfit font-bold tracking-tight text-brand-primary-dark">
@@ -672,6 +695,48 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
           </Card>
         </section>
 
+        {/* Avatars section */}
+        <section className="space-y-6">
+          <h2 className="text-2xl font-outfit font-semibold border-l-4 border-brand-accent pl-4">Avatar & Perfiles</h2>
+          <Card padding="lg" rounded="3xl">
+            <div className="flex flex-col gap-8">
+              <div>
+                <h3 className="text-sm font-semibold text-muted uppercase tracking-wider mb-4">Escalas / Tamaños</h3>
+                <div className="flex items-end flex-wrap gap-6">
+                  <Avatar size="sm" fallback="SM" />
+                  <Avatar size="md" fallback="MD" />
+                  <Avatar size="lg" fallback="LG" />
+                  <Avatar size="xl" fallback="XL" />
+                  <Avatar size="2xl" fallback="2X" />
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="text-sm font-semibold text-muted uppercase tracking-wider mb-4">Fotos y Estados de Actividad</h3>
+                <div className="flex items-end flex-wrap gap-8">
+                  <Avatar size="lg" src="https://i.pravatar.cc/150?img=32" indicator="online" />
+                  <Avatar size="lg" src="https://i.pravatar.cc/150?img=12" indicator="busy" />
+                  <Avatar size="lg" src="https://i.pravatar.cc/150?img=11" indicator="offline" />
+                  <Avatar size="lg" src="https://bad-url-para-probar-fallback.com" fallback="MF" />
+                </div>
+              </div>
+            </div>
+          </Card>
+        </section>
+
+        {/* Toasts section */}
+        <section className="space-y-6">
+          <h2 className="text-2xl font-outfit font-semibold border-l-4 border-brand-accent pl-4">Toasts (Notificaciones Temporales)</h2>
+          <Card padding="lg" rounded="3xl" overflowVisible>
+            <div className="space-y-4">
+              <p className="text-muted mb-6">
+                Avisos flotantes controlados nativamente a través de un Context Provider. Aparecen en pila e incorporan autodestrucción con soporte de cerrado manual.
+              </p>
+              <ToastShowcase />
+            </div>
+          </Card>
+        </section>
+
         {/* Modal section */}
         <section className="space-y-6">
           <h2 className="text-2xl font-outfit font-semibold border-l-4 border-brand-accent pl-4">Modales</h2>
@@ -703,5 +768,6 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
 
       </main>
     </div>
+    </ToastProvider>
   );
 }
