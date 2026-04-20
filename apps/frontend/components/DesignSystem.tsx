@@ -21,29 +21,30 @@ import {
   MapPin,
   Info
 } from "lucide-react";
-import { Button } from "./ui/Button";
-import { Badge } from "./ui/Badge";
-import { Input } from "./ui/Input";
-import { Select } from "./ui/Select";
-import { Tooltip } from "./ui/Tooltip";
-import { Checkbox } from "./ui/Checkbox";
-import { Switch } from "./ui/Switch";
-import { Radio } from "./ui/Radio";
-import { FileDrop } from "./ui/FileDrop";
-import { Textarea } from "./ui/Textarea";
-import {
+import { 
+  Button, 
+  Badge, 
+  Input, 
+  Select, 
+  Tooltip, 
+  Checkbox, 
+  Switch, 
+  Radio, 
+  FileDrop, 
+  Textarea,
   Card,
   CardHeader,
   CardTitle,
   CardDescription,
   CardBody,
   CardFooter,
-} from "./ui/Card";
-import { Modal } from "./ui/Modal";
-import { Avatar } from "./ui/Avatar";
-import { ToastProvider, useToast } from "./ui/Toast";
-import { Tabs } from "./ui/Tabs";
-import { Accordion } from "./ui/Accordion";
+  Modal,
+  Avatar,
+  ToastProvider, 
+  useToast,
+  Tabs,
+  Accordion 
+} from "./ui";
 
 interface DesignSystemProps {
   onBack: () => void;
