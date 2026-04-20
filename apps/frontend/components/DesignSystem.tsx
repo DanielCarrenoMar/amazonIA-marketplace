@@ -43,6 +43,7 @@ import { Modal } from "./ui/Modal";
 import { Avatar } from "./ui/Avatar";
 import { ToastProvider, useToast } from "./ui/Toast";
 import { Tabs } from "./ui/Tabs";
+import { Accordion } from "./ui/Accordion";
 
 interface DesignSystemProps {
   onBack: () => void;
@@ -733,6 +734,58 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
                 }
               ]}
             />
+          </Card>
+        </section>
+
+        {/* Accordion section */}
+        <section className="space-y-6">
+          <h2 className="text-2xl font-outfit font-semibold border-l-4 border-brand-accent pl-4">Acordeón (Desplegables)</h2>
+          <Card padding="lg" rounded="3xl">
+            <div className="space-y-8">
+              <div>
+                <h3 className="text-sm font-semibold text-muted uppercase tracking-wider mb-4">Selección Única (FAQ Style)</h3>
+                <Accordion 
+                  type="single"
+                  defaultValue="item-1"
+                  items={[
+                    {
+                      id: "item-1",
+                      title: "¿Cómo funciona el envío a comunidades remotas?",
+                      content: "Utilizamos una red de logística fluvial coordinada con las federaciones indígenas para asegurar que los productos lleguen intactos y los artesanos reciban su pago de forma segura."
+                    },
+                    {
+                      id: "item-2",
+                      title: "¿Es posible rastrear mi pedido en tiempo real?",
+                      content: "Sí, recibirás un código de seguimiento que te informará desde la recolección en la maloca hasta la entrega final en tu domicilio."
+                    },
+                    {
+                      id: "item-3",
+                      title: "Políticas de devolución",
+                      content: "Dada la naturaleza artesanal y el impacto social de los productos, las devoluciones se gestionan caso por caso para no perjudicar la economía de la comunidad productora."
+                    }
+                  ]}
+                />
+              </div>
+
+              <div>
+                <h3 className="text-sm font-semibold text-muted uppercase tracking-wider mb-4">Selección Múltiple</h3>
+                <Accordion 
+                  type="multiple"
+                  items={[
+                    {
+                      id: "acc-1",
+                      title: "Especificaciones Técnicas",
+                      content: "Materiales: Fibra de chambira, tintes naturales orgánicos. Peso: 450g aprox. Dimensiones: 30x40cm."
+                    },
+                    {
+                      id: "acc-2",
+                      title: "Cuidado del Producto",
+                      content: "No exponer directamente al sol por tiempos prolongados. Limpiar con un paño ligeramente húmedo. No usar químicos agresivos."
+                    }
+                  ]}
+                />
+              </div>
+            </div>
           </Card>
         </section>
 
