@@ -42,6 +42,7 @@ import {
 import { Modal } from "./ui/Modal";
 import { Avatar } from "./ui/Avatar";
 import { ToastProvider, useToast } from "./ui/Toast";
+import { Tabs } from "./ui/Tabs";
 
 interface DesignSystemProps {
   onBack: () => void;
@@ -692,6 +693,46 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
                 </Tooltip>
               </div>
             </div>
+          </Card>
+        </section>
+
+        {/* Tabs section */}
+        <section className="space-y-6">
+          <h2 className="text-2xl font-outfit font-semibold border-l-4 border-brand-accent pl-4">Navegación (Tabs)</h2>
+          <Card padding="lg" rounded="3xl">
+            <Tabs 
+              defaultActiveKey="perfil" 
+              className="w-full"
+              items={[
+                {
+                  key: "perfil",
+                  label: "Perfil Público",
+                  content: (
+                    <div className="p-6 bg-gray-50/50 rounded-2xl border border-border">
+                      <h4 className="font-semibold text-foreground mb-2">Información Pública</h4>
+                      <p className="text-sm text-muted">Aquí puedes editar la apariencia de tu perfil dentro del catálogo general, subir fotos de tu comunidad productora y agregar una bella biografía.</p>
+                    </div>
+                  )
+                },
+                {
+                  key: "seguridad",
+                  label: "Configuración de Seguridad",
+                  content: (
+                    <div className="p-6 bg-brand-urgency/5 rounded-2xl border border-brand-urgency/20">
+                      <h4 className="font-semibold text-brand-urgency mb-2">Protección de Cuenta</h4>
+                      <p className="text-sm text-brand-urgency/80">Cambia tu contraseña regularmente. Tus métricas de ventas y facturación son confidenciales, asegúrate de activar el factor 2FA antes de fin de mes.</p>
+                      <Button variant="outline" size="sm" className="mt-4 border-brand-urgency text-brand-urgency hover:bg-brand-urgency hover:text-white">Cambiar Clave</Button>
+                    </div>
+                  )
+                },
+                {
+                  key: "facturacion",
+                  label: "Facturación (Bloqueado)",
+                  disabled: true,
+                  content: <></>
+                }
+              ]}
+            />
           </Card>
         </section>
 
