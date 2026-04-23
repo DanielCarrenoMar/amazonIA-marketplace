@@ -62,5 +62,4 @@ temp_*
 *.tsbuildinfo
 
 # Misc
-*.md
 *.bak

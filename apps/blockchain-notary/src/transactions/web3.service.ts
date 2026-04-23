@@ -12,12 +12,14 @@ export class Web3Service {
   private readonly logger = new Logger(Web3Service.name);
   private web3: Web3;
   private readonly rpcUrl: string;
+  private readonly rpcApiKey?: string;
   private readonly privateKey: string;
   private readonly contractAddress: string;
 
   constructor(private configService: ConfigService) {
-    // 1. Obtener la URL del nodo RPC (ej. Alchemy, Infura para Arbitrum) desde el .env
+    // 1. Obtener la URL del nodo RPC y la API Key (si requiere por Headers)
     this.rpcUrl = this.configService.get<string>('RPC_URL') || 'https://arb1.arbitrum.io/rpc';
+    this.rpcApiKey = this.configService.get<string>('RPC_API_KEY');
     
     // 2. Obtener la llave privada de la billetera corporativa que asume los costos de gas
     this.privateKey = this.configService.get<string>('PRIVATE_KEY');
@@ -30,7 +32,19 @@ export class Web3Service {
     }
 
     // Inicializamos el proveedor de Web3
-    this.web3 = new Web3(this.rpcUrl);
+    if (this.rpcApiKey) {
+      // Configuramos el HttpProvider con soporte para autenticación de varios proveedores
+      const provider = new Web3.providers.HttpProvider(this.rpcUrl, {
+        headers: {
+          'x-api-key': this.rpcApiKey,
+          'Authorization': `Bearer ${this.rpcApiKey}`,
+        },
+      } as any);
+      this.web3 = new Web3(provider);
+    } else {
+      // Si no hay API Key por header, lo inicializamos normal (asume nodo público o API key en URL)
+      this.web3 = new Web3(this.rpcUrl);
+    }
   }
 
   async registerTransaction(payload: RegisterTransactionDto): Promise<string> {
