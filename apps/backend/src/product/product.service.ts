@@ -39,8 +39,8 @@ export class ProductService {
       ...(search ? { name: { contains: search, mode: 'insensitive' } } : {}),
     };
 
-    // Run count and findMany in parallel via transaction
-    const [total, data] = await this.prisma.$transaction([
+    // Run count and findMany in parallel (no transaction needed for reads)
+    const [total, data] = await Promise.all([
       this.prisma.product.count({ where }),
       this.prisma.product.findMany({
         where,
