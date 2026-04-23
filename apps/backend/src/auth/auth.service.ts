@@ -3,8 +3,8 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { UserAccountService } from '../user-account/user-account.service';
-import { CreateUserAccountDto } from '../user-account/dto/create-user-account.dto';
-import { LoginDto } from './dto/login.dto';
+import {  CreateUserAccountDto  } from 'dtos';
+import {  LoginDto  } from 'dtos';
 import { JwtPayload } from './jwt.strategy';
 
 @Injectable()
@@ -34,7 +34,7 @@ export class AuthService {
   async register(createUserAccountDto: CreateUserAccountDto) {
     const user = await this.userAccountService.create(createUserAccountDto);
 
-    const payload: JwtPayload = { sub: user.id, email: user.email, role: user.role };
+    const payload: JwtPayload = { sub: user.id, email: user.email, role: (user as any).role };
     const tokens = await this.generateTokens(payload);
 
     return {
@@ -60,7 +60,7 @@ export class AuthService {
     if (!passwordMatch) throw new UnauthorizedException('Invalid credentials');
 
     // 3. Sign and return both tokens
-    const payload: JwtPayload = { sub: user.id, email: user.email, role: user.role };
+    const payload: JwtPayload = { sub: user.id, email: user.email, role: (user as any).role };
     const tokens = await this.generateTokens(payload);
 
     return {

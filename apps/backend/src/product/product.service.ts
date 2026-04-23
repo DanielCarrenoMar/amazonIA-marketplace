@@ -1,13 +1,12 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { CreateProductDto } from './dto/create-product.dto';
-import { UpdateProductDto } from './dto/update-product.dto';
+import { CreateProductDto, UpdateProductDto, FindProductsDto, FindNearbyDto } from 'dtos';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class ProductService {
   constructor(private readonly prisma: PrismaService) { }
 
-  async create(createProductDto: import('./dto/create-product.dto').CreateProductDto) {
+  async create(createProductDto: CreateProductDto) {
     const { coords, ...rest } = createProductDto;
 
     // Use $transaction so we don't end up with orphaned rows if the spatial query fails
@@ -30,7 +29,7 @@ export class ProductService {
     });
   }
 
-  async findAll(query: import('./dto/find-products.dto').FindProductsDto) {
+  async findAll(query: FindProductsDto) {
     const { page = 1, limit = 10, search, categoryId } = query;
     const skip = (page - 1) * limit;
 
@@ -63,7 +62,7 @@ export class ProductService {
     };
   }
 
-  async findNearby(query: import('./dto/find-nearby.dto').FindNearbyDto) {
+  async findNearby(query: FindNearbyDto) {
     const { lat, lng, radius = 10 } = query;
     // PostGIS geography ST_DWithin works in meters
     const radiusMeters = radius * 1000;

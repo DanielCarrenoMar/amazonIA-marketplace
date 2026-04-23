@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe, UseGuards } from '@nestjs/common';
 import { SellerService } from './seller.service';
-import { CreateSellerDto } from './dto/create-seller.dto';
-import { UpdateSellerDto } from './dto/update-seller.dto';
+import {  CreateSellerDto  } from 'dtos';
+import {  UpdateSellerDto  } from 'dtos';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('seller')

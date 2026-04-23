@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import { CreateUserAccountDto } from './dto/create-user-account.dto';
-import { UpdateUserAccountDto } from './dto/update-user-account.dto';
+import {  CreateUserAccountDto  } from 'dtos';
+import {  UpdateUserAccountDto  } from 'dtos';
 import { PrismaService } from '../prisma/prisma.service';
 
 const SALT_ROUNDS = 12;

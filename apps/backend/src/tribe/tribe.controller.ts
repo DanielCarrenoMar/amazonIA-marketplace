@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, UseGuards } from '@nestjs/common';
 import { TribeService } from './tribe.service';
-import { CreateTribeDto } from './dto/create-tribe.dto';
-import { UpdateTribeDto } from './dto/update-tribe.dto';
+import {  CreateTribeDto  } from 'dtos';
+import {  UpdateTribeDto  } from 'dtos';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('tribe')

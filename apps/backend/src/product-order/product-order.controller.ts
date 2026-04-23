@@ -3,8 +3,8 @@ import {
   Delete, ParseUUIDPipe, UseGuards, Request,
 } from '@nestjs/common';
 import { ProductOrderService } from './product-order.service';
-import { CreateProductOrderDto } from './dto/create-product-order.dto';
-import { UpdateProductOrderDto } from './dto/update-product-order.dto';
+import {  CreateProductOrderDto  } from 'dtos';
+import {  UpdateProductOrderDto  } from 'dtos';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('product-order')
