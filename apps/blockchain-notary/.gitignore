@@ -1,1 +1,66 @@
+# Node
+node_modules/
+dist/
+build/
+.gradle/
+*.log
+
+# NestJS
+.nest/
+
+# Java
+target/
+
+# IDEs / Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# OS
+Thumbs.db
+
+# Environment
 .env
+.env.local
+.env.*.local
+.env.development
+.env.test
+.env.production
+.env.production.local
+!.env.example
+
+# Testing
+coverage/
+.nyc_output/
+
+# Build Artifacts
+*.tgz
+
+# Generated files
+*.d.ts
+
+# Temporary files
+tmp/
+temp/
+temp_*
+*.tmp
+
+# Specific to this project
+.amplify/
+
+# Database
+*.sqlite
+*.db
+*.sqlite3
+*.mv.db
+
+# TypeScript
+.tsbuildinfo
+*.tsbuildinfo
+
+# Misc
+*.md
+*.bak

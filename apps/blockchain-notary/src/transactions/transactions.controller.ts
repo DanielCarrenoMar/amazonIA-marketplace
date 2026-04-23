@@ -1,8 +1,10 @@
-import { Controller, Post, Body, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, HttpException, HttpStatus, UseGuards } from '@nestjs/common';
 import { Web3Service } from './web3.service';
 import { RegisterTransactionDto } from './dto/register-transaction.dto';
+import { ApiKeyGuard } from '../auth/api-key.guard';
 
 @Controller('transactions')
+@UseGuards(ApiKeyGuard)
 export class TransactionsController {
   constructor(private readonly web3Service: Web3Service) {}
 
