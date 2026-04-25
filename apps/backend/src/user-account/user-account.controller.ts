@@ -1,8 +1,19 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  ParseUUIDPipe,
+  UseGuards,
+} from '@nestjs/common';
 import { UserAccountService } from './user-account.service';
-import {  CreateUserAccountDto  } from 'dtos';
-import {  UpdateUserAccountDto  } from 'dtos';
+import { CreateUserAccountDto, UpdateUserAccountDto, UserRole } from 'dtos';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 
 @Controller('user-account')
 export class UserAccountController {
@@ -14,6 +25,9 @@ export class UserAccountController {
     return this.userAccountService.create(createUserAccountDto);
   }
 
+  // Only ADMIN can list all users
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @Get()
   findAll() {
     return this.userAccountService.findAll();
@@ -26,11 +40,15 @@ export class UserAccountController {
 
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() updateUserAccountDto: UpdateUserAccountDto) {
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateUserAccountDto: UpdateUserAccountDto,
+  ) {
     return this.userAccountService.update(id, updateUserAccountDto);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @Delete(':id')
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.userAccountService.remove(id);
