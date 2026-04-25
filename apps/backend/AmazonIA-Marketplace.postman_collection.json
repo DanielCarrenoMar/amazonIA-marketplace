@@ -1,0 +1,878 @@
+{
+  "info": {
+    "_postman_id": "amazonia-marketplace-v4",
+    "name": "AmazonIA Marketplace API",
+    "description": "Colección completa del backend. Cubre todos los endpoints con guards correctos.\n\n**Usuarios de prueba (Password: Password123!)**\n- 🛒 Comprador: comprador@amazonia.com\n- 🏪 Vendedor 1 (Electrónica): vendedor1@amazonia.com\n- 🏪 Vendedor 2 (Moda): vendedor2@amazonia.com\n\n**Setup rápido:**\n1. Ejecuta 'Login (Comprador) ← EMPIEZA AQUÍ'\n2. El `accessToken` se guarda automáticamente\n3. Todas las rutas 🔒 lo usarán automáticamente",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl",      "value": "http://localhost:3001", "type": "string" },
+    { "key": "accessToken",  "value": "",                     "type": "string" },
+    { "key": "sellerUserId", "value": "",                     "type": "string" },
+    { "key": "buyerUserId",  "value": "",                     "type": "string" },
+    { "key": "productId",    "value": "",                     "type": "string" },
+    { "key": "orderId",      "value": "",                     "type": "string" },
+    { "key": "tribeId",      "value": "",                     "type": "string" },
+    { "key": "categoryId",   "value": "",                     "type": "string" }
+  ],
+  "item": [
+
+    {
+      "name": "🔑 Auth",
+      "item": [
+        {
+          "name": "Login (Comprador) ← EMPIEZA AQUÍ",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.accessToken) {",
+                  "  pm.collectionVariables.set('accessToken', res.accessToken);",
+                  "  console.log('✅ accessToken guardado automáticamente');",
+                  "}",
+                  "if (res.user && res.user.id) {",
+                  "  pm.collectionVariables.set('buyerUserId', res.user.id);",
+                  "  console.log('✅ buyerUserId guardado: ' + res.user.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"comprador@amazonia.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "description": "Login como comprador. Guarda automáticamente `accessToken` y `buyerUserId`."
+          }
+        },
+        {
+          "name": "Login (Vendedor 1 - Electrónica)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.accessToken) {",
+                  "  pm.collectionVariables.set('accessToken', res.accessToken);",
+                  "  console.log('✅ accessToken guardado automáticamente');",
+                  "}",
+                  "if (res.user && res.user.id) {",
+                  "  pm.collectionVariables.set('sellerUserId', res.user.id);",
+                  "  console.log('✅ sellerUserId guardado: ' + res.user.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"vendedor1@amazonia.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "description": "Login como Vendedor 1. Guarda automáticamente `accessToken` y `sellerUserId`."
+          }
+        },
+        {
+          "name": "Login (Vendedor 2 - Moda)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.accessToken) {",
+                  "  pm.collectionVariables.set('accessToken', res.accessToken);",
+                  "  console.log('✅ accessToken guardado automáticamente');",
+                  "}",
+                  "if (res.user && res.user.id) {",
+                  "  pm.collectionVariables.set('sellerUserId', res.user.id);",
+                  "  console.log('✅ sellerUserId guardado: ' + res.user.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"vendedor2@amazonia.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "description": "Login como Vendedor 2 (José Rodríguez)."
+          }
+        },
+        {
+          "name": "Register (Nuevo Usuario)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Ana Martínez\",\n  \"nationalId\": \"V-44444444\",\n  \"email\": \"ana@amazonia.com\",\n  \"password\": \"Password123!\",\n  \"username\": \"anamtz\",\n  \"age\": 25,\n  \"nationality\": \"Venezolana\",\n  \"phonePrimary\": \"+58 412 9999999\"\n}"
+            },
+            "description": "Crea un nuevo usuario y devuelve tokens de inmediato. Ruta pública."
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "refresh"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"<pega_el_refreshToken_aqui>\"\n}"
+            },
+            "description": "Acepta un refreshToken válido (7d) y devuelve un nuevo par de tokens (rotación)."
+          }
+        },
+        {
+          "name": "🔒 Mi Perfil (GET /auth/me)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "me"]
+            },
+            "description": "Devuelve el payload del JWT del usuario autenticado."
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "👤 User Account",
+      "item": [
+        {
+          "name": "Crear Usuario (POST /user-account) — Público",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/user-account",
+              "host": ["{{baseUrl}}"],
+              "path": ["user-account"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Carlos Pérez\",\n  \"nationalId\": \"V-55555555\",\n  \"email\": \"carlos@amazonia.com\",\n  \"password\": \"Password123!\",\n  \"username\": \"carlosperez\",\n  \"age\": 32,\n  \"nationality\": \"Venezolana\",\n  \"phonePrimary\": \"+58 414 1234567\"\n}"
+            },
+            "description": "Crea un UserAccount directamente sin token. Useful para tests de registro manual."
+          }
+        },
+        {
+          "name": "Listar Todos los Usuarios (GET /user-account) — Público",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/user-account",
+              "host": ["{{baseUrl}}"],
+              "path": ["user-account"]
+            }
+          }
+        },
+        {
+          "name": "Ver Usuario por ID (GET /user-account/:id) — Público",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/user-account/{{buyerUserId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["user-account", "{{buyerUserId}}"]
+            },
+            "description": "Usa la variable {{buyerUserId}} guardada al hacer Login (Comprador)."
+          }
+        },
+        {
+          "name": "🔒 Actualizar Usuario (PATCH /user-account/:id)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type",   "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/user-account/{{buyerUserId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["user-account", "{{buyerUserId}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phonePrimary\": \"+58 412 9876543\",\n  \"locationCity\": \"Maracaibo\",\n  \"locationRegion\": \"Zulia\"\n}"
+            }
+          }
+        },
+        {
+          "name": "🔒 Eliminar Usuario (DELETE /user-account/:id)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/user-account/{{buyerUserId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["user-account", "{{buyerUserId}}"]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "🏘️ Tribe",
+      "item": [
+        {
+          "name": "🔒 Crear Tribu (POST /tribe)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.id) {",
+                  "  pm.collectionVariables.set('tribeId', String(res.id));",
+                  "  console.log('✅ tribeId guardado: ' + res.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type",   "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tribe",
+              "host": ["{{baseUrl}}"],
+              "path": ["tribe"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Tribu Comida\",\n  \"description\": \"Vendedores de alimentos y bebidas artesanales\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Listar Tribus (GET /tribe) — Público",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tribe",
+              "host": ["{{baseUrl}}"],
+              "path": ["tribe"]
+            }
+          }
+        },
+        {
+          "name": "Ver Tribu por ID (GET /tribe/:id) — Público",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tribe/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["tribe", "1"]
+            }
+          }
+        },
+        {
+          "name": "🔒 Actualizar Tribu (PATCH /tribe/:id)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type",   "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tribe/{{tribeId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["tribe", "{{tribeId}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Tribu Tecnología\",\n  \"description\": \"Descripción actualizada de la tribu\"\n}"
+            }
+          }
+        },
+        {
+          "name": "🔒 Eliminar Tribu (DELETE /tribe/:id)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/tribe/{{tribeId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["tribe", "{{tribeId}}"]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "🏪 Seller",
+      "item": [
+        {
+          "name": "🔒 Crear Perfil de Vendedor (POST /seller)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type",   "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/seller",
+              "host": ["{{baseUrl}}"],
+              "path": ["seller"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"{{buyerUserId}}\",\n  \"tribeId\": 1,\n  \"description\": \"Vendo artículos de tecnología y gadgets importados.\"\n}"
+            },
+            "description": "Convierte un UserAccount existente en Seller. El 'id' debe ser el UUID del usuario."
+          }
+        },
+        {
+          "name": "Listar Vendedores (GET /seller) — Público",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/seller",
+              "host": ["{{baseUrl}}"],
+              "path": ["seller"]
+            }
+          }
+        },
+        {
+          "name": "Ver Vendedor por ID (GET /seller/:id) — Público",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/seller/{{sellerUserId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["seller", "{{sellerUserId}}"]
+            },
+            "description": "El ID del seller es el mismo UUID del UserAccount."
+          }
+        },
+        {
+          "name": "🔒 Actualizar Vendedor (PATCH /seller/:id)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type",   "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/seller/{{sellerUserId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["seller", "{{sellerUserId}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Descripción actualizada del vendedor.\",\n  \"tribeId\": 2\n}"
+            }
+          }
+        },
+        {
+          "name": "🔒 Eliminar Vendedor (DELETE /seller/:id)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/seller/{{sellerUserId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["seller", "{{sellerUserId}}"]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "📦 Product Category",
+      "item": [
+        {
+          "name": "🔒 Crear Categoría (POST /product-category)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.id) {",
+                  "  pm.collectionVariables.set('categoryId', String(res.id));",
+                  "  console.log('✅ categoryId guardado: ' + res.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type",   "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/product-category",
+              "host": ["{{baseUrl}}"],
+              "path": ["product-category"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"categoryName\": \"Hogar\",\n  \"subcategoryName\": \"Muebles\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Listar Categorías (GET /product-category) — Público",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/product-category",
+              "host": ["{{baseUrl}}"],
+              "path": ["product-category"]
+            }
+          }
+        },
+        {
+          "name": "Ver Categoría por ID (GET /product-category/:id) — Público",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/product-category/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["product-category", "1"]
+            }
+          }
+        },
+        {
+          "name": "🔒 Actualizar Categoría (PATCH /product-category/:id)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type",   "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/product-category/{{categoryId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["product-category", "{{categoryId}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subcategoryName\": \"Smartphones\"\n}"
+            }
+          }
+        },
+        {
+          "name": "🔒 Eliminar Categoría (DELETE /product-category/:id)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/product-category/{{categoryId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["product-category", "{{categoryId}}"]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "🛒 Product",
+      "item": [
+        {
+          "name": "🔒 Crear Producto (POST /product)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.id) {",
+                  "  pm.collectionVariables.set('productId', res.id);",
+                  "  console.log('✅ productId guardado: ' + res.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type",   "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/product",
+              "host": ["{{baseUrl}}"],
+              "path": ["product"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sellerId\": \"{{sellerUserId}}\",\n  \"categoryId\": 1,\n  \"name\": \"Airpods Pro 2da Generación\",\n  \"description\": \"Cancelación activa de ruido, estuche MagSafe. Nuevo en caja.\",\n  \"price\": 249.99,\n  \"stockAvailable\": 20,\n  \"locationCity\": \"Caracas\",\n  \"locationRegion\": \"Distrito Capital\",\n  \"locationFormattedAddress\": \"Centro Comercial Sambil, Caracas\"\n}"
+            },
+            "description": "Requiere token de Vendedor. Primero haz Login (Vendedor 1) para tener `sellerUserId` y `accessToken`."
+          }
+        },
+        {
+          "name": "Listar Productos (GET /product) — Público",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/product?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["product"],
+              "query": [
+                { "key": "page",  "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buscar Productos por Nombre (GET /product?search=) — Público",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/product?search=Samsung&page=1&limit=5",
+              "host": ["{{baseUrl}}"],
+              "path": ["product"],
+              "query": [
+                { "key": "search", "value": "Samsung" },
+                { "key": "page",   "value": "1" },
+                { "key": "limit",  "value": "5" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Filtrar por Categoría (GET /product?categoryId=) — Público",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/product?categoryId=1&page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["product"],
+              "query": [
+                { "key": "categoryId", "value": "1" },
+                { "key": "page",       "value": "1" },
+                { "key": "limit",      "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Productos Cercanos — PostGIS (GET /product/nearby) — Público",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/product/nearby?lat=10.4985&lng=-66.8792&radiusKm=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["product", "nearby"],
+              "query": [
+                { "key": "lat",      "value": "10.4985" },
+                { "key": "lng",      "value": "-66.8792" },
+                { "key": "radiusKm", "value": "50" }
+              ]
+            },
+            "description": "Busca productos en un radio de 50 km desde Caracas (lat: 10.4985, lng: -66.8792). NOTA: la ruta `/nearby` debe quedar ANTES de `/:id` en el router de NestJS."
+          }
+        },
+        {
+          "name": "Ver Producto por ID (GET /product/:id) — Público",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/product/{{productId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["product", "{{productId}}"]
+            },
+            "description": "Usa {{productId}} guardado al crear un producto."
+          }
+        },
+        {
+          "name": "🔒 Actualizar Producto (PATCH /product/:id)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type",   "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/product/{{productId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["product", "{{productId}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 229.99,\n  \"stockAvailable\": 18\n}"
+            }
+          }
+        },
+        {
+          "name": "🔒 Eliminar Producto (DELETE /product/:id)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/product/{{productId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["product", "{{productId}}"]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "⭐ Product Rating",
+      "item": [
+        {
+          "name": "🔒 Crear Rating (POST /product-rating)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type",   "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/product-rating",
+              "host": ["{{baseUrl}}"],
+              "path": ["product-rating"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"{{productId}}\",\n  \"ratingValue\": 5\n}"
+            },
+            "description": "El `userAccountId` se extrae del JWT (no se envía en el body). Califica del 1 al 5."
+          }
+        },
+        {
+          "name": "Listar Ratings (GET /product-rating) — Público",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/product-rating",
+              "host": ["{{baseUrl}}"],
+              "path": ["product-rating"]
+            }
+          }
+        },
+        {
+          "name": "Ver Rating de un Usuario en un Producto (GET /product-rating/:productId/:userAccountId) — Público",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/product-rating/{{productId}}/{{buyerUserId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["product-rating", "{{productId}}", "{{buyerUserId}}"]
+            }
+          }
+        },
+        {
+          "name": "🔒 Actualizar Rating (PATCH /product-rating/:productId)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type",   "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/product-rating/{{productId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["product-rating", "{{productId}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ratingValue\": 4\n}"
+            },
+            "description": "El `userAccountId` se extrae del JWT. Solo actualiza el rating del usuario autenticado."
+          }
+        },
+        {
+          "name": "🔒 Eliminar Rating (DELETE /product-rating/:productId)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/product-rating/{{productId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["product-rating", "{{productId}}"]
+            },
+            "description": "El `userAccountId` se extrae del JWT. Solo elimina el rating del usuario autenticado."
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "📋 Product Order",
+      "item": [
+        {
+          "name": "🔒 Crear Orden (POST /product-order)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.id) {",
+                  "  pm.collectionVariables.set('orderId', res.id);",
+                  "  console.log('✅ orderId guardado: ' + res.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type",   "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/product-order",
+              "host": ["{{baseUrl}}"],
+              "path": ["product-order"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"{{productId}}\",\n  \"quantity\": 1,\n  \"orderNotes\": \"Entrega urgente por favor.\"\n}"
+            },
+            "description": "El `buyerId` se extrae del JWT. Primero haz Login como Comprador y asegúrate de tener un `productId` válido."
+          }
+        },
+        {
+          "name": "Listar Órdenes (GET /product-order) — Público",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/product-order",
+              "host": ["{{baseUrl}}"],
+              "path": ["product-order"]
+            }
+          }
+        },
+        {
+          "name": "Ver Orden por ID (GET /product-order/:id) — Público",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/product-order/{{orderId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["product-order", "{{orderId}}"]
+            }
+          }
+        },
+        {
+          "name": "Historial de Estado de Orden (GET /product-order/:id/history) — Público",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/product-order/{{orderId}}/history",
+              "host": ["{{baseUrl}}"],
+              "path": ["product-order", "{{orderId}}", "history"]
+            }
+          }
+        },
+        {
+          "name": "🔒 Actualizar Estado de Orden (PATCH /product-order/:id)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type",   "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/product-order/{{orderId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["product-order", "{{orderId}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentStatus\": \"SHIPPED\",\n  \"statusNote\": \"Paquete enviado via MRW, tracking: MRW123456\"\n}"
+            },
+            "description": "El `changedByUserId` se extrae del JWT. Estados válidos: PENDING → PAID → SHIPPED → DELIVERED / CANCELED / REFUNDED"
+          }
+        },
+        {
+          "name": "🔒 Eliminar Orden (DELETE /product-order/:id)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/product-order/{{orderId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["product-order", "{{orderId}}"]
+            }
+          }
+        }
+      ]
+    }
+
+  ]
+}
