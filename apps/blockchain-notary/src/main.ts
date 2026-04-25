@@ -1,19 +1,28 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, Logger } from '@nestjs/common';
 
 async function bootstrap() {
+  const logger = new Logger('Bootstrap');
   const app = await NestFactory.create(AppModule);
-  
-  // ¡CLAVE! Activamos class-validator de manera global para que el DTO valide al instante el payload
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true,
-    forbidNonWhitelisted: true,
-  }));
-  
-  // Endpoint de negocio
+
+  // Validación global de DTOs con class-validator
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
+
+  // Prefijo global de la API
   app.setGlobalPrefix('api/v1');
-  
-  await app.listen(process.env.PORT || 3001);
+
+  const port = process.env.PORT || 3001;
+  await app.listen(port);
+
+  logger.log(`🔗 Blockchain Notary running on http://localhost:${port}/api/v1`);
+  logger.log(`❤️  Health check: http://localhost:${port}/api/v1/health`);
 }
+
 bootstrap();

@@ -10,9 +10,10 @@ import { ProductModule } from './product/product.module';
 import { ProductOrderModule } from './product-order/product-order.module';
 import { ProductRatingModule } from './product-rating/product-rating.module';
 import { AuthModule } from './auth/auth.module';
+import { BlockchainModule } from './blockchain/blockchain.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, UserAccountModule, TribeModule, SellerModule, ProductCategoryModule, ProductModule, ProductOrderModule, ProductRatingModule],
+  imports: [PrismaModule, AuthModule, UserAccountModule, TribeModule, SellerModule, ProductCategoryModule, ProductModule, ProductOrderModule, ProductRatingModule, BlockchainModule],
   controllers: [AppController],
   providers: [AppService],
 })

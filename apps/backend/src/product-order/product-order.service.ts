@@ -1,11 +1,18 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { CreateProductOrderDto } from './dto/create-product-order.dto';
 import { UpdateProductOrderDto } from './dto/update-product-order.dto';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotaryClientService } from '../blockchain/services/notary-client.service';
+import { OrderStatus } from '@prisma/client';
 
 @Injectable()
 export class ProductOrderService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(ProductOrderService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notaryClientService: NotaryClientService,
+  ) {}
 
   // buyerId comes from the JWT token (req.user.id), NOT from the client body
   async create(buyerId: string, createProductOrderDto: CreateProductOrderDto) {
@@ -64,8 +71,8 @@ export class ProductOrderService {
     const statusChanged = orderData.currentStatus && orderData.currentStatus !== order.currentStatus;
 
     // Use a transaction to keep the order update and history log atomic
-    return this.prisma.$transaction(async (tx) => {
-      const updatedOrder = await tx.productOrder.update({
+    const updatedOrder = await this.prisma.$transaction(async (tx) => {
+      const updated = await tx.productOrder.update({
         where: { id },
         data: orderData,
       });
@@ -108,8 +115,35 @@ export class ProductOrderService {
         }
       }
 
-      return updatedOrder;
+      return updated;
     });
+
+    // Event-driven: disparar notarización cuando la orden se marca como PAID
+    // No bloqueamos la respuesta — la notarización es asíncrona
+    if (statusChanged && orderData.currentStatus === OrderStatus.PAID) {
+      // Obtener datos completos de la orden para la notarización
+      const fullOrder = await this.prisma.productOrder.findUnique({
+        where: { id },
+        include: { product: { include: { seller: true } } },
+      });
+
+      if (fullOrder) {
+        this.notaryClientService.notarizeOrder({
+          orderId: fullOrder.id,
+          amount: Number(fullOrder.totalAmount),
+          paymentMethod: 'fiat',
+          productHash: fullOrder.productId, // TODO: generar hash SHA-256 del producto
+          buyerId: fullOrder.buyerId,
+          sellerId: fullOrder.product.sellerId,
+        }).catch((error) => {
+          this.logger.error(
+            `Failed to send notarization for order ${id}: ${error.message}`,
+          );
+        });
+      }
+    }
+
+    return updatedOrder;
   }
 
   async findHistory(id: string) {

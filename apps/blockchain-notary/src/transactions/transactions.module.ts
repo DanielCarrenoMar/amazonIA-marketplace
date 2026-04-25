@@ -1,9 +1,12 @@
 import { Module } from '@nestjs/common';
 import { TransactionsController } from './transactions.controller';
-import { Web3Service } from './web3.service';
+import { TransactionsService } from './transactions.service';
+import { BlockchainModule } from '../blockchain/blockchain.module';
+import { WebhookModule } from '../webhook/webhook.module';
 
 @Module({
+  imports: [BlockchainModule, WebhookModule],
   controllers: [TransactionsController],
-  providers: [Web3Service],
+  providers: [TransactionsService],
 })
 export class TransactionsModule {}

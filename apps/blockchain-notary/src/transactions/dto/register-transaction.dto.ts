@@ -1,7 +1,9 @@
-import { IsString, IsNumber, IsNotEmpty } from 'class-validator';
+import { IsString, IsNumber, IsNotEmpty, IsOptional, IsUrl } from 'class-validator';
 
-// Tipado estricto con validaciones automáticas.
-// Esta es la ventaja brutal de usar Nest: nos ahorramos todo el código de validación de ifs y typeofs.
+// =============================================================================
+// RegisterTransactionDto — Payload que el Backend Core envía al Notario
+// =============================================================================
+
 export class RegisterTransactionDto {
   @IsString()
   @IsNotEmpty()
@@ -25,4 +27,9 @@ export class RegisterTransactionDto {
   @IsString()
   @IsNotEmpty()
   sellerId: string;
+
+  @IsString()
+  @IsOptional()
+  @IsUrl()
+  webhookUrl?: string;
 }
