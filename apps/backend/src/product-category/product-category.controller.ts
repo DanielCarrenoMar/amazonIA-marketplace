@@ -1,14 +1,32 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  ParseIntPipe,
+  UseGuards,
+} from '@nestjs/common';
 import { ProductCategoryService } from './product-category.service';
-import {  CreateProductCategoryDto  } from 'dtos';
-import {  UpdateProductCategoryDto  } from 'dtos';
+import {
+  CreateProductCategoryDto,
+  UpdateProductCategoryDto,
+  UserRole,
+} from 'dtos';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 
 @Controller('product-category')
 export class ProductCategoryController {
-  constructor(private readonly productCategoryService: ProductCategoryService) {}
+  constructor(
+    private readonly productCategoryService: ProductCategoryService,
+  ) {}
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @Post()
   create(@Body() createProductCategoryDto: CreateProductCategoryDto) {
     return this.productCategoryService.create(createProductCategoryDto);
@@ -24,13 +42,18 @@ export class ProductCategoryController {
     return this.productCategoryService.findOne(id);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @Patch(':id')
-  update(@Param('id', ParseIntPipe) id: number, @Body() updateProductCategoryDto: UpdateProductCategoryDto) {
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateProductCategoryDto: UpdateProductCategoryDto,
+  ) {
     return this.productCategoryService.update(id, updateProductCategoryDto);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.productCategoryService.remove(id);
