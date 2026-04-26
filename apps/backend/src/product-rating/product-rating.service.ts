@@ -7,19 +7,38 @@ import { PrismaService } from '../prisma/prisma.service';
 export class ProductRatingService {
   constructor(private readonly prisma: PrismaService) {}
 
-  // Recalculates the exact average rating of a product using Prisma's aggregate
+  // Recalculates the exact average rating of a product using Prisma's aggregate,
+  // then propagates the seller-level stats (avgProductRating, totalReviews)
   private async recalculateProductAverage(tx: any, productId: string) {
-    const aggregate = await tx.productRating.aggregate({
+    // 1. Recalculate and persist the product-level average
+    const productAggregate = await tx.productRating.aggregate({
       where: { productId },
       _avg: { ratingValue: true },
+      _count: { ratingValue: true },
     });
 
-    const newAverage = aggregate._avg.ratingValue;
-    
-    // Update the parent Product with the newly calculated mathematical average
-    await tx.product.update({
+    const newProductAvg = productAggregate._avg.ratingValue;
+
+    // Fetch the sellerId while updating the product
+    const updatedProduct = await tx.product.update({
       where: { id: productId },
-      data: { averageRating: newAverage },
+      data: { averageRating: newProductAvg },
+      select: { sellerId: true },
+    });
+
+    // 2. Recalculate and persist the seller-level average across ALL their products
+    const sellerAggregate = await tx.productRating.aggregate({
+      where: { product: { sellerId: updatedProduct.sellerId } },
+      _avg: { ratingValue: true },
+      _count: { ratingValue: true },
+    });
+
+    await tx.seller.update({
+      where: { id: updatedProduct.sellerId },
+      data: {
+        avgProductRating: sellerAggregate._avg.ratingValue,
+        totalReviews: sellerAggregate._count.ratingValue,
+      },
     });
   }
 
