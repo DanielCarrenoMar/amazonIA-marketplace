@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "turbo dev --filter=frontend --filter=backend",
+    "dev": "turbo dev --filter=frontend... --filter=backend...",
     "dev-legacy": "turbo dev --filter=frontend-legacy"
   },
   "keywords": [],
