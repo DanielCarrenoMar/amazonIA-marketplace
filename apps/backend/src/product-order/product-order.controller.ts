@@ -11,10 +11,8 @@ import {
   Request,
 } from '@nestjs/common';
 import { ProductOrderService } from './product-order.service';
-import { CreateProductOrderDto, UpdateProductOrderDto, UserRole } from 'dtos';
+import { CreateProductOrderDto, UpdateProductOrderDto } from 'dtos';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
 
 @Controller('product-order')
 export class ProductOrderController {
@@ -45,9 +43,8 @@ export class ProductOrderController {
     return this.productOrderService.findHistory(id);
   }
 
-  // Only SELLER or ADMIN can update order status
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.SELLER, UserRole.ADMIN)
+  // Login required. Service enforces buyer/admin/seller ownership rules.
+  @UseGuards(JwtAuthGuard)
   @Patch(':id')
   update(
     @Param('id', ParseUUIDPipe) id: string,
@@ -56,15 +53,15 @@ export class ProductOrderController {
   ) {
     return this.productOrderService.update(
       id,
-      req.user.id,
+      req.user,
       updateProductOrderDto,
     );
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
+  // Login required. Service enforces buyer/admin ownership rules.
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
-  remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.productOrderService.remove(id);
+  remove(@Param('id', ParseUUIDPipe) id: string, @Request() req: any) {
+    return this.productOrderService.remove(id, req.user);
   }
 }

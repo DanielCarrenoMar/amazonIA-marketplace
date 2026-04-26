@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import {  CreateProductRatingDto  } from 'dtos';
 import {  UpdateProductRatingDto  } from 'dtos';
 import { PrismaService } from '../prisma/prisma.service';
@@ -53,7 +53,17 @@ export class ProductRatingService {
   }
 
   async update(productId: string, userAccountId: string, updateProductRatingDto: UpdateProductRatingDto) {
-    await this.findOne(productId, userAccountId); // Check existence
+    const rating = await this.prisma.productRating.findFirst({
+      where: { productId },
+    });
+
+    if (!rating) {
+      throw new NotFoundException('ProductRating not found');
+    }
+
+    if (rating.userAccountId !== userAccountId) {
+      throw new ForbiddenException('You can only update your own rating');
+    }
 
     return this.prisma.$transaction(async (tx) => {
       const updatedRating = await tx.productRating.update({
@@ -68,7 +78,17 @@ export class ProductRatingService {
   }
 
   async remove(productId: string, userAccountId: string) {
-    await this.findOne(productId, userAccountId); // Check existence
+    const rating = await this.prisma.productRating.findFirst({
+      where: { productId },
+    });
+
+    if (!rating) {
+      throw new NotFoundException('ProductRating not found');
+    }
+
+    if (rating.userAccountId !== userAccountId) {
+      throw new ForbiddenException('You can only delete your own rating');
+    }
 
     return this.prisma.$transaction(async (tx) => {
       const deletedRating = await tx.productRating.delete({
