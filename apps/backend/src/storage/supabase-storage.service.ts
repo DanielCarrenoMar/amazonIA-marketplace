@@ -11,11 +11,12 @@ export class SupabaseStorageService implements StorageService {
   private readonly bucketName = 'amazonia-marketplace';
 
   constructor(private readonly configService: ConfigService) {
-    const supabaseUrl = this.configService.get<string>('SUPABASE_URL');
-    const supabaseKey = this.configService.get<string>('SUPABASE_SERVICE_KEY');
+    const supabaseUrl = this.configService.get<string>('SUPABASE_URL') || process.env.SUPABASE_URL;
+    const supabaseKey = this.configService.get<string>('SUPABASE_SERVICE_KEY') || process.env.SUPABASE_SERVICE_KEY;
 
     if (!supabaseUrl || !supabaseKey) {
-      throw new Error('Las credenciales de Supabase no están configuradas.');
+      console.error('Missing Supabase Config:', { supabaseUrl: !!supabaseUrl, supabaseKey: !!supabaseKey });
+      throw new Error('Las credenciales de Supabase no están configuradas en el .env');
     }
 
     this.supabase = createClient(supabaseUrl, supabaseKey);
