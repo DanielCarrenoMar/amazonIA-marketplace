@@ -1,7 +1,7 @@
 import {
   Controller, Get, Post, Body, Patch, Param,
   Delete, ParseUUIDPipe, UseGuards, Query,
-  UseInterceptors, UploadedFile, BadRequestException
+  UseInterceptors, UploadedFile, BadRequestException, Req
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ProductService } from './product.service';
@@ -12,7 +12,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 
 @Controller('product')
 export class ProductController {
-  constructor(private readonly productService: ProductService) {}
+  constructor(private readonly productService: ProductService) { }
 
   // Only authenticated sellers or admins can create products
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -32,6 +32,15 @@ export class ProductController {
   @Get('nearby')
   findNearby(@Query() query: FindNearbyDto) {
     return this.productService.findNearby(query);
+  }
+
+  //  Declarado antes del GET ':id'
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SELLER, UserRole.ADMIN)
+  @Get('my-products')
+  findBySeller(@Req() req: any) {
+    const sellerId = req.user.id;
+    return this.productService.findBySeller(sellerId);
   }
 
   // Public — anyone can view a single product

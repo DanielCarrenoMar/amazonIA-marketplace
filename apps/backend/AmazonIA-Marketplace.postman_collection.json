@@ -1,57 +1,12 @@
 {
   "info": {
-    "_postman_id": "amazonia-marketplace-v4",
+    "_postman_id": "df6967a3-069e-4229-8be0-404bfcfe5db5",
     "name": "AmazonIA Marketplace API",
     "description": "Colección completa del backend actualizada con Roles y Ownership.\n\n**Usuarios de prueba (Password: Password123!)**\n- 👑 Admin: admin@amazonia.com\n- 🏪 Vendedor 1: vendedor1@amazonia.com\n- 🛒 Comprador: comprador@amazonia.com\n\n**Flujo:**\nEjecuta el Login que necesites y el token se guarda solo.",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "54131272",
+    "_collection_link": "https://go.postman.co/collection/54131272-df6967a3-069e-4229-8be0-404bfcfe5db5?source=collection_link"
   },
-  "variable": [
-    {
-      "key": "baseUrl",
-      "value": "http://localhost:3001",
-      "type": "string"
-    },
-    {
-      "key": "accessToken",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "sellerUserId",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "buyerUserId",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "productId",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "orderId",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "tribeId",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "categoryId",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "adminUserId",
-      "value": "",
-      "type": "string"
-    }
-  ],
   "item": [
     {
       "name": "🔑 Auth",
@@ -85,6 +40,10 @@
                 "value": "application/json"
               }
             ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"comprador@amazonia.com\",\n  \"password\": \"Password123!\"\n}"
+            },
             "url": {
               "raw": "{{baseUrl}}/auth/login",
               "host": [
@@ -95,12 +54,9 @@
                 "login"
               ]
             },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"comprador@amazonia.com\",\n  \"password\": \"Password123!\"\n}"
-            },
             "description": "Login como comprador. Guarda automáticamente `accessToken` y `buyerUserId`."
-          }
+          },
+          "response": []
         },
         {
           "name": "Login (Administrador)",
@@ -131,6 +87,10 @@
                 "value": "application/json"
               }
             ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@amazonia.com\",\n  \"password\": \"Password123!\"\n}"
+            },
             "url": {
               "raw": "{{baseUrl}}/auth/login",
               "host": [
@@ -141,12 +101,9 @@
                 "login"
               ]
             },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"admin@amazonia.com\",\n  \"password\": \"Password123!\"\n}"
-            },
             "description": "Login como Administrador (Role: ADMIN). Guarda automáticamente `accessToken` y `adminUserId`."
-          }
+          },
+          "response": []
         },
         {
           "name": "Login (Vendedor 1 - Electrónica)",
@@ -177,6 +134,10 @@
                 "value": "application/json"
               }
             ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"vendedor1@amazonia.com\",\n  \"password\": \"Password123!\"\n}"
+            },
             "url": {
               "raw": "{{baseUrl}}/auth/login",
               "host": [
@@ -187,12 +148,9 @@
                 "login"
               ]
             },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"vendedor1@amazonia.com\",\n  \"password\": \"Password123!\"\n}"
-            },
             "description": "Login como Vendedor 1. Guarda automáticamente `accessToken` y `sellerUserId`."
-          }
+          },
+          "response": []
         },
         {
           "name": "Login (Vendedor 2 - Moda)",
@@ -223,6 +181,10 @@
                 "value": "application/json"
               }
             ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"vendedor2@amazonia.com\",\n  \"password\": \"Password123!\"\n}"
+            },
             "url": {
               "raw": "{{baseUrl}}/auth/login",
               "host": [
@@ -233,12 +195,9 @@
                 "login"
               ]
             },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"vendedor2@amazonia.com\",\n  \"password\": \"Password123!\"\n}"
-            },
             "description": "Login como Vendedor 2 (José Rodríguez)."
-          }
+          },
+          "response": []
         },
         {
           "name": "Register (Nuevo Usuario)",
@@ -250,6 +209,10 @@
                 "value": "application/json"
               }
             ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Ana Martínez\",\n  \"nationalId\": \"V-44444444\",\n  \"email\": \"ana@amazonia.com\",\n  \"password\": \"Password123!\",\n  \"username\": \"anamtz\",\n  \"age\": 25,\n  \"nationality\": \"Venezolana\",\n  \"phonePrimary\": \"+58 412 9999999\"\n}"
+            },
             "url": {
               "raw": "{{baseUrl}}/auth/register",
               "host": [
@@ -260,12 +223,9 @@
                 "register"
               ]
             },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"fullName\": \"Ana Martínez\",\n  \"nationalId\": \"V-44444444\",\n  \"email\": \"ana@amazonia.com\",\n  \"password\": \"Password123!\",\n  \"username\": \"anamtz\",\n  \"age\": 25,\n  \"nationality\": \"Venezolana\",\n  \"phonePrimary\": \"+58 412 9999999\"\n}"
-            },
             "description": "Crea un nuevo usuario y devuelve tokens de inmediato. Ruta pública."
-          }
+          },
+          "response": []
         },
         {
           "name": "Refresh Token",
@@ -277,6 +237,10 @@
                 "value": "application/json"
               }
             ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"<pega_el_refreshToken_aqui>\"\n}"
+            },
             "url": {
               "raw": "{{baseUrl}}/auth/refresh",
               "host": [
@@ -287,12 +251,9 @@
                 "refresh"
               ]
             },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"refreshToken\": \"<pega_el_refreshToken_aqui>\"\n}"
-            },
             "description": "Acepta un refreshToken válido (7d) y devuelve un nuevo par de tokens (rotación)."
-          }
+          },
+          "response": []
         },
         {
           "name": "🔒 Mi Perfil (GET /auth/me)",
@@ -315,7 +276,8 @@
               ]
             },
             "description": "Devuelve el payload del JWT del usuario autenticado."
-          }
+          },
+          "response": []
         }
       ]
     },
@@ -332,6 +294,10 @@
                 "value": "application/json"
               }
             ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Carlos Pérez\",\n  \"nationalId\": \"V-55555555\",\n  \"email\": \"carlos@amazonia.com\",\n  \"password\": \"Password123!\",\n  \"username\": \"carlosperez\",\n  \"age\": 32,\n  \"nationality\": \"Venezolana\",\n  \"phonePrimary\": \"+58 414 1234567\"\n}"
+            },
             "url": {
               "raw": "{{baseUrl}}/user-account",
               "host": [
@@ -341,12 +307,9 @@
                 "user-account"
               ]
             },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"fullName\": \"Carlos Pérez\",\n  \"nationalId\": \"V-55555555\",\n  \"email\": \"carlos@amazonia.com\",\n  \"password\": \"Password123!\",\n  \"username\": \"carlosperez\",\n  \"age\": 32,\n  \"nationality\": \"Venezolana\",\n  \"phonePrimary\": \"+58 414 1234567\"\n}"
-            },
             "description": "Crea un UserAccount directamente sin token. Useful para tests de registro manual."
-          }
+          },
+          "response": []
         },
         {
           "name": "Listar Todos los Usuarios (GET /user-account) — Público",
@@ -362,7 +325,8 @@
                 "user-account"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Ver Usuario por ID (GET /user-account/:id) — Público",
@@ -380,7 +344,8 @@
               ]
             },
             "description": "Usa la variable {{buyerUserId}} guardada al hacer Login (Comprador)."
-          }
+          },
+          "response": []
         },
         {
           "name": "🔒 Actualizar Usuario (PATCH /user-account/:id)",
@@ -396,6 +361,10 @@
                 "value": "application/json"
               }
             ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phonePrimary\": \"+58 412 9876543\",\n  \"locationCity\": \"Maracaibo\",\n  \"locationRegion\": \"Zulia\"\n}"
+            },
             "url": {
               "raw": "{{baseUrl}}/user-account/{{buyerUserId}}",
               "host": [
@@ -406,12 +375,9 @@
                 "{{buyerUserId}}"
               ]
             },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"phonePrimary\": \"+58 412 9876543\",\n  \"locationCity\": \"Maracaibo\",\n  \"locationRegion\": \"Zulia\"\n}"
-            },
             "description": "Requiere token. Solo el mismo usuario o un ADMIN pueden editar la cuenta."
-          }
+          },
+          "response": []
         },
         {
           "name": "🔒 Eliminar Usuario (DELETE /user-account/:id)",
@@ -434,7 +400,8 @@
               ]
             },
             "description": "Requiere token (ADMIN). Solo ADMIN puede eliminar."
-          }
+          },
+          "response": []
         }
       ]
     },
@@ -470,6 +437,10 @@
                 "value": "application/json"
               }
             ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Tribu Comida\",\n  \"description\": \"Vendedores de alimentos y bebidas artesanales\"\n}"
+            },
             "url": {
               "raw": "{{baseUrl}}/tribe",
               "host": [
@@ -479,12 +450,9 @@
                 "tribe"
               ]
             },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Tribu Comida\",\n  \"description\": \"Vendedores de alimentos y bebidas artesanales\"\n}"
-            },
             "description": "Requiere token (ADMIN)."
-          }
+          },
+          "response": []
         },
         {
           "name": "Listar Tribus (GET /tribe) — Público",
@@ -500,7 +468,8 @@
                 "tribe"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Ver Tribu por ID (GET /tribe/:id) — Público",
@@ -517,7 +486,8 @@
                 "1"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "🔒 Actualizar Tribu (PATCH /tribe/:id)",
@@ -533,6 +503,10 @@
                 "value": "application/json"
               }
             ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Tribu Tecnología\",\n  \"description\": \"Descripción actualizada de la tribu\"\n}"
+            },
             "url": {
               "raw": "{{baseUrl}}/tribe/{{tribeId}}",
               "host": [
@@ -543,12 +517,9 @@
                 "{{tribeId}}"
               ]
             },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Tribu Tecnología\",\n  \"description\": \"Descripción actualizada de la tribu\"\n}"
-            },
             "description": "Requiere token (ADMIN)."
-          }
+          },
+          "response": []
         },
         {
           "name": "🔒 Eliminar Tribu (DELETE /tribe/:id)",
@@ -571,7 +542,8 @@
               ]
             },
             "description": "Requiere token (ADMIN)."
-          }
+          },
+          "response": []
         }
       ]
     },
@@ -592,6 +564,10 @@
                 "value": "application/json"
               }
             ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"{{buyerUserId}}\",\n  \"tribeId\": 1,\n  \"description\": \"Vendo artículos de tecnología y gadgets importados.\"\n}"
+            },
             "url": {
               "raw": "{{baseUrl}}/seller",
               "host": [
@@ -601,12 +577,9 @@
                 "seller"
               ]
             },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"id\": \"{{buyerUserId}}\",\n  \"tribeId\": 1,\n  \"description\": \"Vendo artículos de tecnología y gadgets importados.\"\n}"
-            },
             "description": "Requiere token (ADMIN)."
-          }
+          },
+          "response": []
         },
         {
           "name": "Listar Vendedores (GET /seller) — Público",
@@ -622,7 +595,8 @@
                 "seller"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Ver Vendedor por ID (GET /seller/:id) — Público",
@@ -640,7 +614,8 @@
               ]
             },
             "description": "El ID del seller es el mismo UUID del UserAccount."
-          }
+          },
+          "response": []
         },
         {
           "name": "🔒 Actualizar Vendedor (PATCH /seller/:id)",
@@ -656,6 +631,10 @@
                 "value": "application/json"
               }
             ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Descripción actualizada del vendedor.\",\n  \"tribeId\": 2\n}"
+            },
             "url": {
               "raw": "{{baseUrl}}/seller/{{sellerUserId}}",
               "host": [
@@ -666,12 +645,9 @@
                 "{{sellerUserId}}"
               ]
             },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"description\": \"Descripción actualizada del vendedor.\",\n  \"tribeId\": 2\n}"
-            },
             "description": "Requiere token (ADMIN)."
-          }
+          },
+          "response": []
         },
         {
           "name": "🔒 Eliminar Vendedor (DELETE /seller/:id)",
@@ -694,7 +670,8 @@
               ]
             },
             "description": "Requiere token (ADMIN)."
-          }
+          },
+          "response": []
         }
       ]
     },
@@ -730,6 +707,10 @@
                 "value": "application/json"
               }
             ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"categoryName\": \"Hogar\",\n  \"subcategoryName\": \"Muebles\"\n}"
+            },
             "url": {
               "raw": "{{baseUrl}}/product-category",
               "host": [
@@ -739,12 +720,9 @@
                 "product-category"
               ]
             },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"categoryName\": \"Hogar\",\n  \"subcategoryName\": \"Muebles\"\n}"
-            },
             "description": "Requiere token (ADMIN)."
-          }
+          },
+          "response": []
         },
         {
           "name": "Listar Categorías (GET /product-category) — Público",
@@ -760,7 +738,8 @@
                 "product-category"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Ver Categoría por ID (GET /product-category/:id) — Público",
@@ -777,7 +756,8 @@
                 "1"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "🔒 Actualizar Categoría (PATCH /product-category/:id)",
@@ -793,6 +773,10 @@
                 "value": "application/json"
               }
             ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subcategoryName\": \"Smartphones\"\n}"
+            },
             "url": {
               "raw": "{{baseUrl}}/product-category/{{categoryId}}",
               "host": [
@@ -803,12 +787,9 @@
                 "{{categoryId}}"
               ]
             },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"subcategoryName\": \"Smartphones\"\n}"
-            },
             "description": "Requiere token (ADMIN)."
-          }
+          },
+          "response": []
         },
         {
           "name": "🔒 Eliminar Categoría (DELETE /product-category/:id)",
@@ -831,7 +812,8 @@
               ]
             },
             "description": "Requiere token (ADMIN)."
-          }
+          },
+          "response": []
         }
       ]
     },
@@ -867,6 +849,10 @@
                 "value": "application/json"
               }
             ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sellerId\": \"{{sellerUserId}}\",\n  \"categoryId\": 1,\n  \"name\": \"Airpods Pro 2da Generación\",\n  \"description\": \"Cancelación activa de ruido, estuche MagSafe. Nuevo en caja.\",\n  \"price\": 249.99,\n  \"stockAvailable\": 20,\n  \"locationCity\": \"Caracas\",\n  \"locationRegion\": \"Distrito Capital\",\n  \"locationFormattedAddress\": \"Centro Comercial Sambil, Caracas\"\n}"
+            },
             "url": {
               "raw": "{{baseUrl}}/product",
               "host": [
@@ -876,12 +862,37 @@
                 "product"
               ]
             },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"sellerId\": \"{{sellerUserId}}\",\n  \"categoryId\": 1,\n  \"name\": \"Airpods Pro 2da Generación\",\n  \"description\": \"Cancelación activa de ruido, estuche MagSafe. Nuevo en caja.\",\n  \"price\": 249.99,\n  \"stockAvailable\": 20,\n  \"locationCity\": \"Caracas\",\n  \"locationRegion\": \"Distrito Capital\",\n  \"locationFormattedAddress\": \"Centro Comercial Sambil, Caracas\"\n}"
-            },
             "description": "Requiere token de Vendedor. Primero haz Login (Vendedor 1) para tener `sellerUserId` y `accessToken`."
-          }
+          },
+          "response": []
+        },
+        {
+          "name": "Mis Productos (Get  /product/my-products)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3ODY1ZDhkZC0wNWQwLTQzYzYtYjg5OS0wNzk1NzRjZDRjMzkiLCJlbWFpbCI6InZlbmRlZG9yMUBhbWF6b25pYS5jb20iLCJyb2xlIjoiU0VMTEVSIiwiaWF0IjoxNzc3MjQxNjM2LCJleHAiOjE3NzcyNDI1MzZ9.NnEQJ5-VQOoA2FiIM3Np6nOWQGNN2NHBjc45YnAP1Uk",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/product/my-products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product",
+                "my-products"
+              ]
+            }
+          },
+          "response": []
         },
         {
           "name": "Listar Productos (GET /product) — Público",
@@ -907,7 +918,8 @@
                 }
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Buscar Productos por Nombre (GET /product?search=) — Público",
@@ -937,7 +949,8 @@
                 }
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Filtrar por Categoría (GET /product?categoryId=) — Público",
@@ -967,7 +980,8 @@
                 }
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Productos Cercanos — PostGIS (GET /product/nearby) — Público",
@@ -999,7 +1013,8 @@
               ]
             },
             "description": "Busca productos en un radio de 50 km desde Caracas (lat: 10.4985, lng: -66.8792). NOTA: la ruta `/nearby` debe quedar ANTES de `/:id` en el router de NestJS."
-          }
+          },
+          "response": []
         },
         {
           "name": "Ver Producto por ID (GET /product/:id) — Público",
@@ -1017,7 +1032,8 @@
               ]
             },
             "description": "Usa {{productId}} guardado al crear un producto."
-          }
+          },
+          "response": []
         },
         {
           "name": "🔒 Actualizar Producto (PATCH /product/:id)",
@@ -1033,6 +1049,10 @@
                 "value": "application/json"
               }
             ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 229.99,\n  \"stockAvailable\": 18\n}"
+            },
             "url": {
               "raw": "{{baseUrl}}/product/{{productId}}",
               "host": [
@@ -1042,12 +1062,9 @@
                 "product",
                 "{{productId}}"
               ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"price\": 229.99,\n  \"stockAvailable\": 18\n}"
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "🔒 Eliminar Producto (DELETE /product/:id)",
@@ -1069,7 +1086,8 @@
                 "{{productId}}"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "🔒 Subir Imagen de Producto (POST /product/:id/image)",
@@ -1087,7 +1105,7 @@
                 {
                   "key": "file",
                   "type": "file",
-                  "src": []
+                  "value": null
                 }
               ]
             },
@@ -1103,7 +1121,8 @@
               ]
             },
             "description": "Sube y optimiza una imagen (WebP, 800px) para el producto. Requiere token de Vendedor/Admin."
-          }
+          },
+          "response": []
         }
       ]
     },
@@ -1124,6 +1143,10 @@
                 "value": "application/json"
               }
             ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"{{productId}}\",\n  \"ratingValue\": 5\n}"
+            },
             "url": {
               "raw": "{{baseUrl}}/product-rating",
               "host": [
@@ -1133,12 +1156,9 @@
                 "product-rating"
               ]
             },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"productId\": \"{{productId}}\",\n  \"ratingValue\": 5\n}"
-            },
             "description": "El `userAccountId` se extrae del JWT (no se envía en el body). Califica del 1 al 5."
-          }
+          },
+          "response": []
         },
         {
           "name": "Listar Ratings (GET /product-rating) — Público",
@@ -1154,7 +1174,8 @@
                 "product-rating"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Ver Rating de un Usuario en un Producto (GET /product-rating/:productId/:userAccountId) — Público",
@@ -1172,7 +1193,8 @@
                 "{{buyerUserId}}"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "🔒 Actualizar Rating (PATCH /product-rating/:productId)",
@@ -1188,6 +1210,10 @@
                 "value": "application/json"
               }
             ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ratingValue\": 4\n}"
+            },
             "url": {
               "raw": "{{baseUrl}}/product-rating/{{productId}}",
               "host": [
@@ -1198,12 +1224,9 @@
                 "{{productId}}"
               ]
             },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"ratingValue\": 4\n}"
-            },
             "description": "El `userAccountId` se extrae del JWT. Solo actualiza el rating del usuario autenticado."
-          }
+          },
+          "response": []
         },
         {
           "name": "🔒 Eliminar Rating (DELETE /product-rating/:productId)",
@@ -1226,7 +1249,8 @@
               ]
             },
             "description": "El `userAccountId` se extrae del JWT. Solo elimina el rating del usuario autenticado."
-          }
+          },
+          "response": []
         }
       ]
     },
@@ -1262,6 +1286,10 @@
                 "value": "application/json"
               }
             ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"{{productId}}\",\n  \"quantity\": 1,\n  \"orderNotes\": \"Entrega urgente por favor.\"\n}"
+            },
             "url": {
               "raw": "{{baseUrl}}/product-order",
               "host": [
@@ -1271,12 +1299,9 @@
                 "product-order"
               ]
             },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"productId\": \"{{productId}}\",\n  \"quantity\": 1,\n  \"orderNotes\": \"Entrega urgente por favor.\"\n}"
-            },
             "description": "El `buyerId` se extrae del JWT. Primero haz Login como Comprador y asegúrate de tener un `productId` válido."
-          }
+          },
+          "response": []
         },
         {
           "name": "Listar Órdenes (GET /product-order) — Público",
@@ -1292,7 +1317,8 @@
                 "product-order"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Ver Orden por ID (GET /product-order/:id) — Público",
@@ -1309,7 +1335,8 @@
                 "{{orderId}}"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Historial de Estado de Orden (GET /product-order/:id/history) — Público",
@@ -1327,7 +1354,8 @@
                 "history"
               ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "🔒 Actualizar Estado de Orden (PATCH /product-order/:id)",
@@ -1343,6 +1371,10 @@
                 "value": "application/json"
               }
             ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentStatus\": \"SHIPPED\",\n  \"statusNote\": \"Paquete enviado via MRW, tracking: MRW123456\"\n}"
+            },
             "url": {
               "raw": "{{baseUrl}}/product-order/{{orderId}}",
               "host": [
@@ -1353,12 +1385,9 @@
                 "{{orderId}}"
               ]
             },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"currentStatus\": \"SHIPPED\",\n  \"statusNote\": \"Paquete enviado via MRW, tracking: MRW123456\"\n}"
-            },
             "description": "El `changedByUserId` se extrae del JWT. Estados válidos: PENDING → PAID → SHIPPED → DELIVERED / CANCELED / REFUNDED"
-          }
+          },
+          "response": []
         },
         {
           "name": "🔒 Eliminar Orden (DELETE /product-order/:id)",
@@ -1380,9 +1409,48 @@
                 "{{orderId}}"
               ]
             }
-          }
+          },
+          "response": []
         }
       ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3001"
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    },
+    {
+      "key": "sellerUserId",
+      "value": ""
+    },
+    {
+      "key": "buyerUserId",
+      "value": ""
+    },
+    {
+      "key": "productId",
+      "value": ""
+    },
+    {
+      "key": "orderId",
+      "value": ""
+    },
+    {
+      "key": "tribeId",
+      "value": ""
+    },
+    {
+      "key": "categoryId",
+      "value": ""
+    },
+    {
+      "key": "adminUserId",
+      "value": ""
     }
   ]
 }

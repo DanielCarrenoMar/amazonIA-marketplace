@@ -108,6 +108,13 @@ export class ProductService {
     };
   }
 
+  async findBySeller(sellerId: string) {
+    return this.prisma.product.findMany({
+      where: { sellerId },
+      include: { seller: true, category: true },
+    });
+  }
+
   async findOne(id: string) {
     const product = await this.prisma.product.findUnique({
       where: { id },
@@ -130,13 +137,6 @@ export class ProductService {
     await this.findOne(id); // Check existence
     return this.prisma.product.delete({
       where: { id },
-    });
-  }
-
-  async findBySeller(sellerId: string) {
-    return this.prisma.product.findMany({
-      where: { sellerId },
-      include: { seller: true, category: true },
     });
   }
 
