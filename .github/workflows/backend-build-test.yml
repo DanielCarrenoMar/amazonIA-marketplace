@@ -33,7 +33,7 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        run: pnpm --filter backend install --frozen-lockfile
+        run: pnpm --filter backend... install --frozen-lockfile
 
       - name: Build backend
         run: pnpm --filter backend... build
