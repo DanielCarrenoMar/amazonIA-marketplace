@@ -99,7 +99,7 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
       <div className="min-h-screen bg-background p-8 md:p-20 font-sans">
       <header className="max-w-6xl mx-auto mb-16 flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">
         <div className="flex items-center gap-4">
-          <h1 className="text-4xl font-outfit font-bold tracking-tight text-brand-primary-dark">
+          <h1 className="text-4xl font-poppins font-bold tracking-tight text-brand-primary-dark">
             Amazonia IA <span className="text-brand-primary">Design System</span>
           </h1>
         </div>
@@ -118,7 +118,7 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
         {/* Color Palette section */}
         <section>
           <div className="flex items-center gap-3 mb-8">
-            <h2 className="text-2xl font-outfit font-semibold border-l-4 border-brand-primary pl-4">Paleta de Colores</h2>
+            <h2 className="text-2xl font-poppins font-semibold border-l-4 border-brand-primary pl-4">Paleta de Colores</h2>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
             {colors.map((color) => (
@@ -137,17 +137,17 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
         <div className="grid md:grid-cols-2 gap-12">
           {/* Typography section */}
           <section className="space-y-6">
-            <h2 className="text-2xl font-outfit font-semibold border-l-4 border-brand-secondary pl-4">Tipografía</h2>
+            <h2 className="text-2xl font-poppins font-semibold border-l-4 border-brand-secondary pl-4">Tipografía</h2>
             <Card variant="nature" padding="lg" rounded="3xl">
               <div className="space-y-4 font-sans">
-                <h1 className="text-5xl font-outfit font-extrabold text-brand-nature-content">Heading 1</h1>
-                <h2 className="text-4xl font-outfit font-bold text-brand-nature-content">Heading 2</h2>
-                <h3 className="text-3xl font-outfit font-semibold text-brand-nature-content">Heading 3</h3>
+                <h1 className="text-5xl font-poppins font-extrabold text-brand-nature-content">Heading 1</h1>
+                <h2 className="text-4xl font-poppins font-bold text-brand-nature-content">Heading 2</h2>
+                <h3 className="text-3xl font-poppins font-semibold text-brand-nature-content">Heading 3</h3>
                 <p className="text-lg text-foreground leading-relaxed">
-                  Este es un ejemplo de cuerpo de texto en Poppins. Amazonia IA utiliza una estética orgánica para conectar a los usuarios con la biodiversidad del Amazonas.
+                  Este es un ejemplo de cuerpo de texto en Outfit. Proporciona una lectura clara y geométrica, ideal para la navegación y componentes de UI. Amazonia IA utiliza esta estética para conectar a los usuarios con la biodiversidad del Amazonas.
                 </p>
                 <p className="text-sm text-brand-nature-content italic">
-                  Títulos en Outfit para mayor claridad y modernidad.
+                  Títulos en Poppins, aportando un toque moderno y distintivo.
                 </p>
               </div>
             </Card>
@@ -155,7 +155,7 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
 
           {/* Components section */}
           <section className="space-y-6">
-            <h2 className="text-2xl font-outfit font-semibold border-l-4 border-brand-accent pl-4">Componentes Base</h2>
+            <h2 className="text-2xl font-poppins font-semibold border-l-4 border-brand-accent pl-4">Componentes Base</h2>
             <Card padding="lg" rounded="3xl">
               <div className="space-y-8">
                 <div className="flex items-center gap-2 p-4 bg-brand-primary-light rounded-xl border border-brand-primary/20">
@@ -177,7 +177,7 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
 
         {/* Icons section */}
         <section className="space-y-6">
-          <h2 className="text-2xl font-outfit font-semibold border-l-4 border-brand-primary-dark pl-4">Iconografía</h2>
+          <h2 className="text-2xl font-poppins font-semibold border-l-4 border-brand-primary-dark pl-4">Iconografía</h2>
           <Card padding="lg" rounded="3xl">
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-8">
               {icons.map(({ Icon, label, color }, idx) => (
@@ -194,7 +194,7 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
 
         {/* Buttons section */}
         <section className="space-y-6">
-          <h2 className="text-2xl font-outfit font-semibold border-l-4 border-brand-accent pl-4">Botones</h2>
+          <h2 className="text-2xl font-poppins font-semibold border-l-4 border-brand-accent pl-4">Botones</h2>
           <Card padding="lg" rounded="3xl">
             <div className="space-y-10">
               {/* Variantes */}
@@ -245,7 +245,7 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
 
         {/* Badges section */}
         <section className="space-y-6">
-          <h2 className="text-2xl font-outfit font-semibold border-l-4 border-brand-secondary pl-4">Badges</h2>
+          <h2 className="text-2xl font-poppins font-semibold border-l-4 border-brand-secondary pl-4">Badges</h2>
           <Card padding="lg" rounded="3xl">
             <div className="space-y-10">
               {/* Variantes */}
@@ -287,7 +287,7 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
 
         {/* Form Inputs section */}
         <section className="space-y-6">
-          <h2 className="text-2xl font-outfit font-semibold border-l-4 border-brand-primary pl-4">Formularios (Inputs & Selects)</h2>
+          <h2 className="text-2xl font-poppins font-semibold border-l-4 border-brand-primary pl-4">Formularios (Inputs & Selects)</h2>
           <Card padding="lg" rounded="3xl" overflowVisible>
             <div className="grid lg:grid-cols-3 gap-8">
               {/* Basic Inputs */}
@@ -510,7 +510,7 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
 
         {/* Cards section */}
         <section className="space-y-6">
-          <h2 className="text-2xl font-outfit font-semibold border-l-4 border-brand-primary pl-4">Cards</h2>
+          <h2 className="text-2xl font-poppins font-semibold border-l-4 border-brand-primary pl-4">Cards</h2>
 
           {/* Variantes */}
           <div className="space-y-3">
@@ -558,7 +558,7 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
                     ))}
                     <span className="ml-1 text-xs text-muted">4.9 (128)</span>
                   </div>
-                  <p className="text-2xl font-outfit font-bold text-brand-primary">$24.99</p>
+                  <p className="text-2xl font-poppins font-bold text-brand-primary">$24.99</p>
                 </CardBody>
                 <CardFooter>
                   <Button size="sm" className="flex-1">Añadir al Carrito</Button>
@@ -579,7 +579,7 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
                   </div>
                 </CardHeader>
                 <CardBody>
-                  <p className="text-4xl font-outfit font-bold text-foreground mb-1">$12,450</p>
+                  <p className="text-4xl font-poppins font-bold text-foreground mb-1">$12,450</p>
                   <div className="flex items-center gap-2">
                     <Badge variant="primary" size="sm">+18.2%</Badge>
                     <span className="text-sm text-muted">vs. mes anterior</span>
@@ -664,7 +664,7 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
 
         {/* Tooltips section */}
         <section className="space-y-6">
-          <h2 className="text-2xl font-outfit font-semibold border-l-4 border-brand-accent pl-4">Tooltips</h2>
+          <h2 className="text-2xl font-poppins font-semibold border-l-4 border-brand-accent pl-4">Tooltips</h2>
           <Card padding="lg" rounded="3xl" overflowVisible>
             <div className="space-y-4">
               <p className="text-muted mb-8">
@@ -700,7 +700,7 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
 
         {/* Tabs section */}
         <section className="space-y-6">
-          <h2 className="text-2xl font-outfit font-semibold border-l-4 border-brand-accent pl-4">Navegación (Tabs)</h2>
+          <h2 className="text-2xl font-poppins font-semibold border-l-4 border-brand-accent pl-4">Navegación (Tabs)</h2>
           <Card padding="lg" rounded="3xl">
             <Tabs 
               defaultActiveKey="perfil" 
@@ -740,7 +740,7 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
 
         {/* Accordion section */}
         <section className="space-y-6">
-          <h2 className="text-2xl font-outfit font-semibold border-l-4 border-brand-accent pl-4">Acordeón (Desplegables)</h2>
+          <h2 className="text-2xl font-poppins font-semibold border-l-4 border-brand-accent pl-4">Acordeón (Desplegables)</h2>
           <Card padding="lg" rounded="3xl">
             <div className="space-y-8">
               <div>
@@ -792,7 +792,7 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
 
         {/* Avatars section */}
         <section className="space-y-6">
-          <h2 className="text-2xl font-outfit font-semibold border-l-4 border-brand-accent pl-4">Avatar & Perfiles</h2>
+          <h2 className="text-2xl font-poppins font-semibold border-l-4 border-brand-accent pl-4">Avatar & Perfiles</h2>
           <Card padding="lg" rounded="3xl">
             <div className="flex flex-col gap-8">
               <div>
@@ -821,7 +821,7 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
 
         {/* Toasts section */}
         <section className="space-y-6">
-          <h2 className="text-2xl font-outfit font-semibold border-l-4 border-brand-accent pl-4">Toasts (Notificaciones Temporales)</h2>
+          <h2 className="text-2xl font-poppins font-semibold border-l-4 border-brand-accent pl-4">Toasts (Notificaciones Temporales)</h2>
           <Card padding="lg" rounded="3xl" overflowVisible>
             <div className="space-y-4">
               <p className="text-muted mb-6">
@@ -834,7 +834,7 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
 
         {/* Modal section */}
         <section className="space-y-6">
-          <h2 className="text-2xl font-outfit font-semibold border-l-4 border-brand-accent pl-4">Modales</h2>
+          <h2 className="text-2xl font-poppins font-semibold border-l-4 border-brand-accent pl-4">Modales</h2>
           <Card padding="lg" rounded="3xl">
             <div className="space-y-4">
               <p className="text-muted">
