@@ -8,6 +8,7 @@ import {
   Delete,
   ParseUUIDPipe,
   UseGuards,
+  Request,
 } from '@nestjs/common';
 import { UserAccountService } from './user-account.service';
 import { CreateUserAccountDto, UpdateUserAccountDto, UserRole } from 'dtos';
@@ -42,9 +43,10 @@ export class UserAccountController {
   @Patch(':id')
   update(
     @Param('id', ParseUUIDPipe) id: string,
+    @Request() req: any,
     @Body() updateUserAccountDto: UpdateUserAccountDto,
   ) {
-    return this.userAccountService.update(id, updateUserAccountDto);
+    return this.userAccountService.update(id, req.user, updateUserAccountDto);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

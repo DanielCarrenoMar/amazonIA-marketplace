@@ -1,7 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import {  CreateUserAccountDto  } from 'dtos';
-import {  UpdateUserAccountDto  } from 'dtos';
+import { CreateUserAccountDto, UpdateUserAccountDto, UserRole } from 'dtos';
 import { PrismaService } from '../prisma/prisma.service';
 
 const SALT_ROUNDS = 12;
@@ -38,8 +37,17 @@ export class UserAccountService {
     return user;
   }
 
-  async update(id: string, updateUserAccountDto: UpdateUserAccountDto) {
+  async update(
+    id: string,
+    reqUser: { id: string; role: UserRole },
+    updateUserAccountDto: UpdateUserAccountDto,
+  ) {
     await this.findOne(id); // Check existence
+
+    // Only the account owner or an ADMIN can update this account
+    if (reqUser.id !== id && reqUser.role !== UserRole.ADMIN) {
+      throw new ForbiddenException('You can only update your own account');
+    }
 
     // If a new password is provided, hash it before updating
     const { password, ...rest } = updateUserAccountDto as any;
