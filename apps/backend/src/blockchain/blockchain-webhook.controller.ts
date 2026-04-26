@@ -4,7 +4,7 @@
 
 import { Controller, Post, Body, Logger, HttpCode, HttpStatus } from '@nestjs/common';
 import { BlockchainRecordService } from './services/blockchain-record.service';
-import { WebhookPayloadDto } from './dto/webhook-payload.dto';
+import type { WebhookCallbackPayload } from 'dtos';
 import { BlockchainStatus } from '@prisma/client';
 
 @Controller('blockchain')
@@ -21,7 +21,7 @@ export class BlockchainWebhookController {
    */
   @Post('webhook')
   @HttpCode(HttpStatus.OK)
-  async handleWebhook(@Body() payload: WebhookPayloadDto) {
+  async handleWebhook(@Body() payload: WebhookCallbackPayload) {
     this.logger.log(
       `Webhook received for order ${payload.orderId}: status=${payload.status}`,
     );
@@ -52,7 +52,7 @@ export class BlockchainWebhookController {
       }
 
       return { received: true, orderId: payload.orderId };
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(
         `Failed to process webhook for order ${payload.orderId}: ${error.message}`,
       );

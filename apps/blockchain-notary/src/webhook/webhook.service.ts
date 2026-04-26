@@ -4,7 +4,7 @@
 // =============================================================================
 
 import { Injectable, Logger } from '@nestjs/common';
-import { BlockchainStatusEnum, WebhookCallbackPayload } from './dto/webhook-callback.dto';
+import { BlockchainStatusEnum, WebhookCallbackPayload } from 'dtos';
 
 const MAX_WEBHOOK_RETRIES = 3;
 const WEBHOOK_RETRY_DELAY_MS = 2000;
@@ -39,7 +39,7 @@ export class WebhookService {
         this.logger.warn(
           `Webhook returned ${response.status} for order ${payload.orderId}`,
         );
-      } catch (error) {
+      } catch (error: any) {
         this.logger.error(
           `Webhook attempt ${attempt} failed for order ${payload.orderId}: ${error.message}`,
         );

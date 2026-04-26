@@ -6,15 +6,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { BlockchainStatus } from '@prisma/client';
-
-interface NotarizeOrderParams {
-  orderId: string;
-  amount: number;
-  paymentMethod: string;
-  productHash: string;
-  buyerId: string;
-  sellerId: string;
-}
+import type { NotarizeOrderPayload } from 'dtos';
 
 @Injectable()
 export class NotaryClientService {
@@ -39,7 +31,7 @@ export class NotaryClientService {
    * 2. Envía POST al notario con webhook_url
    * 3. El notario procesa async y notifica via webhook
    */
-  async notarizeOrder(params: NotarizeOrderParams): Promise<void> {
+  async notarizeOrder(params: NotarizeOrderPayload): Promise<void> {
     const { orderId } = params;
 
     try {
@@ -88,7 +80,7 @@ export class NotaryClientService {
       }
 
       this.logger.log(`Notarization request accepted for order: ${orderId}`);
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Failed to send notarization request for order ${orderId}: ${error.message}`);
 
       // Actualizar el registro como fallido

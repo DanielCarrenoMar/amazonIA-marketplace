@@ -7,7 +7,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { BlockchainService } from '../blockchain/blockchain.service';
 import { WebhookService } from '../webhook/webhook.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { RegisterTransactionDto } from './dto/register-transaction.dto';
+import type { NotarizeOrderPayload } from 'dtos';
 import { BlockchainStatus } from '@prisma/client';
 
 const MAX_RETRY_ATTEMPTS = 3;
@@ -32,7 +32,7 @@ export class TransactionsService {
    * 3. Actualiza DB con resultado
    * 4. Notifica al backend via webhook
    */
-  async processNotarization(payload: RegisterTransactionDto): Promise<void> {
+  async processNotarization(payload: NotarizeOrderPayload): Promise<void> {
     const { orderId, webhookUrl } = payload;
 
     try {
@@ -98,7 +98,7 @@ export class TransactionsService {
         );
         await this.webhookService.notifyBackend(webhookUrl, webhookPayload);
       }
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Notarization failed for order ${orderId}: ${error.message}`);
 
       // Actualizar DB con el error

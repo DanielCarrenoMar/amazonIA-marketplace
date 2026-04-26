@@ -16,7 +16,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { TransactionsService } from './transactions.service';
-import { RegisterTransactionDto } from './dto/register-transaction.dto';
+import type { NotarizeOrderPayload } from 'dtos';
 import { ApiKeyGuard } from '../auth/api-key.guard';
 
 @Controller('transactions')
@@ -24,7 +24,7 @@ import { ApiKeyGuard } from '../auth/api-key.guard';
 export class TransactionsController {
   private readonly logger = new Logger(TransactionsController.name);
 
-  constructor(private readonly transactionsService: TransactionsService) {}
+  constructor(private readonly transactionsService: TransactionsService){}
 
   /**
    * POST /api/v1/transactions/register
@@ -35,7 +35,7 @@ export class TransactionsController {
    */
   @Post('register')
   @HttpCode(HttpStatus.ACCEPTED)
-  async register(@Body() payload: RegisterTransactionDto) {
+  async register(@Body() payload: NotarizeOrderPayload) {
     this.logger.log(`Received notarization request for order: ${payload.orderId}`);
 
     // Fire-and-forget: no esperamos la respuesta de la blockchain

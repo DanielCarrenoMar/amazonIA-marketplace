@@ -177,6 +177,9 @@ importers:
       class-validator:
         specifier: ^0.14.1
         version: 0.14.4
+      dtos:
+        specifier: workspace:*
+        version: link:../dtos
       ethers:
         specifier: ^6.13.0
         version: 6.16.0
