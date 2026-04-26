@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import {  CreateProductRatingDto  } from 'dtos';
 import {  UpdateProductRatingDto  } from 'dtos';
 import { PrismaService } from '../prisma/prisma.service';
@@ -53,16 +53,14 @@ export class ProductRatingService {
   }
 
   async update(productId: string, userAccountId: string, updateProductRatingDto: UpdateProductRatingDto) {
-    const rating = await this.prisma.productRating.findFirst({
-      where: { productId },
+    // findUnique with the composite key guarantees ownership:
+    // if the rating doesn't exist for THIS user on THIS product → 404
+    const rating = await this.prisma.productRating.findUnique({
+      where: { productId_userAccountId: { productId, userAccountId } },
     });
 
     if (!rating) {
-      throw new NotFoundException('ProductRating not found');
-    }
-
-    if (rating.userAccountId !== userAccountId) {
-      throw new ForbiddenException('You can only update your own rating');
+      throw new NotFoundException('Rating not found or you do not own this rating');
     }
 
     return this.prisma.$transaction(async (tx) => {
@@ -78,16 +76,14 @@ export class ProductRatingService {
   }
 
   async remove(productId: string, userAccountId: string) {
-    const rating = await this.prisma.productRating.findFirst({
-      where: { productId },
+    // findUnique with the composite key guarantees ownership:
+    // if the rating doesn't exist for THIS user on THIS product → 404
+    const rating = await this.prisma.productRating.findUnique({
+      where: { productId_userAccountId: { productId, userAccountId } },
     });
 
     if (!rating) {
-      throw new NotFoundException('ProductRating not found');
-    }
-
-    if (rating.userAccountId !== userAccountId) {
-      throw new ForbiddenException('You can only delete your own rating');
+      throw new NotFoundException('Rating not found or you do not own this rating');
     }
 
     return this.prisma.$transaction(async (tx) => {
