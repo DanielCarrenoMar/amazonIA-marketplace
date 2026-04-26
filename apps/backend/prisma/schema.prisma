@@ -107,6 +107,9 @@ model Seller {
   avgProductRating Float?   @map("avg_product_rating")
   totalReviews     Int      @default(0) @map("total_reviews")
 
+  avgProductRating Float?   @map("avg_product_rating")
+  totalReviews     Int      @default(0) @map("total_reviews")
+
   // Relations
   user             UserAccount @relation(fields: [id], references: [id], onDelete: Cascade)
   tribe            Tribe?      @relation(fields: [tribeId], references: [id], onDelete: SetNull)
@@ -142,7 +145,9 @@ model Product {
   description              String?
   price                    Decimal   @db.Decimal(12, 2)
   stockAvailable           Int       @default(0) @map("stock_available")
+  imageUrl                 String?   @map("image_url")
   averageRating            Decimal?  @map("average_rating") @db.Decimal(3, 2)
+  totalReviews             Int       @default(0) @map("total_reviews")
 
   // Spatial
   locationCoords           Unsupported("geography(Point, 4326)")? @map("location_coords")

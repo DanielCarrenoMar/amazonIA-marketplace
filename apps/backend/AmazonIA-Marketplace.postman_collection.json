@@ -678,6 +678,31 @@
               "path": ["product", "{{productId}}"]
             }
           }
+        },
+        {
+          "name": "🔒 Subir Imagen de Producto (POST /product/:id/image)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/product/{{productId}}/image",
+              "host": ["{{baseUrl}}"],
+              "path": ["product", "{{productId}}", "image"]
+            },
+            "description": "Sube y optimiza una imagen (WebP, 800px) para el producto. Requiere token de Vendedor/Admin."
+          }
         }
       ]
     },
