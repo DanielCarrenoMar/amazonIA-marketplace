@@ -14,12 +14,15 @@ export class SellerService {
   }
 
   async findAll() {
+    // Lectura directa: ya no es necesario $queryRaw o agregar en tiempo de ejecución.
+    // Los campos avgProductRating y totalReviews ahora vienen nativamente.
     return this.prisma.seller.findMany({
-      include: { user: true, tribe: true }, // Helpful to pull user details
+      include: { user: true, tribe: true },
     });
   }
 
   async findOne(id: string) {
+    // Lectura instantánea: la calificación ya está desnormalizada y guardada en el Seller.
     const seller = await this.prisma.seller.findUnique({
       where: { id },
       include: { user: true, tribe: true },
