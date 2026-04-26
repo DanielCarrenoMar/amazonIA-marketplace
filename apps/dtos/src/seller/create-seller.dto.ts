@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsInt, Min, Max, IsUUID } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsInt, IsNumber, Min, Max, IsUUID } from 'class-validator';
 
 export class CreateSellerDto {
   // Must be an existing UserAccount UUID
@@ -16,6 +16,16 @@ export class CreateSellerDto {
   @Max(5)
   @IsOptional()
   rating?: number;
+
+  @IsNumber()
+  @Min(1)
+  @Max(5)
+  @IsOptional()
+  avgProductRating?: number;
+
+  @IsInt()
+  @IsOptional()
+  totalReviews?: number;
 
   @IsString()
   @IsOptional()

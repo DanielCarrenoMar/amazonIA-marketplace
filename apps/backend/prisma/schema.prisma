@@ -99,15 +99,18 @@ model Tribe {
 
 model Seller {
   // Shares the same UUID as the parent UserAccount row
-  id          String   @id @db.Uuid
-  tribeId     Int?     @map("tribe_id")
-  rating      Int?
-  description String?
+  id               String   @id @db.Uuid
+  tribeId          Int?     @map("tribe_id")
+  rating           Int?
+  description      String?
+
+  avgProductRating Float?   @map("avg_product_rating")
+  totalReviews     Int      @default(0) @map("total_reviews")
 
   // Relations
-  user        UserAccount @relation(fields: [id], references: [id], onDelete: Cascade)
-  tribe       Tribe?      @relation(fields: [tribeId], references: [id], onDelete: SetNull)
-  products    Product[]
+  user             UserAccount @relation(fields: [id], references: [id], onDelete: Cascade)
+  tribe            Tribe?      @relation(fields: [tribeId], references: [id], onDelete: SetNull)
+  products         Product[]
 
   @@map("seller")
 }
