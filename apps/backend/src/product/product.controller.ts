@@ -1,7 +1,9 @@
 import {
   Controller, Get, Post, Body, Patch, Param,
   Delete, ParseUUIDPipe, UseGuards, Query,
+  UseInterceptors, UploadedFile, BadRequestException
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ProductService } from './product.service';
 import { CreateProductDto, UpdateProductDto, FindProductsDto, FindNearbyDto, UserRole } from 'dtos';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -52,5 +54,19 @@ export class ProductController {
   @Delete(':id')
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.productService.remove(id);
+  }
+
+  // Upload Product Image
+  @Post(':id/image')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadImage(
+    @Param('id', ParseUUIDPipe) id: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new BadRequestException('No se ha proporcionado ningún archivo de imagen');
+    }
+
+    return this.productService.uploadImage(id, file);
   }
 }

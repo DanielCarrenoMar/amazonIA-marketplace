@@ -11,8 +11,21 @@ import { ProductOrderModule } from './product-order/product-order.module';
 import { ProductRatingModule } from './product-rating/product-rating.module';
 import { AuthModule } from './auth/auth.module';
 
+import { ConfigModule } from '@nestjs/config';
+
 @Module({
-  imports: [PrismaModule, AuthModule, UserAccountModule, TribeModule, SellerModule, ProductCategoryModule, ProductModule, ProductOrderModule, ProductRatingModule],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    PrismaModule,
+    AuthModule,
+    UserAccountModule,
+    TribeModule,
+    SellerModule,
+    ProductCategoryModule,
+    ProductModule,
+    ProductOrderModule,
+    ProductRatingModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

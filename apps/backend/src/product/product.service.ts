@@ -1,10 +1,14 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { CreateProductDto, UpdateProductDto, FindProductsDto, FindNearbyDto } from 'dtos';
 import { PrismaService } from '../prisma/prisma.service';
+import { StorageService } from '../storage/storage.service';
 
 @Injectable()
 export class ProductService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly storageService: StorageService,
+  ) { }
 
   async create(createProductDto: CreateProductDto) {
     const { coords, ...rest } = createProductDto;
@@ -149,5 +153,24 @@ export class ProductService {
       where: { id },
       data: { stockAvailable: { increment: quantity } },
     });
+  }
+
+  async uploadImage(id: string, file: Express.Multer.File) {
+    try {
+      // 1. Delegar el procesamiento y subida al servicio inyectado
+      const imageUrl = await this.storageService.uploadOptimizedImage(file);
+
+      // 2. Actualizar el registro del producto en la base de datos vía Prisma
+      const updatedProduct = await this.prisma.product.update({
+        where: { id },
+        data: { imageUrl },
+      });
+
+      return updatedProduct;
+    } catch (error: any) {
+      throw new InternalServerErrorException(
+        `No se pudo actualizar la imagen del producto: ${error.message}`
+      );
+    }
   }
 }
