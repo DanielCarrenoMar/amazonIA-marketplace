@@ -1,6 +1,7 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import {  CreateProductOrderDto  } from 'dtos';
 import {  UpdateProductOrderDto  } from 'dtos';
+import { UserRole } from 'dtos';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -56,9 +57,21 @@ export class ProductOrderService {
     return order;
   }
 
-  // changedByUserId comes from the JWT token (req.user.id), NOT from the client body
-  async update(id: string, changedByUserId: string, updateProductOrderDto: UpdateProductOrderDto) {
+  // reqUser comes from the JWT token (req.user), NOT from the client body
+  async update(
+    id: string,
+    reqUser: { id: string; role: UserRole },
+    updateProductOrderDto: UpdateProductOrderDto,
+  ) {
     const order = await this.findOne(id); // Already includes { product: true }
+
+    if (
+      order.buyerId !== reqUser.id &&
+      reqUser.role !== UserRole.ADMIN &&
+      reqUser.role !== UserRole.SELLER
+    ) {
+      throw new ForbiddenException('You can only update your own order');
+    }
 
     const { statusNote, ...orderData } = updateProductOrderDto;
     const statusChanged = orderData.currentStatus && orderData.currentStatus !== order.currentStatus;
@@ -75,7 +88,7 @@ export class ProductOrderService {
         await tx.orderStatusHistory.create({
           data: {
             orderId: id,
-            changedByUserId,
+            changedByUserId: reqUser.id,
             previousStatus: order.currentStatus,
             newStatus: orderData.currentStatus!,
             statusNote: statusNote,
@@ -121,8 +134,13 @@ export class ProductOrderService {
     });
   }
 
-  async remove(id: string) {
-    await this.findOne(id); // Check existence
+  async remove(id: string, reqUser: { id: string; role: UserRole }) {
+    const order = await this.findOne(id); // Check existence
+
+    if (order.buyerId !== reqUser.id && reqUser.role !== UserRole.ADMIN) {
+      throw new ForbiddenException('You can only delete your own order');
+    }
+
     return this.prisma.productOrder.delete({
       where: { id },
     });
