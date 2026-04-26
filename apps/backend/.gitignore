@@ -46,3 +46,6 @@ Thumbs.db
 # Nest CLI / local config
 .nest-cli.json
 /src/generated/prisma
+
+# Collection Postman
+.postman/**

@@ -107,9 +107,6 @@ model Seller {
   avgProductRating Float?   @map("avg_product_rating")
   totalReviews     Int      @default(0) @map("total_reviews")
 
-  avgProductRating Float?   @map("avg_product_rating")
-  totalReviews     Int      @default(0) @map("total_reviews")
-
   // Relations
   user             UserAccount @relation(fields: [id], references: [id], onDelete: Cascade)
   tribe            Tribe?      @relation(fields: [tribeId], references: [id], onDelete: SetNull)
