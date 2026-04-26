@@ -2,21 +2,57 @@
   "info": {
     "_postman_id": "amazonia-marketplace-v4",
     "name": "AmazonIA Marketplace API",
-    "description": "Colección completa del backend. Cubre todos los endpoints con guards correctos.\n\n**Usuarios de prueba (Password: Password123!)**\n- 🛒 Comprador: comprador@amazonia.com\n- 🏪 Vendedor 1 (Electrónica): vendedor1@amazonia.com\n- 🏪 Vendedor 2 (Moda): vendedor2@amazonia.com\n\n**Setup rápido:**\n1. Ejecuta 'Login (Comprador) ← EMPIEZA AQUÍ'\n2. El `accessToken` se guarda automáticamente\n3. Todas las rutas 🔒 lo usarán automáticamente",
+    "description": "Colección completa del backend actualizada con Roles y Ownership.\n\n**Usuarios de prueba (Password: Password123!)**\n- 👑 Admin: admin@amazonia.com\n- 🏪 Vendedor 1: vendedor1@amazonia.com\n- 🛒 Comprador: comprador@amazonia.com\n\n**Flujo:**\nEjecuta el Login que necesites y el token se guarda solo.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "baseUrl",      "value": "http://localhost:3001", "type": "string" },
-    { "key": "accessToken",  "value": "",                     "type": "string" },
-    { "key": "sellerUserId", "value": "",                     "type": "string" },
-    { "key": "buyerUserId",  "value": "",                     "type": "string" },
-    { "key": "productId",    "value": "",                     "type": "string" },
-    { "key": "orderId",      "value": "",                     "type": "string" },
-    { "key": "tribeId",      "value": "",                     "type": "string" },
-    { "key": "categoryId",   "value": "",                     "type": "string" }
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3001",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "sellerUserId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "buyerUserId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "productId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "orderId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tribeId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "categoryId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "adminUserId",
+      "value": "",
+      "type": "string"
+    }
   ],
   "item": [
-
     {
       "name": "🔑 Auth",
       "item": [
@@ -43,17 +79,73 @@
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/auth/login",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "login"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
             },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"comprador@amazonia.com\",\n  \"password\": \"Password123!\"\n}"
             },
             "description": "Login como comprador. Guarda automáticamente `accessToken` y `buyerUserId`."
+          }
+        },
+        {
+          "name": "Login (Administrador)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.accessToken) {",
+                  "  pm.collectionVariables.set('accessToken', res.accessToken);",
+                  "  console.log('✅ accessToken guardado automáticamente');",
+                  "}",
+                  "if (res.user && res.user.id) {",
+                  "  pm.collectionVariables.set('adminUserId', res.user.id);",
+                  "  console.log('✅ adminUserId guardado: ' + res.user.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@amazonia.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "description": "Login como Administrador (Role: ADMIN). Guarda automáticamente `accessToken` y `adminUserId`."
           }
         },
         {
@@ -79,11 +171,21 @@
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/auth/login",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "login"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -115,11 +217,21 @@
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/auth/login",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "login"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -132,11 +244,21 @@
           "name": "Register (Nuevo Usuario)",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/auth/register",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "register"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -149,11 +271,21 @@
           "name": "Refresh Token",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/auth/refresh",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "refresh"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "refresh"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -166,18 +298,27 @@
           "name": "🔒 Mi Perfil (GET /auth/me)",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/auth/me",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "me"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
             },
             "description": "Devuelve el payload del JWT del usuario autenticado."
           }
         }
       ]
     },
-
     {
       "name": "👤 User Account",
       "item": [
@@ -185,11 +326,20 @@
           "name": "Crear Usuario (POST /user-account) — Público",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/user-account",
-              "host": ["{{baseUrl}}"],
-              "path": ["user-account"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "user-account"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -205,8 +355,12 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/user-account",
-              "host": ["{{baseUrl}}"],
-              "path": ["user-account"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "user-account"
+              ]
             }
           }
         },
@@ -217,8 +371,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/user-account/{{buyerUserId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["user-account", "{{buyerUserId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "user-account",
+                "{{buyerUserId}}"
+              ]
             },
             "description": "Usa la variable {{buyerUserId}} guardada al hacer Login (Comprador)."
           }
@@ -228,35 +387,57 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
-              { "key": "Content-Type",   "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/user-account/{{buyerUserId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["user-account", "{{buyerUserId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "user-account",
+                "{{buyerUserId}}"
+              ]
             },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"phonePrimary\": \"+58 412 9876543\",\n  \"locationCity\": \"Maracaibo\",\n  \"locationRegion\": \"Zulia\"\n}"
-            }
+            },
+            "description": "Requiere token. Solo el mismo usuario o un ADMIN pueden editar la cuenta."
           }
         },
         {
           "name": "🔒 Eliminar Usuario (DELETE /user-account/:id)",
           "request": {
             "method": "DELETE",
-            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/user-account/{{buyerUserId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["user-account", "{{buyerUserId}}"]
-            }
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "user-account",
+                "{{buyerUserId}}"
+              ]
+            },
+            "description": "Requiere token (ADMIN). Solo ADMIN puede eliminar."
           }
         }
       ]
     },
-
     {
       "name": "🏘️ Tribe",
       "item": [
@@ -280,18 +461,29 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
-              { "key": "Content-Type",   "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/tribe",
-              "host": ["{{baseUrl}}"],
-              "path": ["tribe"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tribe"
+              ]
             },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"Tribu Comida\",\n  \"description\": \"Vendedores de alimentos y bebidas artesanales\"\n}"
-            }
+            },
+            "description": "Requiere token (ADMIN)."
           }
         },
         {
@@ -301,8 +493,12 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/tribe",
-              "host": ["{{baseUrl}}"],
-              "path": ["tribe"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tribe"
+              ]
             }
           }
         },
@@ -313,8 +509,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/tribe/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["tribe", "1"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tribe",
+                "1"
+              ]
             }
           }
         },
@@ -323,35 +524,57 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
-              { "key": "Content-Type",   "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/tribe/{{tribeId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["tribe", "{{tribeId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tribe",
+                "{{tribeId}}"
+              ]
             },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"Tribu Tecnología\",\n  \"description\": \"Descripción actualizada de la tribu\"\n}"
-            }
+            },
+            "description": "Requiere token (ADMIN)."
           }
         },
         {
           "name": "🔒 Eliminar Tribu (DELETE /tribe/:id)",
           "request": {
             "method": "DELETE",
-            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/tribe/{{tribeId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["tribe", "{{tribeId}}"]
-            }
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tribe",
+                "{{tribeId}}"
+              ]
+            },
+            "description": "Requiere token (ADMIN)."
           }
         }
       ]
     },
-
     {
       "name": "🏪 Seller",
       "item": [
@@ -360,19 +583,29 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
-              { "key": "Content-Type",   "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/seller",
-              "host": ["{{baseUrl}}"],
-              "path": ["seller"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "seller"
+              ]
             },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"id\": \"{{buyerUserId}}\",\n  \"tribeId\": 1,\n  \"description\": \"Vendo artículos de tecnología y gadgets importados.\"\n}"
             },
-            "description": "Convierte un UserAccount existente en Seller. El 'id' debe ser el UUID del usuario."
+            "description": "Requiere token (ADMIN)."
           }
         },
         {
@@ -382,8 +615,12 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/seller",
-              "host": ["{{baseUrl}}"],
-              "path": ["seller"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "seller"
+              ]
             }
           }
         },
@@ -394,8 +631,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/seller/{{sellerUserId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["seller", "{{sellerUserId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "seller",
+                "{{sellerUserId}}"
+              ]
             },
             "description": "El ID del seller es el mismo UUID del UserAccount."
           }
@@ -405,35 +647,57 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
-              { "key": "Content-Type",   "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/seller/{{sellerUserId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["seller", "{{sellerUserId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "seller",
+                "{{sellerUserId}}"
+              ]
             },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"description\": \"Descripción actualizada del vendedor.\",\n  \"tribeId\": 2\n}"
-            }
+            },
+            "description": "Requiere token (ADMIN)."
           }
         },
         {
           "name": "🔒 Eliminar Vendedor (DELETE /seller/:id)",
           "request": {
             "method": "DELETE",
-            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/seller/{{sellerUserId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["seller", "{{sellerUserId}}"]
-            }
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "seller",
+                "{{sellerUserId}}"
+              ]
+            },
+            "description": "Requiere token (ADMIN)."
           }
         }
       ]
     },
-
     {
       "name": "📦 Product Category",
       "item": [
@@ -457,18 +721,29 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
-              { "key": "Content-Type",   "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/product-category",
-              "host": ["{{baseUrl}}"],
-              "path": ["product-category"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-category"
+              ]
             },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"categoryName\": \"Hogar\",\n  \"subcategoryName\": \"Muebles\"\n}"
-            }
+            },
+            "description": "Requiere token (ADMIN)."
           }
         },
         {
@@ -478,8 +753,12 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/product-category",
-              "host": ["{{baseUrl}}"],
-              "path": ["product-category"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-category"
+              ]
             }
           }
         },
@@ -490,8 +769,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/product-category/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["product-category", "1"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-category",
+                "1"
+              ]
             }
           }
         },
@@ -500,35 +784,57 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
-              { "key": "Content-Type",   "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/product-category/{{categoryId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["product-category", "{{categoryId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-category",
+                "{{categoryId}}"
+              ]
             },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"subcategoryName\": \"Smartphones\"\n}"
-            }
+            },
+            "description": "Requiere token (ADMIN)."
           }
         },
         {
           "name": "🔒 Eliminar Categoría (DELETE /product-category/:id)",
           "request": {
             "method": "DELETE",
-            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/product-category/{{categoryId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["product-category", "{{categoryId}}"]
-            }
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-category",
+                "{{categoryId}}"
+              ]
+            },
+            "description": "Requiere token (ADMIN)."
           }
         }
       ]
     },
-
     {
       "name": "🛒 Product",
       "item": [
@@ -552,13 +858,23 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
-              { "key": "Content-Type",   "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/product",
-              "host": ["{{baseUrl}}"],
-              "path": ["product"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -574,11 +890,21 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/product?page=1&limit=10",
-              "host": ["{{baseUrl}}"],
-              "path": ["product"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product"
+              ],
               "query": [
-                { "key": "page",  "value": "1" },
-                { "key": "limit", "value": "10" }
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
               ]
             }
           }
@@ -590,12 +916,25 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/product?search=Samsung&page=1&limit=5",
-              "host": ["{{baseUrl}}"],
-              "path": ["product"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product"
+              ],
               "query": [
-                { "key": "search", "value": "Samsung" },
-                { "key": "page",   "value": "1" },
-                { "key": "limit",  "value": "5" }
+                {
+                  "key": "search",
+                  "value": "Samsung"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
               ]
             }
           }
@@ -607,12 +946,25 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/product?categoryId=1&page=1&limit=10",
-              "host": ["{{baseUrl}}"],
-              "path": ["product"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product"
+              ],
               "query": [
-                { "key": "categoryId", "value": "1" },
-                { "key": "page",       "value": "1" },
-                { "key": "limit",      "value": "10" }
+                {
+                  "key": "categoryId",
+                  "value": "1"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
               ]
             }
           }
@@ -624,12 +976,26 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/product/nearby?lat=10.4985&lng=-66.8792&radiusKm=50",
-              "host": ["{{baseUrl}}"],
-              "path": ["product", "nearby"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product",
+                "nearby"
+              ],
               "query": [
-                { "key": "lat",      "value": "10.4985" },
-                { "key": "lng",      "value": "-66.8792" },
-                { "key": "radiusKm", "value": "50" }
+                {
+                  "key": "lat",
+                  "value": "10.4985"
+                },
+                {
+                  "key": "lng",
+                  "value": "-66.8792"
+                },
+                {
+                  "key": "radiusKm",
+                  "value": "50"
+                }
               ]
             },
             "description": "Busca productos en un radio de 50 km desde Caracas (lat: 10.4985, lng: -66.8792). NOTA: la ruta `/nearby` debe quedar ANTES de `/:id` en el router de NestJS."
@@ -642,8 +1008,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/product/{{productId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["product", "{{productId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product",
+                "{{productId}}"
+              ]
             },
             "description": "Usa {{productId}} guardado al crear un producto."
           }
@@ -653,13 +1024,24 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
-              { "key": "Content-Type",   "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/product/{{productId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["product", "{{productId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product",
+                "{{productId}}"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -671,11 +1053,21 @@
           "name": "🔒 Eliminar Producto (DELETE /product/:id)",
           "request": {
             "method": "DELETE",
-            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/product/{{productId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["product", "{{productId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product",
+                "{{productId}}"
+              ]
             }
           }
         },
@@ -684,7 +1076,10 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
             ],
             "body": {
               "mode": "formdata",
@@ -698,15 +1093,20 @@
             },
             "url": {
               "raw": "{{baseUrl}}/product/{{productId}}/image",
-              "host": ["{{baseUrl}}"],
-              "path": ["product", "{{productId}}", "image"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product",
+                "{{productId}}",
+                "image"
+              ]
             },
             "description": "Sube y optimiza una imagen (WebP, 800px) para el producto. Requiere token de Vendedor/Admin."
           }
         }
       ]
     },
-
     {
       "name": "⭐ Product Rating",
       "item": [
@@ -715,13 +1115,23 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
-              { "key": "Content-Type",   "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/product-rating",
-              "host": ["{{baseUrl}}"],
-              "path": ["product-rating"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-rating"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -737,8 +1147,12 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/product-rating",
-              "host": ["{{baseUrl}}"],
-              "path": ["product-rating"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-rating"
+              ]
             }
           }
         },
@@ -749,8 +1163,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/product-rating/{{productId}}/{{buyerUserId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["product-rating", "{{productId}}", "{{buyerUserId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-rating",
+                "{{productId}}",
+                "{{buyerUserId}}"
+              ]
             }
           }
         },
@@ -759,13 +1179,24 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
-              { "key": "Content-Type",   "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/product-rating/{{productId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["product-rating", "{{productId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-rating",
+                "{{productId}}"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -778,18 +1209,27 @@
           "name": "🔒 Eliminar Rating (DELETE /product-rating/:productId)",
           "request": {
             "method": "DELETE",
-            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/product-rating/{{productId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["product-rating", "{{productId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-rating",
+                "{{productId}}"
+              ]
             },
             "description": "El `userAccountId` se extrae del JWT. Solo elimina el rating del usuario autenticado."
           }
         }
       ]
     },
-
     {
       "name": "📋 Product Order",
       "item": [
@@ -813,13 +1253,23 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
-              { "key": "Content-Type",   "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/product-order",
-              "host": ["{{baseUrl}}"],
-              "path": ["product-order"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-order"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -835,8 +1285,12 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/product-order",
-              "host": ["{{baseUrl}}"],
-              "path": ["product-order"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-order"
+              ]
             }
           }
         },
@@ -847,8 +1301,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/product-order/{{orderId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["product-order", "{{orderId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-order",
+                "{{orderId}}"
+              ]
             }
           }
         },
@@ -859,8 +1318,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/product-order/{{orderId}}/history",
-              "host": ["{{baseUrl}}"],
-              "path": ["product-order", "{{orderId}}", "history"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-order",
+                "{{orderId}}",
+                "history"
+              ]
             }
           }
         },
@@ -869,13 +1334,24 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
-              { "key": "Content-Type",   "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/product-order/{{orderId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["product-order", "{{orderId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-order",
+                "{{orderId}}"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -888,16 +1364,25 @@
           "name": "🔒 Eliminar Orden (DELETE /product-order/:id)",
           "request": {
             "method": "DELETE",
-            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/product-order/{{orderId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["product-order", "{{orderId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-order",
+                "{{orderId}}"
+              ]
             }
           }
         }
       ]
     }
-
   ]
 }
