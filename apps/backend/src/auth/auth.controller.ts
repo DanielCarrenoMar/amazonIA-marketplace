@@ -1,13 +1,13 @@
 import { Controller, Post, Body, Get, UseGuards, Request } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import {  LoginDto  } from 'dtos';
-import {  RefreshDto  } from 'dtos';
+import { LoginDto } from 'dtos';
+import { RefreshDto } from 'dtos';
 import { JwtAuthGuard } from './jwt-auth.guard';
-import {  CreateUserAccountDto  } from 'dtos';
+import { CreateUserAccountDto } from 'dtos';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   // Public — creates a user and returns an immediate token pair (no separate login needed)
   @Post('register')
@@ -31,6 +31,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Get('me')
   me(@Request() req: any) {
-    return req.user;
+    //return req.user;
+    return this.authService.findme(req.user.id)
   }
 }

@@ -3,8 +3,8 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { UserAccountService } from '../user-account/user-account.service';
-import {  CreateUserAccountDto  } from 'dtos';
-import {  LoginDto  } from 'dtos';
+import { CreateUserAccountDto } from 'dtos';
+import { LoginDto } from 'dtos';
 import { JwtPayload } from './jwt.strategy';
 
 @Injectable()
@@ -13,7 +13,7 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly userAccountService: UserAccountService,
-  ) {}
+  ) { }
 
   // Centralized token generation — called on login and on refresh
   private async generateTokens(payload: JwtPayload) {
@@ -87,5 +87,14 @@ export class AuthService {
     } catch {
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
+  }
+
+  async findme(id: string) {
+    const user = await this.prisma.userAccount.findUnique({
+      where: { id },
+      omit: { passwordHash: true },
+      include: { seller: { include: { tribe: true } } }
+    });
+    return user;
   }
 }

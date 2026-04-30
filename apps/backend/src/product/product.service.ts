@@ -34,12 +34,13 @@ export class ProductService {
   }
 
   async findAll(query: FindProductsDto) {
-    const { page = 1, limit = 10, search, categoryId } = query;
+    const { page = 1, limit = 10, search, categoryId, sellerId } = query;
     const skip = (page - 1) * limit;
 
     // Prisma Where conditions
     const where: import('@prisma/client').Prisma.ProductWhereInput = {
       ...(categoryId ? { categoryId } : {}),
+      ...(sellerId ? { sellerId } : {}),
       ...(search ? { name: { contains: search, mode: 'insensitive' } } : {}),
     };
 
@@ -108,6 +109,13 @@ export class ProductService {
     };
   }
 
+  async findBySeller(sellerId: string) {
+    return this.prisma.product.findMany({
+      where: { sellerId },
+      include: { seller: true, category: true },
+    });
+  }
+
   async findOne(id: string) {
     const product = await this.prisma.product.findUnique({
       where: { id },
@@ -130,13 +138,6 @@ export class ProductService {
     await this.findOne(id); // Check existence
     return this.prisma.product.delete({
       where: { id },
-    });
-  }
-
-  async findBySeller(sellerId: string) {
-    return this.prisma.product.findMany({
-      where: { sellerId },
-      include: { seller: true, category: true },
     });
   }
 
