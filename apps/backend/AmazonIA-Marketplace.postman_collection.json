@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "df6967a3-069e-4229-8be0-404bfcfe5db5",
     "name": "AmazonIA Marketplace API",
-    "description": "Colección completa del backend actualizada con Roles y Ownership.\n\n**Usuarios de prueba (Password: Password123!)**\n- 👑 Admin: admin@amazonia.com\n- 🏪 Vendedor 1: vendedor1@amazonia.com\n- 🛒 Comprador: comprador@amazonia.com\n\n**Flujo:**\nEjecuta el Login que necesites y el token se guarda solo.",
+    "description": "Colección completa del backend — Roles y Ownership aplicados.\n\n**Usuarios de prueba (Password: Password123!)**\n- 👑 Admin: admin@amazonia.com\n- 🏪 Vendedor 1 (Electrónica): vendedor1@amazonia.com\n- 🏪 Vendedor 2 (Moda): vendedor2@amazonia.com\n- 🛒 Comprador: comprador@amazonia.com\n\n**Setup:**\n1. Ejecuta el Login del rol que necesites — el token se guarda solo.\n2. Rutas 🔒 requieren el accessToken correspondiente.\n\n**Roles:**\n- BUYER: puede comprar, calificar productos, ver sus órdenes.\n- SELLER: puede crear/editar sus productos, subir imágenes, ver sus órdenes.\n- ADMIN: acceso completo a todos los endpoints protegidos.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "54131272",
     "_collection_link": "https://go.postman.co/collection/54131272-df6967a3-069e-4229-8be0-404bfcfe5db5?source=collection_link"
@@ -55,53 +55,6 @@
               ]
             },
             "description": "Login como comprador. Guarda automáticamente `accessToken` y `buyerUserId`."
-          },
-          "response": []
-        },
-        {
-          "name": "Login (Administrador)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "const res = pm.response.json();",
-                  "if (res.accessToken) {",
-                  "  pm.collectionVariables.set('accessToken', res.accessToken);",
-                  "  console.log('✅ accessToken guardado automáticamente');",
-                  "}",
-                  "if (res.user && res.user.id) {",
-                  "  pm.collectionVariables.set('adminUserId', res.user.id);",
-                  "  console.log('✅ adminUserId guardado: ' + res.user.id);",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"admin@amazonia.com\",\n  \"password\": \"Password123!\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/auth/login",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "login"
-              ]
-            },
-            "description": "Login como Administrador (Role: ADMIN). Guarda automáticamente `accessToken` y `adminUserId`."
           },
           "response": []
         },
@@ -196,6 +149,53 @@
               ]
             },
             "description": "Login como Vendedor 2 (José Rodríguez)."
+          },
+          "response": []
+        },
+        {
+          "name": "Login (Administrador)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.accessToken) {",
+                  "  pm.collectionVariables.set('accessToken', res.accessToken);",
+                  "  console.log('✅ accessToken guardado automáticamente');",
+                  "}",
+                  "if (res.user && res.user.id) {",
+                  "  pm.collectionVariables.set('adminUserId', res.user.id);",
+                  "  console.log('✅ adminUserId guardado: ' + res.user.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@amazonia.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Login como Administrador (Role: ADMIN). Guarda automáticamente `accessToken` y `adminUserId`."
           },
           "response": []
         },
@@ -312,10 +312,15 @@
           "response": []
         },
         {
-          "name": "Listar Todos los Usuarios (GET /user-account) — Público",
+          "name": "🔒 Listar Todos los Usuarios (GET /user-account) — Solo ADMIN",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/user-account",
               "host": [
@@ -324,7 +329,8 @@
               "path": [
                 "user-account"
               ]
-            }
+            },
+            "description": "Requiere token de ADMIN. Devuelve todos los usuarios sin passwordHash."
           },
           "response": []
         },
@@ -867,7 +873,7 @@
           "response": []
         },
         {
-          "name": "Mis Productos (Get  /product/my-products)",
+          "name": "🔒 Mis Productos (GET /product/my-products) — Solo SELLER",
           "request": {
             "auth": {
               "type": "bearer",
@@ -880,7 +886,12 @@
               ]
             },
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/product/my-products",
               "host": [
@@ -890,7 +901,8 @@
                 "product",
                 "my-products"
               ]
-            }
+            },
+            "description": "Devuelve los productos del seller autenticado. Requiere token de SELLER. Los admins pueden usar GET /product?sellerId=<uuid>."
           },
           "response": []
         },
@@ -982,6 +994,37 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "Filtrar por Vendedor (GET /product?sellerId=) — Público",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/product?sellerId={{sellerUserId}}&page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product"
+              ],
+              "query": [
+                {
+                  "key": "sellerId",
+                  "value": "{{sellerUserId}}"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Filtra todos los productos de un seller por su UUID. Útil para admins que quieran inspeccionar el catálogo de un vendedor."
+          }
         },
         {
           "name": "Productos Cercanos — PostGIS (GET /product/nearby) — Público",

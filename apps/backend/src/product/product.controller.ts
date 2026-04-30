@@ -34,13 +34,13 @@ export class ProductController {
     return this.productService.findNearby(query);
   }
 
-  //  Declarado antes del GET ':id'
+  // Only the authenticated seller can see their own products.
+  // Admins should use GET /product?sellerId=<uuid> to inspect any seller's products.
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.SELLER, UserRole.ADMIN)
+  @Roles(UserRole.SELLER)
   @Get('my-products')
   findBySeller(@Req() req: any) {
-    const sellerId = req.user.id;
-    return this.productService.findBySeller(sellerId);
+    return this.productService.findBySeller(req.user.id);
   }
 
   // Public — anyone can view a single product

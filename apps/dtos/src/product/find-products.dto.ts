@@ -1,4 +1,4 @@
-import { IsOptional, IsInt, Min, IsString } from 'class-validator';
+import { IsOptional, IsInt, Min, IsString, IsUUID } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class FindProductsDto {
@@ -24,4 +24,9 @@ export class FindProductsDto {
   @IsInt()
   @IsOptional()
   categoryId?: number;
+
+  // Filter by seller UUID — useful for admins to inspect a seller's catalog
+  @IsUUID()
+  @IsOptional()
+  sellerId?: string;
 }

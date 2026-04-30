@@ -34,12 +34,13 @@ export class ProductService {
   }
 
   async findAll(query: FindProductsDto) {
-    const { page = 1, limit = 10, search, categoryId } = query;
+    const { page = 1, limit = 10, search, categoryId, sellerId } = query;
     const skip = (page - 1) * limit;
 
     // Prisma Where conditions
     const where: import('@prisma/client').Prisma.ProductWhereInput = {
       ...(categoryId ? { categoryId } : {}),
+      ...(sellerId ? { sellerId } : {}),
       ...(search ? { name: { contains: search, mode: 'insensitive' } } : {}),
     };
 
