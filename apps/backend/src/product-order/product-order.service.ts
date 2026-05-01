@@ -135,6 +135,7 @@ export class ProductOrderService {
           productHash: fullOrder.productId, // TODO: generar hash SHA-256 del producto
           buyerId: fullOrder.buyerId,
           sellerId: fullOrder.product.sellerId,
+          webhookUrl: 'http://localhost:3000/blockchain/webhook' 
         }).catch((error) => {
           this.logger.error(
             `Failed to send notarization for order ${id}: ${error.message}`,
