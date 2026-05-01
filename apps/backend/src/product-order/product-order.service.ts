@@ -128,6 +128,12 @@ export class ProductOrderService {
       });
 
       if (fullOrder) {
+        const webhookBaseUrl = process.env.WEBHOOK_BASE_URL;
+        if (!webhookBaseUrl) {
+          this.logger.error('WEBHOOK_BASE_URL is not set; skipping notarization request.');
+          return updatedOrder;
+        }
+
         this.notaryClientService.notarizeOrder({
           orderId: fullOrder.id,
           amount: Number(fullOrder.totalAmount),
@@ -135,7 +141,7 @@ export class ProductOrderService {
           productHash: fullOrder.productId, // TODO: generar hash SHA-256 del producto
           buyerId: fullOrder.buyerId,
           sellerId: fullOrder.product.sellerId,
-          webhookUrl: 'http://localhost:3000/blockchain/webhook' 
+          webhookUrl: `${webhookBaseUrl}/blockchain/webhook`
         }).catch((error) => {
           this.logger.error(
             `Failed to send notarization for order ${id}: ${error.message}`,

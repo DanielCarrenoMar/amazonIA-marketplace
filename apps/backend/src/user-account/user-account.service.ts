@@ -3,6 +3,7 @@ import * as bcrypt from 'bcrypt';
 import { CreateUserAccountDto } from './dto/create-user-account.dto';
 import { UpdateUserAccountDto } from './dto/update-user-account.dto';
 import { PrismaService } from '../prisma/prisma.service';
+import { UserRole } from '@prisma/client';
 
 const SALT_ROUNDS = 12;
 
@@ -58,6 +59,15 @@ export class UserAccountService {
     await this.findOne(id); // Check existence
     return this.prisma.userAccount.delete({
       where: { id },
+    });
+  }
+
+  async promoteToSeller(id: string) {
+    await this.findOne(id);
+    return this.prisma.userAccount.update({
+      where: { id },
+      data: { role: UserRole.SELLER },
+      omit: { passwordHash: true },
     });
   }
 }

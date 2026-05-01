@@ -1,10 +1,10 @@
 {
   "info": {
-    "_postman_id": "3a4023c9-6800-45ce-ba57-5e93739b882c",
+    "_postman_id": "a4c5cf7d-42e1-4ab2-904a-bbf9e5574b47",
     "name": "AmazonIA Flow",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "54390240",
-    "_collection_link": "https://go.postman.co/collection/54390240-3a4023c9-6800-45ce-ba57-5e93739b882c?source=collection_link"
+    "_collection_link": "https://go.postman.co/collection/54390240-a4c5cf7d-42e1-4ab2-904a-bbf9e5574b47?source=collection_link"
   },
   "item": [
     {
@@ -18,7 +18,9 @@
               "pm.environment.set('accessToken', json.accessToken);",
               "pm.environment.set('userId', json.user.id);"
             ],
-            "type": "text/javascript"
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
           }
         }
       ],
@@ -32,7 +34,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\"fullName\":\"Buyer Test\",\"nationalId\":\"BUYER-123\",\"password\":\"Password123!\",\"email\":\"buyer@test.com\"}"
+          "raw": "{\"fullName\":\"Buyer Test\",\"nationalId\":\"CompradorFake3\",\"password\":\"Password123!\",\"email\":\"buyerfake3@test.com\"}"
         },
         "url": {
           "raw": "{{backendBaseUrl}}/auth/register",
@@ -74,7 +76,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\"fullName\":\"Seller Test\",\"nationalId\":\"SELLER2-123\",\"password\":\"Password123!\",\"email\":\"seller2@test.com\"}"
+          "raw": "{\"fullName\":\"Seller Test\",\"nationalId\":\"SellerFake3\",\"password\":\"Password123!\",\"email\":\"sellerfake3@test.com\"}"
         },
         "url": {
           "raw": "{{backendBaseUrl}}/auth/register",
@@ -84,6 +86,38 @@
           "path": [
             "auth",
             "register"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "User - Promote Seller (dev)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "x-dev-key",
+            "value": "{{devRoleKey}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{}"
+        },
+        "url": {
+          "raw": "{{backendBaseUrl}}/user-account/{{sellerId}}/make-seller",
+          "host": [
+            "{{backendBaseUrl}}"
+          ],
+          "path": [
+            "user-account",
+            "{{sellerId}}",
+            "make-seller"
           ]
         }
       },
@@ -108,10 +142,15 @@
       ],
       "request": {
         "method": "POST",
-        "header": [],
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n  \"email\": \"seller2@test.com\",\r\n  \"password\": \"Password123!\"\r\n}",
+          "raw": "{\r\n  \"email\": \"sellerfake3@test.com\",\r\n  \"password\": \"Password123!\"\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -119,12 +158,10 @@
           }
         },
         "url": {
-          "raw": "http://localhost:3000/auth/login",
-          "protocol": "http",
+          "raw": "{{backendBaseUrl}}/auth/login",
           "host": [
-            "localhost"
+            "{{backendBaseUrl}}"
           ],
-          "port": "3000",
           "path": [
             "auth",
             "login"
@@ -161,7 +198,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n  \"email\": \"buyer@test.com\",\r\n  \"password\": \"Password123!\"\r\n}",
+          "raw": "{\r\n  \"email\": \"buyerfake3@test.com\",\r\n  \"password\": \"Password123!\"\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -197,7 +234,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\"id\":\"{{sellerId}}\",\"description\":\"Vendedor de prueba\"}"
+          "raw": "{\r\n  \"id\": \"{{sellerId}}\",\r\n  \"description\": \"Vendedor de prueba\"\r\n}"
         },
         "url": {
           "raw": "{{backendBaseUrl}}/seller",
@@ -428,7 +465,11 @@
     },
     {
       "key": "apiKey",
-      "value": "MySecretApiKey"
+      "value": "notary_api_key_6a2f9c1b0d7e"
+    },
+    {
+      "key": "devRoleKey",
+      "value": "dev_role_key_9f3a2b7c1d4e"
     },
     {
       "key": "accessToken",
