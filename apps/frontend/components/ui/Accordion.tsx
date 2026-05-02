@@ -53,7 +53,7 @@ export const Accordion: React.FC<AccordionProps> = ({
               type="button"
               disabled={item.disabled}
               onClick={() => toggleItem(item.id)}
-              className="flex w-full flex-1 items-center justify-between py-4 text-sm font-semibold transition-all hover:text-brand-primary disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+              className="flex w-full flex-1 items-center cursor-pointer justify-between py-4 text-sm font-semibold transition-all hover:text-brand-primary disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
             >
               {item.title}
               <ChevronDown

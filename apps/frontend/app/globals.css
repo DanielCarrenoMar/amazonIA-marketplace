@@ -19,20 +19,20 @@
   --color-brand-urgency-dark: #dc2626;
 
   /* System Colors */
-  --color-background: #ffffff;
-  --color-foreground: #111827;
+  --color-background: #fbfbfb;
+  --color-foreground: #3e3e3e;
   --color-muted: #4b5563;
   --color-border: #e5e7eb;
 
   /* Fonts */
-  --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
-  --font-outfit: var(--font-outfit), sans-serif;
+  --font-sans: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+  --font-poppins: var(--font-poppins), sans-serif;
 }
 
 
 :root {
-  --background: #ffffff;
-  --foreground: #111827;
+  --background: #fbfbfb;
+  --foreground: #3e3e3e;
 }
 
 body {

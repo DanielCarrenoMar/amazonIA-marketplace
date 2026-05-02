@@ -26,16 +26,22 @@ Nuestros colores están inspirados en el ecosistema amazónico: la selva (Esmera
 | `brand-accent` | `#fbbf24` | **Calificaciones**, estrellas, destacados especiales. |
 | `brand-urgency` | `#ef4444` | Alertas de stock, errores, estados críticos. |
 
+### Colores de Sistema (Base)
+| Token | HEX | Uso |
+| :--- | :--- | :--- |
+| `background` | `#fbfbfb` | Fondo principal de la aplicación (blanco roto para reducir fatiga visual). |
+| `foreground` | `#3e3e3e` | Color principal de textos oscuros (gris oscuro suave para mejor lectura). |
+
 ---
 
 ## ✍️ Tipografía
 
 Usamos una combinación de fuentes modernas y legibles que refuerzan la identidad tecnológica y amigable del proyecto.
 
-*   **Principal:** **Poppins** (Sans Serif)
-    *   *Uso:* Cuerpo de texto, botones, componentes de UI y navegación. Proporciona una lectura clara y geométrica.
-*   **Secundaria / Display:** **Outfit** (Sans Serif)
+*   **Principal / Display:** **Poppins** (Sans Serif)
     *   *Uso:* Encabezados (`h1`, `h2`, `h3`), títulos de secciones y elementos destacados. Aporta un toque moderno y distintivo.
+*   **Secundaria:** **Outfit** (Sans Serif)
+    *   *Uso:* Cuerpo de texto, botones, componentes de UI y navegación. Proporciona una lectura clara y geométrica.
 
 ---
 
@@ -45,8 +51,8 @@ Los colores y fuentes están registrados en `app/globals.css` bajo el bloque `@t
 
 ```tsx
 // Ejemplo de uso de fuentes
-<h1 className="font-outfit text-brand-primary-dark">Título en Outfit</h1>
-<p className="font-sans">Cuerpo de texto en Poppins</p>
+<h1 className="font-poppins text-brand-primary-dark">Título en Poppins</h1>
+<p className="font-sans">Cuerpo de texto en Outfit</p>
 ```
 
 // Ejemplo de una tarjeta con fondo natural
@@ -65,4 +71,4 @@ Los colores y fuentes están registrados en `app/globals.css` bajo el bloque `@t
 
 ---
 
-*Última actualización: 18 de Abril de 2026*
+*Última actualización: 26 de Abril de 2026*
