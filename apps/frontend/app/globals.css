@@ -19,8 +19,8 @@
   --color-brand-urgency-dark: #dc2626;
 
   /* System Colors */
-  --color-background: #ffffff;
-  --color-foreground: #111827;
+  --color-background: #fbfbfb;
+  --color-foreground: #3e3e3e;
   --color-muted: #4b5563;
   --color-border: #e5e7eb;
 
@@ -31,8 +31,8 @@
 
 
 :root {
-  --background: #ffffff;
-  --foreground: #111827;
+  --background: #fbfbfb;
+  --foreground: #3e3e3e;
 }
 
 body {

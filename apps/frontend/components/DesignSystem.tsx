@@ -81,6 +81,8 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
     { name: "Accent (Amber)", class: "bg-brand-accent", text: "text-brand-primary-dark", hex: "#fbbf24" },
     { name: "Urgency", class: "bg-brand-urgency", text: "text-white", hex: "#ef4444" },
     { name: "Nature BG", class: "bg-brand-nature-bg", text: "text-brand-nature-content", border: "border-brand-primary-light", hex: "#ecfdf5" },
+    { name: "Background", class: "bg-background", text: "text-foreground", border: "border-border", hex: "#fbfbfb" },
+    { name: "Foreground (Texto)", class: "bg-foreground", text: "text-background", hex: "#3e3e3e" },
   ];
 
   const icons = [
@@ -139,16 +141,27 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
           <section className="space-y-6">
             <h2 className="text-2xl font-poppins font-semibold border-l-4 border-brand-secondary pl-4">Tipografía</h2>
             <Card variant="nature" padding="lg" rounded="3xl">
-              <div className="space-y-4 font-sans">
-                <h1 className="text-5xl font-poppins font-extrabold text-brand-nature-content">Heading 1</h1>
-                <h2 className="text-4xl font-poppins font-bold text-brand-nature-content">Heading 2</h2>
-                <h3 className="text-3xl font-poppins font-semibold text-brand-nature-content">Heading 3</h3>
-                <p className="text-lg text-foreground leading-relaxed">
-                  Este es un ejemplo de cuerpo de texto en Outfit. Proporciona una lectura clara y geométrica, ideal para la navegación y componentes de UI. Amazonia IA utiliza esta estética para conectar a los usuarios con la biodiversidad del Amazonas.
-                </p>
-                <p className="text-sm text-brand-nature-content italic">
-                  Títulos en Poppins, aportando un toque moderno y distintivo.
-                </p>
+              <div className="space-y-8">
+                <div className="space-y-2">
+                  <span className="text-[10px] uppercase tracking-widest text-brand-primary font-bold">Poppins (Títulos)</span>
+                  <div className="space-y-1">
+                    <h1 className="text-5xl font-poppins font-extrabold text-brand-primary-dark">Heading 1</h1>
+                    <h2 className="text-4xl font-poppins font-bold text-brand-primary-dark">Heading 2</h2>
+                    <h3 className="text-3xl font-poppins font-semibold text-brand-primary-dark">Heading 3</h3>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <span className="text-[10px] uppercase tracking-widest text-brand-secondary font-bold">Outfit (Cuerpo / UI)</span>
+                  <div className="space-y-4">
+                    <p className="text-lg text-foreground leading-relaxed font-sans">
+                      Este es un ejemplo de cuerpo de texto en **Outfit**. Proporciona una lectura clara y geométrica, ideal para la navegación y componentes de UI. Amazonia IA utiliza esta estética para conectar a los usuarios con la biodiversidad del Amazonas.
+                    </p>
+                    <p className="text-sm text-foreground/80 font-sans italic">
+                      "La selva no es solo verde, es un diálogo constante entre tecnología y ancestros."
+                    </p>
+                  </div>
+                </div>
               </div>
             </Card>
           </section>

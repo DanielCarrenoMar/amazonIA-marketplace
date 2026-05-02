@@ -26,6 +26,12 @@ Nuestros colores están inspirados en el ecosistema amazónico: la selva (Esmera
 | `brand-accent` | `#fbbf24` | **Calificaciones**, estrellas, destacados especiales. |
 | `brand-urgency` | `#ef4444` | Alertas de stock, errores, estados críticos. |
 
+### Colores de Sistema (Base)
+| Token | HEX | Uso |
+| :--- | :--- | :--- |
+| `background` | `#fbfbfb` | Fondo principal de la aplicación (blanco roto para reducir fatiga visual). |
+| `foreground` | `#3e3e3e` | Color principal de textos oscuros (gris oscuro suave para mejor lectura). |
+
 ---
 
 ## ✍️ Tipografía
