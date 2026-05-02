@@ -54,7 +54,7 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
     };
 
     const hoverStyles = hoverable
-      ? "hover:shadow-xl hover:-translate-y-1 cursor-pointer"
+      ? "hover:shadow-xl hover:-translate-y-1 "
       : "";
 
     return (

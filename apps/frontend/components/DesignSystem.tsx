@@ -135,58 +135,34 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
           </div>
         </section>
 
-        {/* UI Elements Preview */}
-        <div className="grid md:grid-cols-2 gap-12">
-          {/* Typography section */}
-          <section className="space-y-6">
-            <h2 className="text-2xl font-poppins font-semibold border-l-4 border-brand-secondary pl-4">Tipografía</h2>
-            <Card variant="nature" padding="lg" rounded="3xl">
-              <div className="space-y-8">
-                <div className="space-y-2">
-                  <span className="text-[10px] uppercase tracking-widest text-brand-primary font-bold">Poppins (Títulos)</span>
-                  <div className="space-y-1">
-                    <h1 className="text-5xl font-poppins font-extrabold text-brand-primary-dark">Heading 1</h1>
-                    <h2 className="text-4xl font-poppins font-bold text-brand-primary-dark">Heading 2</h2>
-                    <h3 className="text-3xl font-poppins font-semibold text-brand-primary-dark">Heading 3</h3>
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <span className="text-[10px] uppercase tracking-widest text-brand-secondary font-bold">Outfit (Cuerpo / UI)</span>
-                  <div className="space-y-4">
-                    <p className="text-lg text-foreground leading-relaxed font-sans">
-                      Este es un ejemplo de cuerpo de texto en **Outfit**. Proporciona una lectura clara y geométrica, ideal para la navegación y componentes de UI. Amazonia IA utiliza esta estética para conectar a los usuarios con la biodiversidad del Amazonas.
-                    </p>
-                    <p className="text-sm text-foreground/80 font-sans italic">
-                      "La selva no es solo verde, es un diálogo constante entre tecnología y ancestros."
-                    </p>
-                  </div>
+        {/* Typography section */}
+        <section className="space-y-6">
+          <h2 className="text-2xl font-poppins font-semibold border-l-4 border-brand-secondary pl-4">Tipografía</h2>
+          <Card variant="nature" padding="lg" rounded="3xl">
+            <div className="space-y-8">
+              <div className="space-y-2">
+                <span className="text-[10px] uppercase tracking-widest text-brand-primary font-bold">Poppins (Títulos)</span>
+                <div className="space-y-1">
+                  <h1 className="text-5xl font-poppins font-extrabold text-brand-primary-dark">Heading 1</h1>
+                  <h2 className="text-4xl font-poppins font-bold text-brand-primary-dark">Heading 2</h2>
+                  <h3 className="text-3xl font-poppins font-semibold text-brand-primary-dark">Heading 3</h3>
                 </div>
               </div>
-            </Card>
-          </section>
-
-          {/* Components section */}
-          <section className="space-y-6">
-            <h2 className="text-2xl font-poppins font-semibold border-l-4 border-brand-accent pl-4">Componentes Base</h2>
-            <Card padding="lg" rounded="3xl">
-              <div className="space-y-8">
-                <div className="flex items-center gap-2 p-4 bg-brand-primary-light rounded-xl border border-brand-primary/20">
-                  <div className="w-8 h-8 rounded-full bg-brand-primary flex items-center justify-center text-white">
-                    <Globe className="w-5 h-5" />
-                  </div>
-                  <p className="text-sm text-brand-primary-dark font-medium">Información sobre comercio justo cargada.</p>
-                </div>
-                <div className="flex items-center gap-1">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <Star key={i} className="w-6 h-6 text-brand-accent fill-current" />
-                  ))}
-                  <span className="ml-2 text-sm text-muted font-medium">5.0 (24 reviews)</span>
+              
+              <div className="space-y-2">
+                <span className="text-[10px] uppercase tracking-widest text-brand-secondary font-bold">Outfit (Cuerpo / UI)</span>
+                <div className="space-y-4">
+                  <p className="text-lg text-foreground leading-relaxed font-sans">
+                    Este es un ejemplo de cuerpo de texto en Outfit. Proporciona una lectura clara y geométrica, ideal para la navegación y componentes de UI. Amazonia IA utiliza esta estética para conectar a los usuarios con la biodiversidad del Amazonas.
+                  </p>
+                  <p className="text-sm text-foreground/80 font-sans italic">
+                    "La selva no es solo verde, es un diálogo constante entre tecnología y ancestros."
+                  </p>
                 </div>
               </div>
-            </Card>
-          </section>
-        </div>
+            </div>
+          </Card>
+        </section>
 
         {/* Icons section */}
         <section className="space-y-6">
