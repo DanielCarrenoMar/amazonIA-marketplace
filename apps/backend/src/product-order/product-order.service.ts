@@ -47,6 +47,15 @@ export class ProductOrderService {
     });
   }
 
+  // Returns all orders that belong to a specific buyer
+  async findByBuyer(buyerId: string) {
+    return this.prisma.productOrder.findMany({
+      where: { buyerId },
+      include: { product: true, statusHistory: true, buyer: true },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   async findOne(id: string) {
     const order = await this.prisma.productOrder.findUnique({
       where: { id },
@@ -54,6 +63,22 @@ export class ProductOrderService {
     });
 
     if (!order) throw new NotFoundException(`ProductOrder with ID ${id} not found`);
+    return order;
+  }
+
+  // Find a single order ensuring it belongs to the given buyerId
+  async findOneForBuyer(id: string, buyerId: string) {
+    const order = await this.prisma.productOrder.findUnique({
+      where: { id },
+      include: { product: true, buyer: true, statusHistory: true },
+    });
+
+    if (!order) throw new NotFoundException(`ProductOrder with ID ${id} not found`);
+
+    if (order.buyerId !== buyerId) {
+      throw new ForbiddenException('You can only view your own order');
+    }
+
     return order;
   }
 

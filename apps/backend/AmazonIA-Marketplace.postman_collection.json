@@ -1,11 +1,11 @@
 {
   "info": {
-    "_postman_id": "df6967a3-069e-4229-8be0-404bfcfe5db5",
+    "_postman_id": "bdc24beb-7dba-4434-b6fe-5743f05f5b4c",
     "name": "AmazonIA Marketplace API",
     "description": "Colección completa del backend — Roles y Ownership aplicados.\n\n**Usuarios de prueba (Password: Password123!)**\n- 👑 Admin: admin@amazonia.com\n- 🏪 Vendedor 1 (Electrónica): vendedor1@amazonia.com\n- 🏪 Vendedor 2 (Moda): vendedor2@amazonia.com\n- 🛒 Comprador: comprador@amazonia.com\n\n**Setup:**\n1. Ejecuta el Login del rol que necesites — el token se guarda solo.\n2. Rutas 🔒 requieren el accessToken correspondiente.\n\n**Roles:**\n- BUYER: puede comprar, calificar productos, ver sus órdenes.\n- SELLER: puede crear/editar sus productos, subir imágenes, ver sus órdenes.\n- ADMIN: acceso completo a todos los endpoints protegidos.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_exporter_id": "54131272",
-    "_collection_link": "https://go.postman.co/collection/54131272-df6967a3-069e-4229-8be0-404bfcfe5db5?source=collection_link"
+    "_exporter_id": "54140480",
+    "_collection_link": "https://go.postman.co/collection/54140480-bdc24beb-7dba-4434-b6fe-5743f05f5b4c?source=collection_link"
   },
   "item": [
     {
@@ -1024,7 +1024,8 @@
               ]
             },
             "description": "Filtra todos los productos de un seller por su UUID. Útil para admins que quieran inspeccionar el catálogo de un vendedor."
-          }
+          },
+          "response": []
         },
         {
           "name": "Productos Cercanos — PostGIS (GET /product/nearby) — Público",
@@ -1450,6 +1451,63 @@
               "path": [
                 "product-order",
                 "{{orderId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Mis Órdenes",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/product-order/my-orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-order",
+                "my-orders"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Mi Orden — detalle",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/product-order/my-orders/60e40196-f0eb-4c08-88c4-7243b0cf52c7",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-order",
+                "my-orders",
+                "60e40196-f0eb-4c08-88c4-7243b0cf52c7"
               ]
             }
           },
