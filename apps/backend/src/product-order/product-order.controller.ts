@@ -33,6 +33,21 @@ export class ProductOrderController {
     return this.productOrderService.findAll();
   }
 
+  // NOTE: declare static routes before dynamic :id to avoid routing conflicts
+  // Returns all orders for the authenticated buyer
+  @UseGuards(JwtAuthGuard)
+  @Get('my-orders')
+  myOrders(@Request() req: any) {
+    return this.productOrderService.findByBuyer(req.user.id);
+  }
+
+  // Returns a single order owned by the authenticated buyer
+  @UseGuards(JwtAuthGuard)
+  @Get('my-orders/:id')
+  myOrderDetail(@Param('id', ParseUUIDPipe) id: string, @Request() req: any) {
+    return this.productOrderService.findOneForBuyer(id, req.user.id);
+  }
+
   @Get(':id')
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.productOrderService.findOne(id);
