@@ -7,12 +7,6 @@ on:
     paths:
       - 'apps/backend/**'
       - '.github/workflows/backend-build-test.yml'
-  pull_request:
-    branches:
-      - dev
-    paths:
-      - 'apps/backend/**'
-      - '.github/workflows/backend-build-test.yml'
 
 jobs:
   build:
