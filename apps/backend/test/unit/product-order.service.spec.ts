@@ -1,5 +1,5 @@
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
-import { UserRole } from 'dtos';
+import { OrderStatus, UserRole } from 'dtos';
 import { ProductOrderService } from '../../src/product-order/product-order.service';
 
 describe('ProductOrderService', () => {
@@ -10,6 +10,13 @@ describe('ProductOrderService', () => {
     },
     productOrder: {
       create: jest.fn(),
+      update: jest.fn(),
+    },
+    orderStatusHistory: {
+      create: jest.fn(),
+    },
+    seller: {
+      update: jest.fn(),
     },
   } as any;
 
@@ -25,6 +32,22 @@ describe('ProductOrderService', () => {
   } as any;
 
   const service = new ProductOrderService(prismaMock);
+  const allStatuses = [
+    OrderStatus.PENDING,
+    OrderStatus.PAID,
+    OrderStatus.SHIPPED,
+    OrderStatus.DELIVERED,
+    OrderStatus.CANCELED,
+    OrderStatus.REFUNDED,
+  ] as const;
+  const allowedTransitionsByStatus: Record<OrderStatus, readonly OrderStatus[]> = {
+    [OrderStatus.PENDING]: [OrderStatus.PAID, OrderStatus.CANCELED],
+    [OrderStatus.PAID]: [OrderStatus.SHIPPED, OrderStatus.REFUNDED],
+    [OrderStatus.SHIPPED]: [OrderStatus.DELIVERED],
+    [OrderStatus.DELIVERED]: [],
+    [OrderStatus.CANCELED]: [],
+    [OrderStatus.REFUNDED]: [],
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -93,6 +116,62 @@ describe('ProductOrderService', () => {
         {} as any,
       ),
     ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+
+  describe('Update_ChangeStatus', () => {
+    const setupOrder = (currentStatus: OrderStatus) => {
+      prismaMock.productOrder.findUnique.mockResolvedValue({
+        id: 'order-1',
+        buyerId: 'owner-user',
+        currentStatus,
+        product: {},
+      });
+    };
+
+    it.each([
+      [OrderStatus.PENDING, [OrderStatus.PAID, OrderStatus.CANCELED]],
+      [OrderStatus.PAID, [OrderStatus.SHIPPED, OrderStatus.REFUNDED]],
+      [OrderStatus.SHIPPED, [OrderStatus.DELIVERED]],
+      [OrderStatus.DELIVERED, []],
+      [OrderStatus.CANCELED, []],
+      [OrderStatus.REFUNDED, []],
+    ] as Array<[OrderStatus, OrderStatus[]]>)('allows only valid transitions from %s', async (currentStatus, allowedStatuses) => {
+      setupOrder(currentStatus);
+
+      for (const nextStatus of allowedStatuses) {
+        txMock.productOrder.update.mockResolvedValue({ id: 'order-1', currentStatus: nextStatus });
+
+        await expect(
+          service.update(
+            'order-1',
+            { id: 'owner-user', role: UserRole.BUYER },
+            { currentStatus: nextStatus } as any,
+          ),
+        ).resolves.toMatchObject({ id: 'order-1', currentStatus: nextStatus });
+      }
+    });
+
+    it.each(
+      allStatuses.flatMap((currentStatus) =>
+        allStatuses
+          .filter((nextStatus) => {
+            return currentStatus !== nextStatus && !allowedTransitionsByStatus[currentStatus].includes(nextStatus);
+          })
+          .map((nextStatus) => [currentStatus, nextStatus]),
+      ) as Array<[OrderStatus, OrderStatus]>,
+    )('rejects invalid transition %s -> %s', async (currentStatus, nextStatus) => {
+      setupOrder(currentStatus);
+
+      await expect(
+        service.update(
+          'order-1',
+          { id: 'owner-user', role: UserRole.BUYER },
+          { currentStatus: nextStatus } as any,
+        ),
+      ).rejects.toBeInstanceOf(BadRequestException);
+
+      expect(prismaMock.$transaction).not.toHaveBeenCalled();
+    });
   });
 
   it('throws ForbiddenException when non-owner non-admin deletes order', async () => {
