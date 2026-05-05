@@ -11,8 +11,10 @@ import {
   Request,
 } from '@nestjs/common';
 import { ProductOrderService } from './product-order.service';
-import { CreateProductOrderDto, UpdateProductOrderDto } from 'dtos';
+import { CreateProductOrderDto, UpdateProductOrderDto, UserRole } from 'dtos';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 
 @Controller('product-order')
 export class ProductOrderController {
@@ -28,6 +30,8 @@ export class ProductOrderController {
     return this.productOrderService.create(req.user.id, createProductOrderDto);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @Get()
   findAll() {
     return this.productOrderService.findAll();
@@ -48,11 +52,13 @@ export class ProductOrderController {
     return this.productOrderService.findOneForBuyer(id, req.user.id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.productOrderService.findOne(id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get(':id/history')
   findHistory(@Param('id', ParseUUIDPipe) id: string) {
     return this.productOrderService.findHistory(id);
