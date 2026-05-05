@@ -1,8 +1,18 @@
-import { ForbiddenException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import { UserRole } from 'dtos';
 import { ProductOrderService } from '../../src/product-order/product-order.service';
 
 describe('ProductOrderService', () => {
+  const txMock = {
+    product: {
+      findUnique: jest.fn(),
+      update: jest.fn(),
+    },
+    productOrder: {
+      create: jest.fn(),
+    },
+  } as any;
+
   const prismaMock = {
     productOrder: {
       findUnique: jest.fn(),
@@ -11,13 +21,62 @@ describe('ProductOrderService', () => {
     orderStatusHistory: {
       findMany: jest.fn(),
     },
-    $transaction: jest.fn(),
+    $transaction: jest.fn(async (callback: any) => callback(txMock)),
   } as any;
 
   const service = new ProductOrderService(prismaMock);
 
   beforeEach(() => {
     jest.clearAllMocks();
+    prismaMock.$transaction.mockImplementation(async (callback: any) => callback(txMock));
+  });
+
+  it('creates order and decrements stock', async () => {
+    txMock.product.findUnique
+      .mockResolvedValueOnce({ stockAvailable: 10 })
+      .mockResolvedValueOnce({ price: 25 });
+    txMock.product.update.mockResolvedValue({});
+    txMock.productOrder.create.mockResolvedValue({
+      id: 'order-1',
+      buyerId: 'buyer-1',
+      totalAmount: 50,
+    });
+
+    await expect(
+      service.create('buyer-1', {
+        productId: 'product-1',
+        quantity: 2,
+      } as any),
+    ).resolves.toMatchObject({
+      id: 'order-1',
+      buyerId: 'buyer-1',
+      totalAmount: 50,
+    });
+
+    expect(txMock.product.update).toHaveBeenCalledWith({
+      where: { id: 'product-1' },
+      data: { stockAvailable: { decrement: 2 } },
+    });
+
+    expect(txMock.productOrder.create).toHaveBeenCalledWith({
+      data: {
+        productId: 'product-1',
+        quantity: 2,
+        buyerId: 'buyer-1',
+        totalAmount: 50,
+      },
+    });
+  });
+
+  it('throws BadRequestException when stock is insufficient', async () => {
+    txMock.product.findUnique.mockResolvedValueOnce({ stockAvailable: 1 });
+
+    await expect(
+      service.create('buyer-1', {
+        productId: 'product-1',
+        quantity: 2,
+      } as any),
+    ).rejects.toBeInstanceOf(BadRequestException);
   });
 
   it('throws ForbiddenException when non-owner non-admin non-seller updates order', async () => {
