@@ -2,8 +2,17 @@ import { BadRequestException, ForbiddenException, Injectable, NotFoundException 
 import { Prisma } from '@prisma/client';
 import {  CreateProductOrderDto  } from 'dtos';
 import {  UpdateProductOrderDto  } from 'dtos';
-import { UserRole } from 'dtos';
+import { OrderStatus, UserRole } from 'dtos';
 import { PrismaService } from '../prisma/prisma.service';
+
+const allowedOrderStatusTransitions: Record<OrderStatus, readonly OrderStatus[]> = {
+  [OrderStatus.PENDING]: [OrderStatus.PAID, OrderStatus.CANCELED],
+  [OrderStatus.PAID]: [OrderStatus.SHIPPED, OrderStatus.REFUNDED],
+  [OrderStatus.SHIPPED]: [OrderStatus.DELIVERED],
+  [OrderStatus.DELIVERED]: [],
+  [OrderStatus.CANCELED]: [],
+  [OrderStatus.REFUNDED]: [],
+};
 
 @Injectable()
 export class ProductOrderService {
@@ -102,7 +111,18 @@ export class ProductOrderService {
     }
 
     const { statusNote, ...orderData } = updateProductOrderDto;
-    const statusChanged = orderData.currentStatus && orderData.currentStatus !== order.currentStatus;
+    const nextStatus = orderData.currentStatus;
+    const statusChanged = nextStatus && nextStatus !== order.currentStatus;
+
+    if (statusChanged) {
+      const allowedTransitions = allowedOrderStatusTransitions[order.currentStatus as OrderStatus] ?? [];
+
+      if (!allowedTransitions.includes(nextStatus)) {
+        throw new BadRequestException(
+          `Invalid order status transition from ${order.currentStatus} to ${nextStatus}`,
+        );
+      }
+    }
 
     // Use a transaction to keep the order update and history log atomic
     return this.prisma.$transaction(async (tx) => {
