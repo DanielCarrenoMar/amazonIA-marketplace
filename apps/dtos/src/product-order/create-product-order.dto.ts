@@ -13,11 +13,6 @@ export class CreateProductOrderDto {
   @IsNotEmpty()
   quantity: number;
 
-  @IsNumber()
-  @Min(0)
-  @IsNotEmpty()
-  totalAmount: number;
-
   @IsString()
   @IsOptional()
   orderNotes?: string;
