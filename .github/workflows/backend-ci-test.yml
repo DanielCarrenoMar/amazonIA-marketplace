@@ -9,7 +9,7 @@ on:
       - '.github/workflows/backend-ci-test.yml'
 
 jobs:
-  build:
+  test-ci:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
