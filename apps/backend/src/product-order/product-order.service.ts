@@ -1,4 +1,5 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import {  CreateProductOrderDto  } from 'dtos';
 import {  UpdateProductOrderDto  } from 'dtos';
 import { UserRole } from 'dtos';
@@ -34,9 +35,11 @@ export class ProductOrderService {
         data: { stockAvailable: { decrement: createProductOrderDto.quantity } },
       });
 
+      const totalAmount = await calculateTotalAmountOfProductOrder(tx, createProductOrderDto);
+
       // 4. Create the order
       return tx.productOrder.create({
-        data: { ...createProductOrderDto, buyerId },
+        data: { ...createProductOrderDto, buyerId, totalAmount },
       });
     });
   }
@@ -170,4 +173,19 @@ export class ProductOrderService {
       where: { id },
     });
   }
+}
+
+function calculateTotalAmountOfProductOrder(
+  tx: Prisma.TransactionClient,
+  createProductOrderDto: CreateProductOrderDto,
+): Promise<number> {
+  return tx.product.findUnique({
+    where: { id: createProductOrderDto.productId },
+    select: { price: true },
+  }).then((product) => {
+    if (!product) {
+      throw new NotFoundException(`Product with ID ${createProductOrderDto.productId} not found`);
+    }
+    return Number(product.price) * createProductOrderDto.quantity;
+  });
 }
