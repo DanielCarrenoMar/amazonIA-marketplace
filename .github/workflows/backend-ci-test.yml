@@ -6,7 +6,7 @@ on:
       - dev
     paths:
       - 'apps/backend/**'
-      - '.github/workflows/backend-test-test.yml'
+      - '.github/workflows/backend-ci-test.yml'
 
 jobs:
   build:
