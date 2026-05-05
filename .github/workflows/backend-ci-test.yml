@@ -29,5 +29,5 @@ jobs:
       - name: Install dependencies
         run: pnpm --filter backend... install --frozen-lockfile
 
-      - name: Build backend
-        run: pnpm --filter backend... build
+      - name: Test backend
+        run: pnpm --filter backend test
