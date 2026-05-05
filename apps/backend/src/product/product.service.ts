@@ -1,5 +1,5 @@
-import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException } from '@nestjs/common';
-import { CreateProductDto, UpdateProductDto, FindProductsDto, FindNearbyDto } from 'dtos';
+import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException, ConflictException } from '@nestjs/common';
+import { CreateProductDto, UpdateProductDto, FindProductsDto, FindNearbyDto, OrderStatus } from 'dtos';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 
@@ -136,9 +136,19 @@ export class ProductService {
 
   async remove(id: string) {
     await this.findOne(id); // Check existence
-    return this.prisma.product.delete({
-      where: { id },
+    // Check for active orders (not CANCELED or REFUNDED)
+    const activeOrders = await this.prisma.productOrder.count({
+      where: {
+        productId: id,
+        currentStatus: { notIn: [OrderStatus.CANCELED, OrderStatus.REFUNDED] },
+      },
     });
+
+    if (activeOrders > 0) {
+      throw new ConflictException('No se puede eliminar el producto porque tiene órdenes activas');
+    }
+
+    return this.prisma.product.delete({ where: { id } });
   }
 
   async updateStock(id: string, quantity: number) {
