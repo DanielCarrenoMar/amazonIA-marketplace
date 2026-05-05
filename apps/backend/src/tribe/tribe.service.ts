@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import {  CreateTribeDto  } from 'dtos';
 import {  UpdateTribeDto  } from 'dtos';
 import { PrismaService } from '../prisma/prisma.service';
@@ -8,9 +9,17 @@ export class TribeService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(createTribeDto: CreateTribeDto) {
-    return this.prisma.tribe.create({
-      data: createTribeDto,
-    });
+    try {
+      return await this.prisma.tribe.create({
+        data: createTribeDto,
+      });
+    } catch (e: any) {
+      // Map Prisma unique constraint error to HTTP 409
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+        throw new ConflictException('El nombre de la tribu ya está en uso');
+      }
+      throw e;
+    }
   }
 
   async findAll() {

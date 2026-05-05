@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import {  CreateSellerDto  } from 'dtos';
 import {  UpdateSellerDto  } from 'dtos';
 import { PrismaService } from '../prisma/prisma.service';
@@ -8,9 +9,17 @@ export class SellerService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(createSellerDto: CreateSellerDto) {
-    return this.prisma.seller.create({
-      data: createSellerDto,
-    });
+    try {
+      return await this.prisma.seller.create({
+        data: createSellerDto,
+      });
+    } catch (e: any) {
+      // Map Prisma unique constraint error to HTTP 409
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+        throw new ConflictException('Alguno de los campos únicos del seller ya está en uso');
+      }
+      throw e;
+    }
   }
 
   async findAll() {
