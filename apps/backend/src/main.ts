@@ -1,9 +1,19 @@
+import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
+  // Validate required environment variables early to avoid unsafe startup
+  const required = ['DATABASE_URL', 'JWT_SECRET', 'JWT_REFRESH_SECRET', 'SUPABASE_URL', 'SUPABASE_SERVICE_KEY', 'FRONTEND_URL'];
+  for (const key of required) {
+    if (!process.env[key]) {
+      console.error(`Falta variable de entorno requerida: ${key}`);
+      process.exit(1);
+    }
+  }
+
   const app = await NestFactory.create(AppModule);
 
   // Activate all class-validator decorators globally
