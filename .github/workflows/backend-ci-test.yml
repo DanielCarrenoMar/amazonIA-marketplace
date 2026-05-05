@@ -30,7 +30,7 @@ jobs:
         run: pnpm --filter backend... install --frozen-lockfile
 
       - name: Run Prisma generate
-        run: pnpm --filter backend prisma generate
+        run: pnpx --filter backend prisma generate
 
       - name: Test backend
         run: pnpm --filter backend test
