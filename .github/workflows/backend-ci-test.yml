@@ -33,4 +33,4 @@ jobs:
         run: pnpm --filter backend exec prisma generate
 
       - name: Test backend
-        run: pnpm --filter backend test
+        run: pnpm --filter backend... test
