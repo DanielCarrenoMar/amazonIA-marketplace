@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import {  CreateProductRatingDto  } from 'dtos';
 import {  UpdateProductRatingDto  } from 'dtos';
 import { PrismaService } from '../prisma/prisma.service';
@@ -47,9 +48,18 @@ export class ProductRatingService {
     const { productId, ratingValue } = createProductRatingDto;
 
     return this.prisma.$transaction(async (tx) => {
-      const newRating = await tx.productRating.create({
-        data: { productId, userAccountId, ratingValue },
-      });
+      let newRating;
+      try {
+        newRating = await tx.productRating.create({
+          data: { productId, userAccountId, ratingValue },
+        });
+      } catch (e: any) {
+        if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+          // Composite primary key conflict — user already rated this product
+          throw new ConflictException('Ya existe una valoración de este usuario para este producto');
+        }
+        throw e;
+      }
 
       // Recalculate average and inject it into the product
       await this.recalculateProductAverage(tx, productId);

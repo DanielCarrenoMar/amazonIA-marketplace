@@ -1,4 +1,5 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { CreateUserAccountDto, UpdateUserAccountDto, UserRole } from 'dtos';
 import { PrismaService } from '../prisma/prisma.service';
@@ -14,10 +15,17 @@ export class UserAccountService {
 
     // Hash the plain password before persisting — never store plain text
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
-
-    return this.prisma.userAccount.create({
-      data: { ...rest, passwordHash },
-    });
+    try {
+      return await this.prisma.userAccount.create({
+        data: { ...rest, passwordHash },
+      });
+    } catch (e: any) {
+      // Convert Prisma unique constraint errors to HTTP 409 Conflict with a clear message
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+        throw new ConflictException('El email, username o nationalId ya está en uso');
+      }
+      throw e;
+    }
   }
 
   async findAll() {
