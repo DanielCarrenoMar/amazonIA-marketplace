@@ -143,6 +143,18 @@ export class ProductOrderService {
             statusNote: statusNote,
           },
         });
+
+        // 1.5 Restore stock if the order is canceled or refunded
+        if (
+          (nextStatus === OrderStatus.CANCELED || nextStatus === OrderStatus.REFUNDED) &&
+          order.currentStatus !== OrderStatus.CANCELED &&
+          order.currentStatus !== OrderStatus.REFUNDED
+        ) {
+          await tx.product.update({
+            where: { id: order.productId },
+            data: { stockAvailable: { increment: order.quantity } },
+          });
+        }
       }
 
       // 2. Seller Rating: If the buyer left a rating for the seller, recalculate the seller's global rating
