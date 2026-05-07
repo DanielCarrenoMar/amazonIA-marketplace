@@ -128,9 +128,20 @@ export class AuthService {
     }
   }
 
-  async logout(userId: string, refreshToken: string) {
+  async logout(refreshToken: string) {
+    let payload: JwtPayload;
+    try {
+      // Decode and verify the refresh token to get the user ID securely
+      payload = await this.jwtService.verifyAsync<JwtPayload>(refreshToken, {
+        secret: process.env.JWT_REFRESH_SECRET,
+      });
+    } catch (e: any) {
+      // If the token is already expired or invalid, there's nothing to revoke
+      return { message: 'Logged out successfully' };
+    }
+
     const userTokens = await this.prisma.refreshToken.findMany({
-      where: { userId, revokedAt: null },
+      where: { userId: payload.sub, revokedAt: null },
     });
 
     let foundToken: any = null;
