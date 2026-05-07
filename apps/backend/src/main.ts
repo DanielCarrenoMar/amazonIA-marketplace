@@ -5,14 +5,18 @@ import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
-  // Validate required environment variables early to avoid unsafe startup
-  const required = ['DATABASE_URL', 'JWT_SECRET', 'JWT_REFRESH_SECRET', 'SUPABASE_URL', 'SUPABASE_SERVICE_KEY', 'FRONTEND_URL'];
+  // Validate strict required environment variables early to avoid unsafe startup
+  const required = ['DATABASE_URL', 'JWT_SECRET', 'JWT_REFRESH_SECRET'];
   for (const key of required) {
     if (!process.env[key]) {
       console.error(`Falta variable de entorno requerida: ${key}`);
       process.exit(1);
     }
   }
+
+  // Optional variables with defaults or specific feature requirements:
+  // - FRONTEND_URL: defaults to http://localhost:3000
+  // - SUPABASE_URL / SUPABASE_SERVICE_KEY: required only for image uploads
 
   const app = await NestFactory.create(AppModule);
 

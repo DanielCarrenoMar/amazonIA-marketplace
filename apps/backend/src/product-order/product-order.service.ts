@@ -21,10 +21,10 @@ export class ProductOrderService {
   // buyerId comes from the JWT token (req.user.id), NOT from the client body
   async create(buyerId: string, createProductOrderDto: CreateProductOrderDto) {
     return this.prisma.$transaction(async (tx) => {
-      // 1. Get the current stock
+      // 1. Get the current stock and price
       const product = await tx.product.findUnique({
         where: { id: createProductOrderDto.productId },
-        select: { stockAvailable: true },
+        select: { stockAvailable: true, price: true },
       });
 
       if (!product) {
@@ -44,7 +44,8 @@ export class ProductOrderService {
         data: { stockAvailable: { decrement: createProductOrderDto.quantity } },
       });
 
-      const totalAmount = await calculateTotalAmountOfProductOrder(tx, createProductOrderDto);
+      // Calculate total amount using the already fetched price
+      const totalAmount = Number(product.price) * createProductOrderDto.quantity;
 
       // 4. Create the order
       return tx.productOrder.create({
@@ -195,17 +196,3 @@ export class ProductOrderService {
   }
 }
 
-function calculateTotalAmountOfProductOrder(
-  tx: Prisma.TransactionClient,
-  createProductOrderDto: CreateProductOrderDto,
-): Promise<number> {
-  return tx.product.findUnique({
-    where: { id: createProductOrderDto.productId },
-    select: { price: true },
-  }).then((product) => {
-    if (!product) {
-      throw new NotFoundException(`Product with ID ${createProductOrderDto.productId} not found`);
-    }
-    return Number(product.price) * createProductOrderDto.quantity;
-  });
-}
