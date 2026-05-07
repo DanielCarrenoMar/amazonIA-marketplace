@@ -235,3 +235,23 @@ CREATE TABLE IF NOT EXISTS order_status_history (
 CREATE INDEX IF NOT EXISTS idx_order_status_history_order_id
     ON order_status_history (order_id, created_at);
 
+-- ---------------------------------------------------------------------------
+-- 10. refresh_token
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS refresh_token (
+    id                          UUID                     PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id                     UUID                     NOT NULL,
+    token_hash                  VARCHAR(255)             NOT NULL,
+    expires_at                  TIMESTAMP WITH TIME ZONE NOT NULL,
+    revoked_at                  TIMESTAMP WITH TIME ZONE,
+    created_at                  TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    -- FKs
+    CONSTRAINT fk_refresh_token_user
+        FOREIGN KEY (user_id) REFERENCES user_account (id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_refresh_token_user_id
+    ON refresh_token (user_id);
+
+CREATE INDEX IF NOT EXISTS idx_refresh_token_hash
+    ON refresh_token (token_hash);

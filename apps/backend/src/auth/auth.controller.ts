@@ -27,6 +27,12 @@ export class AuthController {
     return this.authService.refresh(refreshDto.refreshToken);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Post('logout')
+  logout(@Request() req: any, @Body() refreshDto: RefreshDto) {
+    return this.authService.logout(req.user.id, refreshDto.refreshToken);
+  }
+
   // Protected route — returns the currently authenticated user from the JWT payload
   @UseGuards(JwtAuthGuard)
   @Get('me')
