@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, MaxLength, IsInt, Min, IsEmail } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, MaxLength, IsInt, Min, IsEmail, MinLength } from 'class-validator';
 
 export class CreateUserAccountDto {
   @IsString()
@@ -28,6 +28,7 @@ export class CreateUserAccountDto {
 
   @IsString()
   @IsNotEmpty()
+  @MinLength(8, { message: 'La contraseña debe tener al menos 8 caracteres' })
   @MaxLength(255)
   password: string; // Plain text — will be hashed by the service before saving to the database
 

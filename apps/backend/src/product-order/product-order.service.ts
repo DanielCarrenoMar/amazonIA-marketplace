@@ -113,20 +113,31 @@ export class ProductOrderService {
 
     const { statusNote, ...orderData } = updateProductOrderDto;
     const nextStatus = orderData.currentStatus;
-    const statusChanged = nextStatus && nextStatus !== order.currentStatus;
-
-    if (statusChanged) {
-      const allowedTransitions = allowedOrderStatusTransitions[order.currentStatus as OrderStatus] ?? [];
-
-      if (!allowedTransitions.includes(nextStatus)) {
-        throw new BadRequestException(
-          `Invalid order status transition from ${order.currentStatus} to ${nextStatus}`,
-        );
-      }
-    }
 
     // Use a transaction to keep the order update and history log atomic
     return this.prisma.$transaction(async (tx) => {
+      // Re-fetch the order inside the transaction to prevent race conditions
+      const currentOrder = await tx.productOrder.findUnique({
+        where: { id },
+        include: { product: true },
+      });
+
+      if (!currentOrder) {
+        throw new NotFoundException(`ProductOrder with ID ${id} not found`);
+      }
+
+      const statusChanged = nextStatus && nextStatus !== currentOrder.currentStatus;
+
+      if (statusChanged) {
+        const allowedTransitions = allowedOrderStatusTransitions[currentOrder.currentStatus as OrderStatus] ?? [];
+
+        if (!allowedTransitions.includes(nextStatus)) {
+          throw new BadRequestException(
+            `Invalid order status transition from ${currentOrder.currentStatus} to ${nextStatus}`,
+          );
+        }
+      }
+
       const updatedOrder = await tx.productOrder.update({
         where: { id },
         data: orderData,
@@ -138,8 +149,8 @@ export class ProductOrderService {
           data: {
             orderId: id,
             changedByUserId: reqUser.id,
-            previousStatus: order.currentStatus,
-            newStatus: orderData.currentStatus!,
+            previousStatus: currentOrder.currentStatus,
+            newStatus: nextStatus!,
             statusNote: statusNote,
           },
         });
@@ -147,19 +158,19 @@ export class ProductOrderService {
         // 1.5 Restore stock if the order is canceled or refunded
         if (
           (nextStatus === OrderStatus.CANCELED || nextStatus === OrderStatus.REFUNDED) &&
-          order.currentStatus !== OrderStatus.CANCELED &&
-          order.currentStatus !== OrderStatus.REFUNDED
+          currentOrder.currentStatus !== OrderStatus.CANCELED &&
+          currentOrder.currentStatus !== OrderStatus.REFUNDED
         ) {
           await tx.product.update({
-            where: { id: order.productId },
-            data: { stockAvailable: { increment: order.quantity } },
+            where: { id: currentOrder.productId },
+            data: { stockAvailable: { increment: currentOrder.quantity } },
           });
         }
       }
 
       // 2. Seller Rating: If the buyer left a rating for the seller, recalculate the seller's global rating
-      if (orderData.sellerRatingValue !== undefined && order.product?.sellerId) {
-        const sellerId = order.product.sellerId;
+      if (orderData.sellerRatingValue !== undefined && currentOrder.product?.sellerId) {
+        const sellerId = currentOrder.product.sellerId;
         
         // Find the mathematical average of all completed ratings for this seller
         const aggregate = await tx.productOrder.aggregate({
@@ -202,8 +213,21 @@ export class ProductOrderService {
       throw new ForbiddenException('You can only delete your own order');
     }
 
-    return this.prisma.productOrder.delete({
-      where: { id },
+    return this.prisma.$transaction(async (tx) => {
+      // Restore stock if deleting an active order permanently
+      if (
+        order.currentStatus !== OrderStatus.CANCELED &&
+        order.currentStatus !== OrderStatus.REFUNDED
+      ) {
+        await tx.product.update({
+          where: { id: order.productId },
+          data: { stockAvailable: { increment: order.quantity } },
+        });
+      }
+
+      return tx.productOrder.delete({
+        where: { id },
+      });
     });
   }
 }
