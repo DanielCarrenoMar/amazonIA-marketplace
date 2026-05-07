@@ -18,3 +18,4 @@ export * from './tribe/create-tribe.dto';
 export * from './tribe/update-tribe.dto';
 export * from './user-account/create-user-account.dto';
 export * from './user-account/update-user-account.dto';
+export * from './user-account/change-password.dto';

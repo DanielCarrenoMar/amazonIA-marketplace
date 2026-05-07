@@ -1,7 +1,7 @@
-import { ForbiddenException, Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
-import { CreateUserAccountDto, UpdateUserAccountDto, UserRole } from 'dtos';
+import { CreateUserAccountDto, UpdateUserAccountDto, ChangePasswordDto, UserRole } from 'dtos';
 import { PrismaService } from '../prisma/prisma.service';
 
 const SALT_ROUNDS = 12;
@@ -57,15 +57,41 @@ export class UserAccountService {
       throw new ForbiddenException('You can only update your own account');
     }
 
-    // If a new password is provided, hash it before updating
-    const { password, ...rest } = updateUserAccountDto as any;
-    const data = password
-      ? { ...rest, passwordHash: await bcrypt.hash(password, SALT_ROUNDS) }
-      : rest;
+    return this.prisma.userAccount.update({
+      where: { id },
+      data: updateUserAccountDto,
+      omit: { passwordHash: true },
+    });
+  }
+
+  async changePassword(
+    id: string,
+    reqUser: { id: string },
+    changePasswordDto: ChangePasswordDto,
+  ) {
+    if (reqUser.id !== id) {
+      throw new ForbiddenException('You can only change your own password');
+    }
+
+    const user = await this.prisma.userAccount.findUnique({ where: { id } });
+    if (!user) {
+      throw new NotFoundException(`UserAccount with ID ${id} not found`);
+    }
+
+    const isMatch = await bcrypt.compare(changePasswordDto.currentPassword, user.passwordHash);
+    if (!isMatch) {
+      throw new ForbiddenException('La contraseña actual es incorrecta');
+    }
+
+    if (changePasswordDto.currentPassword === changePasswordDto.newPassword) {
+      throw new BadRequestException('La nueva contraseña no puede ser igual a la actual');
+    }
+
+    const newPasswordHash = await bcrypt.hash(changePasswordDto.newPassword, SALT_ROUNDS);
 
     return this.prisma.userAccount.update({
       where: { id },
-      data,
+      data: { passwordHash: newPasswordHash },
       omit: { passwordHash: true },
     });
   }
