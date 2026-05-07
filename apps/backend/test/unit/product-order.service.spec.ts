@@ -9,8 +9,10 @@ describe('ProductOrderService', () => {
       update: jest.fn(),
     },
     productOrder: {
+      findUnique: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
+      delete: jest.fn(),
     },
     orderStatusHistory: {
       create: jest.fn(),
@@ -50,14 +52,12 @@ describe('ProductOrderService', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    jest.resetAllMocks();
     prismaMock.$transaction.mockImplementation(async (callback: any) => callback(txMock));
   });
 
   it('creates order and decrements stock', async () => {
-    txMock.product.findUnique
-      .mockResolvedValueOnce({ stockAvailable: 10 })
-      .mockResolvedValueOnce({ price: 25 });
+    txMock.product.findUnique.mockResolvedValue({ stockAvailable: 10, price: 25 });
     txMock.product.update.mockResolvedValue({});
     txMock.productOrder.create.mockResolvedValue({
       id: 'order-1',
@@ -120,12 +120,14 @@ describe('ProductOrderService', () => {
 
   describe('Update_ChangeStatus', () => {
     const setupOrder = (currentStatus: OrderStatus) => {
-      prismaMock.productOrder.findUnique.mockResolvedValue({
+      const order = {
         id: 'order-1',
         buyerId: 'owner-user',
         currentStatus,
         product: {},
-      });
+      };
+      prismaMock.productOrder.findUnique.mockResolvedValue(order);
+      txMock.productOrder.findUnique.mockResolvedValue(order);
     };
 
     it.each([
@@ -169,8 +171,6 @@ describe('ProductOrderService', () => {
           { currentStatus: nextStatus } as any,
         ),
       ).rejects.toBeInstanceOf(BadRequestException);
-
-      expect(prismaMock.$transaction).not.toHaveBeenCalled();
     });
   });
 
