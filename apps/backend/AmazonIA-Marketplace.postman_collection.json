@@ -386,6 +386,39 @@
           "response": []
         },
         {
+          "name": "🔒 Cambiar Contraseña (PATCH /user-account/:id/password)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"myOldPassword1\",\n  \"newPassword\": \"MyNewPassword123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/user-account/{{buyerUserId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "user-account",
+                "{{buyerUserId}}",
+                "password"
+              ]
+            },
+            "description": "Requiere token. Solo el mismo usuario o un ADMIN pueden editar la cuenta."
+          },
+          "response": []
+        },
+        {
           "name": "🔒 Eliminar Usuario (DELETE /user-account/:id)",
           "request": {
             "method": "DELETE",
