@@ -27,6 +27,20 @@ export class AuthService {
         expiresIn: '7d', // Long-lived refresh token
       }),
     ]);
+
+    // Guardar el refresh token hasheado en la base de datos
+    const tokenHash = await bcrypt.hash(refreshToken, 10);
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
+
+    await this.prisma.refreshToken.create({
+      data: {
+        userId: payload.sub,
+        tokenHash,
+        expiresAt,
+      },
+    });
+
     return { accessToken, refreshToken };
   }
 
@@ -81,12 +95,71 @@ export class AuthService {
         secret: process.env.JWT_REFRESH_SECRET,
       });
 
+      // Find all active tokens for this user
+      const userTokens = await this.prisma.refreshToken.findMany({
+        where: { userId: payload.sub, revokedAt: null },
+      });
+
+      let foundToken: any = null;
+      for (const token of userTokens) {
+        if (await bcrypt.compare(refreshToken, token.tokenHash)) {
+          foundToken = token;
+          break;
+        }
+      }
+
+      // Verify that the token exists in DB and is not revoked
+      if (!foundToken) {
+        throw new UnauthorizedException('Invalid or revoked refresh token');
+      }
+
+      // Revoke the old token (rotation)
+      await this.prisma.refreshToken.update({
+        where: { id: foundToken.id },
+        data: { revokedAt: new Date() },
+      });
+
       // Issue a brand new pair of tokens (rotation — the old refresh token becomes invalid)
       const newPayload: JwtPayload = { sub: payload.sub, email: payload.email, role: payload.role };
       return this.generateTokens(newPayload);
-    } catch {
+    } catch (e: any) {
+      if (e instanceof UnauthorizedException) throw e;
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
+  }
+
+  async logout(refreshToken: string) {
+    let payload: JwtPayload;
+    try {
+      // Decode and verify the refresh token to get the user ID securely
+      payload = await this.jwtService.verifyAsync<JwtPayload>(refreshToken, {
+        secret: process.env.JWT_REFRESH_SECRET,
+      });
+    } catch (e: any) {
+      // If the token is already expired or invalid, there's nothing to revoke
+      return { message: 'Logged out successfully' };
+    }
+
+    const userTokens = await this.prisma.refreshToken.findMany({
+      where: { userId: payload.sub, revokedAt: null },
+    });
+
+    let foundToken: any = null;
+    for (const token of userTokens) {
+      if (await bcrypt.compare(refreshToken, token.tokenHash)) {
+        foundToken = token;
+        break;
+      }
+    }
+
+    if (foundToken) {
+      await this.prisma.refreshToken.update({
+        where: { id: foundToken.id },
+        data: { revokedAt: new Date() },
+      });
+    }
+
+    return { message: 'Logged out successfully' };
   }
 
   async findme(id: string) {

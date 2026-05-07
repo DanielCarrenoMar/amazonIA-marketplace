@@ -27,6 +27,12 @@ export class AuthController {
     return this.authService.refresh(refreshDto.refreshToken);
   }
 
+  // Public endpoint for logout — it verifies the refresh token internally
+  @Post('logout')
+  logout(@Body() refreshDto: RefreshDto) {
+    return this.authService.logout(refreshDto.refreshToken);
+  }
+
   // Protected route — returns the currently authenticated user from the JWT payload
   @UseGuards(JwtAuthGuard)
   @Get('me')

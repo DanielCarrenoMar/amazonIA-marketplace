@@ -68,6 +68,7 @@ model UserAccount {
   productRatings           ProductRating[]
   buyerOrders              ProductOrder[]         @relation("BuyerOrders")
   orderStatusChanges       OrderStatusHistory[]   @relation("ChangedByUser")
+  refreshTokens            RefreshToken[]
 
   @@index([locationCoords], type: Gist)
   @@map("user_account")
@@ -233,4 +234,23 @@ model OrderStatusHistory {
 
   @@index([orderId, createdAt])
   @@map("order_status_history")
+}
+
+// ---------------------------------------------------------------------------
+// RefreshToken
+// ---------------------------------------------------------------------------
+
+model RefreshToken {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  tokenHash String    @map("token_hash") @db.VarChar(255)
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz
+  revokedAt DateTime? @map("revoked_at") @db.Timestamptz
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  user      UserAccount @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@map("refresh_token")
 }
