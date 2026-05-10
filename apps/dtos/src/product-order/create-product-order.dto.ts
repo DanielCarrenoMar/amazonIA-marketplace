@@ -1,5 +1,5 @@
 import { IsString, IsNotEmpty, IsOptional, MaxLength, IsNumber, Min, IsUUID, IsInt, IsEnum } from 'class-validator';
-import { OrderStatus } from '../enums';
+
 
 export class CreateProductOrderDto {
   @IsUUID()
@@ -30,7 +30,4 @@ export class CreateProductOrderDto {
   @MaxLength(255)
   transactionHash?: string;
 
-  @IsEnum(OrderStatus)
-  @IsOptional()
-  currentStatus?: OrderStatus;
 }

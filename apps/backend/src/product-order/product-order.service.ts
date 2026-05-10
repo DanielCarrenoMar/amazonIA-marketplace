@@ -49,7 +49,7 @@ export class ProductOrderService {
 
       // 4. Create the order
       return tx.productOrder.create({
-        data: { ...createProductOrderDto, buyerId, totalAmount },
+        data: { ...createProductOrderDto, buyerId, totalAmount, currentStatus: OrderStatus.PENDING },
       });
     });
   }
