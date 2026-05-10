@@ -87,6 +87,7 @@ describe('ProductOrderService', () => {
         quantity: 2,
         buyerId: 'buyer-1',
         totalAmount: 50,
+        currentStatus: OrderStatus.PENDING,
       },
     });
   });
