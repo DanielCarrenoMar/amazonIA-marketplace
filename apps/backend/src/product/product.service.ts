@@ -135,7 +135,7 @@ export class ProductService {
   }
 
   async remove(id: string) {
-    await this.findOne(id); // Check existence
+    const product = await this.findOne(id); // Check existence
     // Check for active orders (not CANCELED or REFUNDED)
     const activeOrders = await this.prisma.productOrder.count({
       where: {
@@ -146,6 +146,13 @@ export class ProductService {
 
     if (activeOrders > 0) {
       throw new ConflictException('No se puede eliminar el producto porque tiene órdenes activas');
+    }
+
+    if (product.imageUrl) {
+      // Delete image in Supabase, but don't fail the whole deletion if it throws
+      await this.storageService.deleteImage(product.imageUrl).catch((err) => {
+        console.error(`Failed to delete old image in Supabase during product removal: ${err.message}`);
+      });
     }
 
     return this.prisma.product.delete({ where: { id } });
@@ -167,6 +174,15 @@ export class ProductService {
   }
 
   async uploadImage(id: string, file: Express.Multer.File) {
+    const product = await this.findOne(id);
+
+    if (product.imageUrl) {
+      // Delete old image before uploading a new one
+      await this.storageService.deleteImage(product.imageUrl).catch((err) => {
+        console.error(`Failed to delete old image in Supabase: ${err.message}`);
+      });
+    }
+
     try {
       // 1. Delegar el procesamiento y subida al servicio inyectado
       const imageUrl = await this.storageService.uploadOptimizedImage(file);
