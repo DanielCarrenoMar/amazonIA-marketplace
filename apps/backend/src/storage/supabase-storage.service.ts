@@ -54,4 +54,27 @@ export class SupabaseStorageService implements StorageService {
       throw new InternalServerErrorException(`Error al subir la imagen: ${error.message}`);
     }
   }
+
+  async deleteImage(url: string): Promise<void> {
+    try {
+      if (!url) return;
+
+      // Extract filename from URL (e.g., .../public/bucketName/uuid.webp)
+      const urlParts = url.split('/');
+      const fileName = urlParts.pop();
+
+      if (!fileName) return;
+
+      const { error } = await this.supabase.storage
+        .from(this.bucketName)
+        .remove([fileName]);
+
+      if (error) {
+        throw error;
+      }
+    } catch (error: any) {
+      console.error(`Error al eliminar la imagen en Supabase: ${error.message}`);
+      throw new InternalServerErrorException(`Error al eliminar la imagen: ${error.message}`);
+    }
+  }
 }
