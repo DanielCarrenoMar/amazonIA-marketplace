@@ -18,25 +18,27 @@ import { Roles } from '../auth/decorators/roles.decorator';
 
 @Controller('user-account')
 export class UserAccountController {
-  constructor(private readonly userAccountService: UserAccountService) {}
+  constructor(private readonly userAccountService: UserAccountService) { }
 
-  // Public — Used for user registration
   @Post()
   create(@Body() createUserAccountDto: CreateUserAccountDto) {
     return this.userAccountService.create(createUserAccountDto);
   }
 
-  // Only ADMIN can list all users
+  @UseGuards(JwtAuthGuard)
+  @Get(':id')
+  findOne(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Request() req: any,
+  ) {
+    return this.userAccountService.findOne(id, req.user);
+  }
+
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @Get()
   findAll() {
     return this.userAccountService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.userAccountService.findOne(id);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -62,7 +64,10 @@ export class UserAccountController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @Delete(':id')
-  remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.userAccountService.remove(id);
+  remove(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Request() req: any,
+  ) {
+    return this.userAccountService.remove(id, req.user);
   }
 }
