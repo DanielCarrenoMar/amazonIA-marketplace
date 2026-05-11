@@ -47,19 +47,19 @@ export class UserAccountService {
 
     if (!user) throw new NotFoundException(`UserAccount with ID ${id} not found`);
 
-    if (user.id !== id) {
-      return {
-        id: user.id,
-        fullName: user.fullName,
-        username: user.username,
-      };
-    }
-
     // LOGICA DE PRIVACIDAD:
-    if (reqUser.id === id || reqUser.role === UserRole.ADMIN) {
+    if (reqUser.id === id ){
+      return  user;
+    }
+    if (reqUser.role === UserRole.ADMIN) {
       return user;
     }
 
+    return {
+      id: user.id,
+      fullName: user.fullName,
+      username: user.username,
+    };
   }
 
   async update(
