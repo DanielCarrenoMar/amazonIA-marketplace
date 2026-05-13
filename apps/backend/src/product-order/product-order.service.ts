@@ -1,6 +1,6 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import {  CreateProductOrderDto  } from 'dtos';
+import {  CreateProductOrderDto, FindOrdersDto  } from 'dtos';
 import {  UpdateProductOrderDto  } from 'dtos';
 import { OrderStatus, UserRole } from 'dtos';
 import { PrismaService } from '../prisma/prisma.service';
@@ -61,9 +61,13 @@ export class ProductOrderService {
   }
 
   // Returns all orders that belong to a specific buyer
-  async findByBuyer(buyerId: string) {
+  async findByBuyer(buyerId: string, query?: FindOrdersDto) {
+    const { status } = query || {};
     return this.prisma.productOrder.findMany({
-      where: { buyerId },
+      where: { 
+        buyerId,
+        ...(status ? { currentStatus: status } : {}),
+      },
       include: { product: true, statusHistory: true, buyer: true },
       orderBy: { createdAt: 'desc' },
     });

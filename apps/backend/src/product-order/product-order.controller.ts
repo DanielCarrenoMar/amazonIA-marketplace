@@ -9,9 +9,10 @@ import {
   ParseUUIDPipe,
   UseGuards,
   Request,
+  Query,
 } from '@nestjs/common';
 import { ProductOrderService } from './product-order.service';
-import { CreateProductOrderDto, UpdateProductOrderDto, UserRole } from 'dtos';
+import { CreateProductOrderDto, UpdateProductOrderDto, UserRole, FindOrdersDto } from 'dtos';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -41,8 +42,8 @@ export class ProductOrderController {
   // Returns all orders for the authenticated buyer
   @UseGuards(JwtAuthGuard)
   @Get('my-orders')
-  myOrders(@Request() req: any) {
-    return this.productOrderService.findByBuyer(req.user.id);
+  myOrders(@Request() req: any, @Query() query: FindOrdersDto) {
+    return this.productOrderService.findByBuyer(req.user.id, query);
   }
 
   // Returns a single order owned by the authenticated buyer
