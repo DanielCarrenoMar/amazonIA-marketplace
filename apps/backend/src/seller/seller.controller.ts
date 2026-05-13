@@ -8,9 +8,10 @@ import {
   Delete,
   ParseUUIDPipe,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { SellerService } from './seller.service';
-import { CreateSellerDto, UpdateSellerDto, UserRole } from 'dtos';
+import { CreateSellerDto, UpdateSellerDto, UserRole, FindSellersDto } from 'dtos';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -27,8 +28,8 @@ export class SellerController {
   }
 
   @Get()
-  findAll() {
-    return this.sellerService.findAll();
+  findAll(@Query() query: FindSellersDto) {
+    return this.sellerService.findAll(query);
   }
 
   @Get(':id')

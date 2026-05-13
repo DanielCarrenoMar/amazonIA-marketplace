@@ -14,6 +14,7 @@ export * from './product-rating/create-product-rating.dto';
 export * from './product-rating/update-product-rating.dto';
 export * from './seller/create-seller.dto';
 export * from './seller/update-seller.dto';
+export * from './seller/find-sellers.dto';
 export * from './tribe/create-tribe.dto';
 export * from './tribe/update-tribe.dto';
 export * from './user-account/create-user-account.dto';

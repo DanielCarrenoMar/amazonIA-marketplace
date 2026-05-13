@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import {  CreateSellerDto  } from 'dtos';
+import {  CreateSellerDto, FindSellersDto  } from 'dtos';
 import {  UpdateSellerDto  } from 'dtos';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -22,12 +22,41 @@ export class SellerService {
     }
   }
 
-  async findAll() {
-    // Lectura directa: ya no es necesario $queryRaw o agregar en tiempo de ejecución.
-    // Los campos avgProductRating y totalReviews ahora vienen nativamente.
-    return this.prisma.seller.findMany({
-      include: { user: true, tribe: true },
-    });
+  async findAll(query?: FindSellersDto) {
+    const { tribeId, search, page = 1, limit = 10 } = query || {};
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.SellerWhereInput = {
+      ...(tribeId ? { tribeId } : {}),
+      ...(search
+        ? {
+            OR: [
+              { description: { contains: search, mode: 'insensitive' } },
+              { user: { fullName: { contains: search, mode: 'insensitive' } } },
+            ],
+          }
+        : {}),
+    };
+
+    const [data, total] = await Promise.all([
+      this.prisma.seller.findMany({
+        where,
+        include: { user: true, tribe: true },
+        skip,
+        take: limit,
+      }),
+      this.prisma.seller.count({ where }),
+    ]);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async findOne(id: string) {
