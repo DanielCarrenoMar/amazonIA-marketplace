@@ -10,6 +10,7 @@ export * from './product-category/create-product-category.dto';
 export * from './product-category/update-product-category.dto';
 export * from './product-order/create-product-order.dto';
 export * from './product-order/update-product-order.dto';
+export * from './product-order/find-orders.dto';
 export * from './product-rating/create-product-rating.dto';
 export * from './product-rating/update-product-rating.dto';
 export * from './seller/create-seller.dto';
