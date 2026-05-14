@@ -1,4 +1,10 @@
-import { ForbiddenException, Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  BadRequestException
+} from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { CreateUserAccountDto, UpdateUserAccountDto, ChangePasswordDto, UserRole } from 'dtos';
@@ -12,15 +18,14 @@ export class UserAccountService {
 
   async create(createUserAccountDto: CreateUserAccountDto) {
     const { password, ...rest } = createUserAccountDto;
-
-    // Hash the plain password before persisting — never store plain text
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+
     try {
       return await this.prisma.userAccount.create({
         data: { ...rest, passwordHash },
+        omit: { passwordHash: true },
       });
     } catch (e: any) {
-      // Convert Prisma unique constraint errors to HTTP 409 Conflict with a clear message
       if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
         throw new ConflictException('El email, username o nationalId ya está en uso');
       }
@@ -30,19 +35,31 @@ export class UserAccountService {
 
   async findAll() {
     return this.prisma.userAccount.findMany({
-      // Exclude the passwordHash field from the response
       omit: { passwordHash: true },
     });
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, reqUser: { id: string; role: UserRole }) {
     const user = await this.prisma.userAccount.findUnique({
       where: { id },
       omit: { passwordHash: true },
     });
 
     if (!user) throw new NotFoundException(`UserAccount with ID ${id} not found`);
-    return user;
+
+    // PRIVACY LOGIC:
+    if (reqUser.id === id) {
+      return user;
+    }
+    if (reqUser.role === UserRole.ADMIN) {
+      return user;
+    }
+
+    return {
+      id: user.id,
+      fullName: user.fullName,
+      username: user.username,
+    };
   }
 
   async update(
@@ -50,11 +67,13 @@ export class UserAccountService {
     reqUser: { id: string; role: UserRole },
     updateUserAccountDto: UpdateUserAccountDto,
   ) {
-    await this.findOne(id); // Check existence
+    // Validate existence before update
+    const user = await this.prisma.userAccount.findUnique({ where: { id } });
+    if (!user) throw new NotFoundException(`UserAccount with ID ${id} not found`);
 
-    // Only the account owner or an ADMIN can update this account
+    // Only owner or ADMIN can edit sensitive fields
     if (reqUser.id !== id && reqUser.role !== UserRole.ADMIN) {
-      throw new ForbiddenException('You can only update your own account');
+      throw new ForbiddenException('No tienes permiso para actualizar esta cuenta');
     }
 
     return this.prisma.userAccount.update({
@@ -69,19 +88,16 @@ export class UserAccountService {
     reqUser: { id: string },
     changePasswordDto: ChangePasswordDto,
   ) {
+    // Password change rule is stricter: ONLY owner (not even ADMIN)
     if (reqUser.id !== id) {
-      throw new ForbiddenException('You can only change your own password');
+      throw new ForbiddenException('Solo puedes cambiar tu propia contraseña');
     }
 
     const user = await this.prisma.userAccount.findUnique({ where: { id } });
-    if (!user) {
-      throw new NotFoundException(`UserAccount with ID ${id} not found`);
-    }
+    if (!user) throw new NotFoundException(`UserAccount with ID ${id} not found`);
 
     const isMatch = await bcrypt.compare(changePasswordDto.currentPassword, user.passwordHash);
-    if (!isMatch) {
-      throw new ForbiddenException('La contraseña actual es incorrecta');
-    }
+    if (!isMatch) throw new ForbiddenException('La contraseña actual es incorrecta');
 
     if (changePasswordDto.currentPassword === changePasswordDto.newPassword) {
       throw new BadRequestException('La nueva contraseña no puede ser igual a la actual');
@@ -96,8 +112,12 @@ export class UserAccountService {
     });
   }
 
-  async remove(id: string) {
-    await this.findOne(id); // Check existence
+  async remove(id: string, reqUser: { id: string; role: UserRole }) {
+    // According to controller, only ADMIN reaches here, but we reinforce in service
+    if (reqUser.role !== UserRole.ADMIN) {
+      throw new ForbiddenException('Solo un administrador puede eliminar cuentas');
+    }
+
     return this.prisma.userAccount.delete({
       where: { id },
     });
