@@ -14,7 +14,7 @@ const SALT_ROUNDS = 12;
 
 @Injectable()
 export class UserAccountService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   async create(createUserAccountDto: CreateUserAccountDto) {
     const { password, ...rest } = createUserAccountDto;
@@ -47,9 +47,9 @@ export class UserAccountService {
 
     if (!user) throw new NotFoundException(`UserAccount with ID ${id} not found`);
 
-    // LOGICA DE PRIVACIDAD:
-    if (reqUser.id === id ){
-      return  user;
+    // PRIVACY LOGIC:
+    if (reqUser.id === id) {
+      return user;
     }
     if (reqUser.role === UserRole.ADMIN) {
       return user;
@@ -67,11 +67,11 @@ export class UserAccountService {
     reqUser: { id: string; role: UserRole },
     updateUserAccountDto: UpdateUserAccountDto,
   ) {
-    // Validamos que exista antes de intentar actualizar
+    // Validate existence before update
     const user = await this.prisma.userAccount.findUnique({ where: { id } });
     if (!user) throw new NotFoundException(`UserAccount with ID ${id} not found`);
 
-    // Solo el dueño o ADMIN pueden editar campos sensibles
+    // Only owner or ADMIN can edit sensitive fields
     if (reqUser.id !== id && reqUser.role !== UserRole.ADMIN) {
       throw new ForbiddenException('No tienes permiso para actualizar esta cuenta');
     }
@@ -88,7 +88,7 @@ export class UserAccountService {
     reqUser: { id: string },
     changePasswordDto: ChangePasswordDto,
   ) {
-    // Para cambiar password, la regla es más estricta: SOLO el dueño (ni el ADMIN debería)
+    // Password change rule is stricter: ONLY owner (not even ADMIN)
     if (reqUser.id !== id) {
       throw new ForbiddenException('Solo puedes cambiar tu propia contraseña');
     }
@@ -113,7 +113,7 @@ export class UserAccountService {
   }
 
   async remove(id: string, reqUser: { id: string; role: UserRole }) {
-    // Según tu controlador, solo el ADMIN llega aquí, pero reforzamos en el service
+    // According to controller, only ADMIN reaches here, but we reinforce in service
     if (reqUser.role !== UserRole.ADMIN) {
       throw new ForbiddenException('Solo un administrador puede eliminar cuentas');
     }

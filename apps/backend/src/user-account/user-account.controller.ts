@@ -18,7 +18,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 
 @Controller('user-account')
 export class UserAccountController {
-  constructor(private readonly userAccountService: UserAccountService) { }
+  constructor(private readonly userAccountService: UserAccountService) {}
 
   @Post()
   create(@Body() createUserAccountDto: CreateUserAccountDto) {
