@@ -41,7 +41,10 @@ export class SellerService {
     const [data, total] = await Promise.all([
       this.prisma.seller.findMany({
         where,
-        include: { user: true, tribe: true },
+        include: {
+          user: { omit: { passwordHash: true } },
+          tribe: true,
+        },
         skip,
         take: limit,
       }),
@@ -60,13 +63,16 @@ export class SellerService {
   }
 
   async findOne(id: string) {
-    // Lectura instantánea: la calificación ya está desnormalizada y guardada en el Seller.
+    // Instant read: the rating is already denormalized and stored in the Seller record.
     const seller = await this.prisma.seller.findUnique({
       where: { id },
-      include: { user: true, tribe: true },
+      include: {
+        user: { omit: { passwordHash: true } },
+        tribe: true,
+      },
     });
     
-    if (!seller) throw new NotFoundException(`Seller with ID ${id} not found`);
+    if (!seller) throw new NotFoundException(`Vendedor con ID ${id} no encontrado`);
     return seller;
   }
 
