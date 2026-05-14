@@ -60,17 +60,47 @@ export class ProductOrderService {
     });
   }
 
-  // Returns all orders that belong to a specific buyer
+  // Returns all orders that belong to a specific buyer with pagination and filters
   async findByBuyer(buyerId: string, query?: FindOrdersDto) {
-    const { status } = query || {};
-    return this.prisma.productOrder.findMany({
-      where: { 
-        buyerId,
-        ...(status ? { currentStatus: status } : {}),
+    const { status, page = 1, limit = 10, dateFrom, dateTo } = query || {};
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.ProductOrderWhereInput = {
+      buyerId,
+      ...(status ? { currentStatus: status } : {}),
+      ...(dateFrom || dateTo
+        ? {
+            createdAt: {
+              ...(dateFrom ? { gte: new Date(dateFrom) } : {}),
+              ...(dateTo ? { lte: new Date(dateTo) } : {}),
+            },
+          }
+        : {}),
+    };
+
+    const [total, data] = await Promise.all([
+      this.prisma.productOrder.count({ where }),
+      this.prisma.productOrder.findMany({
+        where,
+        include: {
+          product: true,
+          statusHistory: { orderBy: { createdAt: 'desc' } },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+    ]);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
       },
-      include: { product: true, statusHistory: true, buyer: true },
-      orderBy: { createdAt: 'desc' },
-    });
+    };
   }
 
   async findOne(id: string) {
