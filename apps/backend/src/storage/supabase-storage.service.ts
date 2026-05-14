@@ -16,7 +16,7 @@ export class SupabaseStorageService implements StorageService {
 
     if (!supabaseUrl || !supabaseKey) {
       console.error('Missing Supabase Config:', { supabaseUrl: !!supabaseUrl, supabaseKey: !!supabaseKey });
-      throw new Error('Las credenciales de Supabase no están configuradas en el .env');
+      throw new Error('Supabase credentials are not configured in the .env');
     }
 
     this.supabase = createClient(supabaseUrl, supabaseKey);
@@ -24,7 +24,7 @@ export class SupabaseStorageService implements StorageService {
 
   async uploadOptimizedImage(file: Express.Multer.File): Promise<string> {
     try {
-      // 1. Compresión y conversión a WebP
+      // 1. Image compression and conversion to WebP
       const optimizedBuffer = await sharp(file.buffer)
         .resize({ width: 800, withoutEnlargement: true })
         .webp({ quality: 80 })
@@ -32,7 +32,7 @@ export class SupabaseStorageService implements StorageService {
 
       const fileName = `${randomUUID()}.webp`;
 
-      // 2. Subida al bucket de Supabase
+      // 2. Upload to Supabase bucket
       const { error } = await this.supabase.storage
         .from(this.bucketName)
         .upload(fileName, optimizedBuffer, {
@@ -44,7 +44,7 @@ export class SupabaseStorageService implements StorageService {
         throw error;
       }
 
-      // 3. Obtener la URL pública
+      // 3. Get public URL
       const { data: publicUrlData } = this.supabase.storage
         .from(this.bucketName)
         .getPublicUrl(fileName);
@@ -59,21 +59,23 @@ export class SupabaseStorageService implements StorageService {
     try {
       if (!url) return;
 
-      // Extract filename from URL (e.g., .../public/bucketName/uuid.webp)
-      const urlParts = url.split('/');
-      const fileName = urlParts.pop();
+      // Extract full path relative to the bucket
+      // Supabase URL format: .../object/public/<bucketName>/path/to/file.webp
+      const marker = `/object/public/${this.bucketName}/`;
+      const path = url.split(marker)[1];
 
-      if (!fileName) return;
+      if (!path) return;
 
       const { error } = await this.supabase.storage
         .from(this.bucketName)
-        .remove([fileName]);
+        .remove([path]);
 
       if (error) {
         throw error;
       }
     } catch (error: any) {
-      console.error(`Error al eliminar la imagen en Supabase: ${error.message}`);
+      // Log the error but don't re-log in the caller if we throw here
+      // (The caller in ProductService already has a catch block)
       throw new InternalServerErrorException(`Error al eliminar la imagen: ${error.message}`);
     }
   }

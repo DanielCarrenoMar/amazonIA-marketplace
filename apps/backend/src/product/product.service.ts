@@ -8,7 +8,7 @@ export class ProductService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly storageService: StorageService,
-  ) { }
+  ) {}
 
   async create(createProductDto: CreateProductDto) {
     const { coords, ...rest } = createProductDto;
@@ -184,10 +184,10 @@ export class ProductService {
     }
 
     try {
-      // 1. Delegar el procesamiento y subida al servicio inyectado
+      // 1. Delegate processing and upload to the injected service
       const imageUrl = await this.storageService.uploadOptimizedImage(file);
 
-      // 2. Actualizar el registro del producto en la base de datos vía Prisma
+      // 2. Update the product record in the database via Prisma
       const updatedProduct = await this.prisma.product.update({
         where: { id },
         data: { imageUrl },
