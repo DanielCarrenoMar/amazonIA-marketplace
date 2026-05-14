@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import {  CreateSellerDto  } from 'dtos';
+import {  CreateSellerDto, FindSellersDto  } from 'dtos';
 import {  UpdateSellerDto  } from 'dtos';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -22,22 +22,57 @@ export class SellerService {
     }
   }
 
-  async findAll() {
-    // Lectura directa: ya no es necesario $queryRaw o agregar en tiempo de ejecución.
-    // Los campos avgProductRating y totalReviews ahora vienen nativamente.
-    return this.prisma.seller.findMany({
-      include: { user: true, tribe: true },
-    });
+  async findAll(query?: FindSellersDto) {
+    const { tribeId, search, page = 1, limit = 10 } = query || {};
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.SellerWhereInput = {
+      ...(tribeId ? { tribeId } : {}),
+      ...(search
+        ? {
+            OR: [
+              { description: { contains: search, mode: 'insensitive' } },
+              { user: { fullName: { contains: search, mode: 'insensitive' } } },
+            ],
+          }
+        : {}),
+    };
+
+    const [data, total] = await Promise.all([
+      this.prisma.seller.findMany({
+        where,
+        include: {
+          user: { omit: { passwordHash: true } },
+          tribe: true,
+        },
+        skip,
+        take: limit,
+      }),
+      this.prisma.seller.count({ where }),
+    ]);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async findOne(id: string) {
-    // Lectura instantánea: la calificación ya está desnormalizada y guardada en el Seller.
+    // Instant read: the rating is already denormalized and stored in the Seller record.
     const seller = await this.prisma.seller.findUnique({
       where: { id },
-      include: { user: true, tribe: true },
+      include: {
+        user: { omit: { passwordHash: true } },
+        tribe: true,
+      },
     });
     
-    if (!seller) throw new NotFoundException(`Seller with ID ${id} not found`);
+    if (!seller) throw new NotFoundException(`Vendedor con ID ${id} no encontrado`);
     return seller;
   }
 
