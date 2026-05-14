@@ -30,16 +30,26 @@ async function main() {
   // 1. TRIBES
   // ──────────────────────────────────────────────
   console.log('  → Tribes...');
-  const [tribeTech, tribeRopa] = await Promise.all([
+  const [tribeTech, tribeFashion, tribeHome, tribeFood] = await Promise.all([
     prisma.tribe.upsert({
       where: { id: 1 },
       update: {},
-      create: { name: 'Tribu Tecnología', description: 'Vendedores de gadgets y electrónica en Caracas' },
+      create: { name: 'Tribu Tecnología', description: 'Gadgets, electronics and tech enthusiasts' },
     }),
     prisma.tribe.upsert({
       where: { id: 2 },
       update: {},
-      create: { name: 'Tribu Moda', description: 'Ropa y accesorios en Valencia' },
+      create: { name: 'Tribu Moda', description: 'Clothing, shoes and fashion accessories' },
+    }),
+    prisma.tribe.upsert({
+      where: { id: 3 },
+      update: {},
+      create: { name: 'Tribu Hogar', description: 'Furniture, decor and home improvement' },
+    }),
+    prisma.tribe.upsert({
+      where: { id: 4 },
+      update: {},
+      create: { name: 'Tribu Gastronomía', description: 'Local food, organic products and snacks' },
     }),
   ]);
 
@@ -145,7 +155,7 @@ async function main() {
       create: {
         id: sellerUser1.id,
         tribeId: tribeTech.id,
-        description: 'Especialista en teléfonos y accesorios tecnológicos. Despacho a todo el país.',
+        description: 'Tech specialist. Latest gadgets and electronics.',
       },
     }),
     prisma.seller.upsert({
@@ -153,21 +163,26 @@ async function main() {
       update: {},
       create: {
         id: sellerUser2.id,
-        tribeId: tribeRopa.id,
-        description: 'Ropa importada de alta calidad. Tallas XS–XXL disponibles.',
+        tribeId: tribeFashion.id,
+        description: 'Fashion boutique. High quality clothing and accessories.',
       },
     }),
+    // For seeding purposes, we'll reuse admin or buyer IDs as sellers if needed, 
+    // but better to create more users or just leave it for now.
+    // Actually, let's keep it to 2 sellers for now but correctly referenced.
   ]);
 
   // ──────────────────────────────────────────────
   // 4. PRODUCT CATEGORIES
   // ──────────────────────────────────────────────
   console.log('  → ProductCategories...');
-  const [catTelefonos, catLaptops, catRopa, catAccesorios] = await Promise.all([
-    prisma.productCategory.upsert({ where: { id: 1 }, update: {}, create: { categoryName: 'Electrónica', subcategoryName: 'Teléfonos' } }),
-    prisma.productCategory.upsert({ where: { id: 2 }, update: {}, create: { categoryName: 'Electrónica', subcategoryName: 'Laptops' } }),
-    prisma.productCategory.upsert({ where: { id: 3 }, update: {}, create: { categoryName: 'Moda', subcategoryName: 'Ropa' } }),
-    prisma.productCategory.upsert({ where: { id: 4 }, update: {}, create: { categoryName: 'Moda', subcategoryName: 'Accesorios' } }),
+  const [catPhones, catLaptops, catClothing, catAccessories, catFurniture, catFood] = await Promise.all([
+    prisma.productCategory.upsert({ where: { id: 1 }, update: {}, create: { categoryName: 'Electronics', subcategoryName: 'Phones' } }),
+    prisma.productCategory.upsert({ where: { id: 2 }, update: {}, create: { categoryName: 'Electronics', subcategoryName: 'Laptops' } }),
+    prisma.productCategory.upsert({ where: { id: 3 }, update: {}, create: { categoryName: 'Fashion', subcategoryName: 'Clothing' } }),
+    prisma.productCategory.upsert({ where: { id: 4 }, update: {}, create: { categoryName: 'Fashion', subcategoryName: 'Accessories' } }),
+    prisma.productCategory.upsert({ where: { id: 5 }, update: {}, create: { categoryName: 'Home', subcategoryName: 'Furniture' } }),
+    prisma.productCategory.upsert({ where: { id: 6 }, update: {}, create: { categoryName: 'Food', subcategoryName: 'Snacks' } }),
   ]);
 
   // ──────────────────────────────────────────────
@@ -179,7 +194,7 @@ async function main() {
     prisma.product.create({
       data: {
         sellerId: seller1.id,
-        categoryId: catTelefonos.id,
+        categoryId: catPhones.id,
         name: 'Samsung Galaxy S24 Ultra',
         description: 'Pantalla 6.8", cámara 200MP, S-Pen incluido. Color: Negro Titanio.',
         price: 999.99,
@@ -192,7 +207,7 @@ async function main() {
     prisma.product.create({
       data: {
         sellerId: seller1.id,
-        categoryId: catTelefonos.id,
+        categoryId: catPhones.id,
         name: 'iPhone 15 Pro Max',
         description: 'Chip A17 Pro, titanio, USB-C, 256GB. Garantía Apple 1 año.',
         price: 1199.99,
@@ -218,7 +233,7 @@ async function main() {
     prisma.product.create({
       data: {
         sellerId: seller2.id,
-        categoryId: catRopa.id,
+        categoryId: catClothing.id,
         name: 'Sneakers Nike Air Max 270',
         description: 'Talla 42. Color blanco/negro. Originales importados de USA.',
         price: 159.99,
@@ -231,7 +246,7 @@ async function main() {
     prisma.product.create({
       data: {
         sellerId: seller2.id,
-        categoryId: catAccesorios.id,
+        categoryId: catAccessories.id,
         name: 'Bolso Michael Kors Original',
         description: 'Bolso de cuero genuino, color café. Capacidad media.',
         price: 299.00,
