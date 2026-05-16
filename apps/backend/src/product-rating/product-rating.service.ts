@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, ForbiddenException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import {  CreateProductRatingDto  } from 'dtos';
+import {  CreateProductRatingDto, OrderStatus  } from 'dtos';
 import {  UpdateProductRatingDto  } from 'dtos';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -46,6 +46,18 @@ export class ProductRatingService {
   // userAccountId comes from the JWT token (req.user.id), NOT from the client body
   async create(userAccountId: string, createProductRatingDto: CreateProductRatingDto) {
     const { productId, ratingValue } = createProductRatingDto;
+
+    const order = await this.prisma.productOrder.findFirst({
+      where: {
+        buyerId: userAccountId,
+        productId,
+        currentStatus: OrderStatus.DELIVERED,
+      },
+    });
+
+    if (!order) {
+      throw new ForbiddenException('Debes haber recibido el producto para calificarlo');
+    }
 
     return this.prisma.$transaction(async (tx) => {
       let newRating;
