@@ -17,15 +17,7 @@ export class CreateSellerDto {
   @IsOptional()
   rating?: number;
 
-  @IsNumber()
-  @Min(1)
-  @Max(5)
-  @IsOptional()
-  avgProductRating?: number;
 
-  @IsInt()
-  @IsOptional()
-  totalReviews?: number;
 
   @IsString()
   @IsOptional()
