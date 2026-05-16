@@ -1,7 +1,7 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import {  CreateProductOrderDto, FindOrdersDto  } from 'dtos';
-import {  UpdateProductOrderDto  } from 'dtos';
+import { CreateProductOrderDto, FindOrdersDto } from 'dtos';
+import { UpdateProductOrderDto } from 'dtos';
 import { OrderStatus, UserRole } from 'dtos';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -16,7 +16,7 @@ const allowedOrderStatusTransitions: Record<OrderStatus, readonly OrderStatus[]>
 
 @Injectable()
 export class ProductOrderService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   // buyerId comes from the JWT token (req.user.id), NOT from the client body
   async create(buyerId: string, createProductOrderDto: CreateProductOrderDto) {
@@ -70,11 +70,11 @@ export class ProductOrderService {
       ...(status ? { currentStatus: status } : {}),
       ...(dateFrom || dateTo
         ? {
-            createdAt: {
-              ...(dateFrom ? { gte: new Date(dateFrom) } : {}),
-              ...(dateTo ? { lte: new Date(dateTo) } : {}),
-            },
-          }
+          createdAt: {
+            ...(dateFrom ? { gte: new Date(dateFrom) } : {}),
+            ...(dateTo ? { lte: new Date(dateTo) } : {}),
+          },
+        }
         : {}),
     };
 
@@ -84,6 +84,49 @@ export class ProductOrderService {
         where,
         include: {
           product: true,
+          statusHistory: { orderBy: { createdAt: 'desc' } },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+    ]);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  async findBySeller(sellerId: string, query?: FindOrdersDto) {
+    const { status, page = 1, limit = 10, dateFrom, dateTo } = query || {};
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.ProductOrderWhereInput = {
+      product: { sellerId },
+      ...(status ? { currentStatus: status } : {}),
+      ...(dateFrom || dateTo
+        ? {
+          createdAt: {
+            ...(dateFrom ? { gte: new Date(dateFrom) } : {}),
+            ...(dateTo ? { lte: new Date(dateTo) } : {}),
+          },
+        }
+        : {}),
+    };
+
+    const [total, data] = await Promise.all([
+      this.prisma.productOrder.count({ where }),
+      this.prisma.productOrder.findMany({
+        where,
+        include: {
+          product: true,
+          buyer: true,
           statusHistory: { orderBy: { createdAt: 'desc' } },
         },
         orderBy: { createdAt: 'desc' },
@@ -205,10 +248,10 @@ export class ProductOrderService {
       // 2. Seller Rating: If the buyer left a rating for the seller, recalculate the seller's global rating
       if (orderData.sellerRatingValue !== undefined && currentOrder.product?.sellerId) {
         const sellerId = currentOrder.product.sellerId;
-        
+
         // Find the mathematical average of all completed ratings for this seller
         const aggregate = await tx.productOrder.aggregate({
-          where: { 
+          where: {
             product: { sellerId },
             sellerRatingValue: { not: null }
           },
