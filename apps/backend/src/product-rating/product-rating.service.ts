@@ -23,7 +23,10 @@ export class ProductRatingService {
     // Fetch the sellerId while updating the product
     const updatedProduct = await tx.product.update({
       where: { id: productId },
-      data: { averageRating: newProductAvg },
+      data: {
+        averageRating: newProductAvg,
+        totalReviews: productAggregate._count.ratingValue,
+      },
       select: { sellerId: true },
     });
 
