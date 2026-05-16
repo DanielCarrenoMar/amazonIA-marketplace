@@ -3,9 +3,6 @@ import { Type } from 'class-transformer';
 import { LocationCoordsDto } from './location-coords.dto';
 
 export class CreateProductDto {
-  @IsUUID()
-  @IsNotEmpty()
-  sellerId: string;
 
   @IsInt()
   @IsNotEmpty()

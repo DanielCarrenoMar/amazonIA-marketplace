@@ -18,8 +18,8 @@ export class ProductController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SELLER, UserRole.ADMIN)
   @Post()
-  create(@Body() createProductDto: CreateProductDto) {
-    return this.productService.create(createProductDto);
+  create(@Body() createProductDto: CreateProductDto, @Req() req: any) {
+    return this.productService.create(createProductDto, req.user.id);
   }
 
   // Public — anyone can browse products
@@ -53,8 +53,12 @@ export class ProductController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SELLER, UserRole.ADMIN)
   @Patch(':id')
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() updateProductDto: UpdateProductDto) {
-    return this.productService.update(id, updateProductDto);
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateProductDto: UpdateProductDto,
+    @Req() req: any,
+  ) {
+    return this.productService.update(id, updateProductDto, req.user);
   }
 
   // Only Admins can delete products
@@ -81,11 +85,12 @@ export class ProductController {
   async uploadImage(
     @Param('id', ParseUUIDPipe) id: string,
     @UploadedFile() file: Express.Multer.File,
+    @Req() req: any,
   ) {
     if (!file) {
       throw new BadRequestException('No se ha proporcionado ningún archivo de imagen');
     }
 
-    return this.productService.uploadImage(id, file);
+    return this.productService.uploadImage(id, file, req.user);
   }
 }

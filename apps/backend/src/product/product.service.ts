@@ -1,5 +1,5 @@
-import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException, ConflictException } from '@nestjs/common';
-import { CreateProductDto, UpdateProductDto, FindProductsDto, FindNearbyDto, OrderStatus } from 'dtos';
+import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException, ConflictException, ForbiddenException } from '@nestjs/common';
+import { CreateProductDto, UpdateProductDto, FindProductsDto, FindNearbyDto, OrderStatus, UserRole } from 'dtos';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 
@@ -10,14 +10,17 @@ export class ProductService {
     private readonly storageService: StorageService,
   ) {}
 
-  async create(createProductDto: CreateProductDto) {
+  async create(createProductDto: CreateProductDto, sellerId: string) {
     const { coords, ...rest } = createProductDto;
 
     // Use $transaction so we don't end up with orphaned rows if the spatial query fails
     return this.prisma.$transaction(async (tx) => {
       // 1. Create the standard product record
       const product = await tx.product.create({
-        data: rest,
+        data: {
+          ...rest,
+          sellerId,
+        },
       });
 
       // 2. If coordinates are provided, perform a raw SQL update to inject Geography Point
@@ -126,8 +129,19 @@ export class ProductService {
     return product;
   }
 
-  async update(id: string, updateProductDto: UpdateProductDto) {
-    await this.findOne(id); // Check existence
+  async update(id: string, updateProductDto: UpdateProductDto, user: any) {
+    const product = await this.findOne(id); // Check existence
+
+    // Security check: Only the owner or an ADMIN can update the product
+    if (user.role !== UserRole.ADMIN && product.sellerId !== user.id) {
+      throw new ForbiddenException('No tienes permiso para actualizar este producto');
+    }
+
+    // Security check: Only an ADMIN can change the sellerId
+    if (updateProductDto.sellerId && user.role !== UserRole.ADMIN) {
+      delete updateProductDto.sellerId;
+    }
+
     return this.prisma.product.update({
       where: { id },
       data: updateProductDto,
@@ -173,8 +187,13 @@ export class ProductService {
     });
   }
 
-  async uploadImage(id: string, file: Express.Multer.File) {
+  async uploadImage(id: string, file: Express.Multer.File, user: any) {
     const product = await this.findOne(id);
+
+    // Security check: Only the owner or an ADMIN can update the product image
+    if (user.role !== UserRole.ADMIN && product.sellerId !== user.id) {
+      throw new ForbiddenException('No tienes permiso para actualizar la imagen de este producto');
+    }
 
     if (product.imageUrl) {
       // Delete old image before uploading a new one
