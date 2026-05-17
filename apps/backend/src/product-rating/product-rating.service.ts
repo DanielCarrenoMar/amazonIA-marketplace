@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import {  CreateProductRatingDto  } from 'dtos';
-import {  UpdateProductRatingDto  } from 'dtos';
+import { CreateProductRatingDto, PaginationDto } from 'dtos';
+import { UpdateProductRatingDto } from 'dtos';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -67,8 +67,29 @@ export class ProductRatingService {
     });
   }
 
-  async findAll() {
-    return this.prisma.productRating.findMany();
+  async findAll(query?: PaginationDto) {
+    const { page = 1, limit = 10 } = query || {};
+    const skip = (page - 1) * limit;
+
+    const [total, data] = await Promise.all([
+      this.prisma.productRating.count(),
+      this.prisma.productRating.findMany({
+        include: { product: true, user: true },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+    ]);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async findOne(productId: string, userAccountId: string) {

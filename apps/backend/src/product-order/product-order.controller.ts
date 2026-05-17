@@ -12,7 +12,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { ProductOrderService } from './product-order.service';
-import { CreateProductOrderDto, UpdateProductOrderDto, UserRole, FindOrdersDto } from 'dtos';
+import { CreateProductOrderDto, UpdateProductOrderDto, UserRole, FindOrdersDto, PaginationDto } from 'dtos';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -34,8 +34,8 @@ export class ProductOrderController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @Get()
-  findAll() {
-    return this.productOrderService.findAll();
+  findAll(@Query() query: PaginationDto) {
+    return this.productOrderService.findAll(query);
   }
 
   // NOTE: declare static routes before dynamic :id to avoid routing conflicts

@@ -1,3 +1,4 @@
+export * from './common/pagination.dto';
 export * from './enums';
 export * from './auth/login.dto';
 export * from './auth/refresh.dto';
