@@ -49,7 +49,7 @@ export class ProductController {
     return this.productService.findOne(id);
   }
 
-  // Only authenticated sellers or admins can update products
+  // Only authenticated sellers or admins can update — service enforces ownership
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SELLER, UserRole.ADMIN)
   @Patch(':id')
@@ -61,12 +61,12 @@ export class ProductController {
     return this.productService.update(id, updateProductDto, req.user);
   }
 
-  // Only Admins can delete products
+  // Sellers can delete their own products; admins can delete any — service enforces ownership
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.SELLER, UserRole.ADMIN)
   @Delete(':id')
-  remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.productService.remove(id);
+  remove(@Param('id', ParseUUIDPipe) id: string, @Req() req: any) {
+    return this.productService.remove(id, req.user);
   }
 
   // Only sellers and admins can upload product images

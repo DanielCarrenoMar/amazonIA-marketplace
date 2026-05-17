@@ -129,16 +129,16 @@ export class ProductService {
     return product;
   }
 
-  async update(id: string, updateProductDto: UpdateProductDto, user: any) {
+  async update(id: string, updateProductDto: UpdateProductDto, reqUser: { id: string; role: UserRole }) {
     const product = await this.findOne(id); // Check existence
 
-    // Security check: Only the owner or an ADMIN can update the product
-    if (user.role !== UserRole.ADMIN && product.sellerId !== user.id) {
-      throw new ForbiddenException('No tienes permiso para actualizar este producto');
+    // Ownership check: only the product owner or an admin can update
+    if (product.sellerId !== reqUser.id && reqUser.role !== UserRole.ADMIN) {
+      throw new ForbiddenException('No tenés permiso para modificar este producto');
     }
 
     // Security check: Only an ADMIN can change the sellerId
-    if (updateProductDto.sellerId && user.role !== UserRole.ADMIN) {
+    if (updateProductDto.sellerId && reqUser.role !== UserRole.ADMIN) {
       delete updateProductDto.sellerId;
     }
 
@@ -148,8 +148,13 @@ export class ProductService {
     });
   }
 
-  async remove(id: string) {
+  async remove(id: string, reqUser: { id: string; role: UserRole }) {
     const product = await this.findOne(id); // Check existence
+
+    // Ownership check: only the product owner or an admin can delete
+    if (product.sellerId !== reqUser.id && reqUser.role !== UserRole.ADMIN) {
+      throw new ForbiddenException('No tenés permiso para eliminar este producto');
+    }
     // Check for active orders (not CANCELED or REFUNDED)
     const activeOrders = await this.prisma.productOrder.count({
       where: {
