@@ -57,7 +57,7 @@ describe('ProductOrderService', () => {
   });
 
   it('creates order and decrements stock', async () => {
-    txMock.product.findUnique.mockResolvedValue({ stockAvailable: 10, price: 25 });
+    txMock.product.findUnique.mockResolvedValue({ stockAvailable: 10, price: 25, sellerId: 'seller-1' });
     txMock.product.update.mockResolvedValue({});
     txMock.productOrder.create.mockResolvedValue({
       id: 'order-1',
@@ -93,7 +93,7 @@ describe('ProductOrderService', () => {
   });
 
   it('throws BadRequestException when stock is insufficient', async () => {
-    txMock.product.findUnique.mockResolvedValueOnce({ stockAvailable: 1 });
+    txMock.product.findUnique.mockResolvedValueOnce({ stockAvailable: 1, sellerId: 'seller-1' });
 
     await expect(
       service.create('buyer-1', {
@@ -101,6 +101,21 @@ describe('ProductOrderService', () => {
         quantity: 2,
       } as any),
     ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('throws BadRequestException when seller tries to buy their own product', async () => {
+    txMock.product.findUnique.mockResolvedValueOnce({ stockAvailable: 10, price: 25, sellerId: 'seller-1' });
+
+    await expect(
+      service.create('seller-1', {
+        productId: 'product-1',
+        quantity: 1,
+      } as any),
+    ).rejects.toBeInstanceOf(BadRequestException);
+
+    // Must NOT decrement stock or create an order
+    expect(txMock.product.update).not.toHaveBeenCalled();
+    expect(txMock.productOrder.create).not.toHaveBeenCalled();
   });
 
   it('throws ForbiddenException when non-owner non-admin non-seller updates order', async () => {

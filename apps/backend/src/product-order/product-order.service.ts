@@ -24,14 +24,19 @@ export class ProductOrderService {
       // 1. Get the current stock and price
       const product = await tx.product.findUnique({
         where: { id: createProductOrderDto.productId },
-        select: { stockAvailable: true, price: true },
+        select: { stockAvailable: true, price: true, sellerId: true },
       });
 
       if (!product) {
         throw new NotFoundException(`Product with ID ${createProductOrderDto.productId} not found`);
       }
 
-      // 2. Validate stock
+      // 2. Prevent self-purchase — a seller cannot buy their own products
+      if (product.sellerId === buyerId) {
+        throw new BadRequestException('No podés comprar tus propios productos');
+      }
+
+      // 3. Validate stock
       if (product.stockAvailable < createProductOrderDto.quantity) {
         throw new BadRequestException(
           `Insufficient stock. Current: ${product.stockAvailable}, needed: ${createProductOrderDto.quantity}`,
