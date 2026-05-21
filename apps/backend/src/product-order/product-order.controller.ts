@@ -19,7 +19,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 
 @Controller('product-order')
 export class ProductOrderController {
-  constructor(private readonly productOrderService: ProductOrderService) {}
+  constructor(private readonly productOrderService: ProductOrderService) { }
 
   // Requires login — buyerId is taken from the JWT, not from the body
   @UseGuards(JwtAuthGuard)
@@ -51,6 +51,13 @@ export class ProductOrderController {
   @Get('my-orders/:id')
   myOrderDetail(@Param('id', ParseUUIDPipe) id: string, @Request() req: any) {
     return this.productOrderService.findOneForBuyer(id, req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SELLER, UserRole.ADMIN)
+  @Get('seller-orders')
+  findBySeller(@Request() req: any, @Query() query: FindOrdersDto) {
+    return this.productOrderService.findBySeller(req.user.id, query);
   }
 
   @UseGuards(JwtAuthGuard)

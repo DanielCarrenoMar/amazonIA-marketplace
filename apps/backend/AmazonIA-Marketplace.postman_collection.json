@@ -1528,6 +1528,45 @@
           "response": []
         },
         {
+          "name": "🔒 Órdenes de mis Productos — Solo SELLER",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/product-order/seller-orders?page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-order",
+                "seller-orders"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Devuelve las órdenes de los productos del seller autenticado. Requiere token de SELLER o ADMIN."
+          },
+          "response": []
+        },
+        {
           "name": "🔒 Mis Órdenes",
           "request": {
             "auth": {
