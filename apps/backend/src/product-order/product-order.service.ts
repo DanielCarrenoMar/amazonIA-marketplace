@@ -16,7 +16,7 @@ const allowedOrderStatusTransitions: Record<OrderStatus, readonly OrderStatus[]>
 
 @Injectable()
 export class ProductOrderService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   // buyerId comes from the JWT token (req.user.id), NOT from the client body
   async create(buyerId: string, createProductOrderDto: CreateProductOrderDto) {
@@ -56,7 +56,11 @@ export class ProductOrderService {
 
   async findAll() {
     return this.prisma.productOrder.findMany({
-      include: { product: true, buyer: true, statusHistory: true },
+      include: {
+        product: true,
+        buyer: { omit: { passwordHash: true } },
+        statusHistory: true,
+      },
     });
   }
 
@@ -126,7 +130,7 @@ export class ProductOrderService {
         where,
         include: {
           product: true,
-          buyer: true,
+          buyer: { omit: { passwordHash: true } },
           statusHistory: { orderBy: { createdAt: 'desc' } },
         },
         orderBy: { createdAt: 'desc' },
@@ -149,7 +153,11 @@ export class ProductOrderService {
   async findOne(id: string) {
     const order = await this.prisma.productOrder.findUnique({
       where: { id },
-      include: { product: true, buyer: true, statusHistory: true },
+      include: {
+        product: true,
+        buyer: { omit: { passwordHash: true } },
+        statusHistory: true,
+      },
     });
 
     if (!order) throw new NotFoundException(`ProductOrder with ID ${id} not found`);
@@ -160,7 +168,11 @@ export class ProductOrderService {
   async findOneForBuyer(id: string, buyerId: string) {
     const order = await this.prisma.productOrder.findUnique({
       where: { id },
-      include: { product: true, buyer: true, statusHistory: true },
+      include: {
+        product: true,
+        buyer: { omit: { passwordHash: true } },
+        statusHistory: true,
+      },
     });
 
     if (!order) throw new NotFoundException(`ProductOrder with ID ${id} not found`);
