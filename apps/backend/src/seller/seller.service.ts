@@ -51,7 +51,16 @@ export class SellerService {
       this.prisma.seller.findMany({
         where,
         include: {
-          user: { omit: { passwordHash: true } },
+          user: { 
+            select: { 
+              id: true, 
+              fullName: true, 
+              username: true, 
+              email: true, 
+              age: true, 
+              nationality: true 
+            } 
+          },
           tribe: true,
         },
         skip,
@@ -76,7 +85,16 @@ export class SellerService {
     const seller = await this.prisma.seller.findUnique({
       where: { id },
       include: {
-        user: { omit: { passwordHash: true } },
+        user: { 
+          select: { 
+            id: true, 
+            fullName: true, 
+            username: true, 
+            email: true, 
+            age: true, 
+            nationality: true 
+          } 
+        },
         tribe: true,
       },
     });

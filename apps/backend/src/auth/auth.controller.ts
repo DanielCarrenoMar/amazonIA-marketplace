@@ -25,12 +25,14 @@ export class AuthController {
   }
 
   // Accepts a valid refreshToken and returns a new token pair (rotation)
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Post('refresh')
   refresh(@Body() refreshDto: RefreshDto) {
     return this.authService.refresh(refreshDto.refreshToken);
   }
 
   // Public endpoint for logout — it verifies the refresh token internally
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post('logout')
   logout(@Body() refreshDto: RefreshDto) {
     return this.authService.logout(refreshDto.refreshToken);
