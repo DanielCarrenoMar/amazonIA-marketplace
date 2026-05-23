@@ -9,9 +9,10 @@ import {
   ParseUUIDPipe,
   UseGuards,
   Request,
+  Query,
 } from '@nestjs/common';
 import { UserAccountService } from './user-account.service';
-import { CreateUserAccountDto, UpdateUserAccountDto, ChangePasswordDto, UserRole } from 'dtos';
+import { CreateUserAccountDto, UpdateUserAccountDto, ChangePasswordDto, UserRole, PaginationDto } from 'dtos';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -32,8 +33,8 @@ export class UserAccountController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @Get()
-  findAll() {
-    return this.userAccountService.findAll();
+  findAll(@Query() query: PaginationDto) {
+    return this.userAccountService.findAll(query);
   }
 
   @UseGuards(JwtAuthGuard)

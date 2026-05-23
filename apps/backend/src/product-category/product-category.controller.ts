@@ -8,12 +8,14 @@ import {
   Delete,
   ParseIntPipe,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { ProductCategoryService } from './product-category.service';
 import {
   CreateProductCategoryDto,
   UpdateProductCategoryDto,
   UserRole,
+  PaginationDto,
 } from 'dtos';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -33,8 +35,8 @@ export class ProductCategoryController {
   }
 
   @Get()
-  findAll() {
-    return this.productCategoryService.findAll();
+  findAll(@Query() query: PaginationDto) {
+    return this.productCategoryService.findAll(query);
   }
 
   @Get(':id')

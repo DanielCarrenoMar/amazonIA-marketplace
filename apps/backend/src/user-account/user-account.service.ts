@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
-import { CreateUserAccountDto, UpdateUserAccountDto, ChangePasswordDto, UserRole } from 'dtos';
+import { CreateUserAccountDto, UpdateUserAccountDto, ChangePasswordDto, UserRole, PaginationDto } from 'dtos';
 import { PrismaService } from '../prisma/prisma.service';
 
 const SALT_ROUNDS = 12;
@@ -33,10 +33,23 @@ export class UserAccountService {
     }
   }
 
-  async findAll() {
-    return this.prisma.userAccount.findMany({
-      omit: { passwordHash: true },
-    });
+  async findAll(query?: PaginationDto) {
+    const { page = 1, limit = 10 } = query || {};
+    const skip = (page - 1) * limit;
+
+    const [total, data] = await Promise.all([
+      this.prisma.userAccount.count(),
+      this.prisma.userAccount.findMany({
+        omit: { passwordHash: true },
+        skip,
+        take: limit,
+      }),
+    ]);
+
+    return {
+      data,
+      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+    };
   }
 
   async findOne(id: string, reqUser: { id: string; role: UserRole }) {

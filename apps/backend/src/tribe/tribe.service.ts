@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import {  CreateTribeDto  } from 'dtos';
-import {  UpdateTribeDto  } from 'dtos';
+import {  UpdateTribeDto, PaginationDto  } from 'dtos';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -22,8 +22,19 @@ export class TribeService {
     }
   }
 
-  async findAll() {
-    return this.prisma.tribe.findMany();
+  async findAll(query?: PaginationDto) {
+    const { page = 1, limit = 10 } = query || {};
+    const skip = (page - 1) * limit;
+
+    const [total, data] = await Promise.all([
+      this.prisma.tribe.count(),
+      this.prisma.tribe.findMany({ skip, take: limit }),
+    ]);
+
+    return {
+      data,
+      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+    };
   }
 
   async findOne(id: number) {

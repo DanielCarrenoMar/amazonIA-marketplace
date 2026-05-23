@@ -8,9 +8,10 @@ import {
   Delete,
   ParseIntPipe,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { TribeService } from './tribe.service';
-import { CreateTribeDto, UpdateTribeDto, UserRole } from 'dtos';
+import { CreateTribeDto, UpdateTribeDto, UserRole, PaginationDto } from 'dtos';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -27,8 +28,8 @@ export class TribeController {
   }
 
   @Get()
-  findAll() {
-    return this.tribeService.findAll();
+  findAll(@Query() query: PaginationDto) {
+    return this.tribeService.findAll(query);
   }
 
   @Get(':id')
