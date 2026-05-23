@@ -3,7 +3,7 @@ import {
   Delete, ParseUUIDPipe, UseGuards, Request, Query,
 } from '@nestjs/common';
 import { ProductRatingService } from './product-rating.service';
-import { CreateProductRatingDto, PaginationDto } from 'dtos';
+import { CreateProductRatingDto, PaginationDto, FindProductRatingsDto } from 'dtos';
 import { UpdateProductRatingDto } from 'dtos';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
@@ -20,8 +20,17 @@ export class ProductRatingController {
 
   // Public — anyone can view all ratings
   @Get()
-  findAll(@Query() query: PaginationDto) {
+  findAll(@Query() query: FindProductRatingsDto) {
     return this.productRatingService.findAll(query);
+  }
+
+  // Public — anyone can view ratings of a specific product
+  @Get('product/:productId')
+  findByProduct(
+    @Param('productId', ParseUUIDPipe) productId: string,
+    @Query() query: PaginationDto
+  ) {
+    return this.productRatingService.findAll({ ...query, productId });
   }
 
   // Public — anyone can view a single rating

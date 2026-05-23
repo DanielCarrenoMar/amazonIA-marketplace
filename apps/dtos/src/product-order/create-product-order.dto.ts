@@ -17,17 +17,7 @@ export class CreateProductOrderDto {
   @IsOptional()
   orderNotes?: string;
 
-  @IsInt()
-  @Min(1)
-  @Max(5)
-  @IsOptional()
-  sellerRatingValue?: number;
 
-  @IsInt()
-  @Min(1)
-  @Max(5)
-  @IsOptional()
-  buyerRatingValue?: number;
 
   @IsString()
   @IsOptional()

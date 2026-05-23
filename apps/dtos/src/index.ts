@@ -14,6 +14,7 @@ export * from './product-order/update-product-order.dto';
 export * from './product-order/find-orders.dto';
 export * from './product-rating/create-product-rating.dto';
 export * from './product-rating/update-product-rating.dto';
+export * from './product-rating/find-product-ratings.dto';
 export * from './seller/create-seller.dto';
 export * from './seller/update-seller.dto';
 export * from './seller/find-sellers.dto';

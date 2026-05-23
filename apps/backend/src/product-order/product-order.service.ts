@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { CreateProductOrderDto, FindOrdersDto, PaginationDto } from 'dtos';
 import { UpdateProductOrderDto } from 'dtos';
@@ -343,6 +343,10 @@ export class ProductOrderService {
 
     if (order.buyerId !== reqUser.id && reqUser.role !== UserRole.ADMIN) {
       throw new ForbiddenException('You can only delete your own order');
+    }
+
+    if (order.currentStatus !== OrderStatus.PENDING && order.currentStatus !== OrderStatus.CANCELED) {
+      throw new ConflictException('Sólo las órdenes PENDING o CANCELED pueden ser eliminadas');
     }
 
     return this.prisma.$transaction(async (tx) => {
