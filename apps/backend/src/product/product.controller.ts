@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ProductService } from './product.service';
-import { CreateProductDto, UpdateProductDto, FindProductsDto, FindNearbyDto, UserRole } from 'dtos';
+import { CreateProductDto, UpdateProductDto, FindProductsDto, FindNearbyDto, UserRole, PaginationDto } from 'dtos';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -39,8 +39,8 @@ export class ProductController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SELLER)
   @Get('my-products')
-  findBySeller(@Req() req: any) {
-    return this.productService.findBySeller(req.user.id);
+  findBySeller(@Req() req: any, @Query() query: PaginationDto) {
+    return this.productService.findBySeller(req.user.id, query);
   }
 
   // Public — anyone can view a single product

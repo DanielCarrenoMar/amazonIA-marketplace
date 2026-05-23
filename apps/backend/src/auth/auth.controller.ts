@@ -11,6 +11,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) { }
 
   // Public — creates a user and returns an immediate token pair (no separate login needed)
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
   @Post('register')
   register(@Body() createUserAccountDto: CreateUserAccountDto) {
     return this.authService.register(createUserAccountDto);

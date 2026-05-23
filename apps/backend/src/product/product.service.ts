@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException, ConflictException, ForbiddenException } from '@nestjs/common';
-import { CreateProductDto, UpdateProductDto, FindProductsDto, FindNearbyDto, OrderStatus, UserRole } from 'dtos';
+import { CreateProductDto, UpdateProductDto, FindProductsDto, FindNearbyDto, OrderStatus, UserRole, PaginationDto } from 'dtos';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 
@@ -112,11 +112,30 @@ export class ProductService {
     };
   }
 
-  async findBySeller(sellerId: string) {
-    return this.prisma.product.findMany({
-      where: { sellerId },
-      include: { seller: true, category: true },
-    });
+  async findBySeller(sellerId: string, paginationDto: PaginationDto) {
+    const { page = 1, limit = 10 } = paginationDto;
+    const skip = (page - 1) * limit;
+
+    const [total, data] = await Promise.all([
+      this.prisma.product.count({ where: { sellerId } }),
+      this.prisma.product.findMany({
+        where: { sellerId },
+        skip,
+        take: limit,
+        include: { seller: { omit: { passwordHash: true } }, category: true },
+        orderBy: { createdAt: 'desc' },
+      }),
+    ]);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async findOne(id: string) {
