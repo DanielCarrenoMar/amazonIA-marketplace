@@ -56,7 +56,11 @@ export class ProductOrderService {
 
   async findAll() {
     return this.prisma.productOrder.findMany({
-      include: { product: true, buyer: true, statusHistory: true },
+      include: {
+        product: true,
+        buyer: { omit: { passwordHash: true } },
+        statusHistory: true,
+      },
     });
   }
 
@@ -106,7 +110,11 @@ export class ProductOrderService {
   async findOne(id: string) {
     const order = await this.prisma.productOrder.findUnique({
       where: { id },
-      include: { product: true, buyer: true, statusHistory: true },
+      include: {
+        product: true,
+        buyer: { omit: { passwordHash: true } },
+        statusHistory: true,
+      },
     });
 
     if (!order) throw new NotFoundException(`ProductOrder with ID ${id} not found`);
@@ -117,7 +125,11 @@ export class ProductOrderService {
   async findOneForBuyer(id: string, buyerId: string) {
     const order = await this.prisma.productOrder.findUnique({
       where: { id },
-      include: { product: true, buyer: true, statusHistory: true },
+      include: {
+        product: true,
+        buyer: { omit: { passwordHash: true } },
+        statusHistory: true,
+      },
     });
 
     if (!order) throw new NotFoundException(`ProductOrder with ID ${id} not found`);
