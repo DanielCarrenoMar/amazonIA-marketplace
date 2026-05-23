@@ -200,6 +200,18 @@ export class ProductOrderService {
       throw new ForbiddenException('You can only update your own order');
     }
 
+    if (updateProductOrderDto.sellerRatingValue !== undefined) {
+      if (reqUser.id !== order.buyerId) {
+        throw new ForbiddenException('Solo el comprador puede calificar al vendedor');
+      }
+    }
+
+    if (updateProductOrderDto.buyerRatingValue !== undefined) {
+      if (reqUser.id !== order.product?.sellerId && reqUser.role !== UserRole.ADMIN) {
+        throw new ForbiddenException('Solo el vendedor (o un admin) puede calificar al comprador');
+      }
+    }
+
     const { statusNote, ...orderData } = updateProductOrderDto;
     const nextStatus = orderData.currentStatus;
 
