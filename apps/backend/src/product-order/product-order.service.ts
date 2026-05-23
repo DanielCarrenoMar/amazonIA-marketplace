@@ -174,7 +174,7 @@ export class ProductOrderService {
     };
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, reqUser?: { id: string; role: UserRole }) {
     const order = await this.prisma.productOrder.findUnique({
       where: { id },
       include: {
@@ -185,6 +185,13 @@ export class ProductOrderService {
     });
 
     if (!order) throw new NotFoundException(`ProductOrder with ID ${id} not found`);
+
+    if (reqUser && reqUser.role !== UserRole.ADMIN) {
+      if (order.buyerId !== reqUser.id && order.product.sellerId !== reqUser.id) {
+        throw new ForbiddenException('You can only view your own orders');
+      }
+    }
+
     return order;
   }
 
@@ -322,12 +329,12 @@ export class ProductOrderService {
     });
   }
 
-  async findHistory(id: string) {
-    await this.findOne(id); // Verify the order exists first
+  async findHistory(id: string, reqUser?: { id: string; role: UserRole }) {
+    await this.findOne(id, reqUser); // Verify the order exists and check ownership
     return this.prisma.orderStatusHistory.findMany({
       where: { orderId: id },
       orderBy: { createdAt: 'asc' },
-      include: { changedByUser: true },
+      include: { changedByUser: { omit: { passwordHash: true } } },
     });
   }
 

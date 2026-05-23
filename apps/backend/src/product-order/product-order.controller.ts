@@ -62,14 +62,14 @@ export class ProductOrderController {
 
   @UseGuards(JwtAuthGuard)
   @Get(':id')
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.productOrderService.findOne(id);
+  findOne(@Param('id', ParseUUIDPipe) id: string, @Request() req: any) {
+    return this.productOrderService.findOne(id, req.user);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get(':id/history')
-  findHistory(@Param('id', ParseUUIDPipe) id: string) {
-    return this.productOrderService.findHistory(id);
+  findHistory(@Param('id', ParseUUIDPipe) id: string, @Request() req: any) {
+    return this.productOrderService.findHistory(id, req.user);
   }
 
   // Login required. Service enforces buyer/admin/seller ownership rules.

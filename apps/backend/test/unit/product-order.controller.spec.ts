@@ -46,8 +46,9 @@ describe('ProductOrderController', () => {
     productOrderServiceMock.findOne.mockResolvedValue({ id: 'order-1' });
     productOrderServiceMock.findHistory.mockResolvedValue([{ id: 'hist-1' }]);
 
-    await expect(controller.findOne('order-1')).resolves.toEqual({ id: 'order-1' });
-    await expect(controller.findHistory('order-1')).resolves.toEqual([
+    const req = { user: { id: 'user-1', role: UserRole.BUYER } };
+    await expect(controller.findOne('order-1', req)).resolves.toEqual({ id: 'order-1' });
+    await expect(controller.findHistory('order-1', req)).resolves.toEqual([
       { id: 'hist-1' },
     ]);
   });

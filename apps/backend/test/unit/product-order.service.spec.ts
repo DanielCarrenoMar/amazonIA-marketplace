@@ -229,7 +229,7 @@ describe('ProductOrderService', () => {
     expect(prismaMock.orderStatusHistory.findMany).toHaveBeenCalledWith({
       where: { orderId: 'order-1' },
       orderBy: { createdAt: 'asc' },
-      include: { changedByUser: true },
+      include: { changedByUser: { omit: { passwordHash: true } } },
     });
   });
 });
