@@ -8,10 +8,19 @@ import { PrismaService } from '../prisma/prisma.service';
 export class SellerService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(createSellerDto: CreateSellerDto) {
+  async create(id: string, createSellerDto: CreateSellerDto) {
     try {
-      return await this.prisma.seller.create({
-        data: createSellerDto,
+      return await this.prisma.$transaction(async (tx) => {
+        const seller = await tx.seller.create({
+          data: { id, ...createSellerDto },
+        });
+
+        await tx.userAccount.update({
+          where: { id },
+          data: { role: UserRole.SELLER },
+        });
+
+        return seller;
       });
     } catch (e: any) {
       // Map Prisma unique constraint error to HTTP 409

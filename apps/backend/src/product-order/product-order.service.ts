@@ -226,7 +226,7 @@ export class ProductOrderService {
     if (
       order.buyerId !== reqUser.id &&
       reqUser.role !== UserRole.ADMIN &&
-      reqUser.role !== UserRole.SELLER
+      (reqUser.role !== UserRole.SELLER || order.product?.sellerId !== reqUser.id)
     ) {
       throw new ForbiddenException('You can only update your own order');
     }

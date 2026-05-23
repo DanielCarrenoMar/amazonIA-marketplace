@@ -6,6 +6,7 @@ import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { UserAccountModule } from '../user-account/user-account.module';
+import { TokenCleanupService } from './token-cleanup.service';
 
 @Module({
   imports: [
@@ -17,7 +18,7 @@ import { UserAccountModule } from '../user-account/user-account.module';
     UserAccountModule, // Needed so AuthService can inject UserAccountService for registration
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, JwtAuthGuard],
+  providers: [AuthService, JwtStrategy, JwtAuthGuard, TokenCleanupService],
   exports: [JwtAuthGuard],
 })
 export class AuthModule {}

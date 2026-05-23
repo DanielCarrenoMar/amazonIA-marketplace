@@ -21,11 +21,17 @@ import { Roles } from '../auth/decorators/roles.decorator';
 export class SellerController {
   constructor(private readonly sellerService: SellerService) {}
 
+  @UseGuards(JwtAuthGuard)
+  @Post('register-me')
+  registerMe(@Body() createSellerDto: CreateSellerDto, @Request() req: any) {
+    return this.sellerService.create(req.user.id, createSellerDto);
+  }
+
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
-  @Post()
-  create(@Body() createSellerDto: CreateSellerDto) {
-    return this.sellerService.create(createSellerDto);
+  @Post(':userId')
+  create(@Param('userId', ParseUUIDPipe) userId: string, @Body() createSellerDto: CreateSellerDto) {
+    return this.sellerService.create(userId, createSellerDto);
   }
 
   @Get()

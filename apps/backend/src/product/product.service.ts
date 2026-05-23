@@ -122,7 +122,7 @@ export class ProductService {
         where: { sellerId },
         skip,
         take: limit,
-        include: { seller: { omit: { passwordHash: true } }, category: true },
+        include: { seller: true, category: true },
         orderBy: { createdAt: 'desc' },
       }),
     ]);

@@ -13,6 +13,7 @@ import { AuthModule } from './auth/auth.module';
 
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ScheduleModule } from '@nestjs/schedule';
 import { APP_GUARD } from '@nestjs/core';
 
 @Module({
@@ -22,6 +23,7 @@ import { APP_GUARD } from '@nestjs/core';
       ttl: 60000,
       limit: 10, // Global limit: 10 requests per minute per IP
     }]),
+    ScheduleModule.forRoot(),
     PrismaModule,
     AuthModule,
     UserAccountModule,
