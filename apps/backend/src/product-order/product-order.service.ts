@@ -98,11 +98,11 @@ export class ProductOrderService {
       ...(status ? { currentStatus: status } : {}),
       ...(dateFrom || dateTo
         ? {
-            createdAt: {
-              ...(dateFrom ? { gte: new Date(dateFrom) } : {}),
-              ...(dateTo ? { lte: new Date(dateTo) } : {}),
-            },
-          }
+          createdAt: {
+            ...(dateFrom ? { gte: new Date(dateFrom) } : {}),
+            ...(dateTo ? { lte: new Date(dateTo) } : {}),
+          },
+        }
         : {}),
     };
 
@@ -131,10 +131,57 @@ export class ProductOrderService {
     };
   }
 
+  async findBySeller(sellerId: string, query?: FindOrdersDto) {
+    const { status, page = 1, limit = 10, dateFrom, dateTo } = query || {};
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.ProductOrderWhereInput = {
+      product: { sellerId },
+      ...(status ? { currentStatus: status } : {}),
+      ...(dateFrom || dateTo
+        ? {
+          createdAt: {
+            ...(dateFrom ? { gte: new Date(dateFrom) } : {}),
+            ...(dateTo ? { lte: new Date(dateTo) } : {}),
+          },
+        }
+        : {}),
+    };
+
+    const [total, data] = await Promise.all([
+      this.prisma.productOrder.count({ where }),
+      this.prisma.productOrder.findMany({
+        where,
+        include: {
+          product: true,
+          buyer: { omit: { passwordHash: true } },
+          statusHistory: { orderBy: { createdAt: 'desc' } },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+    ]);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
   async findOne(id: string) {
     const order = await this.prisma.productOrder.findUnique({
       where: { id },
-      include: { product: true, buyer: true, statusHistory: true },
+      include: {
+        product: true,
+        buyer: { omit: { passwordHash: true } },
+        statusHistory: true,
+      },
     });
 
     if (!order) throw new NotFoundException(`ProductOrder with ID ${id} not found`);
@@ -145,7 +192,11 @@ export class ProductOrderService {
   async findOneForBuyer(id: string, buyerId: string) {
     const order = await this.prisma.productOrder.findUnique({
       where: { id },
-      include: { product: true, buyer: true, statusHistory: true },
+      include: {
+        product: true,
+        buyer: { omit: { passwordHash: true } },
+        statusHistory: true,
+      },
     });
 
     if (!order) throw new NotFoundException(`ProductOrder with ID ${id} not found`);
@@ -171,6 +222,18 @@ export class ProductOrderService {
       reqUser.role !== UserRole.SELLER
     ) {
       throw new ForbiddenException('You can only update your own order');
+    }
+
+    if (updateProductOrderDto.sellerRatingValue !== undefined) {
+      if (reqUser.id !== order.buyerId) {
+        throw new ForbiddenException('Solo el comprador puede calificar al vendedor');
+      }
+    }
+
+    if (updateProductOrderDto.buyerRatingValue !== undefined) {
+      if (reqUser.id !== order.product?.sellerId && reqUser.role !== UserRole.ADMIN) {
+        throw new ForbiddenException('Solo el vendedor (o un admin) puede calificar al comprador');
+      }
     }
 
     const { statusNote, ...orderData } = updateProductOrderDto;
@@ -233,10 +296,10 @@ export class ProductOrderService {
       // 2. Seller Rating: If the buyer left a rating for the seller, recalculate the seller's global rating
       if (orderData.sellerRatingValue !== undefined && currentOrder.product?.sellerId) {
         const sellerId = currentOrder.product.sellerId;
-        
+
         // Find the mathematical average of all completed ratings for this seller
         const aggregate = await tx.productOrder.aggregate({
-          where: { 
+          where: {
             product: { sellerId },
             sellerRatingValue: { not: null }
           },

@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, ForbiddenException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { CreateProductRatingDto, PaginationDto } from 'dtos';
+import { CreateProductRatingDto, PaginationDto, OrderStatus } from 'dtos';
 import { UpdateProductRatingDto } from 'dtos';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -23,7 +23,10 @@ export class ProductRatingService {
     // Fetch the sellerId while updating the product
     const updatedProduct = await tx.product.update({
       where: { id: productId },
-      data: { averageRating: newProductAvg },
+      data: {
+        averageRating: newProductAvg,
+        totalReviews: productAggregate._count.ratingValue,
+      },
       select: { sellerId: true },
     });
 
@@ -46,6 +49,18 @@ export class ProductRatingService {
   // userAccountId comes from the JWT token (req.user.id), NOT from the client body
   async create(userAccountId: string, createProductRatingDto: CreateProductRatingDto) {
     const { productId, ratingValue } = createProductRatingDto;
+
+    const order = await this.prisma.productOrder.findFirst({
+      where: {
+        buyerId: userAccountId,
+        productId,
+        currentStatus: OrderStatus.DELIVERED,
+      },
+    });
+
+    if (!order) {
+      throw new ForbiddenException('Debes haber recibido el producto para calificarlo');
+    }
 
     return this.prisma.$transaction(async (tx) => {
       let newRating;
@@ -98,7 +113,7 @@ export class ProductRatingService {
   async findOne(productId: string, userAccountId: string) {
     const rating = await this.prisma.productRating.findUnique({
       where: { productId_userAccountId: { productId, userAccountId } },
-      include: { user: true },
+      include: { user: { omit: { passwordHash: true } } },
     });
 
     if (!rating) throw new NotFoundException('ProductRating not found');

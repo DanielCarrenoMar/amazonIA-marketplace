@@ -30,15 +30,24 @@ async function bootstrap() {
     }),
   );
 
+  // HTTP security headers — must run before CORS so security headers are present
+  // on ALL responses, including CORS-rejected preflight requests.
+  // HSTS is only enabled in production to avoid locking browsers into HTTPS-only
+  // mode in HTTP dev/staging environments (would be cached for 180 days).
+  app.use(
+    helmet({
+      hsts: process.env.NODE_ENV === 'production'
+        ? { maxAge: 31536000, includeSubDomains: true }
+        : false,
+    }),
+  );
+
   // Allow requests from the frontend.
   // In production set FRONTEND_URL in the environment to restrict origins.
   app.enableCors({
     origin: process.env.FRONTEND_URL ?? 'http://localhost:3000',
     credentials: true,
   });
-
-  // HTTP security headers — protects against clickjacking, XSS, MIME-sniffing, etc.
-  app.use(helmet());
 
   // Global exception filter — formats all errors as:
   // { statusCode, message, timestamp, path }
