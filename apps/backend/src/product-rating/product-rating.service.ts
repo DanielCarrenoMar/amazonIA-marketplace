@@ -23,7 +23,10 @@ export class ProductRatingService {
     // Fetch the sellerId while updating the product
     const updatedProduct = await tx.product.update({
       where: { id: productId },
-      data: { averageRating: newProductAvg },
+      data: {
+        averageRating: newProductAvg,
+        totalReviews: productAggregate._count.ratingValue,
+      },
       select: { sellerId: true },
     });
 
@@ -74,7 +77,7 @@ export class ProductRatingService {
   async findOne(productId: string, userAccountId: string) {
     const rating = await this.prisma.productRating.findUnique({
       where: { productId_userAccountId: { productId, userAccountId } },
-      include: { user: true },
+      include: { user: { omit: { passwordHash: true } } },
     });
 
     if (!rating) throw new NotFoundException('ProductRating not found');
