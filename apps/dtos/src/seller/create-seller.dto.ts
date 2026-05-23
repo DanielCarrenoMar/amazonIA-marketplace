@@ -10,22 +10,9 @@ export class CreateSellerDto {
   @IsOptional()
   tribeId?: number;
 
-  // Rating is checked to be exactly between 1 and 5
-  @IsInt()
-  @Min(1)
-  @Max(5)
-  @IsOptional()
-  rating?: number;
 
-  @IsNumber()
-  @Min(1)
-  @Max(5)
-  @IsOptional()
-  avgProductRating?: number;
 
-  @IsInt()
-  @IsOptional()
-  totalReviews?: number;
+
 
   @IsString()
   @IsOptional()
