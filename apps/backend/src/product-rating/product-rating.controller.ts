@@ -1,10 +1,10 @@
 import {
   Controller, Get, Post, Body, Patch, Param,
-  Delete, ParseUUIDPipe, UseGuards, Request,
+  Delete, ParseUUIDPipe, UseGuards, Request, Query,
 } from '@nestjs/common';
 import { ProductRatingService } from './product-rating.service';
-import {  CreateProductRatingDto  } from 'dtos';
-import {  UpdateProductRatingDto  } from 'dtos';
+import { CreateProductRatingDto, PaginationDto } from 'dtos';
+import { UpdateProductRatingDto } from 'dtos';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('product-rating')
@@ -20,8 +20,8 @@ export class ProductRatingController {
 
   // Public — anyone can view all ratings
   @Get()
-  findAll() {
-    return this.productRatingService.findAll();
+  findAll(@Query() query: PaginationDto) {
+    return this.productRatingService.findAll(query);
   }
 
   // Public — anyone can view a single rating

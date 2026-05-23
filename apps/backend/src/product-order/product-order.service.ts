@@ -1,6 +1,6 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { CreateProductOrderDto, FindOrdersDto } from 'dtos';
+import { CreateProductOrderDto, FindOrdersDto, PaginationDto } from 'dtos';
 import { UpdateProductOrderDto } from 'dtos';
 import { OrderStatus, UserRole } from 'dtos';
 import { PrismaService } from '../prisma/prisma.service';
@@ -59,14 +59,33 @@ export class ProductOrderService {
     });
   }
 
-  async findAll() {
-    return this.prisma.productOrder.findMany({
-      include: {
-        product: true,
-        buyer: { omit: { passwordHash: true } },
-        statusHistory: true,
+  async findAll(query?: PaginationDto) {
+    const { page = 1, limit = 10 } = query || {};
+    const skip = (page - 1) * limit;
+
+    const [total, data] = await Promise.all([
+      this.prisma.productOrder.count(),
+      this.prisma.productOrder.findMany({
+        include: { 
+          product: true, 
+          buyer: { omit: { passwordHash: true } }, 
+          statusHistory: true 
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+    ]);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
       },
-    });
+    };
   }
 
   // Returns all orders that belong to a specific buyer with pagination and filters
