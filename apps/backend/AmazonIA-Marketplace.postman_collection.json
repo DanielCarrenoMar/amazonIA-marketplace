@@ -360,12 +360,22 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/user-account",
+              "raw": "{{baseUrl}}/user-account?page=1&limit=10",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "user-account"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
               ]
             },
             "description": "Requiere token de ADMIN. Devuelve todos los usuarios sin passwordHash."
@@ -537,12 +547,22 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/tribe",
+              "raw": "{{baseUrl}}/tribe?page=1&limit=10",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "tribe"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
               ]
             }
           },
@@ -628,7 +648,39 @@
       "name": "🏪 Seller",
       "item": [
         {
-          "name": "🔒 Crear Perfil de Vendedor (POST /seller)",
+          "name": "🔒 Auto-Registrar Vendedor (POST /seller/register-me)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tribeId\": 1,\n  \"description\": \"Soy un nuevo vendedor que se auto-registra.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/seller/register-me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "seller",
+                "register-me"
+              ]
+            },
+            "description": "Requiere token. Extrae el ID del JWT y promueve al usuario actual a SELLER. No requiere enviar el ID en el body."
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Crear Perfil de Vendedor (Admin) (POST /seller)",
           "request": {
             "method": "POST",
             "header": [
@@ -654,7 +706,7 @@
                 "seller"
               ]
             },
-            "description": "Requiere token (ADMIN)."
+            "description": "Requiere token (ADMIN). Permite a un administrador promover a cualquier usuario a vendedor especificando su ID en el body."
           },
           "response": []
         },
@@ -807,12 +859,22 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/product-category",
+              "raw": "{{baseUrl}}/product-category?page=1&limit=10",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "product-category"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
               ]
             }
           },
@@ -1366,6 +1428,36 @@
             "description": "El `userAccountId` se extrae del JWT. Solo elimina el rating del usuario autenticado."
           },
           "response": []
+        },
+        {
+          "name": "Listar Ratings de un Producto (GET /product-rating/product/:productId)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/product-rating/product/{{productId}}?page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-rating",
+                "product",
+                "{{productId}}"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Devuelve de forma paginada todos los ratings que ha recibido un producto específico."
+          },
+          "response": []
         }
       ]
     },
@@ -1488,7 +1580,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"currentStatus\": \"SHIPPED\",\n  \"statusNote\": \"Paquete enviado via MRW, tracking: MRW123456\"\n}"
+              "raw": "{\n  \"currentStatus\": \"SHIPPED\",\n  \"statusNote\": \"Paquete enviado via MRW, tracking: MRW123456\",\n  \"sellerRatingValue\": 5,\n  \"buyerRatingValue\": 5\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/product-order/{{orderId}}",
