@@ -9,6 +9,7 @@ import {
   ParseUUIDPipe,
   UseGuards,
   Query,
+  Request,
 } from '@nestjs/common';
 import { SellerService } from './seller.service';
 import { CreateSellerDto, UpdateSellerDto, UserRole, FindSellersDto } from 'dtos';
@@ -38,19 +39,20 @@ export class SellerController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SELLER)
   @Patch(':id')
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateSellerDto: UpdateSellerDto,
+    @Request() req: any,
   ) {
-    return this.sellerService.update(id, updateSellerDto);
+    return this.sellerService.update(id, updateSellerDto, req.user);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.SELLER)
   @Delete(':id')
-  remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.sellerService.remove(id);
+  remove(@Param('id', ParseUUIDPipe) id: string, @Request() req: any) {
+    return this.sellerService.remove(id, req.user);
   }
 }

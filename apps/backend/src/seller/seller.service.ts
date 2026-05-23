@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, ForbiddenException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import {  CreateSellerDto, FindSellersDto  } from 'dtos';
+import {  CreateSellerDto, FindSellersDto, UserRole  } from 'dtos';
 import {  UpdateSellerDto  } from 'dtos';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -76,16 +76,26 @@ export class SellerService {
     return seller;
   }
 
-  async update(id: string, updateSellerDto: UpdateSellerDto) {
+  async update(id: string, updateSellerDto: UpdateSellerDto, reqUser?: { id: string; role: UserRole }) {
     await this.findOne(id); // Check existence
+
+    if (reqUser && reqUser.role !== UserRole.ADMIN && reqUser.id !== id) {
+      throw new ForbiddenException('No tienes permiso para actualizar este perfil de vendedor');
+    }
+
     return this.prisma.seller.update({
       where: { id },
       data: updateSellerDto,
     });
   }
 
-  async remove(id: string) {
+  async remove(id: string, reqUser?: { id: string; role: UserRole }) {
     await this.findOne(id); // Check existence
+
+    if (reqUser && reqUser.role !== UserRole.ADMIN && reqUser.id !== id) {
+      throw new ForbiddenException('No tienes permiso para eliminar este perfil de vendedor');
+    }
+
     return this.prisma.seller.delete({
       where: { id },
     });
