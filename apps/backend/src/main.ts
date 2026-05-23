@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
@@ -26,6 +27,18 @@ async function bootstrap() {
       whitelist: true,            // Strips unknown fields from request body
       forbidNonWhitelisted: true, // Throws 400 if unknown fields are sent
       transform: true,            // Auto-transforms payloads to DTO class instances
+    }),
+  );
+
+  // HTTP security headers — must run before CORS so security headers are present
+  // on ALL responses, including CORS-rejected preflight requests.
+  // HSTS is only enabled in production to avoid locking browsers into HTTPS-only
+  // mode in HTTP dev/staging environments (would be cached for 180 days).
+  app.use(
+    helmet({
+      hsts: process.env.NODE_ENV === 'production'
+        ? { maxAge: 31536000, includeSubDomains: true }
+        : false,
     }),
   );
 
