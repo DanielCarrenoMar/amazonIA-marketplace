@@ -66,7 +66,11 @@ export class ProductOrderService {
     const [total, data] = await Promise.all([
       this.prisma.productOrder.count(),
       this.prisma.productOrder.findMany({
-        include: { product: true, buyer: true, statusHistory: true },
+        include: { 
+          product: true, 
+          buyer: { omit: { passwordHash: true } }, 
+          statusHistory: true 
+        },
         orderBy: { createdAt: 'desc' },
         skip,
         take: limit,

@@ -74,7 +74,10 @@ export class ProductRatingService {
     const [total, data] = await Promise.all([
       this.prisma.productRating.count(),
       this.prisma.productRating.findMany({
-        include: { product: true, user: true },
+        include: { 
+          product: true, 
+          user: { omit: { passwordHash: true } } 
+        },
         orderBy: { createdAt: 'desc' },
         skip,
         take: limit,
