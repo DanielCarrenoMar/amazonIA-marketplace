@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, MaxLength, IsNumber, Min, IsUUID, IsInt, IsEnum } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, MaxLength, IsNumber, Min, Max, IsUUID, IsInt, IsEnum } from 'class-validator';
 
 
 export class CreateProductOrderDto {
@@ -18,10 +18,14 @@ export class CreateProductOrderDto {
   orderNotes?: string;
 
   @IsInt()
+  @Min(1)
+  @Max(5)
   @IsOptional()
   sellerRatingValue?: number;
 
   @IsInt()
+  @Min(1)
+  @Max(5)
   @IsOptional()
   buyerRatingValue?: number;
 
