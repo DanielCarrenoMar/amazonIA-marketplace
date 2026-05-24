@@ -17,7 +17,7 @@ export default function Home() {
       <main className="flex-1 w-full flex flex-col">
         <LandingPage />
         <div className="flex justify-center py-12">
-          <Button 
+          <Button
             onClick={() => setShowDesignSystem(true)}
             variant="outline"
             size="lg"
