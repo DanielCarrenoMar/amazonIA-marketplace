@@ -1,5 +1,5 @@
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
-import { UserRole } from 'dtos';
+import { UserRole } from 'event-types';
 import { ProductService } from '../../src/product/product.service';
 
 describe('ProductService — ownership checks', () => {

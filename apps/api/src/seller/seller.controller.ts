@@ -12,7 +12,7 @@ import {
   Request,
 } from '@nestjs/common';
 import { SellerService } from './seller.service';
-import { CreateSellerDto, UpdateSellerDto, UserRole, FindSellersDto } from 'dtos';
+import { CreateSellerDto, UpdateSellerDto, UserRole, FindSellersDto } from 'event-types';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';

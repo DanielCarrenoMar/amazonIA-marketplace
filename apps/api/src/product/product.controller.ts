@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ProductService } from './product.service';
-import { CreateProductDto, UpdateProductDto, FindProductsDto, FindNearbyDto, UserRole, PaginationDto } from 'dtos';
+import { CreateProductDto, UpdateProductDto, FindProductsDto, FindNearbyDto, UserRole, PaginationDto } from 'event-types';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';

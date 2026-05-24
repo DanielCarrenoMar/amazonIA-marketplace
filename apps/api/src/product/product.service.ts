@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException, ConflictException, ForbiddenException } from '@nestjs/common';
-import { CreateProductDto, UpdateProductDto, FindProductsDto, FindNearbyDto, OrderStatus, UserRole, PaginationDto } from 'dtos';
+import { CreateProductDto, UpdateProductDto, FindProductsDto, FindNearbyDto, OrderStatus, UserRole, PaginationDto } from 'event-types';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 

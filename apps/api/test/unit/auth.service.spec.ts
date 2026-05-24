@@ -5,7 +5,7 @@ import { UserAccountService } from '../../src/user-account/user-account.service'
 import { PrismaService } from '../../src/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { UnauthorizedException } from '@nestjs/common';
-import { UserRole } from 'dtos';
+import { UserRole } from 'event-types';
 
 jest.mock('bcrypt', () => ({
   compare: jest.fn(),

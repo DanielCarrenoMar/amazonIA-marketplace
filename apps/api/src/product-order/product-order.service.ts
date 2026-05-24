@@ -1,8 +1,8 @@
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { CreateProductOrderDto, FindOrdersDto, PaginationDto } from 'dtos';
-import { UpdateProductOrderDto } from 'dtos';
-import { OrderStatus, UserRole } from 'dtos';
+import { CreateProductOrderDto, FindOrdersDto, PaginationDto } from 'event-types';
+import { UpdateProductOrderDto } from 'event-types';
+import { OrderStatus, UserRole } from 'event-types';
 import { PrismaService } from '../prisma/prisma.service';
 
 const allowedOrderStatusTransitions: Record<OrderStatus, readonly OrderStatus[]> = {

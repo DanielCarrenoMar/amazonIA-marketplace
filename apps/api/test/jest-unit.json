@@ -7,6 +7,6 @@
     "^.+\\.(t|j)s$": "ts-jest"
   },
   "moduleNameMapper": {
-    "^dtos$": "<rootDir>/../dtos/src/index.ts"
+    "^event-types$": "<rootDir>/../../packages/event-types/src/index.ts"
   }
 }

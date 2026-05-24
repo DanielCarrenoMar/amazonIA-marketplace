@@ -3,8 +3,8 @@ import {
   Delete, ParseUUIDPipe, UseGuards, Request, Query,
 } from '@nestjs/common';
 import { ProductRatingService } from './product-rating.service';
-import { CreateProductRatingDto, PaginationDto, FindProductRatingsDto } from 'dtos';
-import { UpdateProductRatingDto } from 'dtos';
+import { CreateProductRatingDto, PaginationDto, FindProductRatingsDto } from 'event-types';
+import { UpdateProductRatingDto } from 'event-types';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('product-rating')

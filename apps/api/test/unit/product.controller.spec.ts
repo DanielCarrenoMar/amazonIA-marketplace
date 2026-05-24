@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { GUARDS_METADATA } from '@nestjs/common/constants';
-import { UserRole } from 'dtos';
+import { UserRole } from 'event-types';
 import { JwtAuthGuard } from '../../src/auth/jwt-auth.guard';
 import { RolesGuard } from '../../src/auth/guards/roles.guard';
 import { ROLES_KEY } from '../../src/auth/decorators/roles.decorator';

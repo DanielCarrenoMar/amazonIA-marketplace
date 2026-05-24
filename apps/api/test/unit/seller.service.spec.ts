@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { SellerService } from '../../src/seller/seller.service';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import { NotFoundException, ForbiddenException } from '@nestjs/common';
-import { UserRole } from 'dtos';
+import { UserRole } from 'event-types';
 
 describe('SellerService', () => {
   let service: SellerService;

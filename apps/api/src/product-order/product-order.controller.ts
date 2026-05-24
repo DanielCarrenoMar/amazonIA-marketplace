@@ -12,7 +12,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { ProductOrderService } from './product-order.service';
-import { CreateProductOrderDto, UpdateProductOrderDto, UserRole, FindOrdersDto, PaginationDto } from 'dtos';
+import { CreateProductOrderDto, UpdateProductOrderDto, UserRole, FindOrdersDto, PaginationDto } from 'event-types';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';

@@ -16,7 +16,7 @@ import {
   UpdateProductCategoryDto,
   UserRole,
   PaginationDto,
-} from 'dtos';
+} from 'event-types';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';

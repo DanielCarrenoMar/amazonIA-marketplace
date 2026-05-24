@@ -3,8 +3,8 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { UserAccountService } from '../user-account/user-account.service';
-import { CreateUserAccountDto } from 'dtos';
-import { LoginDto } from 'dtos';
+import { CreateUserAccountDto } from 'event-types';
+import { LoginDto } from 'event-types';
 import { JwtPayload } from './jwt.strategy';
 
 @Injectable()

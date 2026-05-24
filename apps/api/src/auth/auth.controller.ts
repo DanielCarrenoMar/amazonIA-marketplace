@@ -1,10 +1,10 @@
 import { Controller, Post, Body, Get, UseGuards, Request } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
-import { LoginDto } from 'dtos';
-import { RefreshDto } from 'dtos';
+import { LoginDto } from 'event-types';
+import { RefreshDto } from 'event-types';
 import { JwtAuthGuard } from './jwt-auth.guard';
-import { CreateUserAccountDto } from 'dtos';
+import { CreateUserAccountDto } from 'event-types';
 
 @Controller('auth')
 export class AuthController {

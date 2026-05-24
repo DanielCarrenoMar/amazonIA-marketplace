@@ -1,5 +1,5 @@
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
-import { OrderStatus, UserRole } from 'dtos';
+import { OrderStatus, UserRole } from 'event-types';
 import { ProductOrderService } from '../../src/product-order/product-order.service';
 
 describe('ProductOrderService', () => {

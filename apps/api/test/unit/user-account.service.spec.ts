@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma } from '@prisma/client';
 import { UserAccountService } from '../../src/user-account/user-account.service';
 import { PrismaService } from '../../src/prisma/prisma.service';
-import { UserRole } from 'dtos';
+import { UserRole } from 'event-types';
 import { ConflictException } from '@nestjs/common';
 
 describe('UserAccountService', () => {

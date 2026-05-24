@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import {  CreateTribeDto  } from 'dtos';
-import {  UpdateTribeDto, PaginationDto  } from 'dtos';
+import {  CreateTribeDto  } from 'event-types';
+import {  UpdateTribeDto, PaginationDto  } from 'event-types';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
