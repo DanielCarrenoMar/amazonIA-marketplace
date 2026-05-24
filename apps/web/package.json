@@ -1,5 +1,5 @@
 {
-  "name": "frontend",
+  "name": "web",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -10,7 +10,7 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "dtos": "workspace:*",
+    "event-types": "workspace:*",
     "lucide-react": "^0.487.0",
     "next": "16.2.4",
     "react": "19.2.4",
