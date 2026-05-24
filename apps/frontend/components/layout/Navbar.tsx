@@ -24,7 +24,7 @@ export function Navbar() {
 
   return (
     <div className="fixed top-6 left-0 right-0 z-50 px-4 flex justify-center">
-      <nav className="w-full max-w-5xl bg-slate-600/50 backdrop-blur-md border border-white/20 rounded-2xl shadow-lg transition-all duration-300">
+      <nav className="w-full max-w-5xl bg-slate-800/50 backdrop-blur-md border border-white/20 rounded-2xl shadow-lg transition-all duration-300">
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
@@ -53,7 +53,7 @@ export function Navbar() {
                       )}
                     </a>
                     {item.hasDropdown && item.subItems && (
-                      <div className="absolute top-full left-0 mt-1 w-44 bg-slate-300/30 backdrop-blur-xl border border-white/20 rounded-2xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 py-2 flex flex-col z-50">
+                      <div className="absolute top-full left-0 mt-1 w-44 bg-slate-600/85 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 py-2 flex flex-col z-50">
                         {item.subItems.map((subItem) => (
                           <a
                             key={subItem.label}
