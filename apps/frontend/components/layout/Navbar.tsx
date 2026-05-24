@@ -78,7 +78,7 @@ export function Navbar() {
                 </button>
 
                 <button
-                  className="bg-emerald-500 text-white px-5 py-2 rounded-xl hover:bg-emerald-400 transition-colors text-sm shadow-sm cursor-pointer"
+                  className="bg-brand-primary text-white px-5 py-2 rounded-xl hover:bg-brand-primary/80 transition-colors text-sm shadow-sm cursor-pointer"
                 >
                   Registrarse
                 </button>
@@ -144,7 +144,7 @@ export function Navbar() {
               <button className="w-full text-white/90 px-6 py-3 rounded-xl border border-white/30 hover:bg-white/10 transition-colors">
                 Iniciar Sesión
               </button>
-              <button className="w-full bg-emerald-500 text-white px-6 py-3 rounded-xl hover:bg-emerald-400 transition-colors">
+              <button className="w-full bg-brand-primary text-white px-6 py-3 rounded-xl hover:bg-brand-primary/80 transition-colors">
                 Registrarse
               </button>
             </div>
