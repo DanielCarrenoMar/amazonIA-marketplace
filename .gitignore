@@ -8,3 +8,8 @@ apps/backend/AmazonIA-Marketplace.postman_collection.json
 # Postman — credenciales y artifacts de ejecución (no van al repo)
 *.postman_environment.json
 *.postman_test_run.json
+
+# Entornos y Credenciales
+.env
+.env.*
+*.env
