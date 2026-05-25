@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import logo from '@/public/logo.png';
 import Link from 'next/link';
+import { Button } from '../ui/Button';
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -71,24 +72,29 @@ export function Navbar() {
 
               {/* Desktop Auth Buttons */}
               <div className="flex items-center gap-2 ml-2">
-                <button
-                  className="text-white/90 hover:text-white hover:bg-white/10 px-4 py-2 rounded-xl transition-all duration-200 text-sm cursor-pointer"
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-white/90! hover:text-white! hover:bg-white/10!"
                 >
                   Iniciar Sesión
-                </button>
+                </Button>
 
-                <button
-                  className="bg-brand-primary text-white px-5 py-2 rounded-xl hover:bg-brand-primary/80 transition-colors text-sm shadow-sm cursor-pointer"
+                <Button
+                  variant="primary"
+                  size="sm"
                 >
                   Registrarse
-                </button>
+                </Button>
               </div>
             </div>
 
             {/* Mobile Menu Button */}
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="md:hidden p-2 text-white"
+              className="md:hidden text-white! hover:bg-white/10!"
             >
               {isMenuOpen ? (
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -99,7 +105,7 @@ export function Navbar() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               )}
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -141,12 +147,12 @@ export function Navbar() {
             ))}
 
             <div className="mt-4 space-y-3 pt-4 border-t border-white/20">
-              <button className="w-full text-white/90 px-6 py-3 rounded-xl border border-white/30 hover:bg-white/10 transition-colors">
+              <Button variant="outline" className="w-full border-white/30! text-white/90! hover:bg-white/10! hover:border-transparent!">
                 Iniciar Sesión
-              </button>
-              <button className="w-full bg-brand-primary text-white px-6 py-3 rounded-xl hover:bg-brand-primary/80 transition-colors">
+              </Button>
+              <Button variant="primary" className="w-full">
                 Registrarse
-              </button>
+              </Button>
             </div>
           </div>
         )}

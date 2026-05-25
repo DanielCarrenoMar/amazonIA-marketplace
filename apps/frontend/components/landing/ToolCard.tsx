@@ -1,5 +1,6 @@
 import React from 'react';
 import { LucideIcon } from 'lucide-react';
+import { Button } from '../ui/Button';
 
 export interface ToolCardProps {
   id?: string;
@@ -25,9 +26,12 @@ export function ToolCard({ id, title, description, icon: Icon }: ToolCardProps) 
         {description}
       </p>
 
-      <button className="w-full py-3 rounded-2xl bg-white/10 text-white hover:bg-white/20 transition-colors font-semibold cursor-pointer">
+      <Button
+        variant="ghost"
+        className="w-full py-3! rounded-2xl! bg-white/10! text-white! hover:bg-white/20!"
+      >
         Explorar herramienta
-      </button>
+      </Button>
     </div>
   );
 }

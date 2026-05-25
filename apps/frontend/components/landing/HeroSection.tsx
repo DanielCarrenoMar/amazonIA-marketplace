@@ -1,5 +1,8 @@
 import React from "react";
 import Image from "next/image";
+import { Badge } from "../ui/Badge";
+import { Button } from "../ui/Button";
+import { ArrowRight } from "lucide-react";
 
 export function HeroSection() {
   return (
@@ -15,9 +18,9 @@ export function HeroSection() {
         <div className="absolute inset-0 bg-black/30 md:bg-black/40 flex flex-col items-center justify-center text-center px-4">
 
           {/* Badge */}
-          <div className="mb-6 px-6 py-2 bg-brand-secondary/90 backdrop-blur-sm rounded-full text-white text-base font-medium shadow-md">
+          <Badge variant="secondary" className="mb-6 bg-brand-secondary/90! backdrop-blur-sm! text-white! shadow-md">
             Para comunidades indígenas
-          </div>
+          </Badge>
 
           {/* Headline */}
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-5 drop-shadow-xl max-w-4xl leading-tight md:leading-tight lg:leading-[1.2]">
@@ -31,15 +34,13 @@ export function HeroSection() {
           </p>
 
           {/* CTA Button */}
-          <button className="bg-brand-primary hover:bg-brand-primary/90 text-white px-6 py-2.5 rounded-full text-sm font-medium> transition-all shadow-lg flex items-center gap-2 group mb-5 cursor-pointer">
+          <Button
+            variant="primary"
+            className="mb-5 group rounded-full!"
+            rightIcon={<ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" strokeWidth={2.5} />}
+          >
             Explorar herramientas
-            <svg
-              className="w-4 h-4 group-hover:translate-x-1 transition-transform"
-              fill="none" stroke="currentColor" viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-            </svg>
-          </button>
+          </Button>
 
           {/* Bottom text */}
           <p className="text-xs text-white/80 drop-shadow-sm">
