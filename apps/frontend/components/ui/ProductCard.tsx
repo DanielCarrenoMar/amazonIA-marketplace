@@ -1,9 +1,9 @@
 import React from 'react';
 import Image from 'next/image';
 import { Heart, Star, ShoppingCart } from 'lucide-react';
-import { Badge } from '../ui/Badge';
-import { Button } from '../ui/Button';
-import { Card } from '../ui/Card';
+import { Badge } from './Badge';
+import { Button } from './Button';
+import { Card } from './Card';
 
 export interface ProductCardProps {
   id?: string;

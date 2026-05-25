@@ -2,7 +2,7 @@ import React from 'react';
 import { ArrowRight } from 'lucide-react';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
-import { ProductCard } from './ProductCard';
+import { ProductCard } from '../ui/ProductCard';
 
 const MOCK_PRODUCTS = [
   {
