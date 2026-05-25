@@ -11,7 +11,7 @@ export interface StatCardProps {
 
 export function StatCard({ number, label, title, description, icon: Icon }: StatCardProps) {
   return (
-    <div className="bg-linear-to-r from-brand-secondary to-[#064e3b] rounded-2xl p-6 text-white flex flex-col sm:flex-row gap-6 items-center shadow-lg hover:-translate-y-1 transition-transform duration-300">
+    <div className="bg-linear-to-r from-brand-primary to-[#064e3b] rounded-2xl p-6 text-white flex flex-col sm:flex-row gap-6 items-center shadow-lg hover:-translate-y-1 transition-transform duration-300">
       <div className="flex flex-col items-center justify-center shrink-0 w-full sm:w-auto sm:mr-2">
         <div className="flex items-center gap-3">
           <Icon className="w-8 h-8 text-white" strokeWidth={2.5} />
