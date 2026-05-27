@@ -5,8 +5,7 @@ import { Model } from 'mongoose';
 import { Interval } from '@nestjs/schedule';
 import { KafkaConsumerService, KAFKA_TOPICS } from 'kafka-client';
 import { IClimateEvent, IShipmentEvent } from 'event-types';
-import { ClimateEventDocument } from '../mongo/schemas/climate-event.schema';
-import { ShipmentEventDocument } from '../mongo/schemas/shipment-event.schema';
+import { ClimateEventDocument, ShipmentEventDocument } from 'database';
 
 const CONSUMER_GROUP = 'telemetry-worker-group';
 const INSTANCE_ID = `worker-${process.pid}`;

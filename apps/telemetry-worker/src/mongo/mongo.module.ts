@@ -1,14 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigService } from '@nestjs/config';
-import {
-  ClimateEventDocument,
-  ClimateEventSchema,
-} from './schemas/climate-event.schema';
-import {
-  ShipmentEventDocument,
-  ShipmentEventSchema,
-} from './schemas/shipment-event.schema';
+import { MongoTelemetryModule } from 'database';
 
 @Module({
   imports: [
@@ -21,11 +14,8 @@ import {
     }),
 
     // Register Mongoose schemas for both time-series collections
-    MongooseModule.forFeature([
-      { name: ClimateEventDocument.name, schema: ClimateEventSchema },
-      { name: ShipmentEventDocument.name, schema: ShipmentEventSchema },
-    ]),
+    MongoTelemetryModule,
   ],
-  exports: [MongooseModule],
+  exports: [MongooseModule, MongoTelemetryModule],
 })
 export class MongoModule {}
