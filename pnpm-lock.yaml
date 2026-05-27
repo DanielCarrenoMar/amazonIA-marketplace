@@ -65,6 +65,9 @@ importers:
       class-validator:
         specifier: ^0.15.1
         version: 0.15.1
+      database:
+        specifier: workspace:*
+        version: link:../../packages/database
       event-types:
         specifier: workspace:*
         version: link:../../packages/event-types

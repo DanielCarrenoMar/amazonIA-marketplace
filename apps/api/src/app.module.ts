@@ -10,6 +10,7 @@ import { ProductModule } from './product/product.module';
 import { ProductOrderModule } from './product-order/product-order.module';
 import { ProductRatingModule } from './product-rating/product-rating.module';
 import { AuthModule } from './auth/auth.module';
+import { MongoModule } from './mongo/mongo.module';
 
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
@@ -24,6 +25,7 @@ import { APP_GUARD } from '@nestjs/core';
       limit: 10, // Global limit: 10 requests per minute per IP
     }]),
     ScheduleModule.forRoot(),
+    MongoModule,
     PrismaModule,
     AuthModule,
     UserAccountModule,

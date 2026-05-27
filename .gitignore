@@ -1,5 +1,6 @@
 .turbo
-node_modules
+**/dist/
+**/node_modules/
 
 # Postman collections
 *.postman_collection.json
