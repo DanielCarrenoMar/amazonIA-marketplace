@@ -72,20 +72,24 @@ export function Navbar() {
 
               {/* Desktop Auth Buttons */}
               <div className="flex items-center gap-2 ml-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-white/90! hover:text-white! hover:bg-white/10!"
-                >
-                  Iniciar Sesión
-                </Button>
+                <Link href="/login">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-white/90! hover:text-white! hover:bg-white/10!"
+                  >
+                    Iniciar Sesión
+                  </Button>
+                </Link>
 
-                <Button
-                  variant="primary"
-                  size="sm"
-                >
-                  Registrarse
-                </Button>
+                <Link href="/register">
+                  <Button
+                    variant="primary"
+                    size="sm"
+                  >
+                    Registrarse
+                  </Button>
+                </Link>
               </div>
             </div>
 
@@ -147,12 +151,16 @@ export function Navbar() {
             ))}
 
             <div className="mt-4 space-y-3 pt-4 border-t border-white/20">
-              <Button variant="outline" className="w-full border-white/30! text-white/90! hover:bg-white/10! hover:border-transparent!">
-                Iniciar Sesión
-              </Button>
-              <Button variant="primary" className="w-full">
-                Registrarse
-              </Button>
+              <Link href="/login" onClick={() => setIsMenuOpen(false)} className="block">
+                <Button variant="outline" className="w-full border-white/30! text-white/90! hover:bg-white/10! hover:border-transparent!">
+                  Iniciar Sesión
+                </Button>
+              </Link>
+              <Link href="/register" onClick={() => setIsMenuOpen(false)} className="block">
+                <Button variant="primary" className="w-full">
+                  Registrarse
+                </Button>
+              </Link>
             </div>
           </div>
         )}
