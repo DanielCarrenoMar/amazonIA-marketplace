@@ -11,6 +11,7 @@ import { ProductOrderModule } from './product-order/product-order.module';
 import { ProductRatingModule } from './product-rating/product-rating.module';
 import { AuthModule } from './auth/auth.module';
 import { MongoModule } from './mongo/mongo.module';
+import { ShipmentsModule } from './shipments/shipments.module';
 
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
@@ -20,10 +21,12 @@ import { APP_GUARD } from '@nestjs/core';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    ThrottlerModule.forRoot([{
-      ttl: 60000,
-      limit: 10, // Global limit: 10 requests per minute per IP
-    }]),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 10, // Global limit: 10 requests per minute per IP
+      },
+    ]),
     ScheduleModule.forRoot(),
     MongoModule,
     PrismaModule,
@@ -35,6 +38,7 @@ import { APP_GUARD } from '@nestjs/core';
     ProductModule,
     ProductOrderModule,
     ProductRatingModule,
+    ShipmentsModule,
   ],
   controllers: [AppController],
   providers: [
