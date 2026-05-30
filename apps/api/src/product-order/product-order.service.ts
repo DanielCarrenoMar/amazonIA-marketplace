@@ -3,7 +3,9 @@ import { Prisma } from '@prisma/client';
 import { CreateProductOrderDto, FindOrdersDto, PaginationDto } from 'event-types';
 import { UpdateProductOrderDto } from 'event-types';
 import { OrderStatus, UserRole } from 'event-types';
+import { KAFKA_TOPICS } from 'kafka-client';
 import { PrismaService } from '../prisma/prisma.service';
+import { OutboxService } from '../outbox/outbox.service';
 
 const allowedOrderStatusTransitions: Record<OrderStatus, readonly OrderStatus[]> = {
   [OrderStatus.PENDING]: [OrderStatus.PAID, OrderStatus.CANCELED],
@@ -16,7 +18,10 @@ const allowedOrderStatusTransitions: Record<OrderStatus, readonly OrderStatus[]>
 
 @Injectable()
 export class ProductOrderService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly outbox: OutboxService,
+  ) {}
 
   // buyerId comes from the JWT token (req.user.id), NOT from the client body
   async create(buyerId: string, createProductOrderDto: CreateProductOrderDto) {
@@ -298,6 +303,26 @@ export class ProductOrderService {
             data: { stockAvailable: { increment: currentOrder.quantity } },
           });
         }
+
+        // 1.6 Append an outbox event atomically — same transaction guarantees ACID consistency
+        await this.outbox.append(
+          tx,
+          'ProductOrder',
+          id,
+          `order.${nextStatus.toLowerCase()}`,
+          {
+            orderId: id,
+            productId: currentOrder.productId,
+            buyerId: currentOrder.buyerId,
+            sellerId: currentOrder.product?.sellerId ?? null,
+            quantity: currentOrder.quantity,
+            totalAmount: currentOrder.totalAmount.toString(),
+            previousStatus: currentOrder.currentStatus,
+            newStatus: nextStatus,
+            changedByUserId: reqUser.id,
+            topic: KAFKA_TOPICS.SHIPMENT_EVENTS,
+          },
+        );
       }
 
       // 2. Seller Rating: If the buyer left a rating for the seller, recalculate the seller's global rating
