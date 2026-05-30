@@ -237,6 +237,23 @@ model OrderStatusHistory {
 }
 
 // ---------------------------------------------------------------------------
+// OutboxEvent  (transactional outbox — reliable Kafka publishing)
+// ---------------------------------------------------------------------------
+
+model OutboxEvent {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  aggregateType String    @map("aggregate_type") @db.VarChar(100)
+  aggregateId   String    @map("aggregate_id") @db.Uuid
+  eventType     String    @map("event_type") @db.VarChar(100)
+  payload       Json
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  publishedAt   DateTime? @map("published_at") @db.Timestamptz
+
+  @@index([publishedAt])
+  @@map("outbox_events")
+}
+
+// ---------------------------------------------------------------------------
 // RefreshToken
 // ---------------------------------------------------------------------------
 

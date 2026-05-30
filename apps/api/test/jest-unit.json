@@ -7,6 +7,7 @@
     "^.+\\.(t|j)s$": "ts-jest"
   },
   "moduleNameMapper": {
-    "^event-types$": "<rootDir>/../../packages/event-types/src/index.ts"
+    "^event-types$": "<rootDir>/../../packages/event-types/src/index.ts",
+    "^kafka-client$": "<rootDir>/../../packages/kafka-client/src/topics.ts"
   }
 }
