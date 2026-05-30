@@ -68,7 +68,7 @@ describe('ProductOrderService', () => {
 
       (prisma.productOrder as unknown as { findUnique: jest.Mock }).findUnique
         .mockResolvedValue(order);
-      (prisma.$transaction as jest.Mock).mockImplementation((cb: (tx: typeof tx) => unknown) => cb(tx));
+      (prisma.$transaction as jest.Mock).mockImplementation((cb: (tx: any) => unknown) => cb(tx));
 
       await service.update(
         'order-uuid',
@@ -108,7 +108,7 @@ describe('ProductOrderService', () => {
 
       (prisma.productOrder as unknown as { findUnique: jest.Mock }).findUnique
         .mockResolvedValue(order);
-      (prisma.$transaction as jest.Mock).mockImplementation((cb: (tx: typeof tx) => unknown) => cb(tx));
+      (prisma.$transaction as jest.Mock).mockImplementation((cb: (tx: any) => unknown) => cb(tx));
 
       outbox.append.mockImplementation((...args: unknown[]) => {
         capturedFirstArg = args[0];
@@ -140,7 +140,7 @@ describe('ProductOrderService', () => {
 
       (prisma.productOrder as unknown as { findUnique: jest.Mock }).findUnique
         .mockResolvedValue(order);
-      (prisma.$transaction as jest.Mock).mockImplementation((cb: (tx: typeof tx) => unknown) => cb(tx));
+      (prisma.$transaction as jest.Mock).mockImplementation((cb: (tx: any) => unknown) => cb(tx));
 
       await service.update(
         'order-uuid',
@@ -166,7 +166,7 @@ describe('ProductOrderService', () => {
 
       (prisma.productOrder as unknown as { findUnique: jest.Mock }).findUnique
         .mockResolvedValue(order);
-      (prisma.$transaction as jest.Mock).mockImplementation((cb: (tx: typeof tx) => unknown) => cb(tx));
+      (prisma.$transaction as jest.Mock).mockImplementation((cb: (tx: any) => unknown) => cb(tx));
 
       await service.update(
         'order-uuid',
