@@ -24,6 +24,7 @@ export type ShipmentEventDocumentType =
 @Schema({
   collection: 'shipment_events',
   timestamps: false,
+  autoIndex: false, // Do not automatically build indexes in production
 })
 export class ShipmentEventDocument {
   @Prop({ required: true })

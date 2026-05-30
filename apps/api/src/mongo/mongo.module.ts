@@ -5,17 +5,15 @@ import { MongoTelemetryModule } from 'database';
 
 @Module({
   imports: [
-    // Connect to MongoDB Atlas using the URI from environment
     MongooseModule.forRootAsync({
       useFactory: (config: ConfigService) => ({
         uri: config.getOrThrow<string>('MONGODB_URI'),
+        serverSelectionTimeoutMS: 5000,
       }),
       inject: [ConfigService],
     }),
-
-    // Register Mongoose schemas for both time-series collections
     MongoTelemetryModule,
   ],
-  exports: [MongooseModule, MongoTelemetryModule],
+  exports: [MongooseModule],
 })
 export class MongoModule {}
