@@ -33,7 +33,9 @@ describe('ProductOrderService', () => {
     $transaction: jest.fn(async (callback: any) => callback(txMock)),
   } as any;
 
-  const service = new ProductOrderService(prismaMock);
+  const outboxMock = { append: jest.fn() } as any;
+
+  const service = new ProductOrderService(prismaMock, outboxMock);
   const allStatuses = [
     OrderStatus.PENDING,
     OrderStatus.PAID,
@@ -139,8 +141,11 @@ describe('ProductOrderService', () => {
       const order = {
         id: 'order-1',
         buyerId: 'owner-user',
+        productId: 'product-1',
+        quantity: 1,
+        totalAmount: { toString: () => '100.00' },
         currentStatus,
-        product: {},
+        product: { sellerId: 'seller-1' },
       };
       prismaMock.productOrder.findUnique.mockResolvedValue(order);
       txMock.productOrder.findUnique.mockResolvedValue(order);
