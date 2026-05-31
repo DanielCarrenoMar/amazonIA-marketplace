@@ -3,7 +3,7 @@ import { Prisma } from '@prisma/client';
 import { CreateProductOrderDto, FindOrdersDto, PaginationDto } from 'event-types';
 import { UpdateProductOrderDto } from 'event-types';
 import { OrderStatus, UserRole } from 'event-types';
-import { KAFKA_TOPICS } from 'kafka-client';
+import { STREAM_TOPICS } from 'messaging';
 import { PrismaService } from '../prisma/prisma.service';
 import { OutboxService } from '../outbox/outbox.service';
 
@@ -320,7 +320,7 @@ export class ProductOrderService {
             previousStatus: currentOrder.currentStatus,
             newStatus: nextStatus,
             changedByUserId: reqUser.id,
-            topic: KAFKA_TOPICS.SHIPMENT_EVENTS,
+            topic: STREAM_TOPICS.SHIPMENT_EVENTS,
           },
         );
       }

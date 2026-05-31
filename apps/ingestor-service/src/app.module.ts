@@ -4,6 +4,7 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { HealthModule } from './health/health.module';
 import { IngestModule } from './ingest/ingest.module';
+import { MessagingModule } from 'messaging';
 
 @Module({
   imports: [
@@ -11,11 +12,12 @@ import { IngestModule } from './ingest/ingest.module';
     ThrottlerModule.forRoot([
       {
         ttl: 60000,
-        limit: 200, // Higher limit than API — IoT devices send frequent bursts
+        limit: 200,
       },
     ]),
     HealthModule,
     IngestModule,
+    MessagingModule.forRoot(),
   ],
   providers: [
     {

@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
-import { KafkaProducerService, KAFKA_TOPICS } from 'kafka-client';
+import { IMessageProducer, MESSAGE_PRODUCER, STREAM_TOPICS } from 'messaging';
+import { Inject } from '@nestjs/common';
 import {
   CreateClimateEventDto,
   CreateShipmentEventDto,
@@ -10,7 +11,7 @@ import {
 
 /**
  * Service responsible for enriching IoT event payloads and publishing
- * them to the appropriate Kafka topic.
+ * them to the appropriate Redis Stream.
  *
  * Enrichment steps:
  *  1. Generate event_id if not provided by the device
@@ -22,11 +23,9 @@ import {
 @Injectable()
 export class IngestService {
   private readonly logger = new Logger(IngestService.name);
-  private readonly producer: KafkaProducerService;
-
-  constructor() {
-    this.producer = new KafkaProducerService();
-  }
+  constructor(
+    @Inject(MESSAGE_PRODUCER) private readonly producer: IMessageProducer,
+  ) {}
 
   // -------------------------------------------------------------------------
   // Climate Events
@@ -38,9 +37,9 @@ export class IngestService {
     const event = this.enrichClimateEvent(dto);
 
     await this.producer.produce(
-      KAFKA_TOPICS.CLIMATE_EVENTS,
+      STREAM_TOPICS.CLIMATE_EVENTS,
       event as unknown as Record<string, unknown>,
-      event.metadata.sensor_id, // Kafka key → partition affinity by sensor
+      event.metadata.sensor_id, // Stream key for routing by sensor
     );
 
     this.logger.debug(
@@ -56,7 +55,7 @@ export class IngestService {
     const events = dtos.map((dto) => this.enrichClimateEvent(dto));
 
     await this.producer.produceBatch(
-      KAFKA_TOPICS.CLIMATE_EVENTS,
+      STREAM_TOPICS.CLIMATE_EVENTS,
       events as unknown as Record<string, unknown>[],
       (evt: any) => (evt as unknown as IClimateEvent).metadata.sensor_id,
     );
@@ -74,9 +73,9 @@ export class IngestService {
     const event = this.enrichShipmentEvent(dto);
 
     await this.producer.produce(
-      KAFKA_TOPICS.SHIPMENT_EVENTS,
+      STREAM_TOPICS.SHIPMENT_EVENTS,
       event as unknown as Record<string, unknown>,
-      event.metadata.tracking_number, // Kafka key → partition affinity by shipment
+      event.metadata.tracking_number, // Stream key for routing by shipment
     );
 
     this.logger.debug(
@@ -92,7 +91,7 @@ export class IngestService {
     const events = dtos.map((dto) => this.enrichShipmentEvent(dto));
 
     await this.producer.produceBatch(
-      KAFKA_TOPICS.SHIPMENT_EVENTS,
+      STREAM_TOPICS.SHIPMENT_EVENTS,
       events as unknown as Record<string, unknown>[],
       (evt: any) => (evt as unknown as IShipmentEvent).metadata.tracking_number,
     );

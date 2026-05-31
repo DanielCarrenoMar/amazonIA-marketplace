@@ -11,7 +11,8 @@ const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const schedule_1 = require("@nestjs/schedule");
 const health_module_1 = require("./health/health.module");
-const mongo_module_1 = require("./mongo/mongo.module");
+const database_1 = require("database");
+const messaging_1 = require("messaging");
 const worker_module_1 = require("./worker/worker.module");
 let AppModule = class AppModule {
 };
@@ -21,7 +22,8 @@ exports.AppModule = AppModule = __decorate([
         imports: [
             config_1.ConfigModule.forRoot({ isGlobal: true }),
             schedule_1.ScheduleModule.forRoot(),
-            mongo_module_1.MongoModule,
+            database_1.MongoModule,
+            messaging_1.MessagingModule.forRoot(),
             health_module_1.HealthModule,
             worker_module_1.WorkerModule,
         ],

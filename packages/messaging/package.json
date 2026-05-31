@@ -1,7 +1,7 @@
 {
-  "name": "kafka-client",
+  "name": "messaging",
   "version": "1.0.0",
-  "description": "Shared Upstash Kafka client wrapper for IoT event ingestion",
+  "description": "Shared messaging interfaces and implementations (Redis Streams)",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -19,7 +19,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@upstash/kafka": "^1.3.5",
+    "@nestjs/common": "^11.0.1",
+    "@upstash/redis": "^1.38.0",
     "event-types": "workspace:*"
   },
   "devDependencies": {

@@ -3,7 +3,8 @@ import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Interval } from '@nestjs/schedule';
-import { KafkaConsumerService, KAFKA_TOPICS } from 'kafka-client';
+import { IMessageConsumer, MESSAGE_CONSUMER, STREAM_TOPICS } from 'messaging';
+import { Inject } from '@nestjs/common';
 import { IClimateEvent, IShipmentEvent } from 'event-types';
 import { ClimateEventDocument, ShipmentEventDocument } from 'database';
 
@@ -11,7 +12,7 @@ const CONSUMER_GROUP = 'telemetry-worker-group';
 const INSTANCE_ID = `worker-${process.pid}`;
 
 /**
- * Background worker that polls Kafka topics at a configurable interval
+ * Background worker that polls Redis Streams at a configurable interval
  * and bulk-inserts consumed events into MongoDB Time Series Collections.
  *
  * Metrics logged per cycle:
@@ -21,7 +22,6 @@ const INSTANCE_ID = `worker-${process.pid}`;
 @Injectable()
 export class WorkerService implements OnModuleInit {
   private readonly logger = new Logger(WorkerService.name);
-  private consumer: KafkaConsumerService | null = null;
   private pollIntervalMs: number;
 
   constructor(
@@ -30,6 +30,7 @@ export class WorkerService implements OnModuleInit {
     private readonly climateModel: Model<ClimateEventDocument>,
     @InjectModel(ShipmentEventDocument.name)
     private readonly shipmentModel: Model<ShipmentEventDocument>,
+    @Inject(MESSAGE_CONSUMER) private readonly consumer: IMessageConsumer,
   ) {
     this.pollIntervalMs = Number(
       this.config.get<string>('POLL_INTERVAL_MS', '5000'),
@@ -37,16 +38,9 @@ export class WorkerService implements OnModuleInit {
   }
 
   onModuleInit() {
-    try {
-      this.consumer = new KafkaConsumerService();
-      this.logger.log(
-        `Worker initialized. Polling every ${this.pollIntervalMs}ms`,
-      );
-    } catch (error) {
-      this.logger.warn(
-        'Kafka consumer not initialized — missing credentials. Worker will retry each cycle.',
-      );
-    }
+    this.logger.log(
+      `Worker initialized. Polling every ${this.pollIntervalMs}ms`,
+    );
   }
 
   // -------------------------------------------------------------------------
@@ -54,14 +48,8 @@ export class WorkerService implements OnModuleInit {
   // -------------------------------------------------------------------------
 
   @Interval(5000) // Default 5s; overridden dynamically if needed
-  async pollKafka(): Promise<void> {
-    if (!this.consumer) {
-      try {
-        this.consumer = new KafkaConsumerService();
-      } catch {
-        return; // Still no credentials, skip this cycle
-      }
-    }
+  async pollStreams(): Promise<void> {
+    // Consumer comes from DI now, no need to manually instantiate
 
     await Promise.all([
       this.consumeClimateEvents(),
@@ -70,7 +58,7 @@ export class WorkerService implements OnModuleInit {
   }
 
   // -------------------------------------------------------------------------
-  // Climate events: Kafka → MongoDB
+  // Climate events: Redis Stream → MongoDB
   // -------------------------------------------------------------------------
 
   private async consumeClimateEvents(): Promise<void> {
@@ -78,7 +66,7 @@ export class WorkerService implements OnModuleInit {
       const messages = await this.consumer!.consume<IClimateEvent>(
         CONSUMER_GROUP,
         INSTANCE_ID,
-        KAFKA_TOPICS.CLIMATE_EVENTS,
+        STREAM_TOPICS.CLIMATE_EVENTS,
       );
 
       if (messages.length === 0) return;
@@ -109,7 +97,7 @@ export class WorkerService implements OnModuleInit {
   }
 
   // -------------------------------------------------------------------------
-  // Shipment events: Kafka → MongoDB
+  // Shipment events: Redis Stream → MongoDB
   // -------------------------------------------------------------------------
 
   private async consumeShipmentEvents(): Promise<void> {
@@ -117,7 +105,7 @@ export class WorkerService implements OnModuleInit {
       const messages = await this.consumer!.consume<IShipmentEvent>(
         CONSUMER_GROUP,
         INSTANCE_ID,
-        KAFKA_TOPICS.SHIPMENT_EVENTS,
+        STREAM_TOPICS.SHIPMENT_EVENTS,
       );
 
       if (messages.length === 0) return;

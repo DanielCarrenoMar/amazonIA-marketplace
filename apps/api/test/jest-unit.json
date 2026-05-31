@@ -8,6 +8,6 @@
   },
   "moduleNameMapper": {
     "^event-types$": "<rootDir>/../../packages/event-types/src/index.ts",
-    "^kafka-client$": "<rootDir>/../../packages/kafka-client/src/topics.ts"
+    "^messaging$": "<rootDir>/../../packages/messaging/src/index.ts"
   }
 }

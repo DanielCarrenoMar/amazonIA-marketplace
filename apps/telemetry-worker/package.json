@@ -21,7 +21,7 @@
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/schedule": "^6.1.3",
     "event-types": "workspace:*",
-    "kafka-client": "workspace:*",
+    "messaging": "workspace:*",
     "database": "workspace:*",
     "mongoose": "^8.14.1",
     "reflect-metadata": "^0.2.2",

@@ -19,7 +19,8 @@ const config_1 = require("@nestjs/config");
 const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
 const schedule_1 = require("@nestjs/schedule");
-const kafka_client_1 = require("kafka-client");
+const messaging_1 = require("messaging");
+const common_2 = require("@nestjs/common");
 const database_1 = require("database");
 const CONSUMER_GROUP = 'telemetry-worker-group';
 const INSTANCE_ID = `worker-${process.pid}`;
@@ -27,33 +28,20 @@ let WorkerService = WorkerService_1 = class WorkerService {
     config;
     climateModel;
     shipmentModel;
+    consumer;
     logger = new common_1.Logger(WorkerService_1.name);
-    consumer = null;
     pollIntervalMs;
-    constructor(config, climateModel, shipmentModel) {
+    constructor(config, climateModel, shipmentModel, consumer) {
         this.config = config;
         this.climateModel = climateModel;
         this.shipmentModel = shipmentModel;
+        this.consumer = consumer;
         this.pollIntervalMs = Number(this.config.get('POLL_INTERVAL_MS', '5000'));
     }
     onModuleInit() {
-        try {
-            this.consumer = new kafka_client_1.KafkaConsumerService();
-            this.logger.log(`Worker initialized. Polling every ${this.pollIntervalMs}ms`);
-        }
-        catch (error) {
-            this.logger.warn('Kafka consumer not initialized — missing credentials. Worker will retry each cycle.');
-        }
+        this.logger.log(`Worker initialized. Polling every ${this.pollIntervalMs}ms`);
     }
-    async pollKafka() {
-        if (!this.consumer) {
-            try {
-                this.consumer = new kafka_client_1.KafkaConsumerService();
-            }
-            catch {
-                return;
-            }
-        }
+    async pollStreams() {
         await Promise.all([
             this.consumeClimateEvents(),
             this.consumeShipmentEvents(),
@@ -61,7 +49,7 @@ let WorkerService = WorkerService_1 = class WorkerService {
     }
     async consumeClimateEvents() {
         try {
-            const messages = await this.consumer.consume(CONSUMER_GROUP, INSTANCE_ID, kafka_client_1.KAFKA_TOPICS.CLIMATE_EVENTS);
+            const messages = await this.consumer.consume(CONSUMER_GROUP, INSTANCE_ID, messaging_1.STREAM_TOPICS.CLIMATE_EVENTS);
             if (messages.length === 0)
                 return;
             const documents = messages.map((msg) => ({
@@ -83,7 +71,7 @@ let WorkerService = WorkerService_1 = class WorkerService {
     }
     async consumeShipmentEvents() {
         try {
-            const messages = await this.consumer.consume(CONSUMER_GROUP, INSTANCE_ID, kafka_client_1.KAFKA_TOPICS.SHIPMENT_EVENTS);
+            const messages = await this.consumer.consume(CONSUMER_GROUP, INSTANCE_ID, messaging_1.STREAM_TOPICS.SHIPMENT_EVENTS);
             if (messages.length === 0)
                 return;
             const documents = messages.map((msg) => ({
@@ -117,13 +105,14 @@ __decorate([
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
-], WorkerService.prototype, "pollKafka", null);
+], WorkerService.prototype, "pollStreams", null);
 exports.WorkerService = WorkerService = WorkerService_1 = __decorate([
     (0, common_1.Injectable)(),
     __param(1, (0, mongoose_1.InjectModel)(database_1.ClimateEventDocument.name)),
     __param(2, (0, mongoose_1.InjectModel)(database_1.ShipmentEventDocument.name)),
+    __param(3, (0, common_2.Inject)(messaging_1.MESSAGE_CONSUMER)),
     __metadata("design:paramtypes", [config_1.ConfigService,
         mongoose_2.Model,
-        mongoose_2.Model])
+        mongoose_2.Model, Object])
 ], WorkerService);
 //# sourceMappingURL=worker.service.js.map

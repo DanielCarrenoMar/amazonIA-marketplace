@@ -74,12 +74,12 @@ importers:
       helmet:
         specifier: ^8.1.0
         version: 8.1.0
+      messaging:
+        specifier: workspace:*
+        version: link:../../packages/messaging
       mongoose:
         specifier: ^8.24.0
         version: 8.24.0
-      kafka-client:
-        specifier: workspace:*
-        version: link:../../packages/kafka-client
       passport:
         specifier: ^0.7.0
         version: 0.7.0
@@ -373,9 +373,9 @@ importers:
       helmet:
         specifier: ^8.1.0
         version: 8.1.0
-      kafka-client:
+      messaging:
         specifier: workspace:*
-        version: link:../../packages/kafka-client
+        version: link:../../packages/messaging
       reflect-metadata:
         specifier: ^0.2.2
         version: 0.2.2
@@ -468,9 +468,9 @@ importers:
       event-types:
         specifier: workspace:*
         version: link:../../packages/event-types
-      kafka-client:
+      messaging:
         specifier: workspace:*
-        version: link:../../packages/kafka-client
+        version: link:../../packages/messaging
       mongoose:
         specifier: ^8.14.1
         version: 8.24.0
@@ -560,6 +560,9 @@ importers:
       '@nestjs/common':
         specifier: ^11.0.1
         version: 11.1.19(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/config':
+        specifier: ^4.0.4
+        version: 4.0.4(@nestjs/common@11.1.19(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(rxjs@7.8.2)
       '@nestjs/mongoose':
         specifier: ^11.0.0
         version: 11.0.4(@nestjs/common@11.1.19(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.19)(mongoose@8.24.0)(rxjs@7.8.2)
@@ -590,11 +593,14 @@ importers:
         specifier: ^6.0.3
         version: 6.0.3
 
-  packages/kafka-client:
+  packages/messaging:
     dependencies:
-      '@upstash/kafka':
-        specifier: ^1.3.5
-        version: 1.3.5
+      '@nestjs/common':
+        specifier: ^11.0.1
+        version: 11.1.19(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@upstash/redis':
+        specifier: ^1.38.0
+        version: 1.38.0
       event-types:
         specifier: workspace:*
         version: link:../event-types
@@ -3340,10 +3346,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@upstash/kafka@1.3.5':
-    resolution: {integrity: sha512-BQYwjE2gD0tbSLo7aBXLaQn+yNObHVTr9igGG4WsFM/rlFLHsHTWvuu9tkEqSdSmjicvJZg5Hf9hMzXblYUZxA==}
-    engines: {node: '>=18'}
-    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+  '@upstash/redis@1.38.0':
+    resolution: {integrity: sha512-wu+dZBptlLy0+MCUEoHmzrY/TnmgDey3+c7EbIGwrLqAvkP8yi5MWZHYGIFtAygmL4Bkz2TdFu+eU0vFPncIcg==}
 
   '@vitejs/plugin-react-swc@3.11.0':
     resolution: {integrity: sha512-YTJCGFdNMHCMfjODYtxRNVAYmTWQ1Lb8PulP/2/f/oEEtglw8oKxKIZmmRkyXrVrHfsKOaVkAc3NT9/dMutO5w==}
@@ -6488,6 +6492,9 @@ packages:
     resolution: {integrity: sha512-nWJ91DjeOkej/TA8pXQ3myruKpKEYgqvpw9lz4OPHj/NWFNluYrjbz9j01CJ8yKQd2g4jFoOkINCTW2I5LEEyw==}
     engines: {node: '>= 0.4'}
 
+  uncrypto@0.1.3:
+    resolution: {integrity: sha512-Ql87qFHB3s/De2ClA9e0gsnS6zXG27SkTiSJwjCc9MebbfapQfuPzumMIUMi38ezPZVNFcHI9sUIepeQfw8J8Q==}
+
   undici-types@6.21.0:
     resolution: {integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==}
 
@@ -9431,7 +9438,9 @@ snapshots:
   '@unrs/resolver-binding-win32-x64-msvc@1.11.1':
     optional: true
 
-  '@upstash/kafka@1.3.5': {}
+  '@upstash/redis@1.38.0':
+    dependencies:
+      uncrypto: 0.1.3
 
   '@vitejs/plugin-react-swc@3.11.0(vite@6.3.5(@types/node@20.19.39)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.46.1)(tsx@4.21.0))':
     dependencies:
@@ -13109,6 +13118,8 @@ snapshots:
       has-bigints: 1.1.0
       has-symbols: 1.1.0
       which-boxed-primitive: 1.1.1
+
+  uncrypto@0.1.3: {}
 
   undici-types@6.21.0: {}
 

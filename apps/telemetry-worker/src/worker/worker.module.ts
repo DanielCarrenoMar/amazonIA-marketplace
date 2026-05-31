@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { MongoModule } from '../mongo/mongo.module';
+import { MongoModule } from 'database';
 import { WorkerService } from './worker.service';
 
 @Module({

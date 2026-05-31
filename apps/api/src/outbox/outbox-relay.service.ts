@@ -1,9 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Interval } from '@nestjs/schedule';
 import { OutboxEvent } from '@prisma/client';
-import { KAFKA_TOPICS, KafkaTopic } from 'kafka-client';
-import { KafkaProducerService } from '../kafka/kafka-producer.service';
+import { STREAM_TOPICS, MESSAGE_PRODUCER } from 'messaging';
+import type { StreamTopic, IMessageProducer } from 'messaging';
+
 import { PrismaService } from '../prisma/prisma.service';
+import { Inject } from '@nestjs/common';
 
 const BATCH_SIZE = 50;
 const INTERVAL_MS = 5_000;
@@ -17,7 +19,7 @@ export class OutboxRelayService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly kafka: KafkaProducerService,
+    @Inject(MESSAGE_PRODUCER) private readonly producer: IMessageProducer,
   ) {}
 
   @Interval(INTERVAL_MS)
@@ -62,7 +64,7 @@ export class OutboxRelayService {
       this.nextRetryAt = Date.now() + backoffMs;
       this.logger.warn(
         { consecutiveFailures: this.consecutiveFailures, backoffMs },
-        `Kafka publish failures detected — backing off for ${backoffMs}ms`,
+        `Redis Streams publish failures detected — backing off for ${backoffMs}ms`,
       );
     } else {
       this.consecutiveFailures = 0;
@@ -74,7 +76,7 @@ export class OutboxRelayService {
     const payload = event.payload as Record<string, unknown>;
     const topic = this.resolveTopic(payload.topic);
 
-    await this.kafka.produce(topic, payload, event.aggregateId);
+    await this.producer.produce(topic, payload, event.aggregateId);
 
     await this.prisma.outboxEvent.update({
       where: { id: event.id },
@@ -88,12 +90,12 @@ export class OutboxRelayService {
   }
 
   // Falls back to SHIPMENT_EVENTS if the stored topic is missing or unrecognized
-  private resolveTopic(raw: unknown): KafkaTopic {
-    const valid = Object.values(KAFKA_TOPICS) as string[];
+  private resolveTopic(raw: unknown): StreamTopic {
+    const valid = Object.values(STREAM_TOPICS) as string[];
     if (typeof raw === 'string' && valid.includes(raw)) {
-      return raw as KafkaTopic;
+      return raw as StreamTopic;
     }
     this.logger.warn({ raw }, 'Unrecognized topic in outbox payload — falling back to SHIPMENT_EVENTS');
-    return KAFKA_TOPICS.SHIPMENT_EVENTS;
+    return STREAM_TOPICS.SHIPMENT_EVENTS;
   }
 }

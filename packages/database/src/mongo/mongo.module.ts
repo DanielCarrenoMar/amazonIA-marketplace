@@ -1,10 +1,12 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { ConfigService } from '@nestjs/config';
-import { MongoTelemetryModule } from 'database';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { MongoTelemetryModule } from './mongo-telemetry.module';
 
 @Module({
   imports: [
+    // We import ConfigModule so ConfigService is available
+    ConfigModule,
     MongooseModule.forRootAsync({
       useFactory: (config: ConfigService) => ({
         uri: config.getOrThrow<string>('MONGODB_URI'),
@@ -14,6 +16,6 @@ import { MongoTelemetryModule } from 'database';
     }),
     MongoTelemetryModule,
   ],
-  exports: [MongooseModule],
+  exports: [MongooseModule, MongoTelemetryModule],
 })
 export class MongoModule {}
