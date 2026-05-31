@@ -197,6 +197,7 @@ model ProductOrder {
   quantity          Int
   totalAmount       Decimal     @map("total_amount") @db.Decimal(12, 2)
   orderNotes        String?     @map("order_notes")
+  trackingNumber    String?     @map("tracking_number") @db.VarChar(100)
   sellerRatingValue Int?        @map("seller_rating_value")
   buyerRatingValue  Int?        @map("buyer_rating_value")
   transactionHash   String?     @map("transaction_hash") @db.VarChar(255)

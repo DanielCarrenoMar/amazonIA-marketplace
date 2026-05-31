@@ -18,10 +18,15 @@ import { PrismaClient } from '@prisma/client';
 import { UserRole } from 'event-types';
 import { PrismaPg } from '@prisma/adapter-pg';
 import * as bcrypt from 'bcrypt';
+import mongoose from 'mongoose';
+import { ShipmentEventSchema } from 'database';
+import crypto from 'crypto';
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter }) as any;
 const SALT_ROUNDS = 12;
+
+const ShipmentEventModel = mongoose.models.ShipmentEventDocument || mongoose.model('ShipmentEventDocument', ShipmentEventSchema);
 
 async function main() {
   console.log('🌱 Starting seed...\n');
@@ -299,9 +304,20 @@ async function main() {
   }
 
   // ──────────────────────────────────────────────
-  // 7. PRODUCT ORDERS + STATUS HISTORY
+  // 7. PRODUCT ORDERS + STATUS HISTORY + MONGO SHIPMENTS
   // ──────────────────────────────────────────────
-  console.log('  → ProductOrders...');
+  console.log('  → ProductOrders and Mongo Shipments...');
+
+  if (!process.env.MONGODB_URI) {
+    console.warn('⚠️  MONGODB_URI no está definido. Los eventos de envío de Mongo no se insertarán.');
+  } else {
+    console.log('🔌 Conectando a MongoDB para shipments...');
+    await mongoose.connect(process.env.MONGODB_URI);
+    await ShipmentEventModel.deleteMany({});
+  }
+
+  const trackingNumber1 = `TRK-${crypto.randomUUID().substring(0,8).toUpperCase()}`;
+  const trackingNumber2 = `TRK-${crypto.randomUUID().substring(0,8).toUpperCase()}`;
 
   const order1 = await prisma.productOrder.create({
     data: {
@@ -312,6 +328,7 @@ async function main() {
       currentStatus: 'DELIVERED',
       sellerRatingValue: 5,
       orderNotes: 'Entrega urgente, producto en perfecto estado.',
+      trackingNumber: trackingNumber1,
     },
   });
 
@@ -344,6 +361,7 @@ async function main() {
       totalAmount: 319.98,
       currentStatus: 'PAID',
       orderNotes: 'Talla 42, color blanco.',
+      trackingNumber: trackingNumber2,
     },
   });
 
@@ -353,6 +371,29 @@ async function main() {
       { orderId: order2.id, changedByUserId: sellerUser2.id, previousStatus: 'PENDING', newStatus: 'PAID', statusNote: 'Transferencia recibida' },
     ],
   });
+
+  if (process.env.MONGODB_URI) {
+    const now = new Date();
+    const generateEvents = (trackingNumber: string, containerId: string) => {
+      const events: any[] = [];
+      for (let i = 0; i < 25; i++) {
+        const eventDate = new Date(now.getTime() - (25 - i) * 60 * 60 * 1000); 
+        events.push({
+          event_id: crypto.randomUUID(),
+          event_type: 'shipment_telemetry',
+          recorded_at: eventDate,
+          ingested_at: now,
+          metadata: { tracking_number: trackingNumber, container_id: containerId },
+          location: { type: 'Point', coordinates: [-66.8792 + (i * 0.01), 10.4985 + (i * 0.01)] },
+          business_context: { status: i === 24 ? 'DELIVERED' : i === 0 ? 'CREATED' : 'IN_TRANSIT', scan_type: 'AUTOMATED' },
+          telemetry: { temperature_celsius: Number((20 + (Math.random() * 5)).toFixed(2)), shock_g_force: Number((Math.random() * 2).toFixed(2)) }
+        });
+      }
+      return events;
+    };
+    await ShipmentEventModel.insertMany([...generateEvents(trackingNumber1, 'CONT-1'), ...generateEvents(trackingNumber2, 'CONT-2')]);
+    console.log(`🎉 ¡Eventos de Mongo insertados exitosamente para los trackings: ${trackingNumber1}, ${trackingNumber2}`);
+  }
 
   // ──────────────────────────────────────────────
   // SUMMARY
@@ -373,4 +414,5 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect();
+    if (process.env.MONGODB_URI) await mongoose.disconnect();
   });
