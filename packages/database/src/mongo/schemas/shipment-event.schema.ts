@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory, raw } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
+import { IShipmentMetadata, IBusinessContext, IShipmentTelemetry, IGeoPoint } from 'event-types';
 
 /**
  * Mongoose schema for the `shipment_events` MongoDB Time Series Collection.
@@ -45,7 +46,7 @@ export class ShipmentEventDocument {
       container_id: { type: String, required: true },
     }),
   )
-  metadata: Record<string, string>;
+  metadata: IShipmentMetadata;
 
   @Prop(
     raw({
@@ -53,10 +54,7 @@ export class ShipmentEventDocument {
       coordinates: { type: [Number], required: true },
     }),
   )
-  location: {
-    type: string;
-    coordinates: [number, number];
-  };
+  location: IGeoPoint;
 
   @Prop(
     raw({
@@ -64,7 +62,7 @@ export class ShipmentEventDocument {
       scan_type: { type: String, required: true },
     }),
   )
-  business_context: Record<string, string>;
+  business_context: IBusinessContext;
 
   @Prop(
     raw({
@@ -72,7 +70,7 @@ export class ShipmentEventDocument {
       shock_g_force: { type: Number, required: true },
     }),
   )
-  telemetry: Record<string, number>;
+  telemetry: IShipmentTelemetry;
 }
 
 export const ShipmentEventSchema =

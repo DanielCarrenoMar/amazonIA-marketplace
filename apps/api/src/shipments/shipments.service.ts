@@ -51,10 +51,10 @@ export class ShipmentsService {
       event_type: IoTEventType.SHIPMENT_TELEMETRY,
       recorded_at: doc.recorded_at.toISOString(),
       ingested_at: doc.ingested_at.toISOString(),
-      metadata: doc.metadata as unknown as IShipmentMetadata,
-      location: doc.location as unknown as IGeoPoint,
-      business_context: doc.business_context as unknown as IBusinessContext,
-      telemetry: doc.telemetry as unknown as IShipmentTelemetry,
+      metadata: doc.metadata,
+      location: doc.location,
+      business_context: doc.business_context,
+      telemetry: doc.telemetry,
     }));
 
     return {

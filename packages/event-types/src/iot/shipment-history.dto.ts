@@ -1,6 +1,6 @@
 import { IShipmentEvent } from './shipment-event.dto';
 
-export class ShipmentHistoryDto {
+export interface ShipmentHistoryDto {
   data: IShipmentEvent[];
   meta: {
     total: number;

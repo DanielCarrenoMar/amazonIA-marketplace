@@ -12,7 +12,8 @@
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.4",
     "@nestjs/mongoose": "^11.0.0",
-    "mongoose": "^8.9.5"
+    "mongoose": "^8.9.5",
+    "event-types": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
