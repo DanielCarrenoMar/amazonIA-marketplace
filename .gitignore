@@ -14,3 +14,5 @@ apps/backend/AmazonIA-Marketplace.postman_collection.json
 .env
 .env.*
 *.env
+
+.vscode

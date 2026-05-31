@@ -7,7 +7,6 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "turbo dev --filter=web... --filter=api...",
     "dev:all": "turbo dev --filter=web... --filter=api... --filter=ingestor-service... --filter=telemetry-worker...",
-    "dev-legacy": "turbo dev --filter=frontend-legacy",
     "dev:ingestor": "turbo dev --filter=ingestor-service...",
     "dev:worker": "turbo dev --filter=telemetry-worker...",
     "dev:iot": "turbo dev --filter=ingestor-service... --filter=telemetry-worker...",
