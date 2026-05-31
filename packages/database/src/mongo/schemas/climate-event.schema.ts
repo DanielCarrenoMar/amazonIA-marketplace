@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory, raw } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
+import { IClimateMetadata, IGeoPoint, IClimateTelemetry } from 'event-types';
 
 /**
  * Mongoose schema for the `climate_events` MongoDB Time Series Collection.
@@ -48,7 +49,7 @@ export class ClimateEventDocument {
       sensor_type: { type: String, required: true },
     }),
   )
-  metadata: Record<string, string>;
+  metadata: IClimateMetadata;
 
   @Prop(
     raw({
@@ -56,10 +57,7 @@ export class ClimateEventDocument {
       coordinates: { type: [Number], required: true },
     }),
   )
-  location: {
-    type: string;
-    coordinates: [number, number];
-  };
+  location: IGeoPoint;
 
   @Prop(
     raw({
@@ -67,7 +65,7 @@ export class ClimateEventDocument {
       humidity_percent: { type: Number, required: true },
     }),
   )
-  telemetry: Record<string, number>;
+  telemetry: IClimateTelemetry;
 }
 
 export const ClimateEventSchema =
