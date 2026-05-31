@@ -23,6 +23,8 @@ export class RedisProducerService implements IMessageProducer {
     }
 
     await this.redis.xadd(topic, '*', fields);
+    // Limit stream to approximately the last 1000 entries
+    await this.redis.xtrim(topic, { strategy: 'MAXLEN', threshold: 1000, exactness: '~' });
   }
 
   async produceBatch<T extends Record<string, unknown>>(
@@ -46,5 +48,7 @@ export class RedisProducerService implements IMessageProducer {
     }
 
     await pipeline.exec();
+    // Trim the stream after executing the batch
+    await this.redis.xtrim(topic, { strategy: 'MAXLEN', threshold: 1000, exactness: '~' });
   }
 }
