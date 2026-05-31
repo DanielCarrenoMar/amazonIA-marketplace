@@ -39,6 +39,16 @@ export class OutboxRelayService {
 
     this.logger.log(`Processing ${events.length} pending outbox event(s)`);
 
+    // DESIGN DECISION: Why process events individually instead of in batches?
+    // 1. FAULT ISOLATION: A single bad payload won't fail the entire batch.
+    // 2. MULTIPLE TOPICS: Outbox events can go to different streams, while `produceBatch` only supports one topic at a time.
+    // 3. CONCURRENCY: Promise.allSettled runs these in parallel.
+    //
+    // HOW TO IMPROVE FOR HIGH-VOLUME SCALE:
+    // If the system grows, individual HTTP/DB calls become a bottleneck. We could:
+    // - Group the `events` in memory by topic.
+    // - Call `producer.produceBatch` for each group (reducing HTTP requests via pipeline).
+    // - Perform a single `prisma.outboxEvent.updateMany` for the successfully published IDs.
     const results = await Promise.allSettled(events.map((e) => this.publishOne(e)));
 
     let published = 0;
