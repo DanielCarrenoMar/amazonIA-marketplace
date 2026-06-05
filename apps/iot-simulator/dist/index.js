@@ -39,10 +39,12 @@ async function main() {
     console.log(`║  Network Loss:  ${(opts.networkLoss * 100 + '%').padEnd(33)}║`);
     console.log(`║  Dry Run:       ${String(opts.dryRun).padEnd(33)}║`);
     console.log('╚══════════════════════════════════════════════════╝');
-    // Initialize HTTP sender
+    // Initialize MQTT sender
     (0, sender_1.initSender)({
-        ingestorUrl: process.env.INGESTOR_URL ?? 'http://localhost:3002',
-        apiKey: process.env.INGESTOR_API_KEY ?? 'dev-api-key-change-in-production',
+        host: process.env.HIVEMQ_HOST,
+        port: process.env.HIVEMQ_PORT,
+        username: process.env.HIVEMQ_USERNAME,
+        password: process.env.HIVEMQ_PASSWORD,
         dryRun: opts.dryRun,
     });
     let totalSent = 0;

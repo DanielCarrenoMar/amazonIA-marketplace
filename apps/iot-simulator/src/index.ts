@@ -54,8 +54,10 @@ async function main() {
 
   // Initialize HTTP sender
   initSender({
-    ingestorUrl: process.env.INGESTOR_URL ?? 'http://localhost:3002',
-    apiKey: process.env.INGESTOR_API_KEY ?? 'dev-api-key-change-in-production',
+    host: process.env.HIVEMQ_HOST,
+    port: process.env.HIVEMQ_PORT,
+    username: process.env.HIVEMQ_USERNAME,
+    password: process.env.HIVEMQ_PASSWORD,
     dryRun: opts.dryRun,
   });
 

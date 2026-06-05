@@ -9,10 +9,15 @@ import { KafkaTopic } from './topics';
  * via the REST protocol. Supports single and batch publishing.
  */
 export class KafkaProducerService {
-  private kafka: Kafka;
+  private kafka: Kafka | null;
 
   constructor(kafka?: Kafka) {
     this.kafka = kafka ?? createKafkaClient();
+    if (!this.kafka) {
+      console.warn(
+        '⚠️  [KAFKA-MOCK] Kafka credentials not configured. Operating in local Mock Mode. Telemetry will be logged instead of forwarded.',
+      );
+    }
   }
 
   /**
@@ -24,6 +29,13 @@ export class KafkaProducerService {
     message: T,
     key?: string,
   ): Promise<void> {
+    if (!this.kafka) {
+      console.log(
+        `📡 [KAFKA-MOCK] Produce to topic '${topic}' [Key: ${key}]:`,
+        JSON.stringify(message),
+      );
+      return;
+    }
     const producer = this.kafka.producer();
     await producer.produce(topic, JSON.stringify(message), {
       key,
@@ -39,6 +51,12 @@ export class KafkaProducerService {
     messages: T[],
     keyExtractor?: (msg: T) => string,
   ): Promise<void> {
+    if (!this.kafka) {
+      console.log(
+        `📡 [KAFKA-MOCK] Produce batch of ${messages.length} messages to topic '${topic}'`,
+      );
+      return;
+    }
     const producer = this.kafka.producer();
 
     const batch = messages.map((msg) => ({

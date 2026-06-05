@@ -10,14 +10,12 @@ import { Kafka } from '@upstash/kafka';
  *   KAFKA_REST_URL   — Upstash Kafka REST endpoint
  *   KAFKA_REST_TOKEN — Upstash Kafka REST token (base64-encoded credentials)
  */
-export function createKafkaClient(): Kafka {
+export function createKafkaClient(): Kafka | null {
   const url = process.env.KAFKA_REST_URL;
   const token = process.env.KAFKA_REST_TOKEN;
 
   if (!url || !token) {
-    throw new Error(
-      'Missing Kafka configuration. Set KAFKA_REST_URL and KAFKA_REST_TOKEN environment variables.',
-    );
+    return null;
   }
 
   return new Kafka({

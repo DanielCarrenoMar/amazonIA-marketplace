@@ -20,7 +20,7 @@ export interface ConsumedMessage<T> {
  * Designed for the telemetry-worker's interval-based polling loop.
  */
 export class KafkaConsumerService {
-  private kafka: Kafka;
+  private kafka: Kafka | null;
 
   constructor(kafka?: Kafka) {
     this.kafka = kafka ?? createKafkaClient();
@@ -39,6 +39,9 @@ export class KafkaConsumerService {
     instanceId: string,
     topic: KafkaTopic,
   ): Promise<ConsumedMessage<T>[]> {
+    if (!this.kafka) {
+      return [];
+    }
     const consumer = this.kafka.consumer();
 
     const rawMessages = await consumer.consume({

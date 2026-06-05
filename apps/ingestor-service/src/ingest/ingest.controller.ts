@@ -7,6 +7,7 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { EventPattern, Payload } from '@nestjs/microservices';
 import { ApiKeyGuard } from '../common/guards/api-key.guard';
 import { IngestService } from './ingest.service';
 import { CreateClimateEventDto, CreateShipmentEventDto } from 'event-types';
@@ -24,7 +25,7 @@ import { CreateClimateEventDto, CreateShipmentEventDto } from 'event-types';
 export class IngestController {
   private readonly logger = new Logger(IngestController.name);
 
-  constructor(private readonly ingestService: IngestService) {}
+  constructor(private readonly ingestService: IngestService) { }
 
   // -------------------------------------------------------------------------
   // Single event ingestion
@@ -62,5 +63,34 @@ export class IngestController {
     const events = await this.ingestService.publishShipmentEventBatch(dtos);
     this.logger.log(`Accepted batch of ${events.length} shipment events`);
     return { accepted: true, count: events.length };
+  }
+  @EventPattern('amazonia/iot/climate')
+  async handleMqttClimateEvent(@Payload() dto: CreateClimateEventDto) {
+    this.logger.log(`📥 Recibido evento climático vía MQTT desde sensor ${dto.metadata.sensor_id}`);
+    try {
+      await this.ingestService.publishClimateEvent(dto);
+    } catch (err) {
+      this.logger.error('Error procesando evento climático de MQTT', err);
+    }
+  }
+
+  @EventPattern('amazonia/iot/shipment')
+  async handleMqttShipmentEvent(@Payload() dto: CreateShipmentEventDto) {
+    this.logger.log(`📥 Recibido evento de envío vía MQTT para tracking ${dto.metadata.tracking_number}`);
+    try {
+      await this.ingestService.publishShipmentEvent(dto);
+    } catch (err) {
+      this.logger.error('Error procesando evento de envío de MQTT', err);
+    }
+  }
+
+  @EventPattern('amazonia/iot/batch/shipment')
+  async handleMqttShipmentBatchEvent(@Payload() dtos: CreateShipmentEventDto[]) {
+    this.logger.log(`📥 Recibido lote de ${dtos.length} eventos de envío vía MQTT`);
+    try {
+      await this.ingestService.publishShipmentEventBatch(dtos);
+    } catch (err) {
+      this.logger.error('Error procesando lote de eventos de envío de MQTT', err);
+    }
   }
 }
