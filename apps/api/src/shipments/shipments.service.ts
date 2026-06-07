@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, ServiceUnavailableException, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { TelemetryIntegrationService } from '../telemetry-integration/telemetry-integration.service';
-import { PaginationDto, ShipmentHistoryDto } from 'event-types';
+import { IShipmentEvent, PaginationDto, ShipmentHistoryDto } from 'event-types';
 
 @Injectable()
 export class ShipmentsService {
@@ -56,7 +56,7 @@ export class ShipmentsService {
     const offset = (page - 1) * limit;
 
     return {
-      data: result.data,
+      data: result.data as IShipmentEvent[],
       meta: {
         total: result.total,
         limit,

@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { OrderStatus, UserRole } from 'event-types';
 import { OutboxService } from '../outbox/outbox.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { TelemetryIntegrationService } from '../telemetry-integration/telemetry-integration.service';
 import { ProductOrderService } from './product-order.service';
 
 const makeOrder = (overrides: Partial<Record<string, unknown>> = {}) => ({
@@ -41,11 +42,18 @@ describe('ProductOrderService', () => {
 
     outbox = { append: jest.fn().mockResolvedValue({ id: 'outbox-uuid' }) };
 
+    const telemetry = {
+      getShipmentTelemetry: jest.fn().mockResolvedValue(null),
+      getShipmentHistory: jest.fn().mockResolvedValue(null),
+      circuitState: 'CLOSED',
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ProductOrderService,
         { provide: PrismaService, useValue: prisma },
         { provide: OutboxService, useValue: outbox },
+        { provide: TelemetryIntegrationService, useValue: telemetry },
       ],
     }).compile();
 

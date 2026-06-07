@@ -35,7 +35,13 @@ describe('ProductOrderService', () => {
 
   const outboxMock = { append: jest.fn() } as any;
 
-  const service = new ProductOrderService(prismaMock, outboxMock);
+  const telemetryMock = {
+    getShipmentTelemetry: jest.fn().mockResolvedValue(null),
+    getShipmentHistory: jest.fn().mockResolvedValue(null),
+    circuitState: 'CLOSED',
+  } as any;
+
+  const service = new ProductOrderService(prismaMock, outboxMock, telemetryMock);
   const allStatuses = [
     OrderStatus.PENDING,
     OrderStatus.PAID,

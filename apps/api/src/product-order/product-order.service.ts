@@ -215,6 +215,54 @@ export class ProductOrderService {
     return { ...order, telemetry };
   }
 
+  /**
+   * Returns a unified chronological timeline merging PostgreSQL status history
+   * with MongoDB IoT telemetry events, sorted oldest-first.
+   * Telemetry degrades gracefully: if MongoDB is unavailable, only order events
+   * are returned and `telemetryAvailable` is set to false.
+   */
+  async getTimeline(id: string, reqUser: { id: string; role: UserRole }) {
+    const order = await this.findOne(id, reqUser);
+    const telemetry = await this.telemetryIntegration.getShipmentTelemetry(
+      order.trackingNumber ?? null,
+      100,
+    );
+
+    const orderEvents = order.statusHistory.map((h) => ({
+      type: 'order_event' as const,
+      timestamp: h.createdAt.toISOString(),
+      source: 'postgresql' as const,
+      historyId: h.id,
+      previousStatus: (h.previousStatus as OrderStatus) ?? null,
+      newStatus: h.newStatus as OrderStatus,
+      statusNote: h.statusNote,
+    }));
+
+    const telemetryEvents = (telemetry ?? []).map((e) => ({
+      type: 'telemetry' as const,
+      timestamp: e.recorded_at,
+      source: 'mongodb' as const,
+      event_id: e.event_id,
+      event_type: e.event_type,
+      temperature_celsius: e.telemetry.temperature_celsius,
+      shock_g_force: e.telemetry.shock_g_force,
+      location: e.location,
+      shipment_status: e.business_context.status,
+      scan_type: e.business_context.scan_type,
+    }));
+
+    const items = [...orderEvents, ...telemetryEvents].sort(
+      (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+    );
+
+    return {
+      orderId: order.id,
+      trackingNumber: order.trackingNumber ?? null,
+      telemetryAvailable: telemetry !== null,
+      items,
+    };
+  }
+
   // Find a single order ensuring it belongs to the given buyerId
   async findOneForBuyer(id: string, buyerId: string) {
     const order = await this.prisma.productOrder.findUnique({

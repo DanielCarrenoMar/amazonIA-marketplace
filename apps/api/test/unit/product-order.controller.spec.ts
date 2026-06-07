@@ -13,6 +13,8 @@ describe('ProductOrderController', () => {
     findByBuyer: jest.fn(),
     findOneForBuyer: jest.fn(),
     findOne: jest.fn(),
+    findOneWithTelemetry: jest.fn(),
+    getTimeline: jest.fn(),
     findHistory: jest.fn(),
     update: jest.fn(),
     remove: jest.fn(),
@@ -33,23 +35,26 @@ describe('ProductOrderController', () => {
     ]);
   });
 
-  it('locks findOne and findHistory to jwt only', () => {
+  it('locks findOne, findHistory, and getTimeline to jwt only', () => {
     expect(Reflect.getMetadata(GUARDS_METADATA, ProductOrderController.prototype.findOne)).toEqual([
       JwtAuthGuard,
     ]);
     expect(Reflect.getMetadata(GUARDS_METADATA, ProductOrderController.prototype.findHistory)).toEqual([
       JwtAuthGuard,
     ]);
+    expect(Reflect.getMetadata(GUARDS_METADATA, ProductOrderController.prototype.getTimeline)).toEqual([
+      JwtAuthGuard,
+    ]);
   });
 
-  it('delegates findOne and findHistory to service', async () => {
-    productOrderServiceMock.findOne.mockResolvedValue({ id: 'order-1' });
+  it('delegates findOne, findHistory, and getTimeline to service', async () => {
+    productOrderServiceMock.findOneWithTelemetry.mockResolvedValue({ id: 'order-1', telemetry: null });
     productOrderServiceMock.findHistory.mockResolvedValue([{ id: 'hist-1' }]);
+    productOrderServiceMock.getTimeline.mockResolvedValue({ orderId: 'order-1', items: [] });
 
     const req = { user: { id: 'user-1', role: UserRole.BUYER } };
-    await expect(controller.findOne('order-1', req)).resolves.toEqual({ id: 'order-1' });
-    await expect(controller.findHistory('order-1', req)).resolves.toEqual([
-      { id: 'hist-1' },
-    ]);
+    await expect(controller.findOne('order-1', req)).resolves.toEqual({ id: 'order-1', telemetry: null });
+    await expect(controller.findHistory('order-1', req)).resolves.toEqual([{ id: 'hist-1' }]);
+    await expect(controller.getTimeline('order-1', req)).resolves.toEqual({ orderId: 'order-1', items: [] });
   });
 });

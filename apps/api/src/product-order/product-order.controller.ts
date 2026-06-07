@@ -72,6 +72,12 @@ export class ProductOrderController {
     return this.productOrderService.findHistory(id, req.user);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/timeline')
+  getTimeline(@Param('id', ParseUUIDPipe) id: string, @Request() req: any) {
+    return this.productOrderService.getTimeline(id, req.user);
+  }
+
   // Login required. Service enforces buyer/admin/seller ownership rules.
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
