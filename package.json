@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "turbo build",
     "dev": "turbo dev --filter=web... --filter=api...",
     "dev:all": "turbo dev --filter=web... --filter=api... --filter=ingestor-service... --filter=telemetry-worker...",
     "dev:ingestor": "turbo dev --filter=ingestor-service...",

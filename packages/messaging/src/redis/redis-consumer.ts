@@ -55,7 +55,6 @@ export class RedisConsumerService implements IMessageConsumer {
     }
 
     const messages: ConsumedMessage<T>[] = [];
-    const idsToAck: string[] = [];
 
     for (const stream of result) {
       if (!stream || !Array.isArray(stream.messages)) continue;
@@ -65,8 +64,6 @@ export class RedisConsumerService implements IMessageConsumer {
         const fields = entry.value as Record<string, string> | undefined;
         const data = fields?.data ?? '{}';
         const key = fields?.key ?? null;
-
-        idsToAck.push(id);
 
         const timestampMs = parseInt(id.split('-')[0], 10);
 
@@ -81,10 +78,16 @@ export class RedisConsumerService implements IMessageConsumer {
       }
     }
 
-    if (idsToAck.length > 0) {
-      await this.redis.xack(topic, groupId, idsToAck);
-    }
-
     return messages;
+  }
+
+  async ack(
+    groupId: string,
+    topic: StreamTopic,
+    messageIds: string[],
+  ): Promise<void> {
+    if (messageIds.length > 0) {
+      await this.redis.xack(topic, groupId, messageIds);
+    }
   }
 }

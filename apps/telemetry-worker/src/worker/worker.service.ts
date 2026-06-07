@@ -83,6 +83,14 @@ export class WorkerService implements OnModuleInit {
 
       await this.climateModel.insertMany(documents, { ordered: false });
 
+      // ACK messages only after successful persistence
+      const idsToAck = messages.map((m) => m.offset);
+      await this.consumer!.ack(
+        CONSUMER_GROUP,
+        STREAM_TOPICS.CLIMATE_EVENTS,
+        idsToAck,
+      );
+
       // Log metrics
       const avgLatencyMs = this.calculateAvgLatency(documents);
       this.logger.log(
@@ -122,6 +130,14 @@ export class WorkerService implements OnModuleInit {
       }));
 
       await this.shipmentModel.insertMany(documents, { ordered: false });
+
+      // ACK messages only after successful persistence
+      const idsToAck = messages.map((m) => m.offset);
+      await this.consumer!.ack(
+        CONSUMER_GROUP,
+        STREAM_TOPICS.SHIPMENT_EVENTS,
+        idsToAck,
+      );
 
       const avgLatencyMs = this.calculateAvgLatency(documents);
       this.logger.log(

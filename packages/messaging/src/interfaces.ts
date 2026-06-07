@@ -29,4 +29,10 @@ export interface IMessageConsumer {
     instanceId: string,
     topic: StreamTopic,
   ): Promise<ConsumedMessage<T>[]>;
+
+  ack(
+    groupId: string,
+    topic: StreamTopic,
+    messageIds: string[],
+  ): Promise<void>;
 }
