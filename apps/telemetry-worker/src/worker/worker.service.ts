@@ -47,7 +47,7 @@ export class WorkerService implements OnModuleInit {
   // Polling loop — driven by @nestjs/schedule
   // -------------------------------------------------------------------------
 
-  @Interval(5000) // Default 5s; overridden dynamically if needed
+  @Interval(30000) // Default 5s; overridden dynamically if needed
   async pollStreams(): Promise<void> {
     // Consumer comes from DI now, no need to manually instantiate
 

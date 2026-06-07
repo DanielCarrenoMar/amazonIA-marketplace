@@ -11,7 +11,8 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,test}/**/*.ts\" --fix",
-    "test": "echo \"No tests yet\" && exit 0"
+    "test": "echo \"No tests yet\" && exit 0",
+    "test:producer": "ts-node scripts/test-producer.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -20,9 +21,9 @@
     "@nestjs/mongoose": "^11.0.2",
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/schedule": "^6.1.3",
+    "database": "workspace:*",
     "event-types": "workspace:*",
     "messaging": "workspace:*",
-    "database": "workspace:*",
     "mongoose": "^8.14.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"

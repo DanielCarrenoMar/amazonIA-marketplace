@@ -62,6 +62,8 @@ let WorkerService = WorkerService_1 = class WorkerService {
                 telemetry: msg.value.telemetry,
             }));
             await this.climateModel.insertMany(documents, { ordered: false });
+            const idsToAck = messages.map((m) => m.offset);
+            await this.consumer.ack(CONSUMER_GROUP, messaging_1.STREAM_TOPICS.CLIMATE_EVENTS, idsToAck);
             const avgLatencyMs = this.calculateAvgLatency(documents);
             this.logger.log(`Persisted ${documents.length} climate events | avg latency: ${avgLatencyMs}ms`);
         }
@@ -85,6 +87,8 @@ let WorkerService = WorkerService_1 = class WorkerService {
                 telemetry: msg.value.telemetry,
             }));
             await this.shipmentModel.insertMany(documents, { ordered: false });
+            const idsToAck = messages.map((m) => m.offset);
+            await this.consumer.ack(CONSUMER_GROUP, messaging_1.STREAM_TOPICS.SHIPMENT_EVENTS, idsToAck);
             const avgLatencyMs = this.calculateAvgLatency(documents);
             this.logger.log(`Persisted ${documents.length} shipment events | avg latency: ${avgLatencyMs}ms`);
         }
@@ -101,7 +105,7 @@ let WorkerService = WorkerService_1 = class WorkerService {
 };
 exports.WorkerService = WorkerService;
 __decorate([
-    (0, schedule_1.Interval)(5000),
+    (0, schedule_1.Interval)(30000),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
