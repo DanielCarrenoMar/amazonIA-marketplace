@@ -63,7 +63,7 @@ export class ProductOrderController {
   @UseGuards(JwtAuthGuard)
   @Get(':id')
   findOne(@Param('id', ParseUUIDPipe) id: string, @Request() req: any) {
-    return this.productOrderService.findOne(id, req.user);
+    return this.productOrderService.findOneWithTelemetry(id, req.user);
   }
 
   @UseGuards(JwtAuthGuard)

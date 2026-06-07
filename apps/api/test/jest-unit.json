@@ -7,6 +7,7 @@
     "^.+\\.(t|j)s$": "ts-jest"
   },
   "moduleNameMapper": {
+    "^database$": "<rootDir>/../../packages/database/src/index.ts",
     "^event-types$": "<rootDir>/../../packages/event-types/src/index.ts",
     "^messaging$": "<rootDir>/../../packages/messaging/src/index.ts"
   }

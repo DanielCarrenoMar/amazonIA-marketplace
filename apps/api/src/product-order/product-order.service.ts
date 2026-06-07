@@ -6,6 +6,7 @@ import { OrderStatus, UserRole } from 'event-types';
 import { STREAM_TOPICS } from 'messaging';
 import { PrismaService } from '../prisma/prisma.service';
 import { OutboxService } from '../outbox/outbox.service';
+import { TelemetryIntegrationService } from '../telemetry-integration/telemetry-integration.service';
 
 const allowedOrderStatusTransitions: Record<OrderStatus, readonly OrderStatus[]> = {
   [OrderStatus.PENDING]: [OrderStatus.PAID, OrderStatus.CANCELED],
@@ -21,6 +22,7 @@ export class ProductOrderService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly outbox: OutboxService,
+    private readonly telemetryIntegration: TelemetryIntegrationService,
   ) {}
 
   // buyerId comes from the JWT token (req.user.id), NOT from the client body
@@ -198,6 +200,19 @@ export class ProductOrderService {
     }
 
     return order;
+  }
+
+  /**
+   * Returns the order with its IoT telemetry enriched from MongoDB.
+   * If MongoDB is unavailable (circuit OPEN, timeout, or error), telemetry
+   * degrades gracefully to null — the order data from PostgreSQL is always returned.
+   */
+  async findOneWithTelemetry(id: string, reqUser: { id: string; role: UserRole }) {
+    const order = await this.findOne(id, reqUser);
+    const telemetry = await this.telemetryIntegration.getShipmentTelemetry(
+      order.trackingNumber ?? null,
+    );
+    return { ...order, telemetry };
   }
 
   // Find a single order ensuring it belongs to the given buyerId
