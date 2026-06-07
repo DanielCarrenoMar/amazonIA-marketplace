@@ -1,7 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { ShipmentEventDocument, ShipmentEventDocumentType } from 'database';
+import { PrismaService } from '../prisma/prisma.service';
 import {
   PaginationDto,
   ShipmentHistoryDto,
@@ -18,12 +19,32 @@ export class ShipmentsService {
   constructor(
     @InjectModel(ShipmentEventDocument.name)
     private readonly shipmentEventModel: Model<ShipmentEventDocumentType>,
+    private readonly prismaService: PrismaService,
   ) {}
 
   async getHistory(
     trackingNumber: string,
     query: PaginationDto,
+    user: { id: string; role: string },
   ): Promise<ShipmentHistoryDto> {
+    if (user.role !== 'ADMIN') {
+      const order = await this.prismaService.productOrder.findFirst({
+        where: { trackingNumber },
+        include: { product: true },
+      });
+
+      if (!order) {
+        throw new UnauthorizedException('You do not have access to this shipment');
+      }
+
+      const isBuyer = order.buyerId === user.id;
+      const isSeller = order.product.sellerId === user.id;
+
+      if (!isBuyer && !isSeller) {
+        throw new UnauthorizedException('You do not have access to this shipment');
+      }
+    }
+
     const { limit = 10, page = 1 } = query;
     const offset = (page - 1) * limit;
 

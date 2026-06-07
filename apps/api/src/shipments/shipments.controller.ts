@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query, UseGuards, ValidationPipe } from '@nestjs/common';
+import { Controller, Get, Param, Query, UseGuards, ValidationPipe, Req } from '@nestjs/common';
 import { ShipmentsService } from './shipments.service';
 import { PaginationDto } from 'event-types';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -7,13 +7,14 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 export class ShipmentsController {
   constructor(private readonly shipmentsService: ShipmentsService) {}
 
-  //@UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Get(':tracking_number/history')
   getHistory(
     @Param('tracking_number') trackingNumber: string,
     @Query(new ValidationPipe({ transform: true, whitelist: true }))
     query: PaginationDto,
+    @Req() req: any,
   ) {
-    return this.shipmentsService.getHistory(trackingNumber, query);
+    return this.shipmentsService.getHistory(trackingNumber, query, req.user);
   }
 }
