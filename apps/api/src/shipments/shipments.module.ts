@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-import { MongoTelemetryModule } from 'database';
+import { TelemetryIntegrationModule } from '../telemetry-integration/telemetry-integration.module';
 import { ShipmentsController } from './shipments.controller';
 import { ShipmentsService } from './shipments.service';
 
 @Module({
-  imports: [MongoTelemetryModule],
+  imports: [TelemetryIntegrationModule],
   controllers: [ShipmentsController],
   providers: [ShipmentsService],
 })

@@ -7,6 +7,11 @@ import { IoTEventType } from 'event-types';
 import { CircuitBreaker, CircuitState } from './circuit-breaker';
 import { ShipmentEventDto } from '../product-order/dto/order-detail-with-telemetry.dto';
 
+export interface ShipmentHistoryResult {
+  data: ShipmentEventDto[];
+  total: number;
+}
+
 @Injectable()
 export class TelemetryIntegrationService {
   private readonly logger = new Logger(TelemetryIntegrationService.name);
@@ -34,8 +39,8 @@ export class TelemetryIntegrationService {
   }
 
   /**
-   * Fetch telemetry events for a given tracking number.
-   * Returns null when: no tracking number, circuit is OPEN, MongoDB times out, or any error occurs.
+   * Fetch the last N telemetry events for a tracking number.
+   * Used for order detail enrichment — degrades to null on circuit OPEN or error.
    */
   async getShipmentTelemetry(
     trackingNumber: string | null,
@@ -43,15 +48,50 @@ export class TelemetryIntegrationService {
   ): Promise<ShipmentEventDto[] | null> {
     if (!trackingNumber) return null;
 
-    const state = this.circuitBreaker.currentState;
-    if (state === CircuitState.OPEN) {
-      this.logger.debug(
-        `Circuit OPEN — skipping MongoDB query for tracking ${trackingNumber}`,
-      );
+    if (this.circuitBreaker.currentState === CircuitState.OPEN) {
+      this.logger.debug(`Circuit OPEN — skipping MongoDB query for tracking ${trackingNumber}`);
     }
 
     return this.circuitBreaker.execute(() =>
-      this.queryWithTimeout(trackingNumber, limit),
+      this.withTimeout(() =>
+        this.shipmentModel
+          .find({ 'metadata.tracking_number': trackingNumber })
+          .sort({ recorded_at: -1 })
+          .limit(limit)
+          .lean()
+          .exec()
+          .then((docs) => docs.map((d) => this.mapDocToDto(d))),
+      ),
+    );
+  }
+
+  /**
+   * Fetch a paginated shipment history for use in dedicated telemetry endpoints.
+   * Returns null when the circuit is OPEN or a network/timeout error occurs,
+   * allowing callers to respond with 503 instead of 500.
+   */
+  async getShipmentHistory(
+    trackingNumber: string,
+    page: number,
+    limit: number,
+  ): Promise<ShipmentHistoryResult | null> {
+    const filter = { 'metadata.tracking_number': trackingNumber };
+    const offset = (page - 1) * limit;
+
+    return this.circuitBreaker.execute(() =>
+      this.withTimeout(async () => {
+        const [total, docs] = await Promise.all([
+          this.shipmentModel.countDocuments(filter).exec(),
+          this.shipmentModel
+            .find(filter)
+            .sort({ recorded_at: -1 })
+            .skip(offset)
+            .limit(limit)
+            .lean()
+            .exec(),
+        ]);
+        return { total, data: docs.map((d) => this.mapDocToDto(d)) };
+      }),
     );
   }
 
@@ -59,27 +99,24 @@ export class TelemetryIntegrationService {
     return this.circuitBreaker.currentState;
   }
 
-  private async queryWithTimeout(
-    trackingNumber: string,
-    limit: number,
-  ): Promise<ShipmentEventDto[]> {
-    const timeout = new Promise<never>((_, reject) =>
-      setTimeout(
-        () => reject(new Error(`MongoDB query timed out after ${this.timeoutMs}ms`)),
-        this.timeoutMs,
+  // ---------------------------------------------------------------------------
+  // Private helpers
+  // ---------------------------------------------------------------------------
+
+  private withTimeout<T>(fn: () => Promise<T>): Promise<T> {
+    return Promise.race([
+      fn(),
+      new Promise<never>((_, reject) =>
+        setTimeout(
+          () => reject(new Error(`MongoDB query timed out after ${this.timeoutMs}ms`)),
+          this.timeoutMs,
+        ),
       ),
-    );
+    ]);
+  }
 
-    const query = this.shipmentModel
-      .find({ 'metadata.tracking_number': trackingNumber })
-      .sort({ recorded_at: -1 })
-      .limit(limit)
-      .lean()
-      .exec();
-
-    const docs = await Promise.race([query, timeout]);
-
-    return docs.map((doc) => ({
+  private mapDocToDto(doc: Record<string, any>): ShipmentEventDto {
+    return {
       event_id: doc.event_id,
       event_type: doc.event_type as IoTEventType,
       recorded_at: (doc.recorded_at as Date).toISOString(),
@@ -88,7 +125,7 @@ export class TelemetryIntegrationService {
       location: doc.location,
       business_context: doc.business_context,
       telemetry: doc.telemetry,
-    }));
+    };
   }
 
   private logTransition(from: CircuitState, to: CircuitState, cooldownMs: number): void {
@@ -102,7 +139,6 @@ export class TelemetryIntegrationService {
       [`${CircuitState.HALF_OPEN}→${CircuitState.OPEN}`]:
         `Circuit re-OPENED — probe failed. Bypassing MongoDB for another ${cooldownMs}ms`,
     };
-
     const msg = messages[`${from}→${to}`] ?? `Circuit transition: ${from} → ${to}`;
     this.logger.warn(msg);
   }

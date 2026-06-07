@@ -23,12 +23,39 @@ function buildDoc(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function buildQueryChain(result: unknown[] | Error) {
+function buildFindChain(result: unknown[] | Error) {
   const exec = result instanceof Error
     ? jest.fn().mockRejectedValue(result)
     : jest.fn().mockResolvedValue(result);
+  return { sort: jest.fn().mockReturnValue({ limit: jest.fn().mockReturnValue({ lean: jest.fn().mockReturnValue({ exec }) }) }) };
+}
 
-  return { find: jest.fn().mockReturnValue({ sort: jest.fn().mockReturnValue({ limit: jest.fn().mockReturnValue({ lean: jest.fn().mockReturnValue({ exec }) }) }) }) };
+function buildSkipChain(result: unknown[] | Error) {
+  const exec = result instanceof Error
+    ? jest.fn().mockRejectedValue(result)
+    : jest.fn().mockResolvedValue(result);
+  return { sort: jest.fn().mockReturnValue({ skip: jest.fn().mockReturnValue({ limit: jest.fn().mockReturnValue({ lean: jest.fn().mockReturnValue({ exec }) }) }) }) };
+}
+
+function buildQueryChain(result: unknown[] | Error) {
+  return {
+    find: jest.fn().mockReturnValue(buildFindChain(result)),
+    countDocuments: jest.fn().mockReturnValue({ exec: jest.fn().mockResolvedValue(0) }),
+  };
+}
+
+function buildFullModelMock(count: number, docs: unknown[], error?: Error) {
+  const countExec = error
+    ? jest.fn().mockRejectedValue(error)
+    : jest.fn().mockResolvedValue(count);
+  const docsExec = error
+    ? jest.fn().mockRejectedValue(error)
+    : jest.fn().mockResolvedValue(docs);
+  return {
+    find: jest.fn().mockReturnValue(buildSkipChain(error ?? docs)),
+    countDocuments: jest.fn().mockReturnValue({ exec: countExec }),
+    _docsExec: docsExec,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -194,7 +221,6 @@ describe('TelemetryIntegrationService', () => {
   describe('timeout handling', () => {
     it('returns null and counts as a failure when MongoDB exceeds timeout', async () => {
       const timeoutMs = 100;
-      // Simulate a slow query that never resolves within timeout
       const slowExec = jest.fn().mockImplementation(
         () => new Promise((resolve) => setTimeout(() => resolve([buildDoc()]), timeoutMs + 500)),
       );
@@ -206,16 +232,95 @@ describe('TelemetryIntegrationService', () => {
             }),
           }),
         }),
+        countDocuments: jest.fn().mockReturnValue({ exec: jest.fn().mockResolvedValue(1) }),
       };
 
       const svc = await createService(chain, { MONGODB_TIMEOUT_MS: String(timeoutMs) });
 
-      // Advance past the timeout
       const resultPromise = svc.getShipmentTelemetry('AMZ-001');
       jest.advanceTimersByTime(timeoutMs + 1);
       const result = await resultPromise;
 
       expect(result).toBeNull();
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // getShipmentHistory — paginated query
+  // ---------------------------------------------------------------------------
+
+  describe('getShipmentHistory', () => {
+    it('returns paginated data and total on success', async () => {
+      const doc = buildDoc();
+      const chain = {
+        find: jest.fn().mockReturnValue({
+          sort: jest.fn().mockReturnValue({
+            skip: jest.fn().mockReturnValue({
+              limit: jest.fn().mockReturnValue({
+                lean: jest.fn().mockReturnValue({ exec: jest.fn().mockResolvedValue([doc]) }),
+              }),
+            }),
+          }),
+        }),
+        countDocuments: jest.fn().mockReturnValue({ exec: jest.fn().mockResolvedValue(42) }),
+      };
+
+      const svc = await createService(chain);
+      const result = await svc.getShipmentHistory('AMZ-001', 1, 10);
+
+      expect(result).not.toBeNull();
+      expect(result!.total).toBe(42);
+      expect(result!.data).toHaveLength(1);
+      expect(result!.data[0].event_id).toBe('evt-001');
+    });
+
+    it('returns null when MongoDB fails and opens the circuit after threshold', async () => {
+      const threshold = 2;
+      const error = new Error('MongoNetworkError');
+      const chain = {
+        find: jest.fn().mockReturnValue({
+          sort: jest.fn().mockReturnValue({
+            skip: jest.fn().mockReturnValue({
+              limit: jest.fn().mockReturnValue({
+                lean: jest.fn().mockReturnValue({ exec: jest.fn().mockRejectedValue(error) }),
+              }),
+            }),
+          }),
+        }),
+        countDocuments: jest.fn().mockReturnValue({ exec: jest.fn().mockRejectedValue(error) }),
+      };
+
+      const svc = await createService(chain, { CB_FAILURE_THRESHOLD: String(threshold) });
+
+      for (let i = 0; i < threshold; i++) {
+        expect(await svc.getShipmentHistory('AMZ-001', 1, 10)).toBeNull();
+      }
+
+      expect(svc.circuitState).toBe(CircuitState.OPEN);
+    });
+
+    it('shares circuit state with getShipmentTelemetry', async () => {
+      const threshold = 2;
+      const error = new Error('down');
+
+      // Open the circuit via getShipmentTelemetry failures
+      const chain = buildQueryChain(error);
+      const svc = await createService(chain, { CB_FAILURE_THRESHOLD: String(threshold) });
+
+      for (let i = 0; i < threshold; i++) await svc.getShipmentTelemetry('AMZ-001');
+      expect(svc.circuitState).toBe(CircuitState.OPEN);
+
+      // getShipmentHistory should also fast-fail (same circuit)
+      const histChain = {
+        find: jest.fn(),
+        countDocuments: jest.fn(),
+      };
+      // Re-create service is not possible here since it's the same instance,
+      // so we just verify the circuit is OPEN and getShipmentHistory returns null
+      const result = await svc.getShipmentHistory('AMZ-001', 1, 10);
+      expect(result).toBeNull();
+      // The model's find/countDocuments were not called (fast-fail)
+      expect(chain.find).toHaveBeenCalledTimes(threshold); // only from the setup calls
     });
   });
 });

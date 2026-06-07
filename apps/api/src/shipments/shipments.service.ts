@@ -1,24 +1,12 @@
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { ShipmentEventDocument, ShipmentEventDocumentType } from 'database';
+import { Injectable, NotFoundException, ServiceUnavailableException, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import {
-  PaginationDto,
-  ShipmentHistoryDto,
-  IShipmentEvent,
-  IShipmentMetadata,
-  IBusinessContext,
-  IShipmentTelemetry,
-  IGeoPoint,
-  IoTEventType,
-} from 'event-types';
+import { TelemetryIntegrationService } from '../telemetry-integration/telemetry-integration.service';
+import { PaginationDto, ShipmentHistoryDto } from 'event-types';
 
 @Injectable()
 export class ShipmentsService {
   constructor(
-    @InjectModel(ShipmentEventDocument.name)
-    private readonly shipmentEventModel: Model<ShipmentEventDocumentType>,
+    private readonly telemetryIntegration: TelemetryIntegrationService,
     private readonly prismaService: PrismaService,
   ) {}
 
@@ -46,45 +34,34 @@ export class ShipmentsService {
     }
 
     const { limit = 10, page = 1 } = query;
-    const offset = (page - 1) * limit;
 
-    const filter = { 'metadata.tracking_number': trackingNumber };
+    const result = await this.telemetryIntegration.getShipmentHistory(
+      trackingNumber,
+      page,
+      limit,
+    );
 
-    const [total, documents] = await Promise.all([
-      this.shipmentEventModel.countDocuments(filter),
-      this.shipmentEventModel
-        .find(filter)
-        .sort({ recorded_at: -1 })
-        .skip(offset)
-        .limit(limit)
-        .lean()
-        .exec(),
-    ]);
+    if (result === null) {
+      throw new ServiceUnavailableException(
+        'Telemetry service temporarily unavailable. Please retry shortly.',
+      );
+    }
 
-    if (total === 0) {
+    if (result.total === 0) {
       throw new NotFoundException(
         `No events found for tracking number ${trackingNumber}`,
       );
     }
 
-    const data: IShipmentEvent[] = documents.map((doc) => ({
-      event_id: doc.event_id,
-      event_type: IoTEventType.SHIPMENT_TELEMETRY,
-      recorded_at: doc.recorded_at.toISOString(),
-      ingested_at: doc.ingested_at.toISOString(),
-      metadata: doc.metadata,
-      location: doc.location,
-      business_context: doc.business_context,
-      telemetry: doc.telemetry,
-    }));
+    const offset = (page - 1) * limit;
 
     return {
-      data,
+      data: result.data,
       meta: {
-        total,
+        total: result.total,
         limit,
         offset,
-        hasMore: offset + limit < total,
+        hasMore: offset + limit < result.total,
       },
     };
   }
