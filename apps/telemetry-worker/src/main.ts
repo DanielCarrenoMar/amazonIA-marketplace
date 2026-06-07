@@ -15,20 +15,12 @@ async function bootstrap() {
     }
   }
 
-  if (!process.env.KAFKA_REST_URL || !process.env.KAFKA_REST_TOKEN) {
-    logger.warn(
-      'KAFKA_REST_URL or KAFKA_REST_TOKEN not set. Kafka consumption will fail at runtime.',
-    );
-  }
-
   const app = await NestFactory.create(AppModule);
 
   // Only expose health endpoint — no public API
   const port = process.env.PORT ?? 3003;
   await app.listen(port);
   logger.log(`Telemetry Worker running on port ${port} (health check only)`);
-  logger.log(
-    `Polling Kafka every ${process.env.POLL_INTERVAL_MS ?? 5000}ms`,
-  );
+
 }
 bootstrap();
