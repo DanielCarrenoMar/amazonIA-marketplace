@@ -342,6 +342,9 @@ importers:
       '@types/node':
         specifier: ^24.0.0
         version: 24.12.2
+      '@upstash/redis':
+        specifier: ^1.38.0
+        version: 1.38.0
       dotenv:
         specifier: ^17.4.2
         version: 17.4.2
