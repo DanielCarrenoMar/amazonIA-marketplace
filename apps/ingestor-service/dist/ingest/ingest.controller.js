@@ -16,7 +16,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.IngestController = void 0;
 const common_1 = require("@nestjs/common");
 const microservices_1 = require("@nestjs/microservices");
-const api_key_guard_1 = require("../common/guards/api-key.guard");
 const ingest_service_1 = require("./ingest.service");
 const event_types_1 = require("event-types");
 let IngestController = IngestController_1 = class IngestController {
@@ -24,24 +23,6 @@ let IngestController = IngestController_1 = class IngestController {
     logger = new common_1.Logger(IngestController_1.name);
     constructor(ingestService) {
         this.ingestService = ingestService;
-    }
-    async ingestClimate(dto) {
-        const event = await this.ingestService.publishClimateEvent(dto);
-        return { accepted: true, event_id: event.event_id };
-    }
-    async ingestShipment(dto) {
-        const event = await this.ingestService.publishShipmentEvent(dto);
-        return { accepted: true, event_id: event.event_id };
-    }
-    async ingestClimateBatch(dtos) {
-        const events = await this.ingestService.publishClimateEventBatch(dtos);
-        this.logger.log(`Accepted batch of ${events.length} climate events`);
-        return { accepted: true, count: events.length };
-    }
-    async ingestShipmentBatch(dtos) {
-        const events = await this.ingestService.publishShipmentEventBatch(dtos);
-        this.logger.log(`Accepted batch of ${events.length} shipment events`);
-        return { accepted: true, count: events.length };
     }
     async handleMqttClimateEvent(dto) {
         this.logger.log(`📥 Recibido evento climático vía MQTT desde sensor ${dto.metadata.sensor_id}`);
@@ -73,38 +54,6 @@ let IngestController = IngestController_1 = class IngestController {
 };
 exports.IngestController = IngestController;
 __decorate([
-    (0, common_1.Post)('climate'),
-    (0, common_1.HttpCode)(common_1.HttpStatus.ACCEPTED),
-    __param(0, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [event_types_1.CreateClimateEventDto]),
-    __metadata("design:returntype", Promise)
-], IngestController.prototype, "ingestClimate", null);
-__decorate([
-    (0, common_1.Post)('shipment'),
-    (0, common_1.HttpCode)(common_1.HttpStatus.ACCEPTED),
-    __param(0, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [event_types_1.CreateShipmentEventDto]),
-    __metadata("design:returntype", Promise)
-], IngestController.prototype, "ingestShipment", null);
-__decorate([
-    (0, common_1.Post)('batch/climate'),
-    (0, common_1.HttpCode)(common_1.HttpStatus.ACCEPTED),
-    __param(0, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Array]),
-    __metadata("design:returntype", Promise)
-], IngestController.prototype, "ingestClimateBatch", null);
-__decorate([
-    (0, common_1.Post)('batch/shipment'),
-    (0, common_1.HttpCode)(common_1.HttpStatus.ACCEPTED),
-    __param(0, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Array]),
-    __metadata("design:returntype", Promise)
-], IngestController.prototype, "ingestShipmentBatch", null);
-__decorate([
     (0, microservices_1.EventPattern)('amazonia/iot/climate'),
     __param(0, (0, microservices_1.Payload)()),
     __metadata("design:type", Function),
@@ -126,8 +75,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], IngestController.prototype, "handleMqttShipmentBatchEvent", null);
 exports.IngestController = IngestController = IngestController_1 = __decorate([
-    (0, common_1.Controller)('ingest'),
-    (0, common_1.UseGuards)(api_key_guard_1.ApiKeyGuard),
+    (0, common_1.Controller)(),
     __metadata("design:paramtypes", [ingest_service_1.IngestService])
 ], IngestController);
 //# sourceMappingURL=ingest.controller.js.map

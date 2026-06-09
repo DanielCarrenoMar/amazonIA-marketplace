@@ -16,7 +16,7 @@ function createKafkaClient() {
     const url = process.env.KAFKA_REST_URL;
     const token = process.env.KAFKA_REST_TOKEN;
     if (!url || !token) {
-        throw new Error('Missing Kafka configuration. Set KAFKA_REST_URL and KAFKA_REST_TOKEN environment variables.');
+        return null;
     }
     return new kafka_1.Kafka({
         url,

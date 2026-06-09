@@ -1,15 +1,11 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 require("dotenv/config");
 const core_1 = require("@nestjs/core");
 const common_1 = require("@nestjs/common");
 const microservices_1 = require("@nestjs/microservices");
-const helmet_1 = __importDefault(require("helmet"));
 const app_module_1 = require("./app.module");
-const http_exception_filter_1 = require("./common/filters/http-exception.filter");
+const rpc_exception_filter_1 = require("./common/filters/rpc-exception.filter");
 async function bootstrap() {
     const logger = new common_1.Logger('IngestorService');
     const required = ['INGESTOR_API_KEY', 'HIVEMQ_HOST', 'HIVEMQ_USERNAME', 'HIVEMQ_PASSWORD'];
@@ -19,8 +15,7 @@ async function bootstrap() {
             process.exit(1);
         }
     }
-    const app = await core_1.NestFactory.create(app_module_1.AppModule);
-    app.connectMicroservice({
+    const app = await core_1.NestFactory.createMicroservice(app_module_1.AppModule, {
         transport: microservices_1.Transport.MQTT,
         options: {
             host: process.env.HIVEMQ_HOST,
@@ -35,18 +30,9 @@ async function bootstrap() {
         forbidNonWhitelisted: true,
         transform: true,
     }));
-    app.use((0, helmet_1.default)({
-        hsts: process.env.NODE_ENV === 'production'
-            ? { maxAge: 31536000, includeSubDomains: true }
-            : false,
-    }));
-    app.enableCors({ origin: '*' });
-    app.useGlobalFilters(new http_exception_filter_1.HttpExceptionFilter());
-    await app.startAllMicroservices();
+    app.useGlobalFilters(new rpc_exception_filter_1.LogRpcExceptionFilter());
+    await app.listen();
     logger.log('📡 MQTT Microservice listener started successfully');
-    const port = process.env.PORT ?? 3002;
-    await app.listen(port);
-    logger.log(`🚀 Ingestor HTTP Service running on port ${port}`);
 }
 bootstrap();
 //# sourceMappingURL=main.js.map

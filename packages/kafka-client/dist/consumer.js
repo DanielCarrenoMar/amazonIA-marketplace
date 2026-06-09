@@ -24,6 +24,9 @@ class KafkaConsumerService {
      * @returns Parsed messages with metadata
      */
     async consume(groupId, instanceId, topic) {
+        if (!this.kafka) {
+            return [];
+        }
         const consumer = this.kafka.consumer();
         const rawMessages = await consumer.consume({
             consumerGroupId: groupId,

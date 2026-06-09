@@ -9,5 +9,5 @@ import { Kafka } from '@upstash/kafka';
  *   KAFKA_REST_URL   — Upstash Kafka REST endpoint
  *   KAFKA_REST_TOKEN — Upstash Kafka REST token (base64-encoded credentials)
  */
-export declare function createKafkaClient(): Kafka;
+export declare function createKafkaClient(): Kafka | null;
 //# sourceMappingURL=kafka.config.d.ts.map

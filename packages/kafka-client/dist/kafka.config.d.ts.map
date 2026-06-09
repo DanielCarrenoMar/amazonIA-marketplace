@@ -1,1 +1,1 @@
-{"version":3,"file":"kafka.config.d.ts","sourceRoot":"","sources":["../src/kafka.config.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,KAAK,EAAE,MAAM,gBAAgB,CAAC;AAEvC;;;;;;;;;GASG;AACH,wBAAgB,iBAAiB,IAAI,KAAK,CAezC"}
+{"version":3,"file":"kafka.config.d.ts","sourceRoot":"","sources":["../src/kafka.config.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,KAAK,EAAE,MAAM,gBAAgB,CAAC;AAEvC;;;;;;;;;GASG;AACH,wBAAgB,iBAAiB,IAAI,KAAK,GAAG,IAAI,CAahD"}
