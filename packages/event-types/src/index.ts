@@ -34,3 +34,6 @@ export * from './user-account/change-password.dto';
 
 // IoT / Telemetry event contracts
 export * from './iot';
+
+// Blockchain notary contracts
+export * from './blockchain/blockchain.dto';
