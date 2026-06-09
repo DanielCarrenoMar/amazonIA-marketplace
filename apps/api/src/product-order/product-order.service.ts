@@ -338,6 +338,16 @@ export class ProductOrderService {
         }
       }
 
+      if (statusChanged && nextStatus === OrderStatus.SHIPPED) {
+        const finalTrackingNumber = orderData.trackingNumber || currentOrder.trackingNumber;
+        const finalCarrierId = orderData.carrierId || currentOrder.carrierId;
+        if (!finalTrackingNumber || !finalCarrierId) {
+          throw new BadRequestException(
+            'Se requiere un trackingNumber y un carrierId (empresa logística) al marcar la orden como enviada',
+          );
+        }
+      }
+
       const updatedOrder = await tx.productOrder.update({
         where: { id },
         data: orderData,
@@ -383,6 +393,7 @@ export class ProductOrderService {
             previousStatus: currentOrder.currentStatus,
             newStatus: nextStatus,
             changedByUserId: reqUser.id,
+            trackingNumber: updatedOrder.trackingNumber,
             topic: STREAM_TOPICS.SHIPMENT_EVENTS,
           },
         );

@@ -59,6 +59,17 @@ async function main() {
   ]);
 
   // ──────────────────────────────────────────────
+  // 1.5 SHIPPING CARRIERS
+  // ──────────────────────────────────────────────
+  console.log('  → Shipping Carriers...');
+  const [carrierFedEx, carrierDHL, carrierUPS, carrierMRW] = await Promise.all([
+    prisma.shippingCarrier.upsert({ where: { name: 'FedEx' }, update: {}, create: { name: 'FedEx', website: 'https://www.fedex.com' } }),
+    prisma.shippingCarrier.upsert({ where: { name: 'DHL' }, update: {}, create: { name: 'DHL', website: 'https://www.dhl.com' } }),
+    prisma.shippingCarrier.upsert({ where: { name: 'UPS' }, update: {}, create: { name: 'UPS', website: 'https://www.ups.com' } }),
+    prisma.shippingCarrier.upsert({ where: { name: 'MRW' }, update: {}, create: { name: 'MRW', website: 'https://www.mrw.com.ve' } }),
+  ]);
+
+  // ──────────────────────────────────────────────
   // 2. USER ACCOUNTS
   // ──────────────────────────────────────────────
   console.log('  → UserAccounts...');
@@ -329,6 +340,7 @@ async function main() {
       sellerRatingValue: 5,
       orderNotes: 'Entrega urgente, producto en perfecto estado.',
       trackingNumber: trackingNumber1,
+      carrierId: carrierMRW.id,
     },
   });
 
@@ -362,6 +374,7 @@ async function main() {
       currentStatus: 'PAID',
       orderNotes: 'Talla 42, color blanco.',
       trackingNumber: trackingNumber2,
+      carrierId: carrierDHL.id,
     },
   });
 

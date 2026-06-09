@@ -14,6 +14,14 @@ export class UpdateProductOrderDto extends PartialType(CreateProductOrderDto) {
   @IsOptional()
   statusNote?: string;
 
+  @IsString()
+  @IsOptional()
+  trackingNumber?: string;
+
+  @IsInt()
+  @IsOptional()
+  carrierId?: number;
+
   @IsInt()
   @Min(1)
   @Max(5)
