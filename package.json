@@ -5,8 +5,16 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "turbo dev --filter=frontend --filter=backend",
-    "dev-legacy": "turbo dev --filter=frontend-legacy"
+    "build": "turbo build",
+    "dev": "turbo dev --filter=web... --filter=api...",
+    "dev:all": "turbo dev --filter=web... --filter=api... --filter=ingestor-service... --filter=telemetry-worker...",
+    "dev:ingestor": "turbo dev --filter=ingestor-service...",
+    "dev:worker": "turbo dev --filter=telemetry-worker...",
+    "dev:iot": "turbo dev --filter=ingestor-service... --filter=telemetry-worker...",
+    "simulate": "pnpm --filter iot-simulator dev",
+    "simulate:climate": "pnpm --filter iot-simulator simulate:climate",
+    "simulate:shipment": "pnpm --filter iot-simulator simulate:shipment",
+    "simulate:mixed": "pnpm --filter iot-simulator simulate:mixed"
   },
   "keywords": [],
   "author": "",
