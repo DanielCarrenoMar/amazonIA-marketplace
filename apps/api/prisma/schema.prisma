@@ -70,6 +70,7 @@ model UserAccount {
   orderStatusChanges OrderStatusHistory[] @relation("ChangedByUser")
   refreshTokens      RefreshToken[]
   productComments    ProductComment[]
+  sentChatMessages   OrderChat[]          @relation("SentChatMessages")
 
   @@index([locationCoords], type: Gist)
   @@map("user_account")
@@ -250,6 +251,7 @@ model ProductOrder {
   buyer         UserAccount          @relation("BuyerOrders", fields: [buyerId], references: [id])
   carrier       ShippingCarrier?     @relation(fields: [carrierId], references: [id])
   statusHistory OrderStatusHistory[]
+  chatMessages  OrderChat[]          @relation("OrderChatMessages")
 
   @@index([buyerId])
   @@index([currentStatus])
@@ -275,6 +277,25 @@ model OrderStatusHistory {
 
   @@index([orderId, createdAt])
   @@map("order_status_history")
+}
+
+// ---------------------------------------------------------------------------
+// OrderChat (Mensajería entre vendedor y comprador por pedido)
+// ---------------------------------------------------------------------------
+
+model OrderChat {
+  id         Int      @id @default(autoincrement()) @map("id_mensaje")
+  orderId    String   @map("id_pedido") @db.Uuid
+  senderId   String   @map("id_remitente") @db.Uuid
+  message    String   @map("mensaje") @db.Text
+  sentAt     DateTime @default(now()) @map("fh_envio") @db.Timestamptz
+
+  // Relaciones
+  order  ProductOrder @relation("OrderChatMessages", fields: [orderId], references: [id], onDelete: Cascade)
+  sender UserAccount  @relation("SentChatMessages", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, sentAt])
+  @@map("chat")
 }
 
 // ---------------------------------------------------------------------------

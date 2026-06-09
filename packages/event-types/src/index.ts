@@ -23,6 +23,9 @@ export * from './seller/find-sellers.dto';
 export * from './product-comment/create-product-comment.dto';
 export * from './product-comment/update-product-comment.dto';
 
+// Order Chat
+export * from './order-chat/create-order-chat.dto';
+
 export * from './tribe/create-tribe.dto';
 export * from './tribe/update-tribe.dto';
 export * from './user-account/create-user-account.dto';
