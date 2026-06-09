@@ -7,7 +7,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { BlockchainService } from '../blockchain/blockchain.service';
 import { WebhookService } from '../webhook/webhook.service';
 import { PrismaService } from '../prisma/prisma.service';
-import type { NotarizeOrderPayload } from 'dtos';
+import type { NotarizeOrderPayload } from 'event-types';
 import { BlockchainStatus } from '@prisma/client';
 
 const MAX_RETRY_ATTEMPTS = 3;

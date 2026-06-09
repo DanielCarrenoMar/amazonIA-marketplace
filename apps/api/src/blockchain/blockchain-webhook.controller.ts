@@ -4,7 +4,7 @@
 
 import { Controller, Post, Body, Logger, HttpCode, HttpStatus } from '@nestjs/common';
 import { BlockchainRecordService } from './services/blockchain-record.service';
-import type { WebhookCallbackPayload } from 'dtos';
+import type { WebhookCallbackPayload } from 'event-types';
 import { BlockchainStatus } from '@prisma/client';
 
 @Controller('blockchain')

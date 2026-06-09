@@ -4,7 +4,7 @@
 // =============================================================================
 
 import { Injectable, Logger } from '@nestjs/common';
-import { BlockchainStatusEnum, WebhookCallbackPayload } from 'dtos';
+import { BlockchainStatusEnum, WebhookCallbackPayload } from 'event-types';
 
 const MAX_WEBHOOK_RETRIES = 3;
 const WEBHOOK_RETRY_DELAY_MS = 2000;

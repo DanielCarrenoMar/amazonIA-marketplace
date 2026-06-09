@@ -16,7 +16,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { TransactionsService } from './transactions.service';
-import type { NotarizeOrderPayload } from 'dtos';
+import type { NotarizeOrderPayload } from 'event-types';
 import { ApiKeyGuard } from '../auth/api-key.guard';
 
 @Controller('transactions')

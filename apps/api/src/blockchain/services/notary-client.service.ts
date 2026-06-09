@@ -6,7 +6,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { BlockchainStatus } from '@prisma/client';
-import type { NotarizeOrderPayload } from 'dtos';
+import type { NotarizeOrderPayload } from 'event-types';
 
 @Injectable()
 export class NotaryClientService {
