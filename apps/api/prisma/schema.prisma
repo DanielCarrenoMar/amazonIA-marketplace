@@ -69,6 +69,7 @@ model UserAccount {
   buyerOrders        ProductOrder[]       @relation("BuyerOrders")
   orderStatusChanges OrderStatusHistory[] @relation("ChangedByUser")
   refreshTokens      RefreshToken[]
+  productComments    ProductComment[]
 
   @@index([locationCoords], type: Gist)
   @@map("user_account")
@@ -162,6 +163,7 @@ model Product {
   category ProductCategory @relation(fields: [categoryId], references: [id])
   ratings  ProductRating[]
   orders   ProductOrder[]
+  comments ProductComment[]
 
   @@index([sellerId])
   @@index([locationCoords], type: Gist)
@@ -184,6 +186,27 @@ model ProductRating {
 
   @@id([productId, userAccountId])
   @@map("product_rating")
+}
+
+// ---------------------------------------------------------------------------
+// ProductComment (Comentarios e Hilos de Respuesta)
+// ---------------------------------------------------------------------------
+
+model ProductComment {
+  id              Int       @id @default(autoincrement()) @map("id_comentario")
+  productId       String    @map("id_producto") @db.Uuid
+  userId          String    @map("id_usuario") @db.Uuid
+  content         String    @map("comentario") @db.Text
+  parentCommentId Int?      @map("id_respuesta")
+  publishedAt     DateTime  @default(now()) @map("fh_publicacion") @db.Timestamptz
+
+  // Relaciones
+  product       Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user          UserAccount      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parentComment ProductComment?  @relation("CommentReplies", fields: [parentCommentId], references: [id])
+  replies       ProductComment[] @relation("CommentReplies")
+
+  @@map("comentarios_productos")
 }
 
 // ---------------------------------------------------------------------------

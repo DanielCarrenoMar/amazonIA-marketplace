@@ -13,6 +13,7 @@ import { AuthModule } from './auth/auth.module';
 import { MongoModule } from 'database';
 import { ShipmentsModule } from './shipments/shipments.module';
 import { ShippingCarrierModule } from './shipping-carrier/shipping-carrier.module';
+import { ProductCommentModule } from './product-comment/product-comment.module';
 import { MessagingModule } from 'messaging';
 
 import { ConfigModule } from '@nestjs/config';
@@ -43,6 +44,7 @@ import { APP_GUARD } from '@nestjs/core';
     ProductRatingModule,
     ShipmentsModule,
     ShippingCarrierModule,
+    ProductCommentModule,
   ],
   controllers: [AppController],
   providers: [

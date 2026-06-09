@@ -18,6 +18,11 @@ export * from './product-rating/find-product-ratings.dto';
 export * from './seller/create-seller.dto';
 export * from './seller/update-seller.dto';
 export * from './seller/find-sellers.dto';
+
+// Product Comments
+export * from './product-comment/create-product-comment.dto';
+export * from './product-comment/update-product-comment.dto';
+
 export * from './tribe/create-tribe.dto';
 export * from './tribe/update-tribe.dto';
 export * from './user-account/create-user-account.dto';
