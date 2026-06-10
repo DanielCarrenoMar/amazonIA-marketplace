@@ -1,0 +1,19 @@
+{
+  "name": "prueba-iot-amazonia",
+  "version": "1.0.0",
+  "description": "Simulador IoT para AmazonIA Marketplace – sensor MQTT con servicio systemd",
+  "main": "sensor.js",
+  "scripts": {
+    "start": "node sensor.js",
+    "setup:systemd": "bash ./install-systemd.sh",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["iot", "mqtt", "amazonia", "simulator", "systemd"],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "mqtt": "^5.15.1"
+  }
+}
