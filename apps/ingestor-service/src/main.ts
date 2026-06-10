@@ -1,15 +1,19 @@
 import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
+import { Transport, MicroserviceOptions } from '@nestjs/microservices';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
+import { LogRpcExceptionFilter } from './common/filters/rpc-exception.filter';
+
 async function bootstrap() {
   const logger = new Logger('IngestorService');
 
-  // Validate required environment variables early
-  const required = ['INGESTOR_API_KEY'];
+
+  // Validar variables de entorno requeridas
+  const required = ['INGESTOR_API_KEY', 'HIVEMQ_HOST', 'HIVEMQ_USERNAME', 'HIVEMQ_PASSWORD'];
   for (const key of required) {
     if (!process.env[key]) {
       logger.error(`Missing required environment variable: ${key}`);
@@ -17,16 +21,19 @@ async function bootstrap() {
     }
   }
 
-  // Kafka credentials are optional at startup (allows running without Kafka for dev)
-  if (!process.env.KAFKA_REST_URL || !process.env.KAFKA_REST_TOKEN) {
-    logger.warn(
-      'KAFKA_REST_URL or KAFKA_REST_TOKEN not set. Kafka publishing will fail at runtime.',
-    );
-  }
+  // 1. Crear el microservicio de MQTT (HiveMQ Cloud con TLS)
+  const app = await NestFactory.createMicroservice<MicroserviceOptions>(AppModule, {
+    transport: Transport.MQTT,
+    options: {
+      host: process.env.HIVEMQ_HOST,
+      port: process.env.HIVEMQ_PORT ? parseInt(process.env.HIVEMQ_PORT, 10) : 8883,
+      protocol: 'mqtts', // Obligatorio TLS en HiveMQ Cloud
+      username: process.env.HIVEMQ_USERNAME,
+      password: process.env.HIVEMQ_PASSWORD,
+    },
+  });
 
-  const app = await NestFactory.create(AppModule);
-
-  // Validate incoming DTOs globally via class-validator decorators
+  // Validar incoming DTOs globalmente en los mensajes del microservicio
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -35,24 +42,10 @@ async function bootstrap() {
     }),
   );
 
-  // Security headers
-  app.use(
-    helmet({
-      hsts:
-        process.env.NODE_ENV === 'production'
-          ? { maxAge: 31536000, includeSubDomains: true }
-          : false,
-    }),
-  );
+  app.useGlobalFilters(new LogRpcExceptionFilter());
 
-  // CORS — IoT devices and simulators may call from anywhere
-  app.enableCors({ origin: '*' });
-
-  // Standardized error responses
-  app.useGlobalFilters(new HttpExceptionFilter());
-
-  const port = process.env.PORT ?? 3002;
-  await app.listen(port);
-  logger.log(`Ingestor Service running on port ${port}`);
+  // 2. Iniciar el microservicio (MQTT listener)
+  await app.listen();
+  logger.log('📡 MQTT Microservice listener started successfully');
 }
 bootstrap();

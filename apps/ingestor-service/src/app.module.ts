@@ -1,10 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
-import { APP_GUARD } from '@nestjs/core';
 import { HealthModule } from './health/health.module';
 import { IngestModule } from './ingest/ingest.module';
 import { MessagingModule } from 'messaging';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   imports: [
@@ -18,12 +17,6 @@ import { MessagingModule } from 'messaging';
     HealthModule,
     IngestModule,
     MessagingModule.forRoot(),
-  ],
-  providers: [
-    {
-      provide: APP_GUARD,
-      useClass: ThrottlerGuard,
-    },
   ],
 })
 export class AppModule {}
