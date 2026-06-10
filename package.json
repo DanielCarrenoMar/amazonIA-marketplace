@@ -1,26 +1,19 @@
 {
-  "name": "amazonia-marketplace",
+  "name": "prueba-iot-amazonia",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Simulador IoT para AmazonIA Marketplace – sensor MQTT con servicio systemd",
+  "main": "sensor.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "turbo build",
-    "dev": "turbo dev --filter=web... --filter=api...",
-    "dev:all": "turbo dev --filter=web... --filter=api... --filter=ingestor-service... --filter=telemetry-worker...",
-    "dev:ingestor": "turbo dev --filter=ingestor-service...",
-    "dev:worker": "turbo dev --filter=telemetry-worker...",
-    "dev:iot": "turbo dev --filter=ingestor-service... --filter=telemetry-worker...",
-    "simulate": "pnpm --filter iot-simulator dev",
-    "simulate:climate": "pnpm --filter iot-simulator simulate:climate",
-    "simulate:shipment": "pnpm --filter iot-simulator simulate:shipment",
-    "simulate:mixed": "pnpm --filter iot-simulator simulate:mixed"
+    "start": "node sensor.js",
+    "setup:systemd": "bash ./install-systemd.sh",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
+  "keywords": ["iot", "mqtt", "amazonia", "simulator", "systemd"],
   "author": "",
   "license": "ISC",
-  "packageManager": "pnpm@10.29.1",
+  "type": "commonjs",
   "dependencies": {
-    "turbo": "^2.9.6"
+    "dotenv": "^17.4.2",
+    "mqtt": "^5.15.1"
   }
 }
