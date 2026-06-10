@@ -37,6 +37,17 @@ enum OrderStatus {
 }
 
 // ---------------------------------------------------------------------------
+
+enum BlockchainStatus {
+  PENDING
+  SUBMITTED
+  CONFIRMED
+  FAILED
+
+  @@map("blockchain_status_enum")
+}
+
+// ---------------------------------------------------------------------------
 // UserAccount
 // ---------------------------------------------------------------------------
 
@@ -252,6 +263,7 @@ model ProductOrder {
   carrier       ShippingCarrier?     @relation(fields: [carrierId], references: [id])
   statusHistory OrderStatusHistory[]
   chatMessages  OrderChat[]          @relation("OrderChatMessages")
+  blockchainRecord  BlockchainRecord?
 
   @@index([buyerId])
   @@index([currentStatus])
@@ -332,4 +344,30 @@ model RefreshToken {
   @@index([userId])
   @@index([tokenHash])
   @@map("refresh_token")
+}
+
+// ---------------------------------------------------------------------------
+// BlockchainRecord  (1-to-1 extension of ProductOrder)
+// ---------------------------------------------------------------------------
+
+model BlockchainRecord {
+  id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId          String           @unique @map("order_id") @db.Uuid
+  transactionHash  String?          @map("transaction_hash") @db.VarChar(255)
+  blockNumber      Int?             @map("block_number")
+  networkName      String           @default("arbitrum") @map("network_name") @db.VarChar(50)
+  status           BlockchainStatus @default(PENDING)
+  retryCount       Int              @default(0) @map("retry_count")
+  errorMessage     String?          @map("error_message")
+  gasUsed          String?          @map("gas_used") @db.VarChar(50)
+  submittedAt      DateTime?        @map("submitted_at") @db.Timestamptz
+  confirmedAt      DateTime?        @map("confirmed_at") @db.Timestamptz
+  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  order            ProductOrder     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([transactionHash])
+  @@map("blockchain_record")
 }
