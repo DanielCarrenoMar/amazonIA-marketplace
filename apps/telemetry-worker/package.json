@@ -1,0 +1,44 @@
+{
+  "name": "telemetry-worker",
+  "version": "0.0.1",
+  "description": "Kafka consumer that persists IoT telemetry into MongoDB Atlas Time Series Collections",
+  "private": true,
+  "license": "UNLICENSED",
+  "scripts": {
+    "build": "nest build",
+    "start": "nest start",
+    "dev": "nest start --watch --preserveWatchOutput",
+    "start:debug": "nest start --debug --watch",
+    "start:prod": "node dist/main",
+    "lint": "eslint \"{src,test}/**/*.ts\" --fix",
+    "test": "echo \"No tests yet\" && exit 0",
+    "test:producer": "ts-node scripts/test-producer.ts"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.0.1",
+    "@nestjs/config": "^4.0.4",
+    "@nestjs/core": "^11.0.1",
+    "@nestjs/mongoose": "^11.0.2",
+    "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/schedule": "^6.1.3",
+    "database": "workspace:*",
+    "event-types": "workspace:*",
+    "messaging": "workspace:*",
+    "mongoose": "^8.14.1",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^11.0.0",
+    "@nestjs/schematics": "^11.0.0",
+    "@nestjs/testing": "^11.0.1",
+    "@types/node": "^24.0.0",
+    "@upstash/redis": "^1.38.0",
+    "dotenv": "^17.4.2",
+    "source-map-support": "^0.5.21",
+    "ts-loader": "^9.5.2",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.7.3"
+  }
+}
