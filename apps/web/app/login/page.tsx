@@ -53,14 +53,15 @@ export default function LoginPage() {
 
   return (
     <div className="relative h-screen w-full flex flex-col items-center justify-center bg-background px-4 select-none overflow-hidden">
+      <Link
+        href="/"
+        className="absolute top-6 left-6 md:top-8 md:left-8 inline-flex items-center gap-1.5 text-foreground/80 hover:text-brand-primary-dark text-sm sm:text-base font-semibold transition-colors duration-200 group z-50"
+      >
+        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+        Volver al inicio
+      </Link>
+
       <div className="relative w-full max-w-[480px] z-10 flex flex-col">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-1.5 text-foreground/80 hover:text-brand-primary-dark mb-5 text-sm sm:text-base font-semibold transition-colors duration-200 group self-start"
-        >
-          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
-          Volver al inicio
-        </Link>
 
         <Card
           variant="default"
