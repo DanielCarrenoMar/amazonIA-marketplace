@@ -3,11 +3,11 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { Eye, EyeOff, ArrowLeft } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardDescription, CardBody } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import logo from "@/public/logo.png";
+import amazoniaBg from "@/public/amazonia-login-1.webp";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -52,7 +52,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative h-screen w-full flex flex-col items-center justify-center bg-background px-4 select-none overflow-hidden">
+    <div className="flex min-h-screen w-full bg-background select-none">
       <Link
         href="/"
         className="absolute top-6 left-6 md:top-8 md:left-8 inline-flex items-center gap-1.5 text-foreground/80 hover:text-brand-primary-dark text-sm sm:text-base font-semibold transition-colors duration-200 group z-50"
@@ -61,83 +61,77 @@ export default function LoginPage() {
         Volver al inicio
       </Link>
 
-      <div className="relative w-full max-w-[480px] z-10 flex flex-col">
+      <div className="w-full md:w-[450px] lg:w-[550px] flex flex-col justify-center px-8 sm:px-12 py-6 md:py-8 relative overflow-y-auto">
+        <div className="w-full max-w-[400px] mx-auto pt-8 md:pt-0">
+          <div className="flex items-center justify-center gap-2 mb-4 md:mb-6">
+            <img src={logo.src} alt="Amazonia IA Logo" className="h-16 w-16 rounded-full shadow-sm" />
+          </div>
 
-        <Card
-          variant="default"
-          padding="lg"
-          rounded="3xl"
-          className="w-full border-border bg-background shadow-xl shadow-gray-300 relative overflow-hidden"
-        >
-          <CardHeader className="text-center flex flex-col items-center mb-8">
-            <div className="flex items-center gap-2 mb-4">
-              <img src={logo.src} alt="Amazonia IA Logo" className="h-8 w-8 rounded-full shadow-sm" />
-              <span className="font-poppins text-lg font-bold tracking-wider text-brand-primary-dark">
-                AmazonIA
-              </span>
-            </div>
-            <CardTitle className="text-xl sm:text-2xl font-semibold font-poppins text-foreground tracking-tight">
-              ¡Bienvenido de nuevo!
-            </CardTitle>
-            <CardDescription className="text-foreground/80 text-xs sm:text-sm mt-1.5">
-              Por favor ingrese sus datos.
-            </CardDescription>
-          </CardHeader>
+          <h2 className="text-xl sm:text-2xl font-semibold font-poppins text-center text-foreground tracking-tight mb-1">
+            ¡Bienvenido de nuevo!
+          </h2>
+          <p className="text-foreground/70 text-center text-sm mb-5 md:mb-6">
+            Por favor ingrese sus datos.
+          </p>
 
-          <CardBody>
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <Input
-                label="Correo electrónico"
-                type="email"
-                placeholder="Ingrese su correo electrónico"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                error={errors.email}
-              />
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Input
+              label="Correo electrónico"
+              type="email"
+              placeholder="Ingrese su correo electrónico"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (errors.email) setErrors((prev) => ({ ...prev, email: "" }));
+              }}
+              error={errors.email}
+            />
 
-              <Input
-                label="Contraseña"
-                type={showPassword ? "text" : "password"}
-                placeholder="Ingrese su contraseña"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                error={errors.password}
-                rightIcon={
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="text-foreground/60 hover:text-brand-primary transition-colors focus:outline-none p-1 rounded-md cursor-pointer"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                }
-              />
-
-              <div className="flex items-center justify-between text-xs sm:text-sm pt-1">
-                <Checkbox
-                  label={<span className="text-foreground font-medium select-none">Recordarme</span>}
-                />
-                <Link
-                  href="/forgot-password"
-                  className="text-brand-primary hover:text-brand-primary-dark hover:underline font-medium transition-colors duration-200"
+            <Input
+              label="Contraseña"
+              type={showPassword ? "text" : "password"}
+              placeholder="Ingrese su contraseña"
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                if (errors.password) setErrors((prev) => ({ ...prev, password: "" }));
+              }}
+              error={errors.password}
+              rightIcon={
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="text-foreground/60 hover:text-brand-primary transition-colors focus:outline-none p-1 rounded-md cursor-pointer"
                 >
-                  ¿Olvidaste tu contraseña?
-                </Link>
-              </div>
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              }
+            />
 
-              <Button
-                type="submit"
-                variant="primary"
-                size="md"
-                isLoading={isLoading}
-                className="w-full mt-4 font-semibold text-white bg-brand-primary hover:bg-brand-primary-dark transition-all duration-200 rounded-xl"
+            <div className="flex items-center justify-between text-xs sm:text-sm pt-1">
+              <Checkbox
+                label={<span className="text-foreground font-medium select-none">Recordarme</span>}
+              />
+              <Link
+                href="/forgot-password"
+                className="text-brand-primary hover:text-brand-primary-dark hover:underline font-medium transition-colors duration-200"
               >
-                Iniciar sesión
-              </Button>
-            </form>
-          </CardBody>
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </div>
 
-          <div className="mt-6 text-center text-xs sm:text-sm text-foreground/80">
+            <Button
+              type="submit"
+              variant="primary"
+              size="md"
+              isLoading={isLoading}
+              className="w-full mt-4 font-semibold text-white bg-brand-primary hover:bg-brand-primary-dark transition-all duration-200 rounded-xl"
+            >
+              Iniciar sesión
+            </Button>
+          </form>
+
+          <div className="mt-5 text-center text-sm text-foreground/80">
             ¿No tienes una cuenta?{" "}
             <Link
               href="/register"
@@ -146,8 +140,24 @@ export default function LoginPage() {
               Regístrate
             </Link>
           </div>
-        </Card>
+        </div>
       </div>
+
+      <div
+        className="hidden md:flex flex-1 relative bg-cover bg-center"
+        style={{ backgroundImage: `url(${amazoniaBg.src})` }}
+      >
+        <div className="absolute inset-0 bg-black/50" />
+        <div className="relative z-10 flex flex-col justify-end p-12 lg:p-16 text-white h-full pb-24 text-right ml-auto">
+          <h1 className="text-4xl lg:text-5xl font-bold tracking-tight mb-4 font-poppins drop-shadow-lg">
+            Vuelve a conectar
+          </h1>
+          <p className="text-lg lg:text-xl text-white/90 max-w-lg ml-auto drop-shadow-md leading-relaxed">
+            Tu centro de control en AmazonIA 4.0 te espera para seguir innovando.
+          </p>
+        </div>
+      </div>
+
     </div>
   );
 }
