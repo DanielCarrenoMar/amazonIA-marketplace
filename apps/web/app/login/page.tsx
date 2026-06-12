@@ -2,7 +2,9 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { loginUser } from "@/lib/api";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
@@ -14,7 +16,9 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
   const [errors, setErrors] = useState({ email: "", password: "" });
+  const router = useRouter();
 
   const validate = () => {
     let isValid = true;
@@ -40,19 +44,32 @@ export default function LoginPage() {
     return isValid;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setApiError(null);
     if (!validate()) return;
 
     setIsLoading(true);
-    setTimeout(() => {
+    try {
+      const data = await loginUser({ email, password });
+      localStorage.setItem("accessToken", data.accessToken);
+      localStorage.setItem("refreshToken", data.refreshToken);
+      router.push("/dashboard");
+    } catch (err: any) {
+      if (err.status === 401) {
+        setApiError("Correo o contraseña incorrectos.");
+      } else if (err.status === 429) {
+        setApiError("Demasiados intentos. Por favor espera un momento.");
+      } else {
+        setApiError(err.message ?? "Ocurrió un error al iniciar sesión. Inténtalo de nuevo.");
+      }
+    } finally {
       setIsLoading(false);
-      alert("Inicio de sesión simulado correctamente");
-    }, 1500);
+    }
   };
 
   return (
-    <div className="flex min-h-screen w-full bg-background select-none">
+    <div className="flex h-screen w-full bg-background select-none overflow-hidden">
       <Link
         href="/"
         className="absolute top-6 left-6 md:top-8 md:left-8 inline-flex items-center gap-1.5 text-foreground/80 hover:text-brand-primary-dark text-sm sm:text-base font-semibold transition-colors duration-200 group z-50"
@@ -119,6 +136,12 @@ export default function LoginPage() {
                 ¿Olvidaste tu contraseña?
               </Link>
             </div>
+
+            {apiError && (
+              <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+                {apiError}
+              </div>
+            )}
 
             <Button
               type="submit"

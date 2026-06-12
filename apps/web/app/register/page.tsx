@@ -2,7 +2,9 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { registerUser } from "@/lib/api";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import logo from "@/public/logo.png";
@@ -17,12 +19,14 @@ export default function RegisterPage() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
   const [errors, setErrors] = useState({
     fullName: "",
     nationalId: "",
     email: "",
     password: "",
   });
+  const router = useRouter();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -70,19 +74,32 @@ export default function RegisterPage() {
     return isValid;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setApiError(null);
     if (!validate()) return;
 
     setIsLoading(true);
-    setTimeout(() => {
+    try {
+      const data = await registerUser(formData);
+      localStorage.setItem("accessToken", data.accessToken);
+      localStorage.setItem("refreshToken", data.refreshToken);
+      router.push("/dashboard");
+    } catch (err: any) {
+      if (err.status === 409) {
+        setApiError("Este correo o documento de identidad ya está registrado.");
+      } else if (err.status === 429) {
+        setApiError("Demasiados intentos. Por favor espera un momento e inténtalo de nuevo.");
+      } else {
+        setApiError(err.message ?? "Ocurrió un error al registrarse. Inténtalo de nuevo.");
+      }
+    } finally {
       setIsLoading(false);
-      alert("Registro simulado correctamente");
-    }, 1500);
+    }
   };
 
   return (
-    <div className="flex min-h-screen w-full bg-background select-none">
+    <div className="flex h-screen w-full bg-background select-none overflow-hidden">
       <Link
         href="/"
         className="absolute top-6 left-6 md:top-8 md:left-8 inline-flex items-center gap-1.5 text-foreground/80 hover:text-brand-primary-dark md:text-white/90 md:hover:text-white text-sm sm:text-base font-semibold transition-colors duration-200 group z-50 md:drop-shadow-md"
@@ -168,6 +185,12 @@ export default function RegisterPage() {
                 </button>
               }
             />
+
+            {apiError && (
+              <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+                {apiError}
+              </div>
+            )}
 
             <Button
               type="submit"
