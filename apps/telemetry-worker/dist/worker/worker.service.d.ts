@@ -15,5 +15,6 @@ export declare class WorkerService implements OnModuleInit {
     pollStreams(): Promise<void>;
     private consumeClimateEvents;
     private consumeShipmentEvents;
+    private stripNulls;
     private calculateAvgLatency;
 }

@@ -52,7 +52,7 @@ let WorkerService = WorkerService_1 = class WorkerService {
             const messages = await this.consumer.consume(CONSUMER_GROUP, INSTANCE_ID, messaging_1.STREAM_TOPICS.CLIMATE_EVENTS);
             if (messages.length === 0)
                 return;
-            const documents = messages.map((msg) => ({
+            const documents = messages.map((msg) => this.stripNulls({
                 event_id: msg.value.event_id,
                 event_type: msg.value.event_type,
                 recorded_at: new Date(msg.value.recorded_at),
@@ -76,7 +76,7 @@ let WorkerService = WorkerService_1 = class WorkerService {
             const messages = await this.consumer.consume(CONSUMER_GROUP, INSTANCE_ID, messaging_1.STREAM_TOPICS.SHIPMENT_EVENTS);
             if (messages.length === 0)
                 return;
-            const documents = messages.map((msg) => ({
+            const documents = messages.map((msg) => this.stripNulls({
                 event_id: msg.value.event_id,
                 event_type: msg.value.event_type,
                 recorded_at: new Date(msg.value.recorded_at),
@@ -96,11 +96,23 @@ let WorkerService = WorkerService_1 = class WorkerService {
             this.logger.error('Failed to process shipment events', error instanceof Error ? error.stack : String(error));
         }
     }
-    calculateAvgLatency(docs) {
-        if (docs.length === 0)
+    stripNulls(obj) {
+        return Object.fromEntries(Object.entries(obj)
+            .filter(([, v]) => v != null)
+            .map(([k, v]) => [
+            k,
+            v && typeof v === 'object' && !Array.isArray(v) && !(v instanceof Date)
+                ? this.stripNulls(v)
+                : v,
+        ]));
+    }
+    calculateAvgLatency(documents) {
+        if (documents.length === 0)
             return 0;
-        const totalMs = docs.reduce((sum, d) => sum + (d.ingested_at.getTime() - d.recorded_at.getTime()), 0);
-        return Math.round(totalMs / docs.length);
+        const totalLatency = documents.reduce((sum, doc) => {
+            return sum + (doc.ingested_at.getTime() - doc.recorded_at.getTime());
+        }, 0);
+        return Math.round(totalLatency / documents.length);
     }
 };
 exports.WorkerService = WorkerService;

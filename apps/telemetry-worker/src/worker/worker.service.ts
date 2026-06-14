@@ -71,7 +71,7 @@ export class WorkerService implements OnModuleInit {
 
       if (messages.length === 0) return;
 
-      const documents = messages.map((msg: any) => ({
+      const documents = messages.map((msg: any) => this.stripNulls({
         event_id: msg.value.event_id,
         event_type: msg.value.event_type,
         recorded_at: new Date(msg.value.recorded_at),
@@ -118,7 +118,7 @@ export class WorkerService implements OnModuleInit {
 
       if (messages.length === 0) return;
 
-      const documents = messages.map((msg: any) => ({
+      const documents = messages.map((msg: any) => this.stripNulls({
         event_id: msg.value.event_id,
         event_type: msg.value.event_type,
         recorded_at: new Date(msg.value.recorded_at),
@@ -152,22 +152,36 @@ export class WorkerService implements OnModuleInit {
   }
 
   // -------------------------------------------------------------------------
-  // Metrics
+  // Metrics & Utilities
   // -------------------------------------------------------------------------
+
+  /**
+   * Recursively removes keys with null or undefined values from an object.
+   * MongoDB stores null explicitly (wastes space), but omitted keys are simply absent.
+   */
+  private stripNulls(obj: Record<string, any>): Record<string, any> {
+    return Object.fromEntries(
+      Object.entries(obj)
+        .filter(([, v]) => v != null)
+        .map(([k, v]) => [
+          k,
+          v && typeof v === 'object' && !Array.isArray(v) && !(v instanceof Date)
+            ? this.stripNulls(v)
+            : v,
+        ])
+    );
+  }
 
   /**
    * Calculates average ingestion latency (ingested_at - recorded_at).
    * This delta reveals network connectivity gaps — critical for ML models
    * training anomaly detection in low-connectivity zones.
    */
-  private calculateAvgLatency(
-    docs: Array<{ recorded_at: Date; ingested_at: Date }>,
-  ): number {
-    if (docs.length === 0) return 0;
-    const totalMs = docs.reduce(
-      (sum, d) => sum + (d.ingested_at.getTime() - d.recorded_at.getTime()),
-      0,
-    );
-    return Math.round(totalMs / docs.length);
+  private calculateAvgLatency(documents: any[]): number {
+    if (documents.length === 0) return 0;
+    const totalLatency = documents.reduce((sum, doc) => {
+      return sum + (doc.ingested_at.getTime() - doc.recorded_at.getTime());
+    }, 0);
+    return Math.round(totalLatency / documents.length);
   }
 }

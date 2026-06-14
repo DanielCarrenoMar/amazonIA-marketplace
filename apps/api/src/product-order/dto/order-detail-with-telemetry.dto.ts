@@ -126,11 +126,11 @@ export class BusinessContextResponseDto {
 }
 
 export class ShipmentTelemetryResponseDto {
-  @ApiProperty({ example: 4.2, description: 'Temperature in Celsius at time of reading' })
-  temperature_celsius: number;
+  @ApiPropertyOptional({ example: 4.2, description: 'Temperature in Celsius at time of reading' })
+  temperature_celsius?: number;
 
-  @ApiProperty({ example: 0.3, description: 'Shock force in G — values > 2.5 indicate potential damage' })
-  shock_g_force: number;
+  @ApiPropertyOptional({ example: 0.3, description: 'Shock force in G — values > 2.5 indicate potential damage' })
+  shock_g_force?: number;
 }
 
 export class ShipmentEventDto {

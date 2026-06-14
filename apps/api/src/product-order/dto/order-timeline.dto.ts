@@ -60,11 +60,11 @@ export class TelemetryTimelineItemDto {
   @ApiProperty({ enum: IoTEventType, example: IoTEventType.SHIPMENT_TELEMETRY })
   event_type: IoTEventType;
 
-  @ApiProperty({ example: 4.1, description: 'Temperature in Celsius at time of reading' })
-  temperature_celsius: number;
+  @ApiPropertyOptional({ example: 4.1, description: 'Temperature in Celsius at time of reading' })
+  temperature_celsius?: number;
 
-  @ApiProperty({ example: 0.3, description: 'Shock force in G — values > 2.5 indicate potential damage' })
-  shock_g_force: number;
+  @ApiPropertyOptional({ example: 0.3, description: 'Shock force in G — values > 2.5 indicate potential damage' })
+  shock_g_force?: number;
 
   @ApiProperty({ type: () => GeoPointResponseDto, description: 'GPS coordinates at time of reading' })
   @Type(() => GeoPointResponseDto)

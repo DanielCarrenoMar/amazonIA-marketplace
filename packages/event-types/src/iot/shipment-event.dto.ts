@@ -22,11 +22,13 @@ export interface IShipmentMetadata {
 export interface IBusinessContext {
   status: ShipmentStatus;
   scan_type: ScanType;
+  [key: string]: unknown;
 }
 
 export interface IShipmentTelemetry {
-  temperature_celsius: number;
-  shock_g_force: number;
+  temperature_celsius?: number;
+  shock_g_force?: number;
+  [key: string]: unknown;
 }
 
 export interface IShipmentEvent {
@@ -58,14 +60,20 @@ export class BusinessContextDto implements IBusinessContext {
 
   @IsEnum(ScanType)
   scan_type: ScanType;
+
+  [key: string]: unknown;
 }
 
 export class ShipmentTelemetryDto implements IShipmentTelemetry {
+  @IsOptional()
   @IsNumber()
-  temperature_celsius: number;
+  temperature_celsius?: number;
 
+  @IsOptional()
   @IsNumber()
-  shock_g_force: number;
+  shock_g_force?: number;
+
+  [key: string]: unknown;
 }
 
 // ---------------------------------------------------------------------------

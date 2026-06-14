@@ -26,6 +26,7 @@ export type ShipmentEventDocumentType =
   collection: 'shipment_events',
   timestamps: false,
   autoIndex: false, // Do not automatically build indexes in production
+  strict: false,
 })
 export class ShipmentEventDocument {
   @Prop({ required: true })
@@ -66,8 +67,8 @@ export class ShipmentEventDocument {
 
   @Prop(
     raw({
-      temperature_celsius: { type: Number, required: true },
-      shock_g_force: { type: Number, required: true },
+      temperature_celsius: { type: Number },
+      shock_g_force: { type: Number },
     }),
   )
   telemetry: IShipmentTelemetry;

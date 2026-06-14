@@ -81,7 +81,7 @@ describe('ProductOrderService', () => {
       await service.update(
         'order-uuid',
         { id: 'seller-uuid', role: UserRole.SELLER },
-        { currentStatus: OrderStatus.SHIPPED },
+        { currentStatus: OrderStatus.SHIPPED, trackingNumber: 'TRK123', carrierId: 1 },
       );
 
       expect(outbox.append).toHaveBeenCalledTimes(1);
@@ -126,7 +126,7 @@ describe('ProductOrderService', () => {
       await service.update(
         'order-uuid',
         { id: 'seller-uuid', role: UserRole.SELLER },
-        { currentStatus: OrderStatus.SHIPPED },
+        { currentStatus: OrderStatus.SHIPPED, trackingNumber: 'TRK123', carrierId: 1 },
       );
 
       expect(capturedFirstArg).toBe(tx);
@@ -179,7 +179,7 @@ describe('ProductOrderService', () => {
       await service.update(
         'order-uuid',
         { id: 'seller-uuid', role: UserRole.SELLER },
-        { currentStatus: OrderStatus.SHIPPED },
+        { currentStatus: OrderStatus.SHIPPED, trackingNumber: 'TRK123', carrierId: 1 },
       );
 
       const payload = outbox.append.mock.calls[0][4] as Record<string, unknown>;
@@ -197,7 +197,7 @@ describe('ProductOrderService', () => {
         service.update(
           'order-uuid',
           { id: 'seller-uuid', role: UserRole.SELLER },
-          { currentStatus: OrderStatus.SHIPPED },
+          { currentStatus: OrderStatus.SHIPPED, trackingNumber: 'TRK123', carrierId: 1 },
         ),
       ).rejects.toThrow('DB connection lost');
     });
@@ -210,7 +210,7 @@ describe('ProductOrderService', () => {
         service.update(
           'nonexistent-uuid',
           { id: 'user-uuid', role: UserRole.ADMIN },
-          { currentStatus: OrderStatus.SHIPPED },
+          { currentStatus: OrderStatus.SHIPPED, trackingNumber: 'TRK123', carrierId: 1 },
         ),
       ).rejects.toThrow(NotFoundException);
 
@@ -227,7 +227,7 @@ describe('ProductOrderService', () => {
         service.update(
           'order-uuid',
           { id: 'unrelated-user-uuid', role: UserRole.BUYER },
-          { currentStatus: OrderStatus.SHIPPED },
+          { currentStatus: OrderStatus.SHIPPED, trackingNumber: 'TRK123', carrierId: 1 },
         ),
       ).rejects.toThrow(ForbiddenException);
 

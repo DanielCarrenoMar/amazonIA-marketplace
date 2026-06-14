@@ -170,11 +170,17 @@ describe('ProductOrderService', () => {
       for (const nextStatus of allowedStatuses) {
         txMock.productOrder.update.mockResolvedValue({ id: 'order-1', currentStatus: nextStatus });
 
+        const updatePayload: any = { currentStatus: nextStatus };
+        if (nextStatus === OrderStatus.SHIPPED) {
+          updatePayload.trackingNumber = 'TRK123';
+          updatePayload.carrierId = 1;
+        }
+
         await expect(
           service.update(
             'order-1',
             { id: 'owner-user', role: UserRole.BUYER },
-            { currentStatus: nextStatus } as any,
+            updatePayload,
           ),
         ).resolves.toMatchObject({ id: 'order-1', currentStatus: nextStatus });
       }

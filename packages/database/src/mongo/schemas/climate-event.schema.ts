@@ -28,6 +28,7 @@ export type ClimateEventDocumentType = HydratedDocument<ClimateEventDocument>;
   collection: 'climate_events',
   timestamps: false, // We manage recorded_at and ingested_at explicitly
   autoIndex: false,  // Do not automatically build indexes in production
+  strict: false,
 })
 export class ClimateEventDocument {
   @Prop({ required: true })
@@ -61,8 +62,8 @@ export class ClimateEventDocument {
 
   @Prop(
     raw({
-      temperature_celsius: { type: Number, required: true },
-      humidity_percent: { type: Number, required: true },
+      temperature_celsius: { type: Number },
+      humidity_percent: { type: Number },
     }),
   )
   telemetry: IClimateTelemetry;
