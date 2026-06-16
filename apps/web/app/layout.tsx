@@ -23,8 +23,6 @@ export const metadata: Metadata = {
   }
 };
 
-import { Navbar, Footer } from "@/components";
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -36,12 +34,9 @@ export default function RootLayout({
       className={`${poppins.variable} ${outfit.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans">
-        <Navbar />
-        <main className="grow pt-24">
-          {children}
-        </main>
-        <Footer />
+        {children}
       </body>
     </html>
   );
 }
+
