@@ -13,6 +13,7 @@ ROUTES = [
 ]
 
 PRODUCTS = ["perecedero_alto", "perecedero_bajo", "electronica", "general"]
+NUM_SAMPLES = 15000 # Increased dataset size
 
 def check_failure(route_type: str, product: str, max_temp: float, precip_sum: float, wind_speed: float) -> int:
     """
@@ -33,7 +34,11 @@ def check_failure(route_type: str, product: str, max_temp: float, precip_sum: fl
         
     return 0
 
-async def fetch_weather_for_period(client: httpx.AsyncClient, lat: float, lon: float, start_d: date, end_d: date) -> dict | None:
+async def fetch_yearly_weather(client: httpx.AsyncClient, lat: float, lon: float, start_d: date, end_d: date) -> dict:
+    """
+    Fetches the weather for a whole year to avoid rate limits and speed up generation.
+    Returns a dictionary mapping 'YYYY-MM-DD' to daily weather stats.
+    """
     url = "https://archive-api.open-meteo.com/v1/archive"
     params = {
         "latitude": lat,
@@ -43,63 +48,88 @@ async def fetch_weather_for_period(client: httpx.AsyncClient, lat: float, lon: f
         "daily": ["temperature_2m_max", "precipitation_sum", "wind_speed_10m_max"],
         "timezone": "auto"
     }
+    
     try:
-        resp = await client.get(url, params=params, timeout=15.0)
+        resp = await client.get(url, params=params, timeout=30.0)
         resp.raise_for_status()
-        return resp.json().get("daily")
+        data = resp.json().get("daily", {})
+        
+        # Convert parallel arrays into a date-indexed dictionary
+        weather_map = {}
+        if "time" in data:
+            for i, d_str in enumerate(data["time"]):
+                weather_map[d_str] = {
+                    "temp": data["temperature_2m_max"][i] if data["temperature_2m_max"][i] is not None else 30.0,
+                    "precip": data["precipitation_sum"][i] if data["precipitation_sum"][i] is not None else 0.0,
+                    "wind": data["wind_speed_10m_max"][i] if data["wind_speed_10m_max"][i] is not None else 0.0
+                }
+        return weather_map
     except Exception as e:
         print(f"HTTP Error fetching {start_d} to {end_d}: {e}")
-        return None
+        return {}
 
 async def generate():
-    print("Starting Synthetic Bootstrap Dataset generation...")
-    start_date = date(2023, 1, 1)
-    end_date = date(2023, 12, 31)
+    print(f"Starting Synthetic Bootstrap Dataset generation ({NUM_SAMPLES} samples)...")
+    start_date = date(2022, 1, 1)
+    end_date = date(2023, 12, 31) # 2 years of data
     
-    # We take 100 random days of the year to avoid abusing the API rate limit in the initial test.
-    # In production this script would run for 365 days of the year * N routes.
-    delta = (end_date - start_date).days
-    sampled_days = [start_date + timedelta(days=random.randint(0, delta)) for _ in range(100)]
-    
+    # 1. Pre-fetch all weather data for our 3 routes to save time and API calls
+    print("Pre-fetching 2 years of climate data for all routes...")
+    climate_cache = {}
+    async with httpx.AsyncClient() as client:
+        for route in ROUTES:
+            print(f"Fetching climate for {route['name']}...")
+            climate_cache[route["name"]] = await fetch_yearly_weather(
+                client, route["lat"], route["lon"], start_date, end_date
+            )
+            await asyncio.sleep(1) # Be nice to the API
+            
+    # 2. Generate random shipments using the cached data
+    delta = (end_date - start_date).days - 7 # Leave room for the 7-day trip
     dataset = []
     
-    async with httpx.AsyncClient() as client:
-        for i, d in enumerate(sampled_days):
-            route = random.choice(ROUTES)
-            product = random.choice(PRODUCTS)
-            
-            # We simulate that each shipment takes 7 days. We extract the weather for that week of route.
-            d_end = d + timedelta(days=7)
-            weather = await fetch_weather_for_period(client, route["lat"], route["lon"], d, d_end)
-            
-            if weather:
-                # Global Aggregation (Max pooling) that simulates what XGBoost will learn
-                t_max = weather.get("temperature_2m_max", [])
-                p_sum = weather.get("precipitation_sum", [])
-                w_max = weather.get("wind_speed_10m_max", [])
+    for i in range(NUM_SAMPLES):
+        route = random.choice(ROUTES)
+        product = random.choice(PRODUCTS)
+        
+        # Random start date
+        d = start_date + timedelta(days=random.randint(0, delta))
+        
+        # Aggregate the 7-day trip from cache
+        route_climate = climate_cache.get(route["name"], {})
+        
+        t_max_list, p_sum_list, w_max_list = [], [], []
+        
+        for day_offset in range(7):
+            current_day = (d + timedelta(days=day_offset)).isoformat()
+            daily_stats = route_climate.get(current_day)
+            if daily_stats:
+                t_max_list.append(daily_stats["temp"])
+                p_sum_list.append(daily_stats["precip"])
+                w_max_list.append(daily_stats["wind"])
                 
-                max_temp = max([t for t in t_max if t is not None]) if any(t is not None for t in t_max) else 30.0
-                precip_sum = sum([p for p in p_sum if p is not None])
-                wind_speed = max([w for w in w_max if w is not None]) if any(w is not None for w in w_max) else 0.0
-                
-                failure = check_failure(route["type"], product, max_temp, precip_sum, wind_speed)
-                
-                dataset.append({
-                    "fecha_despacho": d.isoformat(),
-                    "ruta": route["name"],
-                    "lat": route["lat"],
-                    "lon": route["lon"],
-                    "tipo_transporte": route["type"],
-                    "tipo_producto": product,
-                    "max_temperatura_c": max_temp,
-                    "precipitacion_acum_mm": precip_sum,
-                    "max_viento_ms": wind_speed,
-                    "fracaso_logistico": failure
-                })
+        if t_max_list:
+            max_temp = max(t_max_list)
+            precip_sum = sum(p_sum_list)
+            wind_speed = max(w_max_list)
             
-            if (i + 1) % 10 == 0:
-                print(f"Processed {i+1}/100 simulated shipments...")
-                await asyncio.sleep(0.5) # Light throttle for Open-Meteo
+            failure = check_failure(route["type"], product, max_temp, precip_sum, wind_speed)
+            
+            dataset.append({
+                "fecha_despacho": d.isoformat(),
+                "ruta": route["name"],
+                "lat": route["lat"],
+                "lon": route["lon"],
+                "tipo_transporte": route["type"],
+                "tipo_producto": product,
+                "max_temperatura_c": max_temp,
+                "precipitacion_acum_mm": precip_sum,
+                "max_viento_ms": wind_speed,
+                "fracaso_logistico": failure
+            })
+            
+        if (i + 1) % 5000 == 0:
+            print(f"Generated {i+1}/{NUM_SAMPLES} simulated shipments...")
 
     df = pd.DataFrame(dataset)
     
