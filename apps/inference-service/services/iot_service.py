@@ -1,11 +1,11 @@
-import redis.asyncio as redis
+from redis.asyncio import Redis
 from typing import Dict, Any, Optional
 from core.config import settings
 
 class IoTService:
     def __init__(self):
         # Initialize connection pool to avoid creating a new connection per request
-        self.redis = redis.from_url(settings.REDIS_URL, decode_responses=True)
+        self.redis = Redis.from_url(settings.REDIS_URL, decode_responses=True)
 
     async def get_iot_telemetry(self, shipment_id: str) -> Dict[str, Any]:
         """
