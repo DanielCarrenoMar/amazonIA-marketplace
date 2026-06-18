@@ -1,11 +1,12 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from schemas.request import EvaluationRequest
 from schemas.response import RiskResponse
+from middleware.auth import verify_jwt
 
 router = APIRouter(prefix="/api/v1/risk", tags=["Risk"])
 
 @router.post("/evaluate", response_model=RiskResponse)
-async def evaluate_risk(request: EvaluationRequest):
+async def evaluate_risk(request: EvaluationRequest, user_payload: dict = Depends(verify_jwt)):
     # TODO: Implement risk evaluation logic (Global Inference)
     return RiskResponse(
         shipment_id=request.shipment_id,
