@@ -5,7 +5,7 @@ import random
 from datetime import date, timedelta
 import httpx
 
-# Constantes de rutas reales en el Amazonas
+# Real routes constants in the Amazon
 ROUTES = [
     {"name": "Manaus-Belem", "lat": -3.119, "lon": -60.021, "type": "fluvial"},
     {"name": "PortoVelho-Manaus", "lat": -8.761, "lon": -63.903, "type": "fluvial"},
@@ -16,18 +16,18 @@ PRODUCTS = ["perecedero_alto", "perecedero_bajo", "electronica", "general"]
 
 def check_failure(route_type: str, product: str, max_temp: float, precip_sum: float, wind_speed: float) -> int:
     """
-    Aplica heurísticas duras de la logística amazónica para determinar si el envío fracasa.
+    Applies hard heuristics of Amazon logistics to determine if the shipment fails.
     """
-    # 1. Rutas fluviales con lluvia extrema (inundaciones, peligros de navegación)
+    # 1. Fluvial routes with extreme rain (floods, navigation hazards)
     if route_type == "fluvial" and precip_sum > 100.0:
         return 1
-    # 2. Perecederos en calor extremo (cadena de frío fallida)
+    # 2. Perishables in extreme heat (cold chain failure)
     if product == "perecedero_alto" and max_temp > 35.0:
         return 1
-    # 3. Fuertes vientos en embarcaciones
+    # 3. Strong winds on vessels
     if route_type == "fluvial" and wind_speed > 25.0:
         return 1
-    # 4. Factor estocástico base (accidentes aleatorios, etc)
+    # 4. Base stochastic factor (random accidents, etc.)
     if random.random() < 0.05:
         return 1
         
@@ -48,16 +48,16 @@ async def fetch_weather_for_period(client: httpx.AsyncClient, lat: float, lon: f
         resp.raise_for_status()
         return resp.json().get("daily")
     except Exception as e:
-        print(f"Error HTTP fetching {start_d} a {end_d}: {e}")
+        print(f"HTTP Error fetching {start_d} to {end_d}: {e}")
         return None
 
 async def generate():
-    print("Iniciando generación de dataset sintético Bootstrap...")
+    print("Starting Synthetic Bootstrap Dataset generation...")
     start_date = date(2023, 1, 1)
     end_date = date(2023, 12, 31)
     
-    # Tomamos 100 días aleatorios del año para evitar abusar del API rate limit en la prueba inicial.
-    # En producción este script correría para los 365 días del año * N rutas.
+    # We take 100 random days of the year to avoid abusing the API rate limit in the initial test.
+    # In production this script would run for 365 days of the year * N routes.
     delta = (end_date - start_date).days
     sampled_days = [start_date + timedelta(days=random.randint(0, delta)) for _ in range(100)]
     
@@ -68,12 +68,12 @@ async def generate():
             route = random.choice(ROUTES)
             product = random.choice(PRODUCTS)
             
-            # Simulamos que cada envío dura 7 días. Extraemos el clima de esa semana de ruta.
+            # We simulate that each shipment takes 7 days. We extract the weather for that week of route.
             d_end = d + timedelta(days=7)
             weather = await fetch_weather_for_period(client, route["lat"], route["lon"], d, d_end)
             
             if weather:
-                # Agregación Global (Max pooling) que simula lo que XGBoost aprenderá
+                # Global Aggregation (Max pooling) that simulates what XGBoost will learn
                 t_max = weather.get("temperature_2m_max", [])
                 p_sum = weather.get("precipitation_sum", [])
                 w_max = weather.get("wind_speed_10m_max", [])
@@ -98,8 +98,8 @@ async def generate():
                 })
             
             if (i + 1) % 10 == 0:
-                print(f"Procesados {i+1}/100 envíos simulados...")
-                await asyncio.sleep(0.5) # Throttle leve para Open-Meteo
+                print(f"Processed {i+1}/100 simulated shipments...")
+                await asyncio.sleep(0.5) # Light throttle for Open-Meteo
 
     df = pd.DataFrame(dataset)
     
@@ -108,8 +108,8 @@ async def generate():
     out_path = os.path.join(data_dir, "bootstrap_dataset.csv")
     
     df.to_csv(out_path, index=False)
-    print(f"\n[ÉXITO] Dataset guardado en {out_path} con {len(df)} registros.")
-    print(f"Tasa de Fracaso Sintético (Peligro): {df['fracaso_logistico'].mean() * 100:.1f}%")
+    print(f"\n[SUCCESS] Dataset saved to {out_path} with {len(df)} records.")
+    print(f"Synthetic Failure Rate (Danger): {df['fracaso_logistico'].mean() * 100:.1f}%")
 
 if __name__ == "__main__":
     asyncio.run(generate())
