@@ -1,20 +1,32 @@
 import { OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Model } from 'mongoose';
-import { IMessageConsumer } from 'messaging';
+import { Redis } from '@upstash/redis';
+import { IMessageConsumer, IMessageProducer } from 'messaging';
 import { ClimateEventDocument, ShipmentEventDocument } from 'database';
 export declare class WorkerService implements OnModuleInit {
     private readonly config;
     private readonly climateModel;
     private readonly shipmentModel;
     private readonly consumer;
+    private readonly producer;
+    private readonly redis;
     private readonly logger;
-    private pollIntervalMs;
-    constructor(config: ConfigService, climateModel: Model<ClimateEventDocument>, shipmentModel: Model<ShipmentEventDocument>, consumer: IMessageConsumer);
+    private readonly pollIntervalMs;
+    private readonly maxRetries;
+    constructor(config: ConfigService, climateModel: Model<ClimateEventDocument>, shipmentModel: Model<ShipmentEventDocument>, consumer: IMessageConsumer, producer: IMessageProducer, redis: Redis);
     onModuleInit(): void;
     pollStreams(): Promise<void>;
     private consumeClimateEvents;
     private consumeShipmentEvents;
+    private processTopic;
+    private mapClimateDocument;
+    private mapShipmentDocument;
+    private validatePayload;
+    private retryHashKey;
+    private incrementRetryCount;
+    private clearRetryCount;
+    private ackMessage;
     private stripNulls;
     private calculateAvgLatency;
 }
