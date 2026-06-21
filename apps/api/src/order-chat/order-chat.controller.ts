@@ -1,6 +1,6 @@
 import { Controller, Post, Get, Body, Param, UseGuards, Req } from '@nestjs/common';
 import { OrderChatService } from './order-chat.service';
-import { CreateOrderChatDto } from 'event-types';
+import { CreateOrderChatDto, OrderChatResponseDto } from 'event-types';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('order-chat')
@@ -9,12 +9,12 @@ export class OrderChatController {
   constructor(private readonly orderChatService: OrderChatService) {}
 
   @Post()
-  create(@Req() req: any, @Body() createDto: CreateOrderChatDto) {
+  create(@Req() req: any, @Body() createDto: CreateOrderChatDto): Promise<OrderChatResponseDto> {
     return this.orderChatService.create(req.user.sub, createDto);
   }
 
-  @Get('order/:orderId')
-  findByOrder(@Param('orderId') orderId: string, @Req() req: any) {
+  @Get(':orderId')
+  findByOrder(@Param('orderId') orderId: string, @Req() req: any): Promise<OrderChatResponseDto[]> {
     return this.orderChatService.findByOrder(orderId, req.user.sub);
   }
 }

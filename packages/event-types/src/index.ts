@@ -25,6 +25,7 @@ export * from './product-comment/update-product-comment.dto';
 
 // Order Chat
 export * from './order-chat/create-order-chat.dto';
+export * from './order-chat/order-chat-response.dto';
 
 export * from './tribe/create-tribe.dto';
 export * from './tribe/update-tribe.dto';
