@@ -2,12 +2,14 @@ import { Injectable, NotFoundException, BadRequestException, InternalServerError
 import { CreateProductDto, UpdateProductDto, FindProductsDto, FindNearbyDto, OrderStatus, UserRole, PaginationDto } from 'event-types';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
+import { OnEvent, EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class ProductService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly storageService: StorageService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async create(createProductDto: CreateProductDto, sellerId: string) {
@@ -242,5 +244,30 @@ export class ProductService {
         `No se pudo actualizar la imagen del producto: ${error.message}`
       );
     }
+  }
+
+  @OnEvent('product-rating.changed', { async: true })
+  async handleProductRatingChanged(payload: { productId: string }) {
+    const { productId } = payload;
+    
+    // Calculate new average and total
+    const aggregate = await this.prisma.productRating.aggregate({
+      where: { productId },
+      _avg: { ratingValue: true },
+      _count: { ratingValue: true },
+    });
+
+    // Update product
+    const updatedProduct = await this.prisma.product.update({
+      where: { id: productId },
+      data: {
+        averageRating: aggregate._avg.ratingValue,
+        totalReviews: aggregate._count.ratingValue,
+      },
+      select: { sellerId: true },
+    });
+
+    // Emit event for seller update
+    this.eventEmitter.emit('product-rating.product-updated', { sellerId: updatedProduct.sellerId });
   }
 }

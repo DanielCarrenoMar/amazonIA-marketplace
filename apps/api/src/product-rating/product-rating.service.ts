@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException, ConflictException, ForbiddenException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma } from '@prisma/client';
 import { CreateProductRatingDto, PaginationDto, OrderStatus, FindProductRatingsDto } from 'event-types';
 import { UpdateProductRatingDto } from 'event-types';
@@ -6,45 +7,10 @@ import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class ProductRatingService {
-  constructor(private readonly prisma: PrismaService) {}
-
-  // Recalculates the exact average rating of a product using Prisma's aggregate,
-  // then propagates the seller-level stats (avgProductRating, totalReviews)
-  private async recalculateProductAverage(tx: any, productId: string) {
-    // 1. Recalculate and persist the product-level average
-    const productAggregate = await tx.productRating.aggregate({
-      where: { productId },
-      _avg: { ratingValue: true },
-      _count: { ratingValue: true },
-    });
-
-    const newProductAvg = productAggregate._avg.ratingValue;
-
-    // Fetch the sellerId while updating the product
-    const updatedProduct = await tx.product.update({
-      where: { id: productId },
-      data: {
-        averageRating: newProductAvg,
-        totalReviews: productAggregate._count.ratingValue,
-      },
-      select: { sellerId: true },
-    });
-
-    // 2. Recalculate and persist the seller-level average across ALL their products
-    const sellerAggregate = await tx.productRating.aggregate({
-      where: { product: { sellerId: updatedProduct.sellerId } },
-      _avg: { ratingValue: true },
-      _count: { ratingValue: true },
-    });
-
-    await tx.seller.update({
-      where: { id: updatedProduct.sellerId },
-      data: {
-        avgProductRating: sellerAggregate._avg.ratingValue,
-        totalReviews: sellerAggregate._count.ratingValue,
-      },
-    });
-  }
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventEmitter: EventEmitter2
+  ) {}
 
   // userAccountId comes from the JWT token (req.user.id), NOT from the client body
   async create(userAccountId: string, createProductRatingDto: CreateProductRatingDto) {
@@ -76,8 +42,8 @@ export class ProductRatingService {
         throw e;
       }
 
-      // Recalculate average and inject it into the product
-      await this.recalculateProductAverage(tx, productId);
+      // Emit event to recalculate aggregates asynchronously
+      this.eventEmitter.emit('product-rating.changed', { productId });
       return newRating;
     });
   }
@@ -142,8 +108,8 @@ export class ProductRatingService {
         data: updateProductRatingDto,
       });
 
-      // Recalculate average since the rating amount changed
-      await this.recalculateProductAverage(tx, productId);
+      // Emit event to recalculate aggregates asynchronously
+      this.eventEmitter.emit('product-rating.changed', { productId });
       return updatedRating;
     });
   }
@@ -164,8 +130,8 @@ export class ProductRatingService {
         where: { productId_userAccountId: { productId, userAccountId } },
       });
 
-      // Recalculate average since one rating was dropped
-      await this.recalculateProductAverage(tx, productId);
+      // Emit event to recalculate aggregates asynchronously
+      this.eventEmitter.emit('product-rating.changed', { productId });
       return deletedRating;
     });
   }

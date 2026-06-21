@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException, ConflictException, ForbiddenException } from '@nestjs/common';
+import { OnEvent } from '@nestjs/event-emitter';
 import { Prisma } from '@prisma/client';
 import {  CreateSellerDto, FindSellersDto, UserRole  } from 'event-types';
 import {  UpdateSellerDto  } from 'event-types';
@@ -125,6 +126,26 @@ export class SellerService {
 
     return this.prisma.seller.delete({
       where: { id },
+    });
+  }
+
+  @OnEvent('product-rating.product-updated', { async: true })
+  async handleProductUpdated(payload: { sellerId: string }) {
+    const { sellerId } = payload;
+    
+    // Calculate new average and total across ALL products of this seller
+    const aggregate = await this.prisma.productRating.aggregate({
+      where: { product: { sellerId } },
+      _avg: { ratingValue: true },
+      _count: { ratingValue: true },
+    });
+
+    await this.prisma.seller.update({
+      where: { id: sellerId },
+      data: {
+        avgProductRating: aggregate._avg.ratingValue,
+        totalReviews: aggregate._count.ratingValue,
+      },
     });
   }
 }
