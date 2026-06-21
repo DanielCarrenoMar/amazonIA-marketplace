@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, ConflictException, ForbiddenException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma } from '@prisma/client';
-import { CreateProductRatingDto, PaginationDto, OrderStatus, FindProductRatingsDto } from 'event-types';
+import { CreateProductRatingDto, PaginationDto, OrderStatus, FindProductRatingsDto, ProductRatingResponseDto, PaginatedResponseDto } from 'event-types';
 import { UpdateProductRatingDto } from 'event-types';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -13,7 +13,7 @@ export class ProductRatingService {
   ) {}
 
   // userAccountId comes from the JWT token (req.user.id), NOT from the client body
-  async create(userAccountId: string, createProductRatingDto: CreateProductRatingDto) {
+  async create(userAccountId: string, createProductRatingDto: CreateProductRatingDto): Promise<ProductRatingResponseDto> {
     const { productId, ratingValue } = createProductRatingDto;
 
     const order = await this.prisma.productOrder.findFirst({
@@ -48,7 +48,7 @@ export class ProductRatingService {
     });
   }
 
-  async findAll(query?: FindProductRatingsDto) {
+  async findAll(query?: FindProductRatingsDto): Promise<PaginatedResponseDto<ProductRatingResponseDto>> {
     const { page = 1, limit = 10, productId } = query || {};
     const skip = (page - 1) * limit;
 
@@ -81,7 +81,7 @@ export class ProductRatingService {
     };
   }
 
-  async findOne(productId: string, userAccountId: string) {
+  async findOne(productId: string, userAccountId: string): Promise<ProductRatingResponseDto> {
     const rating = await this.prisma.productRating.findUnique({
       where: { productId_userAccountId: { productId, userAccountId } },
       include: { user: { omit: { passwordHash: true } } },
@@ -91,7 +91,7 @@ export class ProductRatingService {
     return rating;
   }
 
-  async update(productId: string, userAccountId: string, updateProductRatingDto: UpdateProductRatingDto) {
+  async update(productId: string, userAccountId: string, updateProductRatingDto: UpdateProductRatingDto): Promise<ProductRatingResponseDto> {
     // findUnique with the composite key guarantees ownership:
     // if the rating doesn't exist for THIS user on THIS product → 404
     const rating = await this.prisma.productRating.findUnique({
@@ -114,7 +114,7 @@ export class ProductRatingService {
     });
   }
 
-  async remove(productId: string, userAccountId: string) {
+  async remove(productId: string, userAccountId: string): Promise<ProductRatingResponseDto> {
     // findUnique with the composite key guarantees ownership:
     // if the rating doesn't exist for THIS user on THIS product → 404
     const rating = await this.prisma.productRating.findUnique({

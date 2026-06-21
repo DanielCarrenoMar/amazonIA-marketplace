@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ProductService } from './product.service';
-import { CreateProductDto, UpdateProductDto, FindProductsDto, FindNearbyDto, UserRole, PaginationDto } from 'event-types';
+import { CreateProductDto, UpdateProductDto, FindProductsDto, FindNearbyDto, UserRole, PaginationDto, ProductResponseDto, NearbyProductResponseDto, PaginatedResponseDto } from 'event-types';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -18,19 +18,19 @@ export class ProductController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SELLER, UserRole.ADMIN)
   @Post()
-  create(@Body() createProductDto: CreateProductDto, @Req() req: any) {
+  create(@Body() createProductDto: CreateProductDto, @Req() req: any): Promise<ProductResponseDto> {
     return this.productService.create(createProductDto, req.user.id);
   }
 
   // Public — anyone can browse products
   @Get()
-  findAll(@Query() query: FindProductsDto) {
+  findAll(@Query() query: FindProductsDto): Promise<PaginatedResponseDto<ProductResponseDto>> {
     return this.productService.findAll(query);
   }
 
   // Public — anyone can view a single product
   @Get('nearby')
-  findNearby(@Query() query: FindNearbyDto) {
+  findNearby(@Query() query: FindNearbyDto): Promise<PaginatedResponseDto<NearbyProductResponseDto>> {
     return this.productService.findNearby(query);
   }
 
@@ -39,13 +39,13 @@ export class ProductController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SELLER)
   @Get('my-products')
-  findBySeller(@Req() req: any, @Query() query: PaginationDto) {
+  findBySeller(@Req() req: any, @Query() query: PaginationDto): Promise<PaginatedResponseDto<ProductResponseDto>> {
     return this.productService.findBySeller(req.user.id, query);
   }
 
   // Public — anyone can view a single product
   @Get(':id')
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
+  findOne(@Param('id', ParseUUIDPipe) id: string): Promise<ProductResponseDto> {
     return this.productService.findOne(id);
   }
 
@@ -57,7 +57,7 @@ export class ProductController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateProductDto: UpdateProductDto,
     @Req() req: any,
-  ) {
+  ): Promise<ProductResponseDto> {
     return this.productService.update(id, updateProductDto, req.user);
   }
 
@@ -65,7 +65,7 @@ export class ProductController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SELLER, UserRole.ADMIN)
   @Delete(':id')
-  remove(@Param('id', ParseUUIDPipe) id: string, @Req() req: any) {
+  remove(@Param('id', ParseUUIDPipe) id: string, @Req() req: any): Promise<ProductResponseDto> {
     return this.productService.remove(id, req.user);
   }
 
@@ -86,7 +86,7 @@ export class ProductController {
     @Param('id', ParseUUIDPipe) id: string,
     @UploadedFile() file: Express.Multer.File,
     @Req() req: any,
-  ) {
+  ): Promise<ProductResponseDto> {
     if (!file) {
       throw new BadRequestException('No se ha proporcionado ningún archivo de imagen');
     }

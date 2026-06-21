@@ -1,6 +1,6 @@
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { CreateProductOrderDto, FindOrdersDto, PaginationDto } from 'event-types';
+import { CreateProductOrderDto, FindOrdersDto, PaginationDto, ProductOrderResponseDto, PaginatedResponseDto, OrderStatusHistoryResponseDto, OrderTimelineResponseDto } from 'event-types';
 import { UpdateProductOrderDto } from 'event-types';
 import { OrderStatus, UserRole } from 'event-types';
 import { STREAM_TOPICS } from 'messaging';
@@ -26,8 +26,8 @@ export class ProductOrderService {
   ) {}
 
   // buyerId comes from the JWT token (req.user.id), NOT from the client body
-  async create(buyerId: string, createProductOrderDto: CreateProductOrderDto) {
-    return this.prisma.$transaction(async (tx) => {
+  async create(buyerId: string, createProductOrderDto: CreateProductOrderDto): Promise<ProductOrderResponseDto> {
+    const result = await this.prisma.$transaction(async (tx) => {
       // 1. Get the current stock and price
       const product = await tx.product.findUnique({
         where: { id: createProductOrderDto.productId },
@@ -64,9 +64,10 @@ export class ProductOrderService {
         data: { ...createProductOrderDto, buyerId, totalAmount, currentStatus: OrderStatus.PENDING },
       });
     });
+    return result as unknown as ProductOrderResponseDto;
   }
 
-  async findAll(query?: PaginationDto) {
+  async findAll(query?: PaginationDto): Promise<PaginatedResponseDto<ProductOrderResponseDto>> {
     const { page = 1, limit = 10 } = query || {};
     const skip = (page - 1) * limit;
 
@@ -85,7 +86,7 @@ export class ProductOrderService {
     ]);
 
     return {
-      data,
+      data: data as unknown as ProductOrderResponseDto[],
       meta: {
         total,
         page,
@@ -96,7 +97,7 @@ export class ProductOrderService {
   }
 
   // Returns all orders that belong to a specific buyer with pagination and filters
-  async findByBuyer(buyerId: string, query?: FindOrdersDto) {
+  async findByBuyer(buyerId: string, query?: FindOrdersDto): Promise<PaginatedResponseDto<ProductOrderResponseDto>> {
     const { status, page = 1, limit = 10, dateFrom, dateTo } = query || {};
     const skip = (page - 1) * limit;
 
@@ -128,7 +129,7 @@ export class ProductOrderService {
     ]);
 
     return {
-      data,
+      data: data as unknown as ProductOrderResponseDto[],
       meta: {
         total,
         page,
@@ -138,7 +139,7 @@ export class ProductOrderService {
     };
   }
 
-  async findBySeller(sellerId: string, query?: FindOrdersDto) {
+  async findBySeller(sellerId: string, query?: FindOrdersDto): Promise<PaginatedResponseDto<ProductOrderResponseDto>> {
     const { status, page = 1, limit = 10, dateFrom, dateTo } = query || {};
     const skip = (page - 1) * limit;
 
@@ -171,7 +172,7 @@ export class ProductOrderService {
     ]);
 
     return {
-      data,
+      data: data as unknown as ProductOrderResponseDto[],
       meta: {
         total,
         page,
@@ -181,7 +182,7 @@ export class ProductOrderService {
     };
   }
 
-  async findOne(id: string, reqUser?: { id: string; role: UserRole }) {
+  async findOne(id: string, reqUser?: { id: string; role: UserRole }): Promise<ProductOrderResponseDto> {
     const order = await this.prisma.productOrder.findUnique({
       where: { id },
       include: {
@@ -199,7 +200,7 @@ export class ProductOrderService {
       }
     }
 
-    return order;
+    return order as unknown as ProductOrderResponseDto;
   }
 
   /**
@@ -207,7 +208,7 @@ export class ProductOrderService {
    * If MongoDB is unavailable (circuit OPEN, timeout, or error), telemetry
    * degrades gracefully to null — the order data from PostgreSQL is always returned.
    */
-  async findOneWithTelemetry(id: string, reqUser: { id: string; role: UserRole }) {
+  async findOneWithTelemetry(id: string, reqUser: { id: string; role: UserRole }): Promise<ProductOrderResponseDto> {
     const order = await this.findOne(id, reqUser);
     const telemetry = await this.telemetryIntegration.getShipmentTelemetry(
       order.trackingNumber ?? null,
@@ -221,20 +222,21 @@ export class ProductOrderService {
    * Telemetry degrades gracefully: if MongoDB is unavailable, only order events
    * are returned and `telemetryAvailable` is set to false.
    */
-  async getTimeline(id: string, reqUser: { id: string; role: UserRole }) {
+  async getTimeline(id: string, reqUser: { id: string; role: UserRole }): Promise<OrderTimelineResponseDto> {
     const order = await this.findOne(id, reqUser);
     const telemetry = await this.telemetryIntegration.getShipmentTelemetry(
       order.trackingNumber ?? null,
       100,
     );
 
-    const orderEvents = order.statusHistory.map((h) => ({
+    const historyItems = order.statusHistory || [];
+    const orderEvents = historyItems.map((h) => ({
       type: 'order_event' as const,
       timestamp: h.createdAt.toISOString(),
       source: 'postgresql' as const,
       historyId: h.id,
-      previousStatus: (h.previousStatus as OrderStatus) ?? null,
-      newStatus: h.newStatus as OrderStatus,
+      previousStatus: h.previousStatus as unknown as OrderStatus,
+      newStatus: h.newStatus as unknown as OrderStatus,
       statusNote: h.statusNote,
     }));
 
@@ -264,7 +266,7 @@ export class ProductOrderService {
   }
 
   // Find a single order ensuring it belongs to the given buyerId
-  async findOneForBuyer(id: string, buyerId: string) {
+  async findOneForBuyer(id: string, buyerId: string): Promise<ProductOrderResponseDto> {
     const order = await this.prisma.productOrder.findUnique({
       where: { id },
       include: {
@@ -280,7 +282,7 @@ export class ProductOrderService {
       throw new ForbiddenException('You can only view your own order');
     }
 
-    return order;
+    return order as unknown as ProductOrderResponseDto;
   }
 
   // reqUser comes from the JWT token (req.user), NOT from the client body
@@ -288,7 +290,7 @@ export class ProductOrderService {
     id: string,
     reqUser: { id: string; role: UserRole },
     updateProductOrderDto: UpdateProductOrderDto,
-  ) {
+  ): Promise<ProductOrderResponseDto> {
     const order = await this.findOne(id); // Already includes { product: true }
 
     if (
@@ -315,7 +317,7 @@ export class ProductOrderService {
     const nextStatus = orderData.currentStatus;
 
     // Use a transaction to keep the order update and history log atomic
-    return this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       // Re-fetch the order inside the transaction to prevent race conditions
       const currentOrder = await tx.productOrder.findUnique({
         where: { id },
@@ -426,18 +428,22 @@ export class ProductOrderService {
 
       return updatedOrder;
     });
+    return result as unknown as ProductOrderResponseDto;
   }
 
-  async findHistory(id: string, reqUser?: { id: string; role: UserRole }) {
+  async findHistory(id: string, reqUser?: { id: string; role: UserRole }): Promise<OrderStatusHistoryResponseDto[]> {
     await this.findOne(id, reqUser); // Verify the order exists and check ownership
-    return this.prisma.orderStatusHistory.findMany({
+    const history = await this.prisma.orderStatusHistory.findMany({
       where: { orderId: id },
-      orderBy: { createdAt: 'asc' },
-      include: { changedByUser: { omit: { passwordHash: true } } },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        changedByUser: { omit: { passwordHash: true } },
+      },
     });
+    return history as unknown as OrderStatusHistoryResponseDto[];
   }
 
-  async remove(id: string, reqUser: { id: string; role: UserRole }) {
+  async remove(id: string, reqUser: { id: string; role: UserRole }): Promise<ProductOrderResponseDto> {
     const order = await this.findOne(id); // Check existence
 
     if (order.buyerId !== reqUser.id && reqUser.role !== UserRole.ADMIN) {
@@ -448,7 +454,7 @@ export class ProductOrderService {
       throw new ConflictException('Sólo las órdenes PENDING o CANCELED pueden ser eliminadas');
     }
 
-    return this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       // Restore stock if deleting an active order permanently
       if (
         order.currentStatus !== OrderStatus.CANCELED &&
@@ -464,6 +470,7 @@ export class ProductOrderService {
         where: { id },
       });
     });
+    return result as unknown as ProductOrderResponseDto;
   }
 }
 

@@ -12,7 +12,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { UserAccountService } from './user-account.service';
-import { CreateUserAccountDto, UpdateUserAccountDto, ChangePasswordDto, UserRole, PaginationDto } from 'event-types';
+import { CreateUserAccountDto, UpdateUserAccountDto, ChangePasswordDto, UserRole, PaginationDto, UserAccountResponseDto, PaginatedResponseDto } from 'event-types';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -26,14 +26,14 @@ export class UserAccountController {
   findOne(
     @Param('id', ParseUUIDPipe) id: string,
     @Request() req: any,
-  ) {
+  ): Promise<UserAccountResponseDto> {
     return this.userAccountService.findOne(id, req.user);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @Get()
-  findAll(@Query() query: PaginationDto) {
+  findAll(@Query() query: PaginationDto): Promise<PaginatedResponseDto<UserAccountResponseDto>> {
     return this.userAccountService.findAll(query);
   }
 
@@ -43,7 +43,7 @@ export class UserAccountController {
     @Param('id', ParseUUIDPipe) id: string,
     @Request() req: any,
     @Body() updateUserAccountDto: UpdateUserAccountDto,
-  ) {
+  ): Promise<UserAccountResponseDto> {
     return this.userAccountService.update(id, req.user, updateUserAccountDto);
   }
 
@@ -53,7 +53,7 @@ export class UserAccountController {
     @Param('id', ParseUUIDPipe) id: string,
     @Request() req: any,
     @Body() changePasswordDto: ChangePasswordDto,
-  ) {
+  ): Promise<UserAccountResponseDto> {
     return this.userAccountService.changePassword(id, req.user, changePasswordDto);
   }
 
@@ -63,7 +63,7 @@ export class UserAccountController {
   remove(
     @Param('id', ParseUUIDPipe) id: string,
     @Request() req: any,
-  ) {
+  ): Promise<UserAccountResponseDto> {
     return this.userAccountService.remove(id, req.user);
   }
 }

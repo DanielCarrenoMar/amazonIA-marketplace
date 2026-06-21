@@ -1,14 +1,13 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import {  CreateTribeDto  } from 'event-types';
-import {  UpdateTribeDto, PaginationDto  } from 'event-types';
+import { CreateTribeDto, UpdateTribeDto, PaginationDto, TribeResponseDto, PaginatedResponseDto } from 'event-types';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class TribeService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(createTribeDto: CreateTribeDto) {
+  async create(createTribeDto: CreateTribeDto): Promise<TribeResponseDto> {
     try {
       return await this.prisma.tribe.create({
         data: createTribeDto,
@@ -22,7 +21,7 @@ export class TribeService {
     }
   }
 
-  async findAll(query?: PaginationDto) {
+  async findAll(query?: PaginationDto): Promise<PaginatedResponseDto<TribeResponseDto>> {
     const { page = 1, limit = 10 } = query || {};
     const skip = (page - 1) * limit;
 
@@ -37,7 +36,7 @@ export class TribeService {
     };
   }
 
-  async findOne(id: number) {
+  async findOne(id: number): Promise<TribeResponseDto> {
     const tribe = await this.prisma.tribe.findUnique({
       where: { id },
     });
@@ -46,7 +45,7 @@ export class TribeService {
     return tribe;
   }
 
-  async update(id: number, updateTribeDto: UpdateTribeDto) {
+  async update(id: number, updateTribeDto: UpdateTribeDto): Promise<TribeResponseDto> {
     await this.findOne(id); // Check existence
     return this.prisma.tribe.update({
       where: { id },
@@ -54,7 +53,7 @@ export class TribeService {
     });
   }
 
-  async remove(id: number) {
+  async remove(id: number): Promise<TribeResponseDto> {
     await this.findOne(id); // Check existence
     return this.prisma.tribe.delete({
       where: { id },
