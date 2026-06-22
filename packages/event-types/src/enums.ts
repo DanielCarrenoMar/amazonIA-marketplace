@@ -14,6 +14,23 @@ export enum OrderStatus {
 }
 
 // ---------------------------------------------------------------------------
+// Tribe Enums
+// ---------------------------------------------------------------------------
+
+export enum TribeStatus {
+  PENDING_APPROVAL = 'PENDING_APPROVAL',
+  ACTIVE = 'ACTIVE',
+  REJECTED = 'REJECTED',
+  SUSPENDED = 'SUSPENDED',
+}
+
+export enum MembershipRequestStatus {
+  PENDING = 'PENDING',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+}
+
+// ---------------------------------------------------------------------------
 // IoT / Telemetry Enums
 // ---------------------------------------------------------------------------
 

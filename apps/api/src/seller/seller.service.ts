@@ -25,6 +25,8 @@ export class SellerService {
               } 
             },
             tribe: true,
+            ledTribeAsPrimary: true,
+            ledTribeAsSecondary: true,
           },
         });
 
@@ -75,6 +77,8 @@ export class SellerService {
             } 
           },
           tribe: true,
+          ledTribeAsPrimary: true,
+          ledTribeAsSecondary: true,
         },
         skip,
         take: limit,
@@ -109,6 +113,8 @@ export class SellerService {
           } 
         },
         tribe: true,
+        ledTribeAsPrimary: true,
+        ledTribeAsSecondary: true,
       },
     });
     
@@ -138,6 +144,8 @@ export class SellerService {
           } 
         },
         tribe: true,
+        ledTribeAsPrimary: true,
+        ledTribeAsSecondary: true,
       },
     });
   }

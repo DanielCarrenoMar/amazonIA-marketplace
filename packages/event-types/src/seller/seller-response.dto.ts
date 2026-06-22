@@ -16,4 +16,6 @@ export class SellerResponseDto {
   totalReviews: number;
   user?: SellerUserDto;
   tribe?: any; // TribeResponseDto
+  ledTribeAsPrimary?: any; // TribeResponseDto
+  ledTribeAsSecondary?: any; // TribeResponseDto
 }

@@ -48,6 +48,25 @@ enum BlockchainStatus {
 }
 
 // ---------------------------------------------------------------------------
+
+enum TribeStatus {
+  PENDING_APPROVAL
+  ACTIVE
+  REJECTED
+  SUSPENDED
+
+  @@map("tribe_status_enum")
+}
+
+enum MembershipRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+
+  @@map("membership_request_status_enum")
+}
+
+// ---------------------------------------------------------------------------
 // UserAccount
 // ---------------------------------------------------------------------------
 
@@ -92,18 +111,37 @@ model UserAccount {
 // ---------------------------------------------------------------------------
 
 model Tribe {
-  id          Int     @id @default(autoincrement())
-  name        String  @db.VarChar(255)
+  id          Int         @id @default(autoincrement())
+  name        String      @db.VarChar(255)
   description String?
+  status      TribeStatus @default(PENDING_APPROVAL)
+
+  // Líderes — FK a Seller
+  primaryLeaderId   String? @unique @map("primary_leader_id") @db.Uuid
+  secondaryLeaderId String? @unique @map("secondary_leader_id") @db.Uuid
+
+  // Quien solicitó la creación
+  requestedById String? @map("requested_by_id") @db.Uuid
+
+  // Admin que aprobó/rechazó
+  reviewedById  String?   @map("reviewed_by_id") @db.Uuid
+  reviewedAt    DateTime? @map("reviewed_at") @db.Timestamptz
+  reviewNote    String?   @map("review_note")
 
   // Spatial
   locationCoords           Unsupported("geography(Point, 4326)")? @map("location_coords")
   locationMapboxId         String?                                @map("location_mapbox_id") @db.VarChar(100)
   locationFormattedAddress String?                                @map("location_formatted_address")
 
-  // Relations
-  sellers Seller[]
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
+  // Relations
+  primaryLeader      Seller?                  @relation("TribePrimaryLeader", fields: [primaryLeaderId], references: [id], onDelete: SetNull)
+  secondaryLeader    Seller?                  @relation("TribeSecondaryLeader", fields: [secondaryLeaderId], references: [id], onDelete: SetNull)
+  sellers            Seller[]                 @relation("TribeMembers")
+  membershipRequests TribeMembershipRequest[]
+
+  @@index([status])
   @@map("tribe")
 }
 
@@ -122,11 +160,42 @@ model Seller {
   totalReviews     Int    @default(0) @map("total_reviews")
 
   // Relations
-  user     UserAccount @relation(fields: [id], references: [id], onDelete: Cascade)
-  tribe    Tribe?      @relation(fields: [tribeId], references: [id], onDelete: SetNull)
-  products Product[]
+  user                       UserAccount                @relation(fields: [id], references: [id], onDelete: Cascade)
+  tribe                      Tribe?                     @relation("TribeMembers", fields: [tribeId], references: [id], onDelete: SetNull)
+  products                   Product[]
+  ledTribeAsPrimary          Tribe?                     @relation("TribePrimaryLeader")
+  ledTribeAsSecondary        Tribe?                     @relation("TribeSecondaryLeader")
+  sentMembershipRequests     TribeMembershipRequest[]   @relation("MembershipRequestedBy")
+  reviewedMembershipRequests TribeMembershipRequest[]   @relation("MembershipReviewedBy")
 
   @@map("seller")
+}
+
+// ---------------------------------------------------------------------------
+// TribeMembershipRequest
+// ---------------------------------------------------------------------------
+
+model TribeMembershipRequest {
+  id         Int                      @id @default(autoincrement())
+  tribeId    Int                      @map("tribe_id")
+  sellerId   String                   @map("seller_id") @db.Uuid
+  status     MembershipRequestStatus  @default(PENDING)
+  message    String?
+  reviewNote String?                  @map("review_note")
+
+  // Líder que revisó la solicitud
+  reviewedById String?   @map("reviewed_by_id") @db.Uuid
+  reviewedAt   DateTime? @map("reviewed_at") @db.Timestamptz
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  tribe      Tribe   @relation(fields: [tribeId], references: [id], onDelete: Cascade)
+  seller     Seller  @relation("MembershipRequestedBy", fields: [sellerId], references: [id], onDelete: Cascade)
+  reviewedBy Seller? @relation("MembershipReviewedBy", fields: [reviewedById], references: [id])
+
+  @@unique([tribeId, sellerId])
+  @@index([tribeId, status])
+  @@map("tribe_membership_request")
 }
 
 // ---------------------------------------------------------------------------
@@ -159,6 +228,7 @@ model Product {
   imageUrl       String?  @map("image_url")
   averageRating  Decimal? @map("average_rating") @db.Decimal(3, 2)
   totalReviews   Int      @default(0) @map("total_reviews")
+  isActive       Boolean  @default(true) @map("is_active")
 
   // Spatial
   locationCoords           Unsupported("geography(Point, 4326)")? @map("location_coords")
@@ -179,6 +249,7 @@ model Product {
 
   @@index([sellerId])
   @@index([locationCoords], type: Gist)
+  @@index([isActive])
   @@map("product")
 }
 

@@ -9,14 +9,17 @@ export class ProductResponseDto {
   imageUrl: string | null;
   averageRating: any | null; // Decimal
   totalReviews: number;
+  isActive: boolean;
   locationMapboxId: string | null;
   locationFormattedAddress: string | null;
   locationCity: string | null;
   locationRegion: string | null;
   createdAt: Date;
   updatedAt: Date;
-  seller?: any; // We can type this as SellerResponseDto later
-  category?: any; // We can type this as ProductCategoryResponseDto later
+  
+  // Optional relations depending on the endpoint
+  seller?: any; // SellerResponseDto
+  category?: any; // ProductCategoryResponseDto
 }
 
 export class NearbyProductResponseDto {

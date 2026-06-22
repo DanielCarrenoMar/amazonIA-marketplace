@@ -44,6 +44,7 @@ export class ProductService {
 
     // Prisma Where conditions
     const where: import('@prisma/client').Prisma.ProductWhereInput = {
+      isActive: true, // Only show active products to buyers
       ...(categoryId ? { categoryId } : {}),
       ...(sellerId ? { sellerId } : {}),
       ...(search ? { name: { contains: search, mode: 'insensitive' } } : {}),
@@ -100,6 +101,7 @@ export class ProductService {
         ) AS "distanceKm"
       FROM product p
       WHERE p.location_coords IS NOT NULL
+        AND p.is_active = true
         AND ST_DWithin(
           p.location_coords,
           ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326),
