@@ -5,10 +5,17 @@
   "main": "sensor.js",
   "scripts": {
     "start": "node sensor.js",
+    "start:all": "./start-all.sh",
     "setup:systemd": "bash ./install-systemd.sh",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["iot", "mqtt", "amazonia", "simulator", "systemd"],
+  "keywords": [
+    "iot",
+    "mqtt",
+    "amazonia",
+    "simulator",
+    "systemd"
+  ],
   "author": "",
   "license": "ISC",
   "type": "commonjs",

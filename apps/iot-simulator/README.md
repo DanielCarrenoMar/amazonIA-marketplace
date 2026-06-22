@@ -17,6 +17,7 @@ Genera telemetría ficticia de envíos (GPS, temperatura, vibraciones) y la publ
 ```
 Prueba-IoT-Amazonia/
 ├── sensor.js                  # Simulador IoT (publicador MQTT)
+├── start-all.sh               # Ejecuta 3 sensores en paralelo
 ├── amazonia-sensor.service    # Plantilla de unidad systemd
 ├── install-systemd.sh         # Instalador portable del servicio
 ├── package.json
@@ -67,6 +68,28 @@ npm start
 ### Detener el sensor
 
 Presiona **`Ctrl+C`** en la terminal donde ejecutaste `npm start`. El proceso se cerrará limpiamente (graceful shutdown) y liberará todos los recursos.
+
+### Iniciar múltiples sensores en paralelo
+
+Para ejecutar los 3 sensores simultáneamente (clima01, clima02, sensor02):
+
+```bash
+npm run start:all
+```
+
+Este comando ejecuta `start-all.sh`, que:
+
+1. Carga las variables compartidas (`HIVEMQ_HOST`, `HIVEMQ_PORT`, `HIVEMQ_PASSWORD`) desde `.env`.
+2. Lanza 3 procesos `node sensor.js` en paralelo, cada uno con un `HIVEMQ_USERNAME` diferente.
+3. Captura `Ctrl+C` para detener los 3 procesos limpiamente.
+
+| Sensor | Usuario | ID Generado | Tópico MQTT |
+|---|---|---|---|
+| Clima 01 | `clima01` | `CRM-001` | `amazonia/iot/weather` |
+| Clima 02 | `clima02` | `CRM-002` | `amazonia/iot/weather` |
+| Paquete 02 | `sensor02` | `ORD-002` | `amazonia/iot/shipment` |
+
+> **Nota:** Los sensores de clima se fijan a una estación meteorológica y reportan humedad, presión, viento y UV. Los sensores de paquete recorren la ruta Manaos → Belém reportando temperatura e impactos.
 
 ---
 
