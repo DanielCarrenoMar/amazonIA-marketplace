@@ -28,8 +28,8 @@ export interface IClimateMetadata {
 }
 
 export interface IClimateTelemetry {
-  temperature_celsius?: number;
-  humidity_percent?: number;
+  temperature_celsius: number;
+  humidity_percent: number;
   pressure_hpa?: number;
   wind_speed_kmh?: number;
   uv_index?: number;
@@ -74,13 +74,11 @@ export class ClimateMetadataDto implements IClimateMetadata {
 }
 
 export class ClimateTelemetryDto implements IClimateTelemetry {
-  @IsOptional()
   @IsNumber()
-  temperature_celsius?: number;
+  temperature_celsius: number;
 
-  @IsOptional()
   @IsNumber()
-  humidity_percent?: number;
+  humidity_percent: number;
 
   // ── Extended weather fields ─────────────────────────────────
   // Used by ground-based weather stations in the Amazon basin
