@@ -45,6 +45,7 @@ export class ShipmentEventDocument {
     raw({
       tracking_number: { type: String, required: true },
       container_id: { type: String, required: true },
+      sensor_id: { type: String },
     }),
   )
   metadata: IShipmentMetadata;
@@ -83,5 +84,11 @@ ShipmentEventSchema.index({ location: '2dsphere' });
 // Composite index for querying by tracking number within a time range
 ShipmentEventSchema.index({
   'metadata.tracking_number': 1,
+  recorded_at: -1,
+});
+
+// Composite index for querying by sensor_id within a time range
+ShipmentEventSchema.index({
+  'metadata.sensor_id': 1,
   recorded_at: -1,
 });

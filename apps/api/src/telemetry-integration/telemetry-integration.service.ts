@@ -66,6 +66,32 @@ export class TelemetryIntegrationService {
   }
 
   /**
+   * Fetch the last N telemetry events for a sensor ID.
+   */
+  async getShipmentTelemetryBySensor(
+    sensorId: string | null,
+    limit = 20,
+  ): Promise<ShipmentEventDto[] | null> {
+    if (!sensorId) return null;
+
+    if (this.circuitBreaker.currentState === CircuitState.OPEN) {
+      this.logger.debug(`Circuit OPEN — skipping MongoDB query for sensor ${sensorId}`);
+    }
+
+    return this.circuitBreaker.execute(() =>
+      this.withTimeout(() =>
+        this.shipmentModel
+          .find({ 'metadata.sensor_id': sensorId })
+          .sort({ recorded_at: -1 })
+          .limit(limit)
+          .lean()
+          .exec()
+          .then((docs) => docs.map((d) => this.mapDocToDto(d))),
+      ),
+    );
+  }
+
+  /**
    * Fetch a paginated shipment history for use in dedicated telemetry endpoints.
    * Returns null when the circuit is OPEN or a network/timeout error occurs,
    * allowing callers to respond with 503 instead of 500.
@@ -76,6 +102,34 @@ export class TelemetryIntegrationService {
     limit: number,
   ): Promise<ShipmentHistoryResult | null> {
     const filter = { 'metadata.tracking_number': trackingNumber };
+    const offset = (page - 1) * limit;
+
+    return this.circuitBreaker.execute(() =>
+      this.withTimeout(async () => {
+        const [total, docs] = await Promise.all([
+          this.shipmentModel.countDocuments(filter).exec(),
+          this.shipmentModel
+            .find(filter)
+            .sort({ recorded_at: -1 })
+            .skip(offset)
+            .limit(limit)
+            .lean()
+            .exec(),
+        ]);
+        return { total, data: docs.map((d) => this.mapDocToDto(d)) };
+      }),
+    );
+  }
+
+  /**
+   * Fetch paginated shipment history by sensor ID.
+   */
+  async getShipmentHistoryBySensor(
+    sensorId: string,
+    page: number,
+    limit: number,
+  ): Promise<ShipmentHistoryResult | null> {
+    const filter = { 'metadata.sensor_id': sensorId };
     const offset = (page - 1) * limit;
 
     return this.circuitBreaker.execute(() =>

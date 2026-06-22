@@ -17,4 +17,14 @@ export class ShipmentsController {
   ) {
     return this.shipmentsService.getHistory(trackingNumber, query, req.user);
   }
+  @UseGuards(JwtAuthGuard)
+  @Get('sensor/:sensor_id/history')
+  getHistoryBySensor(
+    @Param('sensor_id') sensorId: string,
+    @Query(new ValidationPipe({ transform: true, whitelist: true }))
+    query: PaginationDto,
+    @Req() req: any,
+  ) {
+    return this.shipmentsService.getHistoryBySensor(sensorId, query, req.user);
+  }
 }

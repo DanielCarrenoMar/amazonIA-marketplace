@@ -19,6 +19,7 @@ export class ProductOrderResponseDto {
   totalAmount: any; // Decimal
   orderNotes: string | null;
   trackingNumber: string | null;
+  sensorId: string | null;
   carrierId: number | null;
   sellerRatingValue: number | null;
   buyerRatingValue: number | null;

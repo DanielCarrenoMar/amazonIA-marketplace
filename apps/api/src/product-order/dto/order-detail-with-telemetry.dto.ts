@@ -115,6 +115,9 @@ export class ShipmentMetadataResponseDto {
 
   @ApiProperty({ example: 'CONT-TRK001' })
   container_id: string;
+
+  @ApiPropertyOptional({ example: 'SENSOR-IOT-001' })
+  sensor_id?: string;
 }
 
 export class BusinessContextResponseDto {
@@ -202,6 +205,13 @@ export class OrderDetailWithTelemetryDto {
     nullable: true,
   })
   trackingNumber: string | null;
+
+  @ApiPropertyOptional({
+    example: 'SENSOR-IOT-001',
+    description: 'ID del sensor IoT colocado en el paquete por el vendedor',
+    nullable: true,
+  })
+  sensorId: string | null;
 
   @ApiPropertyOptional({
     example: '0xabc123def456...',
