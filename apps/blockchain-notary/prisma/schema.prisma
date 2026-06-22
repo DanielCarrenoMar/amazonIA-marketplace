@@ -45,3 +45,75 @@ model BlockchainRecord {
   @@index([transactionHash])
   @@map("blockchain_record")
 }
+
+// ── Gobernanza ───────────────────────────────────────────────────────
+
+enum GovernanceRole {
+  NONE
+  MEMBER
+  ELDER
+  @@map("governance_role_enum")
+}
+
+enum ProposalStatus {
+  PENDING
+  APPROVED
+  VETOED
+  CONFIRMED
+  FAILED
+  @@map("proposal_status_enum")
+}
+
+model GovernanceMember {
+  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String          @unique @map("user_id")
+  walletAddress String          @unique @map("wallet_address") @db.VarChar(42)
+  role          GovernanceRole  @default(NONE)
+  assignedAt    DateTime        @default(now()) @map("assigned_at") @db.Timestamptz
+  assignedBy    String?         @map("assigned_by")
+
+  votes         Vote[]
+
+  @@index([role])
+  @@map("governance_member")
+}
+
+model Proposal {
+  id              String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  proposalId      String          @unique @map("proposal_id")
+  contentHash     String          @map("content_hash")
+  proposerUserId  String          @map("proposer_user_id")
+  status          ProposalStatus  @default(PENDING)
+  votesFor        Int             @default(0) @map("votes_for")
+  votesAgainst    Int             @default(0) @map("votes_against")
+  vetoReason      String?         @map("veto_reason")
+  vetoedBy        String?         @map("vetoed_by")
+  transactionHash String?         @map("transaction_hash") @db.VarChar(255)
+  blockNumber     Int?            @map("block_number")
+  gasUsed         String?         @map("gas_used") @db.VarChar(50)
+  deadline        DateTime        @map("deadline") @db.Timestamptz
+  createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz
+  confirmedAt     DateTime?       @map("confirmed_at") @db.Timestamptz
+
+  votes           Vote[]
+
+  @@index([status])
+  @@index([proposerUserId])
+  @@map("proposal")
+}
+
+model Vote {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  proposalId  String   @map("proposal_id") @db.Uuid
+  voterId     String   @map("voter_id") @db.Uuid
+  inFavor     Boolean  @map("in_favor")
+  weight      Int      @default(1)
+  txHash      String?  @map("tx_hash") @db.VarChar(255)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  proposal    Proposal           @relation(fields: [proposalId], references: [id])
+  voter       GovernanceMember   @relation(fields: [voterId], references: [id])
+
+  @@unique([proposalId, voterId])
+  @@map("vote")
+}
