@@ -2,15 +2,6 @@ import { IsString, IsNotEmpty, IsOptional, IsInt, IsNumber, Min, Max, IsUUID } f
 
 export class CreateSellerDto {
 
-
-  @IsInt()
-  @IsOptional()
-  tribeId?: number;
-
-
-
-
-
   @IsString()
   @IsOptional()
   description?: string;

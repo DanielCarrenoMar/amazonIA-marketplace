@@ -23,7 +23,11 @@ describe('ProductRatingService', () => {
     $transaction: jest.fn(async (callback: any) => callback(txMock)),
   } as any;
 
-  const service = new ProductRatingService(prismaMock);
+  const eventEmitterMock = {
+    emit: jest.fn(),
+  } as any;
+
+  const service = new ProductRatingService(prismaMock, eventEmitterMock);
 
   beforeEach(() => {
     jest.clearAllMocks();

@@ -134,7 +134,7 @@ export class WorkerService implements OnModuleInit {
         try {
           this.validatePayload(msg.value);
           const document = mapper(msg);
-          await model.create(document);
+          await this.insertWithRetry(model, [document]);
 
           await this.ackMessage(topic, msg.offset);
           await this.clearRetryCount(topic, msg.offset);
@@ -171,7 +171,7 @@ export class WorkerService implements OnModuleInit {
       }
 
       this.logger.log(
-        `Topic ${topic} cycle: ${metrics.persisted} persisted, ${metrics.failed} failed, ${metrics.sentToDlq} sent to DLQ`,
+        `Topic ${topic} cycle: ${metrics.persisted} persisted, ${metrics.failed} failed, ${metrics.sentToDlq} sent to DLQ | avg latency: ${this.calculateAvgLatency(messages.map((m) => m.value))}ms`,
       );
     } catch (error) {
       this.logger.error(
@@ -268,6 +268,31 @@ export class WorkerService implements OnModuleInit {
   // -------------------------------------------------------------------------
   // Metrics & Utilities
   // -------------------------------------------------------------------------
+
+  private async insertWithRetry<T>(
+    model: Model<T>,
+    documents: Record<string, any>[],
+    maxRetries = 3,
+  ): Promise<void> {
+    const delays = [100, 200, 400];
+    let lastError: unknown;
+
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        await model.insertMany(documents, { ordered: false });
+        return;
+      } catch (error) {
+        lastError = error;
+        const delay = delays[attempt];
+        this.logger.warn(
+          `insertMany attempt ${attempt + 1}/${maxRetries} failed, retrying in ${delay}ms`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+    }
+
+    throw lastError;
+  }
 
   /**
    * Recursively removes keys with null or undefined values from an object.

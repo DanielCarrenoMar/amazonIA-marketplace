@@ -28,18 +28,18 @@ enum BlockchainStatus {
 // ---------------------------------------------------------------------------
 
 model BlockchainRecord {
-  id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  orderId          String           @unique @map("order_id") @db.Uuid
-  transactionHash  String?          @map("transaction_hash") @db.VarChar(255)
-  blockNumber      Int?             @map("block_number")
-  networkName      String           @default("arbitrum") @map("network_name") @db.VarChar(50)
-  status           BlockchainStatus @default(PENDING)
-  retryCount       Int              @default(0) @map("retry_count")
-  errorMessage     String?          @map("error_message")
-  gasUsed          String?          @map("gas_used") @db.VarChar(50)
-  submittedAt      DateTime?        @map("submitted_at") @db.Timestamptz
-  confirmedAt      DateTime?        @map("confirmed_at") @db.Timestamptz
-  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz
+  id              String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId         String           @unique @map("order_id") @db.Uuid
+  transactionHash String?          @map("transaction_hash") @db.VarChar(255)
+  blockNumber     Int?             @map("block_number")
+  networkName     String           @default("arbitrum") @map("network_name") @db.VarChar(50)
+  status          BlockchainStatus @default(PENDING)
+  retryCount      Int              @default(0) @map("retry_count")
+  errorMessage    String?          @map("error_message")
+  gasUsed         String?          @map("gas_used") @db.VarChar(50)
+  submittedAt     DateTime?        @map("submitted_at") @db.Timestamptz
+  confirmedAt     DateTime?        @map("confirmed_at") @db.Timestamptz
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz
 
   @@index([status])
   @@index([transactionHash])

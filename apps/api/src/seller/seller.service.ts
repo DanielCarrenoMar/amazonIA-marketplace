@@ -1,18 +1,33 @@
 import { Injectable, NotFoundException, ConflictException, ForbiddenException } from '@nestjs/common';
+import { OnEvent } from '@nestjs/event-emitter';
 import { Prisma } from '@prisma/client';
-import {  CreateSellerDto, FindSellersDto, UserRole  } from 'event-types';
-import {  UpdateSellerDto  } from 'event-types';
+import { CreateSellerDto, UpdateSellerDto, FindSellersDto, UserRole, SellerResponseDto, PaginatedResponseDto } from 'event-types';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class SellerService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(id: string, createSellerDto: CreateSellerDto) {
+  async create(id: string, createSellerDto: CreateSellerDto): Promise<SellerResponseDto> {
     try {
       return await this.prisma.$transaction(async (tx) => {
         const seller = await tx.seller.create({
           data: { id, ...createSellerDto },
+          include: {
+            user: { 
+              select: { 
+                id: true, 
+                fullName: true, 
+                username: true, 
+                email: true, 
+                age: true, 
+                nationality: true 
+              } 
+            },
+            tribe: true,
+            ledTribeAsPrimary: true,
+            ledTribeAsSecondary: true,
+          },
         });
 
         await tx.userAccount.update({
@@ -31,7 +46,7 @@ export class SellerService {
     }
   }
 
-  async findAll(query?: FindSellersDto) {
+  async findAll(query?: FindSellersDto): Promise<PaginatedResponseDto<SellerResponseDto>> {
     const { tribeId, search, page = 1, limit = 10 } = query || {};
     const skip = (page - 1) * limit;
 
@@ -62,6 +77,8 @@ export class SellerService {
             } 
           },
           tribe: true,
+          ledTribeAsPrimary: true,
+          ledTribeAsSecondary: true,
         },
         skip,
         take: limit,
@@ -80,7 +97,7 @@ export class SellerService {
     };
   }
 
-  async findOne(id: string) {
+  async findOne(id: string): Promise<SellerResponseDto> {
     // Instant read: the rating is already denormalized and stored in the Seller record.
     const seller = await this.prisma.seller.findUnique({
       where: { id },
@@ -96,6 +113,8 @@ export class SellerService {
           } 
         },
         tribe: true,
+        ledTribeAsPrimary: true,
+        ledTribeAsSecondary: true,
       },
     });
     
@@ -103,7 +122,7 @@ export class SellerService {
     return seller;
   }
 
-  async update(id: string, updateSellerDto: UpdateSellerDto, reqUser?: { id: string; role: UserRole }) {
+  async update(id: string, reqUser: { id: string; role: UserRole }, updateSellerDto: UpdateSellerDto): Promise<SellerResponseDto> {
     await this.findOne(id); // Check existence
 
     if (reqUser && reqUser.role !== UserRole.ADMIN && reqUser.id !== id) {
@@ -113,6 +132,21 @@ export class SellerService {
     return this.prisma.seller.update({
       where: { id },
       data: updateSellerDto,
+      include: {
+        user: { 
+          select: { 
+            id: true, 
+            fullName: true, 
+            username: true, 
+            email: true, 
+            age: true, 
+            nationality: true 
+          } 
+        },
+        tribe: true,
+        ledTribeAsPrimary: true,
+        ledTribeAsSecondary: true,
+      },
     });
   }
 
@@ -125,6 +159,26 @@ export class SellerService {
 
     return this.prisma.seller.delete({
       where: { id },
+    });
+  }
+
+  @OnEvent('product-rating.product-updated', { async: true })
+  async handleProductUpdated(payload: { sellerId: string }) {
+    const { sellerId } = payload;
+    
+    // Calculate new average and total across ALL products of this seller
+    const aggregate = await this.prisma.productRating.aggregate({
+      where: { product: { sellerId } },
+      _avg: { ratingValue: true },
+      _count: { ratingValue: true },
+    });
+
+    await this.prisma.seller.update({
+      where: { id: sellerId },
+      data: {
+        avgProductRating: aggregate._avg.ratingValue,
+        totalReviews: aggregate._count.ratingValue,
+      },
     });
   }
 }

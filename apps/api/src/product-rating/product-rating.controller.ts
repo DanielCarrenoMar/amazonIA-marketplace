@@ -3,7 +3,7 @@ import {
   Delete, ParseUUIDPipe, UseGuards, Request, Query,
 } from '@nestjs/common';
 import { ProductRatingService } from './product-rating.service';
-import { CreateProductRatingDto, PaginationDto, FindProductRatingsDto } from 'event-types';
+import { CreateProductRatingDto, PaginationDto, FindProductRatingsDto, ProductRatingResponseDto, PaginatedResponseDto } from 'event-types';
 import { UpdateProductRatingDto } from 'event-types';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
@@ -14,13 +14,13 @@ export class ProductRatingController {
   // Requires login — userAccountId from JWT, not body
   @UseGuards(JwtAuthGuard)
   @Post()
-  create(@Request() req: any, @Body() createProductRatingDto: CreateProductRatingDto) {
+  create(@Request() req: any, @Body() createProductRatingDto: CreateProductRatingDto): Promise<ProductRatingResponseDto> {
     return this.productRatingService.create(req.user.id, createProductRatingDto);
   }
 
   // Public — anyone can view all ratings
   @Get()
-  findAll(@Query() query: FindProductRatingsDto) {
+  findAll(@Query() query: FindProductRatingsDto): Promise<PaginatedResponseDto<ProductRatingResponseDto>> {
     return this.productRatingService.findAll(query);
   }
 
@@ -29,7 +29,7 @@ export class ProductRatingController {
   findByProduct(
     @Param('productId', ParseUUIDPipe) productId: string,
     @Query() query: PaginationDto
-  ) {
+  ): Promise<PaginatedResponseDto<ProductRatingResponseDto>> {
     return this.productRatingService.findAll({ ...query, productId });
   }
 
@@ -38,7 +38,7 @@ export class ProductRatingController {
   findOne(
     @Param('productId', ParseUUIDPipe) productId: string,
     @Param('userAccountId', ParseUUIDPipe) userAccountId: string,
-  ) {
+  ): Promise<ProductRatingResponseDto> {
     return this.productRatingService.findOne(productId, userAccountId);
   }
 
@@ -49,7 +49,7 @@ export class ProductRatingController {
     @Param('productId', ParseUUIDPipe) productId: string,
     @Request() req: any,
     @Body() updateProductRatingDto: UpdateProductRatingDto,
-  ) {
+  ): Promise<ProductRatingResponseDto> {
     return this.productRatingService.update(productId, req.user.id, updateProductRatingDto);
   }
 
@@ -59,7 +59,7 @@ export class ProductRatingController {
   remove(
     @Param('productId', ParseUUIDPipe) productId: string,
     @Request() req: any,
-  ) {
+  ): Promise<ProductRatingResponseDto> {
     return this.productRatingService.remove(productId, req.user.id);
   }
 }

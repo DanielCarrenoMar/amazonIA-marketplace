@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
-import { CreateUserAccountDto, UpdateUserAccountDto, ChangePasswordDto, UserRole, PaginationDto } from 'event-types';
+import { CreateUserAccountDto, UpdateUserAccountDto, ChangePasswordDto, UserRole, PaginationDto, UserAccountResponseDto, PaginatedResponseDto } from 'event-types';
 import { PrismaService } from '../prisma/prisma.service';
 
 const SALT_ROUNDS = 12;
@@ -16,15 +16,18 @@ const SALT_ROUNDS = 12;
 export class UserAccountService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(createUserAccountDto: CreateUserAccountDto) {
+  async create(createUserAccountDto: CreateUserAccountDto): Promise<UserAccountResponseDto> {
     const { password, ...rest } = createUserAccountDto;
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
 
     try {
-      return await this.prisma.userAccount.create({
-        data: { ...rest, passwordHash },
-        omit: { passwordHash: true },
+      const user = await this.prisma.userAccount.create({
+        data: {
+          ...rest,
+          passwordHash,
+        },
       });
+      return user as unknown as UserAccountResponseDto;
     } catch (e: any) {
       if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
         throw new ConflictException('El email, username o nationalId ya está en uso');
@@ -33,53 +36,56 @@ export class UserAccountService {
     }
   }
 
-  async findAll(query?: PaginationDto) {
+  async findAll(query?: PaginationDto): Promise<PaginatedResponseDto<UserAccountResponseDto>> {
     const { page = 1, limit = 10 } = query || {};
     const skip = (page - 1) * limit;
 
-    const [total, data] = await Promise.all([
+    const [total, users] = await Promise.all([
       this.prisma.userAccount.count(),
       this.prisma.userAccount.findMany({
-        omit: { passwordHash: true },
         skip,
         take: limit,
       }),
     ]);
 
     return {
-      data,
-      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+      data: users as unknown as UserAccountResponseDto[],
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
     };
   }
 
-  async findOne(id: string, reqUser: { id: string; role: UserRole }) {
+  async findOne(id: string, reqUser: { id: string; role: UserRole }): Promise<UserAccountResponseDto> {
     const user = await this.prisma.userAccount.findUnique({
       where: { id },
-      omit: { passwordHash: true },
     });
 
     if (!user) throw new NotFoundException(`UserAccount with ID ${id} not found`);
 
     // PRIVACY LOGIC:
     if (reqUser.id === id) {
-      return user;
+      return user as unknown as UserAccountResponseDto;
     }
     if (reqUser.role === UserRole.ADMIN) {
-      return user;
+      return user as unknown as UserAccountResponseDto;
     }
 
     return {
       id: user.id,
       fullName: user.fullName,
       username: user.username,
-    };
+    } as unknown as UserAccountResponseDto;
   }
 
   async update(
     id: string,
     reqUser: { id: string; role: UserRole },
     updateUserAccountDto: UpdateUserAccountDto,
-  ) {
+  ): Promise<UserAccountResponseDto> {
     // Validate existence before update
     const user = await this.prisma.userAccount.findUnique({ where: { id } });
     if (!user) throw new NotFoundException(`UserAccount with ID ${id} not found`);
@@ -92,15 +98,14 @@ export class UserAccountService {
     return this.prisma.userAccount.update({
       where: { id },
       data: updateUserAccountDto,
-      omit: { passwordHash: true },
-    });
+    }) as unknown as UserAccountResponseDto;
   }
 
   async changePassword(
     id: string,
     reqUser: { id: string },
     changePasswordDto: ChangePasswordDto,
-  ) {
+  ): Promise<UserAccountResponseDto> {
     // Password change rule is stricter: ONLY owner (not even ADMIN)
     if (reqUser.id !== id) {
       throw new ForbiddenException('Solo puedes cambiar tu propia contraseña');
@@ -121,11 +126,10 @@ export class UserAccountService {
     return this.prisma.userAccount.update({
       where: { id },
       data: { passwordHash: newPasswordHash },
-      omit: { passwordHash: true },
-    });
+    }) as unknown as UserAccountResponseDto;
   }
 
-  async remove(id: string, reqUser: { id: string; role: UserRole }) {
+  async remove(id: string, reqUser: { id: string; role: UserRole }): Promise<UserAccountResponseDto> {
     // According to controller, only ADMIN reaches here, but we reinforce in service
     if (reqUser.role !== UserRole.ADMIN) {
       throw new ForbiddenException('Solo un administrador puede eliminar cuentas');
@@ -133,6 +137,6 @@ export class UserAccountService {
 
     return this.prisma.userAccount.delete({
       where: { id },
-    });
+    }) as unknown as UserAccountResponseDto;
   }
 }

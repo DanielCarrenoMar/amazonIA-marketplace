@@ -1,53 +1,19 @@
 import { Injectable, NotFoundException, ConflictException, ForbiddenException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma } from '@prisma/client';
-import { CreateProductRatingDto, PaginationDto, OrderStatus, FindProductRatingsDto } from 'event-types';
+import { CreateProductRatingDto, PaginationDto, OrderStatus, FindProductRatingsDto, ProductRatingResponseDto, PaginatedResponseDto } from 'event-types';
 import { UpdateProductRatingDto } from 'event-types';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class ProductRatingService {
-  constructor(private readonly prisma: PrismaService) {}
-
-  // Recalculates the exact average rating of a product using Prisma's aggregate,
-  // then propagates the seller-level stats (avgProductRating, totalReviews)
-  private async recalculateProductAverage(tx: any, productId: string) {
-    // 1. Recalculate and persist the product-level average
-    const productAggregate = await tx.productRating.aggregate({
-      where: { productId },
-      _avg: { ratingValue: true },
-      _count: { ratingValue: true },
-    });
-
-    const newProductAvg = productAggregate._avg.ratingValue;
-
-    // Fetch the sellerId while updating the product
-    const updatedProduct = await tx.product.update({
-      where: { id: productId },
-      data: {
-        averageRating: newProductAvg,
-        totalReviews: productAggregate._count.ratingValue,
-      },
-      select: { sellerId: true },
-    });
-
-    // 2. Recalculate and persist the seller-level average across ALL their products
-    const sellerAggregate = await tx.productRating.aggregate({
-      where: { product: { sellerId: updatedProduct.sellerId } },
-      _avg: { ratingValue: true },
-      _count: { ratingValue: true },
-    });
-
-    await tx.seller.update({
-      where: { id: updatedProduct.sellerId },
-      data: {
-        avgProductRating: sellerAggregate._avg.ratingValue,
-        totalReviews: sellerAggregate._count.ratingValue,
-      },
-    });
-  }
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventEmitter: EventEmitter2
+  ) {}
 
   // userAccountId comes from the JWT token (req.user.id), NOT from the client body
-  async create(userAccountId: string, createProductRatingDto: CreateProductRatingDto) {
+  async create(userAccountId: string, createProductRatingDto: CreateProductRatingDto): Promise<ProductRatingResponseDto> {
     const { productId, ratingValue } = createProductRatingDto;
 
     const order = await this.prisma.productOrder.findFirst({
@@ -76,13 +42,13 @@ export class ProductRatingService {
         throw e;
       }
 
-      // Recalculate average and inject it into the product
-      await this.recalculateProductAverage(tx, productId);
+      // Emit event to recalculate aggregates asynchronously
+      this.eventEmitter.emit('product-rating.changed', { productId });
       return newRating;
     });
   }
 
-  async findAll(query?: FindProductRatingsDto) {
+  async findAll(query?: FindProductRatingsDto): Promise<PaginatedResponseDto<ProductRatingResponseDto>> {
     const { page = 1, limit = 10, productId } = query || {};
     const skip = (page - 1) * limit;
 
@@ -115,7 +81,7 @@ export class ProductRatingService {
     };
   }
 
-  async findOne(productId: string, userAccountId: string) {
+  async findOne(productId: string, userAccountId: string): Promise<ProductRatingResponseDto> {
     const rating = await this.prisma.productRating.findUnique({
       where: { productId_userAccountId: { productId, userAccountId } },
       include: { user: { omit: { passwordHash: true } } },
@@ -125,7 +91,7 @@ export class ProductRatingService {
     return rating;
   }
 
-  async update(productId: string, userAccountId: string, updateProductRatingDto: UpdateProductRatingDto) {
+  async update(productId: string, userAccountId: string, updateProductRatingDto: UpdateProductRatingDto): Promise<ProductRatingResponseDto> {
     // findUnique with the composite key guarantees ownership:
     // if the rating doesn't exist for THIS user on THIS product → 404
     const rating = await this.prisma.productRating.findUnique({
@@ -142,13 +108,13 @@ export class ProductRatingService {
         data: updateProductRatingDto,
       });
 
-      // Recalculate average since the rating amount changed
-      await this.recalculateProductAverage(tx, productId);
+      // Emit event to recalculate aggregates asynchronously
+      this.eventEmitter.emit('product-rating.changed', { productId });
       return updatedRating;
     });
   }
 
-  async remove(productId: string, userAccountId: string) {
+  async remove(productId: string, userAccountId: string): Promise<ProductRatingResponseDto> {
     // findUnique with the composite key guarantees ownership:
     // if the rating doesn't exist for THIS user on THIS product → 404
     const rating = await this.prisma.productRating.findUnique({
@@ -164,8 +130,8 @@ export class ProductRatingService {
         where: { productId_userAccountId: { productId, userAccountId } },
       });
 
-      // Recalculate average since one rating was dropped
-      await this.recalculateProductAverage(tx, productId);
+      // Emit event to recalculate aggregates asynchronously
+      this.eventEmitter.emit('product-rating.changed', { productId });
       return deletedRating;
     });
   }

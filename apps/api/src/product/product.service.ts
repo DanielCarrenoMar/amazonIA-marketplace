@@ -1,16 +1,18 @@
 import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException, ConflictException, ForbiddenException } from '@nestjs/common';
-import { CreateProductDto, UpdateProductDto, FindProductsDto, FindNearbyDto, OrderStatus, UserRole, PaginationDto } from 'event-types';
+import { CreateProductDto, UpdateProductDto, FindProductsDto, FindNearbyDto, OrderStatus, UserRole, PaginationDto, ProductResponseDto, NearbyProductResponseDto, PaginatedResponseDto } from 'event-types';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
+import { OnEvent, EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class ProductService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly storageService: StorageService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  async create(createProductDto: CreateProductDto, sellerId: string) {
+  async create(createProductDto: CreateProductDto, sellerId: string): Promise<ProductResponseDto> {
     const { coords, ...rest } = createProductDto;
 
     // Use $transaction so we don't end up with orphaned rows if the spatial query fails
@@ -36,12 +38,13 @@ export class ProductService {
     });
   }
 
-  async findAll(query: FindProductsDto) {
+  async findAll(query: FindProductsDto): Promise<PaginatedResponseDto<ProductResponseDto>> {
     const { page = 1, limit = 10, search, categoryId, sellerId } = query;
     const skip = (page - 1) * limit;
 
     // Prisma Where conditions
     const where: import('@prisma/client').Prisma.ProductWhereInput = {
+      isActive: true, // Only show active products to buyers
       ...(categoryId ? { categoryId } : {}),
       ...(sellerId ? { sellerId } : {}),
       ...(search ? { name: { contains: search, mode: 'insensitive' } } : {}),
@@ -70,7 +73,7 @@ export class ProductService {
     };
   }
 
-  async findNearby(query: FindNearbyDto) {
+  async findNearby(query: FindNearbyDto): Promise<PaginatedResponseDto<NearbyProductResponseDto>> {
     const { lat, lng, radius = 10 } = query;
     // PostGIS geography ST_DWithin works in meters
     const radiusMeters = radius * 1000;
@@ -98,6 +101,7 @@ export class ProductService {
         ) AS "distanceKm"
       FROM product p
       WHERE p.location_coords IS NOT NULL
+        AND p.is_active = true
         AND ST_DWithin(
           p.location_coords,
           ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326),
@@ -108,11 +112,11 @@ export class ProductService {
 
     return {
       data: rows,
-      meta: { lat, lng, radiusKm: radius, total: rows.length },
+      meta: { total: rows.length, page: 1, limit: rows.length, totalPages: 1 },
     };
   }
 
-  async findBySeller(sellerId: string, paginationDto: PaginationDto) {
+  async findBySeller(sellerId: string, paginationDto: PaginationDto): Promise<PaginatedResponseDto<ProductResponseDto>> {
     const { page = 1, limit = 10 } = paginationDto;
     const skip = (page - 1) * limit;
 
@@ -138,7 +142,7 @@ export class ProductService {
     };
   }
 
-  async findOne(id: string) {
+  async findOne(id: string): Promise<ProductResponseDto> {
     const product = await this.prisma.product.findUnique({
       where: { id },
       include: { seller: true, category: true },
@@ -148,7 +152,7 @@ export class ProductService {
     return product;
   }
 
-  async update(id: string, updateProductDto: UpdateProductDto, reqUser: { id: string; role: UserRole }) {
+  async update(id: string, updateProductDto: UpdateProductDto, reqUser: { id: string; role: UserRole }): Promise<ProductResponseDto> {
     const product = await this.findOne(id); // Check existence
 
     // Ownership check: only the product owner or an admin can update
@@ -167,7 +171,7 @@ export class ProductService {
     });
   }
 
-  async remove(id: string, reqUser: { id: string; role: UserRole }) {
+  async remove(id: string, reqUser: { id: string; role: UserRole }): Promise<ProductResponseDto> {
     const product = await this.findOne(id); // Check existence
 
     // Ownership check: only the product owner or an admin can delete
@@ -196,7 +200,7 @@ export class ProductService {
     return this.prisma.product.delete({ where: { id } });
   }
 
-  async updateStock(id: string, quantity: number) {
+  async updateStock(id: string, quantity: number): Promise<ProductResponseDto> {
     const product = await this.findOne(id); // Check existence
 
     if (product.stockAvailable + quantity < 0) {
@@ -211,7 +215,7 @@ export class ProductService {
     });
   }
 
-  async uploadImage(id: string, file: Express.Multer.File, user: any) {
+  async uploadImage(id: string, file: Express.Multer.File, user: any): Promise<ProductResponseDto> {
     const product = await this.findOne(id);
 
     // Security check: Only the owner or an ADMIN can update the product image
@@ -242,5 +246,30 @@ export class ProductService {
         `No se pudo actualizar la imagen del producto: ${error.message}`
       );
     }
+  }
+
+  @OnEvent('product-rating.changed', { async: true })
+  async handleProductRatingChanged(payload: { productId: string }) {
+    const { productId } = payload;
+    
+    // Calculate new average and total
+    const aggregate = await this.prisma.productRating.aggregate({
+      where: { productId },
+      _avg: { ratingValue: true },
+      _count: { ratingValue: true },
+    });
+
+    // Update product
+    const updatedProduct = await this.prisma.product.update({
+      where: { id: productId },
+      data: {
+        averageRating: aggregate._avg.ratingValue,
+        totalReviews: aggregate._count.ratingValue,
+      },
+      select: { sellerId: true },
+    });
+
+    // Emit event for seller update
+    this.eventEmitter.emit('product-rating.product-updated', { sellerId: updatedProduct.sellerId });
   }
 }

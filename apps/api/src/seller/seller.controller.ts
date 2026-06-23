@@ -12,7 +12,14 @@ import {
   Request,
 } from '@nestjs/common';
 import { SellerService } from './seller.service';
-import { CreateSellerDto, UpdateSellerDto, UserRole, FindSellersDto } from 'event-types';
+import {
+  CreateSellerDto,
+  UpdateSellerDto,
+  FindSellersDto,
+  UserRole,
+  SellerResponseDto,
+  PaginatedResponseDto,
+} from 'event-types';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -30,17 +37,17 @@ export class SellerController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @Post(':userId')
-  create(@Param('userId', ParseUUIDPipe) userId: string, @Body() createSellerDto: CreateSellerDto) {
-    return this.sellerService.create(userId, createSellerDto);
+  create(@Request() req: any, @Body() createSellerDto: CreateSellerDto): Promise<SellerResponseDto> {
+    return this.sellerService.create(req.params.userId, createSellerDto);
   }
 
   @Get()
-  findAll(@Query() query: FindSellersDto) {
+  findAll(@Query() query: FindSellersDto): Promise<PaginatedResponseDto<SellerResponseDto>> {
     return this.sellerService.findAll(query);
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
+  findOne(@Param('id', ParseUUIDPipe) id: string): Promise<SellerResponseDto> {
     return this.sellerService.findOne(id);
   }
 
@@ -51,8 +58,8 @@ export class SellerController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateSellerDto: UpdateSellerDto,
     @Request() req: any,
-  ) {
-    return this.sellerService.update(id, updateSellerDto, req.user);
+  ): Promise<SellerResponseDto> {
+    return this.sellerService.update(id, req.user, updateSellerDto);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
