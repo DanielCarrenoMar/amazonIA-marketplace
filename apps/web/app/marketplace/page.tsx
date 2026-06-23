@@ -97,7 +97,7 @@ export default function MarketplacePage() {
             <div>
               <div className="flex justify-between items-center mb-4">
                 <h3 className="font-bold text-slate-900 text-lg">Rango de Precio</h3>
-                <button className="text-xs text-muted hover:text-brand-primary transition-colors">Reset</button>
+                <button className="text-xs text-muted hover:text-brand-primary transition-colors">Limpiar</button>
               </div>
               <p className="text-xs text-muted mb-4 font-medium">El precio promedio es $30.00</p>
               <div className="flex items-center gap-3">
@@ -123,7 +123,7 @@ export default function MarketplacePage() {
             <div>
               <div className="flex justify-between items-center mb-4">
                 <h3 className="font-bold text-slate-900 text-lg">Origen / Marca</h3>
-                <button className="text-xs text-muted hover:text-brand-primary transition-colors">Reset</button>
+                <button className="text-xs text-muted hover:text-brand-primary transition-colors">Limpiar</button>
               </div>
               <div className="flex flex-col gap-3.5">
                 {mockBrands.map(brand => (

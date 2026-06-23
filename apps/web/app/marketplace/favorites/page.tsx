@@ -32,7 +32,7 @@ export default function FavoritesPage() {
               <div>
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="font-bold text-slate-900 text-lg">Rango de Precio</h3>
-                  <button className="text-xs text-muted hover:text-brand-primary transition-colors">Reset</button>
+                  <button className="text-xs text-muted hover:text-brand-primary transition-colors">Limpiar</button>
                 </div>
                 <div className="flex items-center gap-3">
                   <Input placeholder="Min" type="number" wrapperClassName="h-10" className="text-sm" />
@@ -57,7 +57,7 @@ export default function FavoritesPage() {
               <div>
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="font-bold text-slate-900 text-lg">Origen / Marca</h3>
-                  <button className="text-xs text-muted hover:text-brand-primary transition-colors">Reset</button>
+                  <button className="text-xs text-muted hover:text-brand-primary transition-colors">Limpiar</button>
                 </div>
                 <div className="flex flex-col gap-3.5">
                   {mockBrands.map(brand => (

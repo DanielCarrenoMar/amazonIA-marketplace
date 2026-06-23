@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Search, ShoppingCart, Heart } from 'lucide-react';
+import { Search, ShoppingCart, Heart, Home } from 'lucide-react';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
 import { CartDrawer } from '../ui/CartDrawer';
@@ -95,6 +95,11 @@ export function MarketplaceNavbar() {
                 <Link href="/register"><Button variant="primary" size="sm" className="rounded-full px-5 font-bold shadow-sm">Crear cuenta</Button></Link>
               </div>
             )}
+
+            {/* Home */}
+            <Link href="/" title="Volver a Inicio" className="relative p-2.5 text-slate-600 hover:text-brand-primary hover:bg-brand-nature-bg rounded-full transition-colors cursor-pointer border border-gray-200 bg-white shadow-sm flex items-center justify-center">
+              <Home className="w-[22px] h-[22px]" />
+            </Link>
 
             {/* Favorites */}
             <Link href="/marketplace/favorites" className="relative p-2.5 text-slate-600 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors cursor-pointer border border-gray-200 bg-white shadow-sm flex items-center justify-center">
