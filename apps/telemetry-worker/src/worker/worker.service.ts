@@ -81,7 +81,7 @@ export class WorkerService implements OnModuleInit {
         telemetry: msg.value.telemetry,
       }));
 
-      await this.climateModel.insertMany(documents, { ordered: false });
+      await this.insertWithRetry(this.climateModel, documents);
 
       // ACK messages only after successful persistence
       const idsToAck = messages.map((m) => m.offset);
@@ -129,7 +129,7 @@ export class WorkerService implements OnModuleInit {
         telemetry: msg.value.telemetry,
       }));
 
-      await this.shipmentModel.insertMany(documents, { ordered: false });
+      await this.insertWithRetry(this.shipmentModel, documents);
 
       // ACK messages only after successful persistence
       const idsToAck = messages.map((m) => m.offset);
@@ -154,6 +154,31 @@ export class WorkerService implements OnModuleInit {
   // -------------------------------------------------------------------------
   // Metrics & Utilities
   // -------------------------------------------------------------------------
+
+  private async insertWithRetry<T>(
+    model: Model<T>,
+    documents: Record<string, any>[],
+    maxRetries = 3,
+  ): Promise<void> {
+    const delays = [100, 200, 400];
+    let lastError: unknown;
+
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        await model.insertMany(documents, { ordered: false });
+        return;
+      } catch (error) {
+        lastError = error;
+        const delay = delays[attempt];
+        this.logger.warn(
+          `insertMany attempt ${attempt + 1}/${maxRetries} failed, retrying in ${delay}ms`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+    }
+
+    throw lastError;
+  }
 
   /**
    * Recursively removes keys with null or undefined values from an object.

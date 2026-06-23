@@ -11,7 +11,7 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,test}/**/*.ts\" --fix",
-    "test": "echo \"No tests yet\" && exit 0",
+    "test:unit": "jest --config ./test/jest-unit.json",
     "test:producer": "ts-node scripts/test-producer.ts"
   },
   "dependencies": {
@@ -32,7 +32,10 @@
     "@nestjs/cli": "^11.0.0",
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/testing": "^11.0.1",
+    "@types/jest": "^30.0.0",
     "@types/node": "^24.0.0",
+    "jest": "^30.0.0",
+    "ts-jest": "^29.2.5",
     "@upstash/redis": "^1.38.0",
     "dotenv": "^17.4.2",
     "source-map-support": "^0.5.21",
