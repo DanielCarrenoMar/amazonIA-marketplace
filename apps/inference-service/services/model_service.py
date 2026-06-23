@@ -66,9 +66,12 @@ class ModelService:
               else:
                   shap_values_dict = self._get_fallback_shap_values(features)
 
+              top_reasons = self.get_top_risk_reasons(shap_values_dict)
+
               return {
                   "risk_score": prob,
                   "shap_values": shap_values_dict,
+                  "top_reasons": top_reasons,
                   "source": "ml_model"
               }
           except Exception as e:
@@ -108,9 +111,12 @@ class ModelService:
           for k, v in reasons.items():
               shap_vals[k] = v
               
+          top_reasons = self.get_top_risk_reasons(shap_vals)
+              
           return {
               "risk_score": base_risk,
               "shap_values": shap_vals,
+              "top_reasons": top_reasons,
               "source": "fallback_heuristics"
           }
 
@@ -130,6 +136,19 @@ class ModelService:
               "tipo_transporte": 0.0,
               "tipo_producto": 0.0
           }
+
+      def get_top_risk_reasons(self, shap_values: dict, top_n: int = 3) -> list:
+          """
+          Extracts the top N features that have a POSITIVE SHAP value (pushing risk towards RED).
+          Returns a list of dicts: [{"feature": "...", "impact": 0.8}, ...]
+          """
+          positive_reasons = []
+          for feature, impact in shap_values.items():
+              if impact > 0.001:
+                  positive_reasons.append({"feature": feature, "impact": float(impact)})
+                  
+          positive_reasons = sorted(positive_reasons, key=lambda x: x["impact"], reverse=True)
+          return positive_reasons[:top_n]
 
 model_service = ModelService()
 
