@@ -1,96 +1,81 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { ProductCard } from '@/components/ui/ProductCard';
-import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Checkbox } from '@/components/ui/Checkbox';
+import { Input } from '@/components/ui/Input';
 import { Star } from 'lucide-react';
 import { MarketplaceNavbar } from '@/components/layout/MarketplaceNavbar';
+import { BannerCarousel } from '@/components/ui/BannerCarousel';
 import { Footer } from '@/components/layout/Footer';
 
-const mockCategories = ["Todas", "Ofertas", "Artesanía", "Moda", "Hogar", "Joyería", "Cestería", "Cerámica"];
-const mockBrands = ["Comunidad Wayuu", "Comunidad Pemón", "Artesanos de los Andes", "Emprendedores Locales", "Hecho a Mano"];
-
-const mockProducts = [
-  {
-    id: '1',
-    image: '/cesta-wayuu.jpg',
-    discount: '50%',
-    title: 'Cesta Wayuu',
-    rating: 4,
-    category: 'Artesanía',
-    description: 'Hermosa cesta tejida a mano con patrones tradicionales.',
-    price: '$25.00',
-    originalPrice: '$50.00'
-  },
-  {
-    id: '2',
-    image: '/bolso-de-moriche.webp',
-    discount: 'Nuevo',
-    title: 'Bolso de Moriche',
-    rating: 5,
-    category: 'Accesorios',
-    description: 'Bolso ecológico fabricado con fibra de palma de moriche.',
-    price: '$35.00'
-  },
-  {
-    id: '3',
-    image: '/ceramica-pemón.jpg',
-    title: 'Cerámica Pemón',
-    rating: 4,
-    category: 'Hogar',
-    description: 'Pieza de cerámica artesanal con diseños de la cultura Pemón.',
-    price: '$40.00'
-  },
-  {
-    id: '4',
-    image: '/collar-de-semillas.jpg',
-    title: 'Collar de Semillas',
-    rating: 3,
-    category: 'Joyería',
-    description: 'Collar elaborado con semillas autóctonas de la selva amazónica.',
-    price: '$15.00'
-  }
-];
+import { mockCategories, mockBrands, mockProducts } from '@/lib/mock-data';
 
 export default function MarketplacePage() {
-  const [activeCategory, setActiveCategory] = useState("Todas");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  
+  const categoryParam = searchParams.get('category');
+  const [activeCategory, setActiveCategory] = useState(categoryParam || "Todas");
+
+  useEffect(() => {
+    if (categoryParam) {
+      setActiveCategory(categoryParam);
+    }
+  }, [categoryParam]);
+
+  const handleCategoryClick = (cat: string) => {
+    setActiveCategory(cat);
+    router.push(
+      cat === "Todas" ? "/marketplace" : `/marketplace?category=${encodeURIComponent(cat)}`,
+      { scroll: false }
+    );
+  };
+
+  const filteredProducts = activeCategory === "Todas" 
+    ? mockProducts 
+    : mockProducts.filter(p => p.category === activeCategory);
+
+  const heroBanners = [
+    {
+      tag: "NUEVA COLECCIÓN",
+      title: "Encuentra tu estilo, Ama tu look",
+      description: "Descubre las últimas tendencias en artesanía, moda y estilo de vida con impacto social directo en el Amazonas.",
+      buttonText: "Comprar Ahora",
+      image: "/bolso-de-moriche.webp"
+    },
+    {
+      tag: "OFERTA ESPECIAL",
+      title: "Cestería Tradicional",
+      description: "Dale un toque único a tu hogar con cestas elaboradas a mano por comunidades indígenas.",
+      buttonText: "Ver Catálogo",
+      image: "/cesta-wayuu.jpg"
+    },
+    {
+      tag: "ARTE VIVO",
+      title: "Cerámica Pemón",
+      description: "Piezas únicas llenas de historia y cultura, hechas con arcilla natural de la región.",
+      buttonText: "Descubrir",
+      image: "/ceramica-pemón.jpg"
+    }
+  ];
 
   return (
     <>
       <MarketplaceNavbar />
       <main className="min-h-screen bg-background pt-28 md:pt-32 pb-12 px-4 md:px-8 max-w-[1400px] mx-auto font-sans">
         
-        {/* HERO BANNER */}
-        <div className="w-full mb-12 flex flex-col md:flex-row items-center justify-between gap-8">
-          <div className="w-full md:w-1/2 text-slate-900">
-            <span className="inline-block px-3 py-1 bg-brand-primary/15 text-brand-primary rounded-full text-xs font-bold mb-4 tracking-wide">
-              NUEVA COLECCIÓN
-            </span>
-            <h2 className="text-4xl md:text-5xl font-extrabold mb-4 leading-tight text-slate-900">
-              Encuentra tu estilo, Ama tu look
-            </h2>
-            <p className="text-muted mb-8 text-lg max-w-md">
-              Descubre las últimas tendencias en artesanía, moda y estilo de vida con impacto social directo en el Amazonas.
-            </p>
-            <Button className="rounded-full px-8 shadow-sm" variant="primary" size="lg">
-              Comprar Ahora
-            </Button>
-          </div>
-          <div className="w-full md:w-1/2 flex justify-end">
-            <div className="relative w-full max-w-lg aspect-video md:aspect-[4/3] rounded-3xl overflow-hidden shadow-sm border border-gray-200">
-              <img src="/bolso-de-moriche.webp" alt="Nueva Colección" className="w-full h-full object-cover" />
-            </div>
-          </div>
-        </div>
+        {/* HERO BANNER CAROUSEL */}
+        <BannerCarousel banners={heroBanners} />
 
         {/* CATEGORIES PILLS */}
         <div className="flex gap-3 overflow-x-auto pb-4 mb-8 scrollbar-hide">
           {mockCategories.map(cat => (
             <button
               key={cat}
-              onClick={() => setActiveCategory(cat)}
+              onClick={() => handleCategoryClick(cat)}
               className={`px-5 py-2 rounded-full font-medium whitespace-nowrap transition-colors border shadow-sm ${
                 activeCategory === cat 
                   ? 'bg-brand-primary text-white border-brand-primary' 
@@ -164,21 +149,20 @@ export default function MarketplacePage() {
           {/* PRODUCT GRID */}
           <div className="flex-1">
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-              {mockProducts.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  {...product}
-                  href={`/marketplace/${product.id}`}
-                />
-              ))}
-              {/* Duplicate products to fill the grid nicely for demo purposes */}
-              {mockProducts.map((product) => (
-                <ProductCard
-                  key={`${product.id}-copy`}
-                  {...product}
-                  href={`/marketplace/${product.id}`}
-                />
-              ))}
+              {filteredProducts.length > 0 ? (
+                filteredProducts.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    {...product}
+                    href={`/marketplace/${product.id}`}
+                  />
+                ))
+              ) : (
+                <div className="col-span-full py-12 text-center text-gray-500">
+                  <p>No se encontraron productos en la categoría "{activeCategory}".</p>
+                  <Button variant="outline" className="mt-4" onClick={() => handleCategoryClick("Todas")}>Ver todos los productos</Button>
+                </div>
+              )}
             </div>
           </div>
 

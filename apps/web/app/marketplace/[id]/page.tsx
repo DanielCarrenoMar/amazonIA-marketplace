@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Star, Heart, ShoppingCart, Minus, Plus } from 'lucide-react';
+import { useParams } from 'next/navigation';
+import { Star, Heart, ShoppingCart, Minus, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { mockProducts } from '@/lib/mock-data';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Select';
@@ -13,13 +15,30 @@ import { MarketplaceNavbar } from '@/components/layout/MarketplaceNavbar';
 import { Footer } from '@/components/layout/Footer';
 
 export default function ProductDetailPage() {
+  const params = useParams();
+  const id = params.id as string;
+  const product = mockProducts.find(p => p.id === id) || mockProducts[0];
+
   const [quantity, setQuantity] = useState(1);
-  const [activeImage, setActiveImage] = useState('/cesta-wayuu.jpg');
+  const [activeImage, setActiveImage] = useState(product.image);
   const [selectedMaterial, setSelectedMaterial] = useState('Algodón');
   const [selectedSize, setSelectedSize] = useState('100m');
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setActiveImage(product.image);
+  }, [product.image]);
 
   const handleDecrease = () => setQuantity(q => Math.max(1, q - 1));
   const handleIncrease = () => setQuantity(q => q + 1);
+
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollRef.current) {
+      const { scrollLeft, clientWidth } = scrollRef.current;
+      const scrollTo = direction === 'left' ? scrollLeft - clientWidth + 40 : scrollLeft + clientWidth - 40;
+      scrollRef.current.scrollTo({ left: scrollTo, behavior: 'smooth' });
+    }
+  };
 
   // You can replace these with actual product images later
   const thumbnails = [
@@ -40,9 +59,9 @@ export default function ProductDetailPage() {
           <span>&gt;</span>
           <Link href="/marketplace" className="hover:text-brand-primary transition-colors">Catálogo</Link>
           <span>&gt;</span>
-          <Link href="/marketplace?category=Telas" className="hover:text-brand-primary transition-colors">Telas</Link>
+          <Link href={`/marketplace?category=${encodeURIComponent(product.category)}`} className="hover:text-brand-primary transition-colors">{product.category}</Link>
           <span>&gt;</span>
-          <span className="text-gray-900 font-medium">Tela Artesanía con Mariposas</span>
+          <span className="text-gray-900 font-medium">{product.title}</span>
         </nav>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
@@ -81,12 +100,12 @@ export default function ProductDetailPage() {
           {/* RIGHT: DETAILS */}
           <div className="flex flex-col pt-2">
             <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-4 leading-tight">
-              Tela Artesanía con Mariposas y Flores de Amazonas
+              {product.title}
             </h1>
 
             <div className="flex items-center gap-3 mb-4">
-              <Badge variant="secondary" className="px-4 py-1.5 text-sm">Tela</Badge>
-              <Badge variant="primary" className="px-4 py-1.5 text-sm bg-brand-primary text-white">50%</Badge>
+              <Badge variant="secondary" className="px-4 py-1.5 text-sm">{product.category}</Badge>
+              {product.discount && <Badge variant="primary" className="px-4 py-1.5 text-sm bg-brand-primary text-white">-{product.discount}</Badge>}
             </div>
 
             <div className="flex items-center gap-4 mb-6">
@@ -100,16 +119,12 @@ export default function ProductDetailPage() {
             </div>
 
             <div className="flex items-end gap-3 mb-6">
-              <span className="text-4xl font-bold text-brand-primary">$25.99</span>
-              <span className="text-xl text-gray-400 line-through font-semibold mb-1">$50.00</span>
+              <span className="text-4xl font-bold text-brand-primary">{product.price}</span>
+              {product.originalPrice && <span className="text-xl text-gray-400 line-through font-semibold mb-1">{product.originalPrice}</span>}
             </div>
 
             <p className="text-gray-600 leading-relaxed mb-8">
-              Lorem ipsum dolor sit amet consectetur. Molestie nulla neque tortor egestas lacus
-              ac. Nulla eget ut in aliquam consectetur consequat ut. Dolor vitae cursus purus
-              commodo. At mauris malesuada rhoncus nulla pulvinar lacus interdum. Et enim sed
-              id faucibus sit. Sed commodo fringilla pellentesque in. Adipiscing ut amet nulla lorem
-              non risus commodo congue est.
+              {product.description}
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
@@ -225,49 +240,34 @@ export default function ProductDetailPage() {
 
         {/* RELATED PRODUCTS */}
         <section className="mt-24">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900">Productos Relacionados</h2>
-            <Button variant="ghost" className="text-brand-primary font-bold">Ver todos</Button>
-          </div>
+          <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 mb-8">Productos Relacionados</h2>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <ProductCard 
-              image="/ceramica-pemón.jpg" 
-              title="Cerámica Pemón" 
-              rating={4} 
-              category="Hogar" 
-              description="Pieza de cerámica artesanal con diseños de la cultura Pemón." 
-              price="$40.00" 
-              href="/marketplace/3" 
-            />
-            <ProductCard 
-              image="/bolso-de-moriche.webp" 
-              title="Bolso de Moriche" 
-              rating={5} 
-              category="Accesorios" 
-              description="Bolso ecológico fabricado con fibra de palma de moriche." 
-              price="$35.00" 
-              href="/marketplace/2" 
-            />
-            <ProductCard 
-              image="/collar-de-semillas.jpg" 
-              title="Collar de Semillas" 
-              rating={3} 
-              category="Joyería" 
-              description="Collar elaborado con semillas autóctonas de la selva amazónica." 
-              price="$15.00" 
-              href="/marketplace/4" 
-            />
-            <ProductCard 
-              image="/cesta-wayuu.jpg" 
-              title="Mini Cesta Wayuu" 
-              rating={5} 
-              category="Artesanía" 
-              description="Hermosa cesta tejida a mano con patrones tradicionales." 
-              price="$20.00" 
-              discount="Nuevo"
-              href="/marketplace/5" 
-            />
+          <div className="relative group">
+            {/* Side Arrows */}
+            <button 
+              onClick={() => scroll('left')}
+              className="absolute -left-4 md:-left-5 top-[40%] -translate-y-1/2 w-12 h-12 rounded-full bg-white hover:bg-gray-50 flex items-center justify-center shadow-lg border border-gray-100 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <ChevronLeft className="w-6 h-6 text-slate-700" />
+            </button>
+            <button 
+              onClick={() => scroll('right')}
+              className="absolute -right-4 md:-right-5 top-[40%] -translate-y-1/2 w-12 h-12 rounded-full bg-white hover:bg-gray-50 flex items-center justify-center shadow-lg border border-gray-100 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <ChevronRight className="w-6 h-6 text-slate-700" />
+            </button>
+
+            {/* Scroll Container */}
+            <div 
+              ref={scrollRef}
+              className="flex overflow-x-auto gap-6 pb-6 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+            >
+              {mockProducts.filter(p => p.id !== product.id).map(related => (
+                <div key={related.id} className="min-w-[280px] w-[280px] md:min-w-[300px] md:w-[300px] snap-start shrink-0">
+                  <ProductCard {...related} href={`/marketplace/${related.id}`} />
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 

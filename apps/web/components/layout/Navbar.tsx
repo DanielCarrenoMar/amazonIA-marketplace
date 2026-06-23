@@ -5,15 +5,12 @@ import { useRouter } from 'next/navigation';
 import logo from '@/public/logo.png';
 import Link from 'next/link';
 import { Button } from '../ui/Button';
-import { CartDrawer } from '../ui/CartDrawer';
-import { ShoppingCart } from 'lucide-react';
 import { getMe, type AuthUser } from '@/lib/api';
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState<AuthUser | null>(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [isCartOpen, setIsCartOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
@@ -117,15 +114,6 @@ export function Navbar() {
                   </div>
                 ))}
               </div>
-
-              {/* Cart Button */}
-              <button 
-                onClick={() => setIsCartOpen(true)} 
-                className="relative p-2 ml-2 text-white/90 hover:text-white hover:bg-white/10 rounded-xl transition-colors cursor-pointer"
-              >
-                <ShoppingCart className="w-5 h-5" />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-brand-accent rounded-full border border-slate-800"></span>
-              </button>
 
               {/* Desktop Auth */}
               <div className="flex items-center gap-2 ml-1">
@@ -289,8 +277,6 @@ export function Navbar() {
           </div>
         )}
       </nav>
-
-      <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </div>
   );
 }

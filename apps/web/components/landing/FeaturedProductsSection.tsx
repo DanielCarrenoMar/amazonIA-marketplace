@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
@@ -63,12 +64,14 @@ export function FeaturedProductsSection() {
           </p>
         </div>
 
-        <Button
-          variant="primary"
-          rightIcon={<ArrowRight className="w-5 h-5" />}
-        >
-          Ver Catálogo Completo
-        </Button>
+        <Link href="/marketplace">
+          <Button
+            variant="primary"
+            rightIcon={<ArrowRight className="w-5 h-5" />}
+          >
+            Ver Catálogo Completo
+          </Button>
+        </Link>
       </div>
       <div className="w-full max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {MOCK_PRODUCTS.map((product) => (
