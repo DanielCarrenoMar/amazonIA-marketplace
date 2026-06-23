@@ -61,3 +61,5 @@ class XGBoostFeatures(BaseModel):
     thermal_delta: float = Field(..., alias="delta_termico")
     month_of_year: int = Field(..., alias="mes_del_anio")
     hydrological_regime_enc: int = Field(..., alias="regimen_hidrologico_enc")
+    
+    is_inpa_fallback: bool = Field(False, alias="es_fallback_inpa")

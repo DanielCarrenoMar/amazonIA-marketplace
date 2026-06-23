@@ -35,7 +35,8 @@ class EncodersMock:
 def construir_features_globales(
     climate: ClimateData,
     telemetry: TelemetryData,
-    shipment: ShipmentData
+    shipment: ShipmentData,
+    is_inpa_fallback: bool = False
 ) -> XGBoostFeatures:
     """
     Core pipeline to transform raw data into ML features.
@@ -80,7 +81,8 @@ def construir_features_globales(
         estimated_duration_days=shipment.estimated_duration_days,
         internal_cargo_temp_c=telemetry.internal_cargo_temp_c or 0.0,
         internal_cargo_humidity_pct=telemetry.internal_cargo_humidity_pct or 0.0,
-        thermal_delta=thermal_delta,
+        delta_termico=thermal_delta,
         month_of_year=shipment.month_of_year,
-        hydrological_regime_enc=regime_enc
+        hydrological_regime_enc=regime_enc,
+        is_inpa_fallback=is_inpa_fallback
     )
