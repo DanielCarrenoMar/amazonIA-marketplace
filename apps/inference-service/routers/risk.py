@@ -7,6 +7,10 @@ from middleware.auth import verify_jwt
 from services.iot_service import iot_service
 from services.climate_service import climate_service
 from services.model_service import model_service
+from schemas.features import ClimateData, TelemetryData, ShipmentData
+from services.feature_pipeline import construir_features_globales
+from services.inpa_fallback import get_inpa_fallback_climate
+from services.spatial import interpolate_climate_idw
 
 router = APIRouter(prefix="/api/v1/risk", tags=["Risk"])
 
@@ -39,59 +43,66 @@ async def evaluate_risk(request: EvaluationRequest, user_payload: dict = Depends
     iot_res = results[0]
     climate_res_list = results[1:]
     
-    # 4. Evaluate confidence scores (failed fetches trigger INPA/fallback mode)
-    confianza_clima = 1.0
-    processed_weather = []
-    
+    # 4. Map to Pydantic and evaluate confidence
+    climate_data_list = []
     for res in climate_res_list:
         if res is None:
-            # Failed weather API fetch fallback (climate data "inventado/INPA")
-            confianza_clima = 0.5
-            processed_weather.append({
-                "fuente": "INPA-invented",
-                "temperatura_max_c": [30.0],
-                "precipitacion_mm": [0.0],
-                "velocidad_viento_ms": [5.0]
-            })
+            climate_data_list.append(None)
         else:
-            processed_weather.append(res)
+            climate_data_list.append(ClimateData(
+                fuente=res.get("fuente", "api"),
+                temperatura_max_c=res.get("temperatura_max_c", []),
+                temperatura_min_c=res.get("temperatura_min_c", []),
+                precipitacion_mm=res.get("precipitacion_mm", []),
+                velocidad_viento_ms=res.get("velocidad_viento_ms", [])
+            ))
             
-    confianza_iot = iot_res.get("confianza_iot", 0.5)
+    is_inpa = False
+    confianza_clima = 1.0
     
-    # 5. Extract point-level aggregates & construct global features
-    point_weather_data = []
-    for res in processed_weather:
-        temps = [t for t in res.get("temperatura_max_c", []) if t is not None]
-        precips = [p for p in res.get("precipitacion_mm", []) if p is not None]
-        winds = [w for w in res.get("velocidad_viento_ms", []) if w is not None]
-        
-        pt_temp = max(temps) if temps else 30.0
-        pt_precip = sum(precips) if precips else 0.0
-        pt_wind = max(winds) if winds else 5.0
-        
-        point_weather_data.append({
-            "max_temperatura_c": pt_temp,
-            "precipitacion_acum_mm": pt_precip,
-            "max_viento_ms": pt_wind
-        })
-        
-    global_temp = max([pt["max_temperatura_c"] for pt in point_weather_data]) if point_weather_data else 30.0
-    global_precip = max([pt["precipitacion_acum_mm"] for pt in point_weather_data]) if point_weather_data else 0.0
-    global_wind = max([pt["max_viento_ms"] for pt in point_weather_data]) if point_weather_data else 5.0
+    # Resiliencia: Fallback INPA e IDW
+    if None in climate_data_list:
+        if all(c is None for c in climate_data_list):
+            is_inpa = True
+            confianza_clima = 0.5
+            fallback = get_inpa_fallback_climate(departure_dt.month)
+            climate_data_list = [fallback for _ in range(len(climate_data_list))]
+        else:
+            try:
+                climate_data_list = interpolate_climate_idw(climate_data_list, request.route_points)
+                confianza_clima = 0.8
+            except Exception:
+                is_inpa = True
+                confianza_clima = 0.5
+                fallback = get_inpa_fallback_climate(departure_dt.month)
+                climate_data_list = [fallback for _ in range(len(climate_data_list))]
+                
+    confianza_iot = iot_res.get("confianza_iot", 0.5) if iot_res else 0.5
+    telemetry = TelemetryData(
+        temperature=iot_res.get("temperature") if iot_res else None,
+        humidity=iot_res.get("humidity") if iot_res else None,
+        vibration=iot_res.get("vibration") if iot_res else None
+    )
     
-    transport_type = request.transport_types[0] if request.transport_types else "terrestre"
-    product_type = request.product_types[0] if request.product_types else "general"
+    shipment = ShipmentData(
+        shipment_id=request.shipment_id,
+        transport_types=request.transport_types,
+        product_types=request.product_types,
+        route_points=request.route_points,
+        departure_date=request.departure_date
+    )
     
-    features = {
-        "max_temperatura_c": global_temp,
-        "precipitacion_acum_mm": global_precip,
-        "max_viento_ms": global_wind,
-        "tipo_transporte": transport_type,
-        "tipo_producto": product_type
-    }
+    # 5. Feature Pipeline
+    xgboost_features = construir_features_globales(
+        shipment=shipment,
+        climate_data_list=climate_data_list,
+        telemetry=telemetry,
+        is_inpa_fallback=is_inpa
+    )
+    features_dict = xgboost_features.model_dump(by_alias=True)
     
     # 6. Run XGBoost / Heuristic prediction
-    prediction = model_service.predict_risk(features)
+    prediction = model_service.predict_risk(features_dict)
     base_score = prediction["risk_score"]
     shap_values = prediction["shap_values"]
     
@@ -115,6 +126,18 @@ async def evaluate_risk(request: EvaluationRequest, user_payload: dict = Depends
     weather_features = ["max_temperatura_c", "precipitacion_acum_mm", "max_viento_ms"]
     max_feature = max(weather_features, key=lambda f: abs(shap_values.get(f, 0.0)))
     
+    # Reconstruct point data for heuristic scan
+    point_weather_data = []
+    for c in climate_data_list:
+        pt_temp = max(c.temperatura_max_c) if c.temperatura_max_c else 30.0
+        pt_precip = sum(c.precipitacion_mm) if c.precipitacion_mm else 0.0
+        pt_wind = max(c.velocidad_viento_ms) if c.velocidad_viento_ms else 5.0
+        point_weather_data.append({
+            "max_temperatura_c": pt_temp,
+            "precipitacion_acum_mm": pt_precip,
+            "max_viento_ms": pt_wind
+        })
+        
     peak_idx = 0
     peak_val = -99999.0
     for idx, pt_weather in enumerate(point_weather_data):
