@@ -3,6 +3,7 @@
 import React from 'react';
 import { X, Trash2 } from 'lucide-react';
 import { Button } from './Button';
+import Link from 'next/link';
 
 interface CartItem {
   id: string;
@@ -95,10 +96,11 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
             <span className="font-bold text-lg text-slate-900">Total</span>
             <span className="font-bold text-xl text-slate-900">$50.00</span>
           </div>
-          
-          <Button variant="primary" className="w-full py-6 text-base rounded-2xl shadow-md font-bold">
-            Ir a Pagar (3)
-          </Button>
+          <Link href="/marketplace/checkout" onClick={onClose} className="block w-full">
+            <Button variant="primary" className="w-full py-6 text-base rounded-2xl shadow-md font-bold">
+              Ir a Pagar (3)
+            </Button>
+          </Link>
         </div>
       </div>
     </>

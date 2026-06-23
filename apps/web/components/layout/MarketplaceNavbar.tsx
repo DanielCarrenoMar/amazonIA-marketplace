@@ -97,14 +97,14 @@ export function MarketplaceNavbar() {
             )}
 
             {/* Home */}
-            <Link href="/" title="Volver a Inicio" className="relative p-2.5 text-slate-600 hover:text-brand-primary hover:bg-brand-nature-bg rounded-full transition-colors cursor-pointer border border-gray-200 bg-white shadow-sm flex items-center justify-center">
+            <Link href="/" title="Volver a Inicio" className="relative p-2.5 text-slate-600 hover:text-brand-primary transition-colors cursor-pointer flex items-center justify-center">
               <Home className="w-[22px] h-[22px]" />
             </Link>
 
             {/* Favorites */}
-            <Link href="/marketplace/favorites" className="relative p-2.5 text-slate-600 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors cursor-pointer border border-gray-200 bg-white shadow-sm flex items-center justify-center">
+            <Link href="/marketplace/favorites" className="relative p-2.5 text-slate-600 hover:text-red-500 transition-colors cursor-pointer flex items-center justify-center">
               <Heart className="w-[22px] h-[22px]" />
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[11px] font-bold rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+              <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm">
                 3
               </span>
             </Link>
@@ -112,7 +112,7 @@ export function MarketplaceNavbar() {
             {/* Cart */}
             <button 
               onClick={() => setIsCartOpen(true)} 
-              className="relative p-2.5 text-slate-600 hover:text-brand-primary hover:bg-brand-nature-bg rounded-full transition-colors cursor-pointer border border-gray-200 bg-white shadow-sm"
+              className="relative p-2.5 text-slate-600 hover:text-brand-primary transition-colors cursor-pointer"
             >
               <ShoppingCart className="w-[22px] h-[22px]" />
               <span className="absolute -top-1 -right-1 w-5 h-5 bg-brand-primary text-white text-[11px] font-bold rounded-full flex items-center justify-center border-2 border-white shadow-sm">
