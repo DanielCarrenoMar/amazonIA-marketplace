@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import { LucideIcon } from 'lucide-react';
 import { Button } from '../ui/Button';
 
@@ -7,9 +8,10 @@ export interface ToolCardProps {
   title: string;
   description: string;
   icon: LucideIcon;
+  href?: string;
 }
 
-export function ToolCard({ id, title, description, icon: Icon }: ToolCardProps) {
+export function ToolCard({ id, title, description, icon: Icon, href }: ToolCardProps) {
   return (
     <div
       id={id}
@@ -26,12 +28,23 @@ export function ToolCard({ id, title, description, icon: Icon }: ToolCardProps) 
         {description}
       </p>
 
-      <Button
-        variant="ghost"
-        className="w-full py-3! rounded-2xl! bg-white/10! text-white! hover:bg-white/20!"
-      >
-        Explorar herramienta
-      </Button>
+      {href ? (
+        <Link href={href} className="w-full">
+          <Button
+            variant="ghost"
+            className="w-full py-3! rounded-2xl! bg-white/10! text-white! hover:bg-white/20!"
+          >
+            Explorar herramienta
+          </Button>
+        </Link>
+      ) : (
+        <Button
+          variant="ghost"
+          className="w-full py-3! rounded-2xl! bg-white/10! text-white! hover:bg-white/20!"
+        >
+          Explorar herramienta
+        </Button>
+      )}
     </div>
   );
 }

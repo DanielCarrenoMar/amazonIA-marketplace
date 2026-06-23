@@ -14,7 +14,8 @@ export function ToolsSection() {
       title: "Marketplace Artesanal",
       description: "Conecta directamente con compradores globales. Vende artesanías auténticas sin intermediarios y asegura un comercio justo.",
       icon: ShoppingBag,
-      id: "marketplace"
+      id: "marketplace",
+      href: "/marketplace"
     },
     {
       title: "Reconocimiento IA",
