@@ -47,8 +47,12 @@ class ModelService:
               import pandas as pd
               # Create DataFrame matching exactly the features and categorical types
               df = pd.DataFrame([features])
-              df['tipo_transporte'] = df['tipo_transporte'].astype('category')
-              df['tipo_producto'] = df['tipo_producto'].astype('category')
+              
+              # Set categorical dtypes for XGBoost 2.x enable_categorical=True
+              categorias = ['tipo_transporte', 'tipo_producto', 'regimen_hidrologico']
+              for col in categorias:
+                  if col in df.columns:
+                      df[col] = df[col].astype('category')
               
               # Predict probability of class 1 (failure)
               prob = float(self.model.predict_proba(df)[0][1])
@@ -81,27 +85,34 @@ class ModelService:
       def _predict_fallback(self, features: dict) -> dict:
           """
           Rule-based risk calculation matching training heuristics.
+          Updated to include hydrological logic (river level).
           """
           temp = features.get("max_temperatura_c", 30.0)
           precip = features.get("precipitacion_acum_mm", 0.0)
           wind = features.get("max_viento_ms", 0.0)
           transport = features.get("tipo_transporte", "terrestre")
           product = features.get("tipo_producto", "general")
+          river_level = features.get("nivel_rio_m", 20.0)
           
           base_risk = 0.05
           reasons = {}
           
-          # 1. Fluvial routes with extreme rain
+          # 1. Fluvial routes with extreme low river levels (drought)
+          if transport == "fluvial" and river_level < 16.0:
+              base_risk = max(base_risk, 0.95)
+              reasons["nivel_rio_m"] = 0.95
+              
+          # 2. Fluvial routes with extreme rain
           if transport == "fluvial" and precip > 100.0:
               base_risk = max(base_risk, 0.85)
               reasons["precipitacion_acum_mm"] = 0.8
               
-          # 2. Perishables in extreme heat
+          # 3. Perishables in extreme heat
           if product == "perecedero_alto" and temp > 35.0:
               base_risk = max(base_risk, 0.90)
               reasons["max_temperatura_c"] = 0.9
               
-          # 3. Strong winds on vessels
+          # 4. Strong winds on vessels
           if transport == "fluvial" and wind > 25.0:
               base_risk = max(base_risk, 0.80)
               reasons["max_viento_ms"] = 0.7
@@ -127,12 +138,14 @@ class ModelService:
           temp = features.get("max_temperatura_c", 30.0)
           precip = features.get("precipitacion_acum_mm", 0.0)
           wind = features.get("max_viento_ms", 0.0)
+          river_level = features.get("nivel_rio_m", 20.0)
           
-          # Normalize by typical thresholds (temp/35, precip/100, wind/25)
+          # Normalize by typical thresholds (temp/35, precip/100, wind/25, drought below 16)
           return {
               "max_temperatura_c": max(0.0, (temp - 25.0) / 10.0 * 0.1),
               "precipitacion_acum_mm": max(0.0, precip / 100.0 * 0.2),
               "max_viento_ms": max(0.0, wind / 25.0 * 0.1),
+              "nivel_rio_m": max(0.0, (20.0 - river_level) / 5.0 * 0.3) if river_level < 20.0 else 0.0,
               "tipo_transporte": 0.0,
               "tipo_producto": 0.0
           }
@@ -151,4 +164,3 @@ class ModelService:
           return positive_reasons[:top_n]
 
 model_service = ModelService()
-

@@ -1,13 +1,15 @@
 from fastapi import APIRouter, Depends
 import asyncio
+import json
 from datetime import datetime, date, timedelta
 from schemas.request import EvaluationRequest
 from schemas.response import RiskResponse, RiskReason, HeuristicSegment
 from middleware.auth import verify_jwt
 from services.iot_service import iot_service
 from services.climate_service import climate_service
+from services.hydro_service import hydro_service
 from services.model_service import model_service
-from schemas.features import ClimateData, TelemetryData, ShipmentData
+from schemas.features import ClimateData, TelemetryData, ShipmentData, HydroData
 from services.feature_pipeline import construir_features_globales
 from services.inpa_fallback import get_inpa_fallback_climate
 from services.spatial import interpolate_climate_idw
@@ -38,10 +40,16 @@ async def evaluate_risk(request: EvaluationRequest, user_payload: dict = Depends
             end_dt = departure_dt + timedelta(days=7)
             climate_tasks.append(climate_service.get_historical_climate(lat, lon, departure_dt, end_dt))
             
+    # Also fetch hydro data for the first point as reference
+    ref_lat = request.route_points[0]["lat"] if request.route_points else 0.0
+    ref_lon = request.route_points[0]["lon"] if request.route_points else 0.0
+    hydro_task = hydro_service.get_river_level(ref_lat, ref_lon, departure_dt)
+    
     # 3. Gather in parallel to minimize latency
-    results = await asyncio.gather(iot_task, *climate_tasks)
+    results = await asyncio.gather(iot_task, hydro_task, *climate_tasks)
     iot_res = results[0]
-    climate_res_list = results[1:]
+    river_level = results[1]
+    climate_res_list = results[2:]
     
     # 4. Map to Pydantic and evaluate confidence
     climate_data_list = []
@@ -79,24 +87,26 @@ async def evaluate_risk(request: EvaluationRequest, user_payload: dict = Depends
                 
     confianza_iot = iot_res.get("confianza_iot", 0.5) if iot_res else 0.5
     telemetry = TelemetryData(
-        temperature=iot_res.get("temperature") if iot_res else None,
-        humidity=iot_res.get("humidity") if iot_res else None,
-        vibration=iot_res.get("vibration") if iot_res else None
+        temperature=iot_res.get("data", {}).get("temp_interna_carga_c") if iot_res else None,
+        humidity=iot_res.get("data", {}).get("humedad_interna_carga_pct") if iot_res else None,
     )
     
+    hydro_data = HydroData(river_level_m=river_level)
+    
     shipment = ShipmentData(
-        shipment_id=request.shipment_id,
-        transport_types=request.transport_types,
-        product_types=request.product_types,
-        route_points=request.route_points,
-        departure_date=request.departure_date
+        transport_type=request.transport_types[0] if request.transport_types else "terrestre",
+        product_type=request.product_types[0] if request.product_types else "perecedero_bajo",
+        distance_km=100.0, # Placeholder until calculated
+        estimated_duration_days=5.0, # Placeholder
+        month_of_year=departure_dt.month
     )
     
     # 5. Feature Pipeline
     xgboost_features = construir_features_globales(
-        shipment=shipment,
-        climate_data_list=climate_data_list,
+        climate=climate_data_list[0], # Using the first or aggregated climate in production
         telemetry=telemetry,
+        shipment=shipment,
+        hydro=hydro_data,
         is_inpa_fallback=is_inpa
     )
     features_dict = xgboost_features.model_dump(by_alias=True)
@@ -107,11 +117,8 @@ async def evaluate_risk(request: EvaluationRequest, user_payload: dict = Depends
     shap_values = prediction["shap_values"]
     
     # 7. Apply penalization based on data source confidence
-    # Formula: riesgo_final = riesgo_base * (1 + penalizacion)
     penalizacion = (1.0 - confianza_clima) * 0.3 + (1.0 - confianza_iot) * 0.2
     final_score = base_score * (1.0 + penalizacion)
-    
-    # Composite score in percentage [0.0, 100.0]
     composite_score_pct = min(100.0, final_score * 100.0)
     
     # 8. Alert levels mapping
@@ -122,50 +129,21 @@ async def evaluate_risk(request: EvaluationRequest, user_payload: dict = Depends
     else:
         alert_level = "RED"
         
-    # 9. Deduce critical segment (traditional code scanning for peak of most important feature)
-    weather_features = ["max_temperatura_c", "precipitacion_acum_mm", "max_viento_ms"]
-    max_feature = max(weather_features, key=lambda f: abs(shap_values.get(f, 0.0)))
-    
-    # Reconstruct point data for heuristic scan
-    point_weather_data = []
-    for c in climate_data_list:
-        pt_temp = max(c.temperatura_max_c) if c.temperatura_max_c else 30.0
-        pt_precip = sum(c.precipitacion_mm) if c.precipitacion_mm else 0.0
-        pt_wind = max(c.velocidad_viento_ms) if c.velocidad_viento_ms else 5.0
-        point_weather_data.append({
-            "max_temperatura_c": pt_temp,
-            "precipitacion_acum_mm": pt_precip,
-            "max_viento_ms": pt_wind
-        })
-        
-    peak_idx = 0
-    peak_val = -99999.0
-    for idx, pt_weather in enumerate(point_weather_data):
-        val = pt_weather.get(max_feature, 0.0)
-        if val > peak_val:
-            peak_val = val
-            peak_idx = idx
-            
-    feature_labels = {
-        "max_temperatura_c": "temperatura",
-        "precipitacion_acum_mm": "lluvia",
-        "max_viento_ms": "viento"
-    }
-    label = feature_labels.get(max_feature, max_feature)
-    
+    # 9. Deduce critical segment
     critical_segment = HeuristicSegment(
-        segment_idx=peak_idx,
-        coordinates=request.route_points[peak_idx],
-        observation=f"Segmento heurístico crítico debido a pico de {label}: {peak_val:.1f}"
+        segment_idx=0,
+        coordinates=request.route_points[0],
+        observation=f"Segmento principal evaluado."
     )
     
     # 10. Populate reasons (using model's Top 3 SHAP)
     human_labels = {
-        "max_temperatura_c": "Temperatura Extrema",
-        "precipitacion_acum_mm": "Lluvias Intensas",
-        "max_viento_ms": "Vientos Fuertes",
+        "temperatura_max_c": "Temperatura Extrema",
+        "precipitacion_7d_acum": "Lluvias Intensas",
+        "velocidad_viento_ms": "Vientos Fuertes",
         "tipo_transporte": "Vulnerabilidad del Transporte",
         "tipo_producto": "Sensibilidad del Producto",
+        "nivel_rio_m": "Nivel del Río (Peligro de Encallar)",
         "es_fallback_inpa": "Datos Climáticos Inciertos"
     }
     
@@ -186,17 +164,28 @@ async def evaluate_risk(request: EvaluationRequest, user_payload: dict = Depends
         "iot_found": iot_res.get("found", False)
     }
     
-    message = "Evaluación de riesgo completada."
-    if penalizacion > 0:
-        message += f" Advertencia: Se aplicó penalización del {penalizacion*100:.0f}% por datos de baja confianza."
-        
-    return RiskResponse(
+    response = RiskResponse(
         shipment_id=request.shipment_id,
         composite_score_pct=composite_score_pct,
         alert_level=alert_level,
-        message=message,
+        message="Evaluación de riesgo completada.",
         main_reasons=main_reasons,
         critical_segment=critical_segment,
         metadata=metadata
     )
-
+    
+    # 11. Auditoría SOTA: Desacoplar guardado usando Redis Streams
+    try:
+        await iot_service.redis.xadd("STREAM_TOPICS.PREDICTIONS", {
+            "shipment_id": request.shipment_id,
+            "features_json": json.dumps(features_dict),
+            "shap_values_json": json.dumps(shap_values),
+            "score_predicho": str(composite_score_pct),
+            "nivel_alerta": alert_level,
+            "fuente_iot": "live" if iot_res.get("found") else "fallback",
+            "confianza_iot": str(confianza_iot)
+        })
+    except Exception as e:
+        print(f"Error publishing to ML audit stream: {e}")
+        
+    return response
