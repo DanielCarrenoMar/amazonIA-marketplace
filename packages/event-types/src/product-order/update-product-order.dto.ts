@@ -37,4 +37,8 @@ export class UpdateProductOrderDto extends PartialType(CreateProductOrderDto) {
   @Max(5)
   @IsOptional()
   buyerRatingValue?: number;
+
+  @IsString()
+  @IsOptional()
+  paymentMethod?: string;
 }

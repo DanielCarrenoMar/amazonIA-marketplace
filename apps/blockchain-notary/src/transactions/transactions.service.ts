@@ -1,12 +1,8 @@
-// =============================================================================
-// TransactionsService — Orquestación del flujo de notarización
-// Patrón: Service Layer — coordina blockchain, DB, y webhook
-// =============================================================================
-
 import { Injectable, Logger } from '@nestjs/common';
 import { BlockchainService } from '../blockchain/blockchain.service';
 import { WebhookService } from '../webhook/webhook.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { GovernanceService } from '../governance/governance.service';
 import type { NotarizeOrderPayload } from 'event-types';
 import { BlockchainStatus } from '@prisma/client';
 
@@ -20,17 +16,17 @@ export class TransactionsService {
     private readonly blockchainService: BlockchainService,
     private readonly webhookService: WebhookService,
     private readonly prisma: PrismaService,
+    private readonly governanceService: GovernanceService,
   ) {}
 
   /**
-   * Procesa la notarización de forma asíncrona.
+   * Procesa la notarización de forma asíncrona mediante gobernanza.
    * Este método NO se espera (fire-and-forget desde el controller).
    *
    * Flujo:
-   * 1. Crea registro en DB con status PENDING
-   * 2. Envía TX a la blockchain
-   * 3. Actualiza DB con resultado
-   * 4. Notifica al backend via webhook
+   * 1. Crea registro en DB con status PENDING y guarda webhookUrl
+   * 2. Crea propuesta de gobernanza en DB + On-chain
+   * 3. Espera a la votación de la comunidad y finalización por Elder
    */
   async processNotarization(payload: NotarizeOrderPayload): Promise<void> {
     const { orderId, webhookUrl } = payload;
@@ -43,76 +39,47 @@ export class TransactionsService {
           status: BlockchainStatus.PENDING,
           retryCount: { increment: 1 },
           errorMessage: null,
+          webhookUrl,
         },
         create: {
           orderId,
           status: BlockchainStatus.PENDING,
-          networkName: 'arbitrum',
+          networkName: this.blockchainService['config'].networkName,
+          webhookUrl,
         },
       });
 
-      // 2. Actualizar a SUBMITTED antes de enviar a la blockchain
-      await this.prisma.blockchainRecord.update({
-        where: { orderId },
-        data: {
-          status: BlockchainStatus.SUBMITTED,
-          submittedAt: new Date(),
-        },
-      });
+      this.logger.log(`Processing notarization as governance proposal for order: ${orderId}`);
 
-      this.logger.log(`Processing notarization for order: ${orderId}`);
-
-      // 3. Enviar transacción a la blockchain
-      const result = await this.blockchainService.registerTransaction({
-        orderId: payload.orderId,
-        amount: payload.amount,
-        paymentMethod: payload.paymentMethod,
-        productHash: payload.productHash,
-        buyerId: payload.buyerId,
-        sellerId: payload.sellerId,
-      });
-
-      // 4. Actualizar DB con resultado exitoso
-      await this.prisma.blockchainRecord.update({
-        where: { orderId },
-        data: {
-          status: BlockchainStatus.CONFIRMED,
-          transactionHash: result.transactionHash,
-          blockNumber: result.blockNumber,
-          gasUsed: result.gasUsed,
-          confirmedAt: new Date(),
-        },
-      });
-
-      this.logger.log(
-        `Notarization confirmed for order ${orderId}. Hash: ${result.transactionHash}`,
+      // 2. Crear propuesta con deadline de 24 horas (1440 minutos)
+      await this.governanceService.createProposal(
+        orderId,
+        payload.productHash,
+        payload.sellerId, // Vendedor es el proponente
+        1440,
       );
 
-      // 5. Notificar al backend via webhook
-      if (webhookUrl) {
-        const webhookPayload = this.webhookService.buildSuccessPayload(
-          orderId,
-          result.transactionHash,
-          result.blockNumber,
-          result.gasUsed,
-        );
-        await this.webhookService.notifyBackend(webhookUrl, webhookPayload);
-      }
+      this.logger.log(
+        `Governance proposal created for order ${orderId}. Waiting for community voting.`,
+      );
     } catch (error: any) {
-      this.logger.error(`Notarization failed for order ${orderId}: ${error.message}`);
+      this.logger.error(`Notarization proposal creation failed for order ${orderId}: ${error.message}`);
 
       // Actualizar DB con el error
       await this.prisma.blockchainRecord.update({
         where: { orderId },
         data: {
           status: BlockchainStatus.FAILED,
-          errorMessage: error.message,
+          errorMessage: `Governance Proposal creation failed: ${error.message}`,
         },
       });
 
       // Notificar al backend del fallo via webhook
       if (webhookUrl) {
-        const webhookPayload = this.webhookService.buildFailurePayload(orderId, error.message);
+        const webhookPayload = this.webhookService.buildFailurePayload(
+          orderId,
+          `Governance Proposal creation failed: ${error.message}`,
+        );
         await this.webhookService.notifyBackend(webhookUrl, webhookPayload);
       }
     }
@@ -140,9 +107,7 @@ export class TransactionsService {
 
     this.logger.log(`Found ${failedRecords.length} failed records to retry`);
 
-    // TODO: Implementar reintento con los datos originales de la orden
-    // Requiere almacenar el payload original o consultarlo al backend
-
     return failedRecords.length;
   }
 }
+

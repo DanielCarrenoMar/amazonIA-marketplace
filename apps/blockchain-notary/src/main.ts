@@ -15,7 +15,7 @@ async function bootstrap() {
     }),
   );
 
-  // Prefijo global de la API
+  //Prefijo global de la API
   app.setGlobalPrefix('api/v1');
 
   const port = process.env.PORT || 3001;

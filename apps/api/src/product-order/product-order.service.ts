@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { CreateProductOrderDto, FindOrdersDto, PaginationDto, ProductOrderResponseDto, PaginatedResponseDto, OrderStatusHistoryResponseDto, OrderTimelineResponseDto } from 'event-types';
 import { UpdateProductOrderDto } from 'event-types';
@@ -7,6 +7,8 @@ import { STREAM_TOPICS } from 'messaging';
 import { PrismaService } from '../prisma/prisma.service';
 import { OutboxService } from '../outbox/outbox.service';
 import { TelemetryIntegrationService } from '../telemetry-integration/telemetry-integration.service';
+import { NotaryClientService } from '../blockchain/services/notary-client.service';
+import * as crypto from 'crypto';
 
 const allowedOrderStatusTransitions: Record<OrderStatus, readonly OrderStatus[]> = {
   [OrderStatus.PENDING]: [OrderStatus.PAID, OrderStatus.CANCELED],
@@ -19,11 +21,15 @@ const allowedOrderStatusTransitions: Record<OrderStatus, readonly OrderStatus[]>
 
 @Injectable()
 export class ProductOrderService {
+  private readonly logger = new Logger(ProductOrderService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly outbox: OutboxService,
     private readonly telemetryIntegration: TelemetryIntegrationService,
+    private readonly notaryClient: NotaryClientService,
   ) {}
+
 
   // buyerId comes from the JWT token (req.user.id), NOT from the client body
   async create(buyerId: string, createProductOrderDto: CreateProductOrderDto): Promise<ProductOrderResponseDto> {
@@ -433,6 +439,33 @@ export class ProductOrderService {
 
       return updatedOrder;
     });
+
+    // Disparar notarización si cambió a PAID
+    if (updateProductOrderDto.currentStatus === OrderStatus.PAID) {
+      this.prisma.product.findUnique({
+        where: { id: result.productId },
+        select: { id: true, sellerId: true },
+      }).then(async (product) => {
+        if (product) {
+          const productHash = crypto
+            .createHash('sha256')
+            .update(`${result.productId}-${product.sellerId}-${result.createdAt.getTime()}`)
+            .digest('hex');
+
+          this.logger.log(`Firing asynchronous notarization proposal creation for order ${id}`);
+          await this.notaryClient.notarizeOrder({
+            orderId: id,
+            amount: Number(result.totalAmount),
+            paymentMethod: updateProductOrderDto.paymentMethod ?? 'UNKNOWN',
+            productHash,
+            buyerId: result.buyerId,
+            sellerId: product.sellerId,
+            webhookUrl: '',
+          });
+        }
+      }).catch(err => this.logger.error(`Notarization trigger failed for order ${id}: ${err.message}`));
+    }
+
     return result as unknown as ProductOrderResponseDto;
   }
 
