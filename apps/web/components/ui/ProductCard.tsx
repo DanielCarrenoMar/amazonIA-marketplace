@@ -1,5 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { Heart, Star, ShoppingCart } from 'lucide-react';
 import { Badge } from './Badge';
 import { Button } from './Button';
@@ -15,6 +16,7 @@ export interface ProductCardProps {
   description: string;
   price: string;
   originalPrice?: string;
+  href?: string;
 }
 
 export function ProductCard({
@@ -26,7 +28,11 @@ export function ProductCard({
   description,
   price,
   originalPrice,
+  href,
 }: ProductCardProps) {
+  const ImageWrapper = href ? Link : 'div';
+  const TitleWrapper = href ? Link : 'div';
+
   return (
     <Card
       padding="none"
@@ -34,7 +40,7 @@ export function ProductCard({
       hoverable={true}
       className="flex flex-col group h-full"
     >
-      <div className="relative w-full aspect-3/2 bg-gray-100 overflow-hidden">
+      <ImageWrapper href={href || '#'} className="relative w-full aspect-3/2 bg-gray-100 overflow-hidden block">
         <Image
           src={image}
           alt={title}
@@ -55,12 +61,18 @@ export function ProductCard({
         >
           <Heart className="w-5 h-5 text-red-500 fill-red-500" />
         </Button>
-      </div>
+      </ImageWrapper>
 
       <div className="p-5 flex flex-col gap-3 grow">
-        <div className="flex justify-between items-center">
-          <h3 className="font-bold text-lg text-brand-nature-content">{title}</h3>
-          <div className="flex gap-0.5">
+        <div className="flex justify-between items-start gap-2">
+          {href ? (
+            <Link href={href} className="hover:underline">
+              <h3 className="font-bold text-lg text-brand-nature-content line-clamp-2">{title}</h3>
+            </Link>
+          ) : (
+            <h3 className="font-bold text-lg text-brand-nature-content line-clamp-2">{title}</h3>
+          )}
+          <div className="flex gap-0.5 shrink-0 pt-1">
             {[...Array(5)].map((_, i) => (
               <Star
                 key={i}
