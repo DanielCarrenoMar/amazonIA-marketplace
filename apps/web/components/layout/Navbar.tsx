@@ -61,7 +61,7 @@ export function Navbar() {
       hasDropdown: true,
       subItems: [
         { label: 'Traductor Jivi', href: '#traductor-jivi' },
-        { label: 'Marketplace Artesanal', href: '#marketplace' },
+        { label: 'Marketplace Artesanal', href: '/marketplace' },
         { label: 'Reconocimiento IA', href: '#reconocimiento-ia' }
       ]
     },
@@ -116,7 +116,7 @@ export function Navbar() {
               </div>
 
               {/* Desktop Auth */}
-              <div className="flex items-center gap-2 ml-2">
+              <div className="flex items-center gap-2 ml-1">
                 {user ? (
                   <div ref={userMenuRef} className="relative">
                     <button

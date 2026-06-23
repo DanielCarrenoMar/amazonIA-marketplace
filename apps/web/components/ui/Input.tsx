@@ -8,6 +8,7 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
   helperText?: string;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
+  wrapperClassName?: string;
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
@@ -21,6 +22,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       rightIcon,
       id,
       disabled,
+      wrapperClassName,
       ...props
     },
     ref
@@ -28,7 +30,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     const generatedId = React.useId();
     const inputId = id || generatedId;
 
-    const baseStyles = "w-full flex items-center bg-white border rounded-xl overflow-hidden shadow-sm transition-all duration-200 focus-within:ring-2 focus-within:border-brand-primary";
+    const baseStyles = `w-full flex items-center bg-white border overflow-hidden shadow-sm transition-all duration-200 focus-within:ring-2 focus-within:border-brand-primary ${wrapperClassName || 'rounded-xl'}`;
     const stateStyles = error 
       ? "border-brand-urgency focus-within:ring-brand-urgency/20" 
       : disabled 
