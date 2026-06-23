@@ -30,7 +30,7 @@ export default function ProductDetailPage() {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen bg-white pt-28 pb-16 px-4 md:px-8 max-w-7xl mx-auto font-sans">
+      <main className="min-h-screen bg-background pt-28 pb-16 px-4 md:px-8 max-w-7xl mx-auto font-sans">
         
         {/* BREADCRUMBS */}
         <nav className="text-sm text-gray-500 mb-8 flex items-center gap-2">
