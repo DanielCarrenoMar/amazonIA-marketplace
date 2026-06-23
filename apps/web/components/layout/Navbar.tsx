@@ -61,7 +61,7 @@ export function Navbar() {
       hasDropdown: true,
       subItems: [
         { label: 'Traductor Jivi', href: '#traductor-jivi' },
-        { label: 'Marketplace Artesanal', href: '#marketplace' },
+        { label: 'Marketplace Artesanal', href: '/marketplace' },
         { label: 'Reconocimiento IA', href: '#reconocimiento-ia' }
       ]
     },

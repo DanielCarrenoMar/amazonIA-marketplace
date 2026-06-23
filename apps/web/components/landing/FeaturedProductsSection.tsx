@@ -72,7 +72,7 @@ export function FeaturedProductsSection() {
       </div>
       <div className="w-full max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {MOCK_PRODUCTS.map((product) => (
-          <ProductCard key={product.id} {...product} />
+          <ProductCard key={product.id} {...product} href={`/marketplace/${product.id}`} />
         ))}
       </div>
     </section>
