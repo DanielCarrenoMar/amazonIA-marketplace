@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional
 
 class MissingClimateDataError(ValueError):
@@ -43,6 +43,8 @@ class XGBoostFeatures(BaseModel):
     Python code uses English names, but we use 'alias' so that .model_dump(by_alias=True)
     outputs the exact Spanish column names the model was trained on.
     """
+    model_config = ConfigDict(populate_by_name=True)
+    
     route_precip_mm: float = Field(..., alias="precipitacion_ruta_mm")
     max_temp_c: float = Field(..., alias="temperatura_max_c")
     min_temp_c: float = Field(..., alias="temperatura_min_c")
