@@ -5,8 +5,8 @@ import { ProductCard } from '@/components/ui/ProductCard';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Checkbox } from '@/components/ui/Checkbox';
-import { Search, Star } from 'lucide-react';
-import { Navbar } from '@/components/layout/Navbar';
+import { Star } from 'lucide-react';
+import { MarketplaceNavbar } from '@/components/layout/MarketplaceNavbar';
 import { Footer } from '@/components/layout/Footer';
 
 const mockCategories = ["Todas", "Ofertas", "Artesanía", "Moda", "Hogar", "Joyería", "Cestería", "Cerámica"];
@@ -55,34 +55,33 @@ const mockProducts = [
 ];
 
 export default function MarketplacePage() {
-  const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState("Todas");
 
   return (
     <>
-      <Navbar />
-      <main className="min-h-screen bg-background pt-28 pb-12 px-4 md:px-8 max-w-[1400px] mx-auto font-sans">
+      <MarketplaceNavbar />
+      <main className="min-h-screen bg-background pt-28 md:pt-32 pb-12 px-4 md:px-8 max-w-[1400px] mx-auto font-sans">
         
-        {/* HEADER & SEARCH */}
-        <div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-8">
-          <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 w-full md:w-auto">
-            Catálogo
-          </h1>
-          <div className="flex w-full md:w-[400px] lg:w-[500px] items-center">
-            <Input 
-              leftIcon={<Search className="w-5 h-5 text-gray-400" />}
-              placeholder="Buscar Productos..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="focus-within:z-10"
-              wrapperClassName="rounded-l-full rounded-r-none border-r-0 bg-white shadow-sm"
-            />
-            <Button 
-              className="rounded-l-none rounded-r-full px-6 md:px-8 h-[46px] shadow-sm"
-              variant="primary"
-            >
-              Buscar
+        {/* HERO BANNER */}
+        <div className="w-full mb-12 flex flex-col md:flex-row items-center justify-between gap-8">
+          <div className="w-full md:w-1/2 text-slate-900">
+            <span className="inline-block px-3 py-1 bg-brand-primary/15 text-brand-primary rounded-full text-xs font-bold mb-4 tracking-wide">
+              NUEVA COLECCIÓN
+            </span>
+            <h2 className="text-4xl md:text-5xl font-extrabold mb-4 leading-tight text-slate-900">
+              Encuentra tu estilo, Ama tu look
+            </h2>
+            <p className="text-muted mb-8 text-lg max-w-md">
+              Descubre las últimas tendencias en artesanía, moda y estilo de vida con impacto social directo en el Amazonas.
+            </p>
+            <Button className="rounded-full px-8 shadow-sm" variant="primary" size="lg">
+              Comprar Ahora
             </Button>
+          </div>
+          <div className="w-full md:w-1/2 flex justify-end">
+            <div className="relative w-full max-w-lg aspect-video md:aspect-[4/3] rounded-3xl overflow-hidden shadow-sm border border-gray-200">
+              <img src="/bolso-de-moriche.webp" alt="Nueva Colección" className="w-full h-full object-cover" />
+            </div>
           </div>
         </div>
 

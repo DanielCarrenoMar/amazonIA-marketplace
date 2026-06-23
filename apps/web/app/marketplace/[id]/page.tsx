@@ -7,7 +7,9 @@ import { Star, Heart, ShoppingCart, Minus, Plus } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Select';
-import { Navbar } from '@/components/layout/Navbar';
+import { Avatar } from '@/components/ui/Avatar';
+import { ProductCard } from '@/components/ui/ProductCard';
+import { MarketplaceNavbar } from '@/components/layout/MarketplaceNavbar';
 import { Footer } from '@/components/layout/Footer';
 
 export default function ProductDetailPage() {
@@ -29,8 +31,8 @@ export default function ProductDetailPage() {
 
   return (
     <>
-      <Navbar />
-      <main className="min-h-screen bg-background pt-28 pb-16 px-4 md:px-8 max-w-7xl mx-auto font-sans">
+      <MarketplaceNavbar />
+      <main className="min-h-screen bg-background pt-28 md:pt-32 pb-16 px-4 md:px-8 max-w-[1400px] mx-auto font-sans">
         
         {/* BREADCRUMBS */}
         <nav className="text-sm text-gray-500 mb-8 flex items-center gap-2">
@@ -171,6 +173,104 @@ export default function ProductDetailPage() {
 
           </div>
         </div>
+
+        {/* REVIEWS SECTION */}
+        <section id="reviews" className="mt-24">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900">Reseñas de Compradores</h2>
+            <Button variant="outline" className="rounded-xl border-gray-300">Escribir Reseña</Button>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Review 1 */}
+            <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col gap-4">
+              <div className="flex justify-between items-start">
+                <div className="flex items-center gap-4">
+                  <Avatar fallback="MJ" size="md" />
+                  <div>
+                    <h4 className="font-bold text-slate-900">María Jiménez</h4>
+                    <p className="text-xs text-muted font-medium mt-0.5">Comprador Verificado • Hace 2 semanas</p>
+                  </div>
+                </div>
+                <div className="flex gap-0.5 shrink-0 pt-1">
+                  {[1,2,3,4,5].map((star) => <Star key={star} className="w-4 h-4 fill-amber-400 text-amber-400" />)}
+                </div>
+              </div>
+              <p className="text-muted leading-relaxed text-sm">
+                "¡Absolutamente hermosa! La calidad del tejido es increíble y se nota el trabajo artesanal en cada detalle. Llegó muy rápido y en perfectas condiciones. Definitivamente volveré a comprar en este marketplace."
+              </p>
+            </div>
+
+            {/* Review 2 */}
+            <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col gap-4">
+              <div className="flex justify-between items-start">
+                <div className="flex items-center gap-4">
+                  <Avatar fallback="CA" size="md" />
+                  <div>
+                    <h4 className="font-bold text-slate-900">Carlos Alberto</h4>
+                    <p className="text-xs text-muted font-medium mt-0.5">Comprador Verificado • Hace 1 mes</p>
+                  </div>
+                </div>
+                <div className="flex gap-0.5 shrink-0 pt-1">
+                  {[1,2,3,4].map((star) => <Star key={star} className="w-4 h-4 fill-amber-400 text-amber-400" />)}
+                  <Star className="w-4 h-4 text-gray-300 stroke-2" />
+                </div>
+              </div>
+              <p className="text-muted leading-relaxed text-sm">
+                "Compré esta tela como regalo para mi madre y le encantó. Los colores son muy vivos y el material es de buena calidad. Le doy 4 estrellas solo porque esperaba que fuera un poco más grande de lo que llegó."
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* RELATED PRODUCTS */}
+        <section className="mt-24">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900">Productos Relacionados</h2>
+            <Button variant="ghost" className="text-brand-primary font-bold">Ver todos</Button>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <ProductCard 
+              image="/ceramica-pemón.jpg" 
+              title="Cerámica Pemón" 
+              rating={4} 
+              category="Hogar" 
+              description="Pieza de cerámica artesanal con diseños de la cultura Pemón." 
+              price="$40.00" 
+              href="/marketplace/3" 
+            />
+            <ProductCard 
+              image="/bolso-de-moriche.webp" 
+              title="Bolso de Moriche" 
+              rating={5} 
+              category="Accesorios" 
+              description="Bolso ecológico fabricado con fibra de palma de moriche." 
+              price="$35.00" 
+              href="/marketplace/2" 
+            />
+            <ProductCard 
+              image="/collar-de-semillas.jpg" 
+              title="Collar de Semillas" 
+              rating={3} 
+              category="Joyería" 
+              description="Collar elaborado con semillas autóctonas de la selva amazónica." 
+              price="$15.00" 
+              href="/marketplace/4" 
+            />
+            <ProductCard 
+              image="/cesta-wayuu.jpg" 
+              title="Mini Cesta Wayuu" 
+              rating={5} 
+              category="Artesanía" 
+              description="Hermosa cesta tejida a mano con patrones tradicionales." 
+              price="$20.00" 
+              discount="Nuevo"
+              href="/marketplace/5" 
+            />
+          </div>
+        </section>
+
       </main>
       <Footer />
     </>
