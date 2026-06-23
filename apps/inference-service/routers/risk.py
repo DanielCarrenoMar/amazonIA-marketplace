@@ -136,13 +136,22 @@ async def evaluate_risk(request: EvaluationRequest, user_payload: dict = Depends
         observation=f"Segmento heurístico crítico debido a pico de {label}: {peak_val:.1f}"
     )
     
-    # 10. Populate reasons (using weather SHAP values)
+    # 10. Populate reasons (using model's Top 3 SHAP)
+    human_labels = {
+        "max_temperatura_c": "Temperatura Extrema",
+        "precipitacion_acum_mm": "Lluvias Intensas",
+        "max_viento_ms": "Vientos Fuertes",
+        "tipo_transporte": "Vulnerabilidad del Transporte",
+        "tipo_producto": "Sensibilidad del Producto",
+        "es_fallback_inpa": "Datos Climáticos Inciertos"
+    }
+    
     main_reasons = []
-    for f in weather_features:
-        impact = shap_values.get(f, 0.0)
-        if abs(impact) > 0.001:
-            main_reasons.append(RiskReason(impact=float(impact), feature=f))
-    main_reasons = sorted(main_reasons, key=lambda r: abs(r.impact), reverse=True)
+    for reason in prediction.get("top_reasons", []):
+        raw_feat = reason["feature"]
+        impact = reason["impact"]
+        label = human_labels.get(raw_feat, raw_feat)
+        main_reasons.append(RiskReason(impact=impact, feature=label))
     
     # Construct metadata
     metadata = {
