@@ -20,9 +20,8 @@ export default function CheckoutPage() {
   const shippingCost = 5.00;
   const total = subtotal + shippingCost;
 
-  const [shippingMethod, setShippingMethod] = useState('standard');
-  const [paymentMethod, setPaymentMethod] = useState('card');
-  const [country, setCountry] = useState('CO');
+  const [orderNotes, setOrderNotes] = useState('');
+  const [transactionHash, setTransactionHash] = useState('');
 
   return (
     <>
@@ -44,155 +43,58 @@ export default function CheckoutPage() {
             {/* LEFT COLUMN: STEPS */}
             <div className="flex-1 flex flex-col gap-8">
               
-              {/* Step 1: Contacto */}
+              {/* Step 1: Notas del Pedido */}
               <section className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-sm">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-full bg-brand-primary/10 flex items-center justify-center text-brand-primary shrink-0">
-                    <User className="w-5 h-5" />
-                  </div>
-                  <h2 className="text-xl font-bold text-slate-900">Información de Contacto</h2>
+                  <User className="w-6 h-6 text-brand-primary shrink-0" />
+                  <h2 className="text-xl font-bold text-slate-900">Notas Adicionales</h2>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <Input label="Correo electrónico" placeholder="tucorreo@ejemplo.com" type="email" required />
-                  <Input label="Teléfono" placeholder="+57 300 000 0000" type="tel" required />
-                </div>
-              </section>
-
-              {/* Step 2: Envío */}
-              <section className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-sm">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-full bg-brand-primary/10 flex items-center justify-center text-brand-primary shrink-0">
-                    <MapPin className="w-5 h-5" />
-                  </div>
-                  <h2 className="text-xl font-bold text-slate-900">Dirección de Envío</h2>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
-                  <Input label="Nombres" placeholder="Ej. María" required />
-                  <Input label="Apellidos" placeholder="Ej. Pérez" required />
-                </div>
-                
-                <div className="mb-5">
-                  <Input label="Dirección completa" placeholder="Calle, Carrera, Avenida, Número..." required />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                  <Input label="Ciudad" placeholder="Ej. Bogotá" required />
-                  <Select 
-                    label="País" 
-                    options={[
-                      { value: 'CO', label: 'Colombia' },
-                      { value: 'MX', label: 'México' },
-                      { value: 'PE', label: 'Perú' }
-                    ]} 
-                    value={country}
-                    onChange={setCountry}
-                    required
+                <div className="mb-2">
+                  <p className="text-sm text-gray-500 mb-4">¿Hay algo que debamos saber sobre este pedido? (Opcional)</p>
+                  <Input 
+                    placeholder="Escribe aquí tus notas para el vendedor..." 
+                    value={orderNotes}
+                    onChange={(e) => setOrderNotes(e.target.value)}
                   />
-                  <Input label="Código Postal" placeholder="110011" />
-                </div>
-
-                {/* Opciones de envío */}
-                <div className="mt-8 pt-8 border-t border-gray-100">
-                  <h3 className="text-base font-bold text-slate-900 mb-4">Método de Envío</h3>
-                  <div className="flex flex-col gap-4">
-                    <label className={`relative flex items-center justify-between p-4 border rounded-2xl cursor-pointer transition-all ${shippingMethod === 'standard' ? 'border-brand-primary bg-brand-primary/5 ring-1 ring-brand-primary' : 'border-gray-200 hover:border-brand-primary/40'}`}>
-                      <div className="flex gap-4">
-                        <Radio 
-                          name="shipping" 
-                          checked={shippingMethod === 'standard'} 
-                          onChange={() => setShippingMethod('standard')} 
-                        />
-                        <div>
-                          <p className="font-semibold text-slate-900">Envío Estándar</p>
-                          <p className="text-sm text-muted">Entrega en 3 - 5 días hábiles</p>
-                        </div>
-                      </div>
-                      <span className="font-bold text-slate-900">$5.00</span>
-                    </label>
-
-                    <label className={`relative flex items-center justify-between p-4 border rounded-2xl cursor-pointer transition-all ${shippingMethod === 'express' ? 'border-brand-primary bg-brand-primary/5 ring-1 ring-brand-primary' : 'border-gray-200 hover:border-brand-primary/40'}`}>
-                      <div className="flex gap-4">
-                        <Radio 
-                          name="shipping" 
-                          checked={shippingMethod === 'express'} 
-                          onChange={() => setShippingMethod('express')} 
-                        />
-                        <div>
-                          <p className="font-semibold text-slate-900">Envío Express</p>
-                          <p className="text-sm text-muted">Entrega en 1 - 2 días hábiles</p>
-                        </div>
-                      </div>
-                      <span className="font-bold text-slate-900">$12.00</span>
-                    </label>
-                  </div>
                 </div>
               </section>
 
-              {/* Step 3: Pago */}
+              {/* Step 2: Pago */}
               <section className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-sm">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-full bg-brand-primary/10 flex items-center justify-center text-brand-primary shrink-0">
-                    <CreditCard className="w-5 h-5" />
-                  </div>
-                  <h2 className="text-xl font-bold text-slate-900">Método de Pago</h2>
+                  <CreditCard className="w-6 h-6 text-brand-primary shrink-0" />
+                  <h2 className="text-xl font-bold text-slate-900">Pago Inteligente</h2>
                 </div>
 
                 <div className="flex flex-col gap-4 mb-6">
-                  {/* Tarjeta de crédito */}
-                  <div className={`border rounded-2xl overflow-hidden transition-all ${paymentMethod === 'card' ? 'border-brand-primary ring-1 ring-brand-primary' : 'border-gray-200'}`}>
-                    <label className={`flex items-center p-4 cursor-pointer ${paymentMethod === 'card' ? 'bg-brand-primary/5' : 'hover:bg-gray-50'}`}>
-                      <Radio 
-                        name="payment" 
-                        checked={paymentMethod === 'card'} 
-                        onChange={() => setPaymentMethod('card')} 
-                      />
-                      <span className="font-semibold text-slate-900 ml-4 flex-1">Tarjeta de Crédito / Débito</span>
-                      <div className="flex gap-2">
-                        {/* Placeholder icons for cards */}
-                        <div className="w-8 h-5 bg-blue-600 rounded flex items-center justify-center text-[8px] text-white font-bold">VISA</div>
-                        <div className="w-8 h-5 bg-red-500 rounded flex items-center justify-center text-[8px] text-white font-bold">MC</div>
-                      </div>
-                    </label>
-                    
-                    {paymentMethod === 'card' && (
-                      <div className="p-5 border-t border-gray-100 bg-white space-y-4 animate-in slide-in-from-top-2 duration-300">
-                        <Input label="Número de tarjeta" placeholder="0000 0000 0000 0000" />
-                        <div className="grid grid-cols-2 gap-5">
-                          <Input label="Vencimiento (MM/AA)" placeholder="MM/AA" />
-                          <Input label="CVC" placeholder="123" type="password" maxLength={4} />
-                        </div>
-                        <Input label="Nombre en la tarjeta" placeholder="Ej. María Pérez" />
-                      </div>
-                    )}
+                  {/* Billetera destino */}
+                  <div className="p-5 border border-brand-primary/30 bg-brand-primary/5 rounded-2xl">
+                    <p className="text-sm text-slate-900 font-semibold mb-2">Billetera de Destino / Cuenta de Pago</p>
+                    <div className="flex items-center justify-between bg-white border border-gray-200 p-3 rounded-xl">
+                      <span className="font-mono text-xs text-slate-600">0x71C...976F (Simulado)</span>
+                      <Button variant="ghost" size="sm" className="h-8 px-3 text-brand-primary text-xs font-bold">Copiar</Button>
+                    </div>
+                    <p className="text-xs text-muted mt-3">
+                      Realiza el envío exacto de <strong>${total.toFixed(2)}</strong> a esta cuenta y pega el Hash de la Transacción debajo.
+                    </p>
                   </div>
 
-                  {/* Transferencia */}
-                  <div className={`border rounded-2xl overflow-hidden transition-all ${paymentMethod === 'transfer' ? 'border-brand-primary ring-1 ring-brand-primary' : 'border-gray-200'}`}>
-                    <label className={`flex items-center p-4 cursor-pointer ${paymentMethod === 'transfer' ? 'bg-brand-primary/5' : 'hover:bg-gray-50'}`}>
-                      <Radio 
-                        name="payment" 
-                        checked={paymentMethod === 'transfer'} 
-                        onChange={() => setPaymentMethod('transfer')} 
-                      />
-                      <span className="font-semibold text-slate-900 ml-4 flex-1">Transferencia Bancaria</span>
-                      <Building2 className="w-5 h-5 text-gray-400" />
-                    </label>
-                    {paymentMethod === 'transfer' && (
-                      <div className="p-5 border-t border-gray-100 bg-white animate-in slide-in-from-top-2 duration-300">
-                        <p className="text-sm text-muted">
-                          Al finalizar la compra, te mostraremos los datos de nuestra cuenta bancaria para que realices la transferencia.
-                          Tu pedido se procesará una vez confirmemos el pago.
-                        </p>
-                      </div>
-                    )}
+                  {/* Hash de transacción */}
+                  <div className="mt-4">
+                    <Input 
+                      label="Hash de Transacción / Comprobante" 
+                      placeholder="Ej. 0xabcdef123456..." 
+                      value={transactionHash}
+                      onChange={(e) => setTransactionHash(e.target.value)}
+                      required
+                    />
                   </div>
                 </div>
 
                 {/* Seguridad */}
                 <div className="flex items-center gap-2 mt-6 text-sm text-green-600 bg-green-50 p-4 rounded-xl">
                   <ShieldCheck className="w-5 h-5" />
-                  <span className="font-medium">Tus pagos son procesados de forma segura y encriptada.</span>
+                  <span className="font-medium">Validaremos tu pago automáticamente usando el comprobante.</span>
                 </div>
               </section>
             </div>

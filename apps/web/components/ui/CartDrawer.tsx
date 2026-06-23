@@ -70,15 +70,6 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
         </div>
 
         <div className="p-6 border-t border-gray-100 bg-gray-50/50">
-          <div className="flex gap-2 mb-6">
-            <input 
-              type="text" 
-              placeholder="Código Promo" 
-              className="flex-1 border border-gray-200 rounded-xl px-4 text-sm outline-none focus:border-brand-primary"
-            />
-            <Button variant="secondary" className="rounded-xl px-6">Aplicar</Button>
-          </div>
-          
           <div className="flex justify-between mb-2">
             <span className="text-gray-500 font-medium">Subtotal</span>
             <span className="font-bold text-slate-900">$55.00</span>
