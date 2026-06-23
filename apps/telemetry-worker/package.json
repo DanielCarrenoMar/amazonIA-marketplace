@@ -11,7 +11,9 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,test}/**/*.ts\" --fix",
-    "test:unit": "jest --config ./test/jest-unit.json",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:cov": "jest --coverage",
     "test:producer": "ts-node scripts/test-producer.ts"
   },
   "dependencies": {
@@ -34,14 +36,31 @@
     "@nestjs/testing": "^11.0.1",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.0.0",
-    "jest": "^30.0.0",
-    "ts-jest": "^29.2.5",
     "@upstash/redis": "^1.38.0",
     "dotenv": "^17.4.2",
+    "jest": "^30.0.0",
     "source-map-support": "^0.5.21",
+    "ts-jest": "^29.2.5",
     "ts-loader": "^9.5.2",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.3"
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "js",
+      "json",
+      "ts"
+    ],
+    "rootDir": "src",
+    "testRegex": ".*\\.spec\\.ts$",
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest"
+    },
+    "collectCoverageFrom": [
+      "**/*.(t|j)s"
+    ],
+    "coverageDirectory": "../coverage",
+    "testEnvironment": "node"
   }
 }
