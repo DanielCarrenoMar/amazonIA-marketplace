@@ -15,7 +15,7 @@ El proyecto utiliza **Turborepo** y **pnpm** para gestionar las múltiples aplic
 3.  **Variables de Entorno (`.env`):** Cada aplicación debe tener su propio archivo `.env`. Para desarrollo local, **no necesitas instalar bases de datos localmente**. Configura las URLs para que apunten directamente a los clústeres de desarrollo en la nube:
     *   `DATABASE_URL` -> Neon (PostgreSQL)
     *   `MONGODB_URI` -> MongoDB Atlas (Asegúrate de incluir `?readPreference=secondary` en el modelo de IA).
-    *   `KAFKA_BROKER` -> Upstash Kafka
+    *   `REDIS_URL` -> Upstash Redis (Serverless Streams)
 
 ### Simulador IoT
 El simulador de datos (en `apps/iot-simulator`) **no se ejecuta automáticamente** con `pnpm run dev` para evitar inyectar basura mientras desarrollas la web.
@@ -30,7 +30,7 @@ Dado que usamos una arquitectura de microservicios dentro de un monorepo, cada s
 ### Bases de Datos y Broker (Managed Services)
 No requieren despliegue de nuestra parte, solo obtener las credenciales de producción desde sus plataformas:
 *   **Neon:** Base de datos principal relacional.
-*   **Upstash:** Cluster de Kafka Serverless.
+*   **Upstash:** Cluster de Redis Serverless (Streams).
 *   **MongoDB Atlas:** Data Lake de series temporales (con Replica Sets activados).
 
 ### Aplicación Web (`apps/web`)

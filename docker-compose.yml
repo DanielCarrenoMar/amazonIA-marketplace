@@ -1,0 +1,125 @@
+# docker-compose.yml — AmazonIA Marketplace
+# Versión: 1.0 | Monorepo: Turborepo + pnpm
+#
+# Uso:
+#   docker compose up -d                  # Levanta todos los servicios
+#   docker compose up iot-simulator -d    # Solo el simulador
+#   docker compose logs -f telemetry-worker
+#   docker compose down
+#
+# Variables de entorno:
+#   Crea un archivo `.env` en la raíz con los valores reales.
+#   NUNCA committees secrets. Usa el archivo .env.compose.example como guía.
+
+services:
+
+  # ══════════════════════════════════════════════════════════════════════════
+  # IoT Simulator — Sensor MQTT (cliente saliente a HiveMQ Cloud)
+  # ══════════════════════════════════════════════════════════════════════════
+  iot-simulator:
+    build:
+      context: ./apps/iot-simulator          # Standalone: no necesita monorepo raíz
+      dockerfile: Dockerfile
+    image: amazonia/iot-simulator:latest
+    container_name: amazonia-iot-simulator
+    restart: unless-stopped
+    environment:
+      - HIVEMQ_HOST=${HIVEMQ_HOST}
+      - HIVEMQ_PORT=${HIVEMQ_PORT:-8883}
+      - HIVEMQ_USERNAME=${HIVEMQ_USERNAME}
+      - HIVEMQ_PASSWORD=${HIVEMQ_PASSWORD}
+    networks:
+      - amazonia-internal
+    # Sin puertos expuestos: el sensor solo PUBLICA hacia HiveMQ Cloud
+    # No tiene endpoints HTTP
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ══════════════════════════════════════════════════════════════════════════
+  # Ingestor Service — Gateway MQTT → Redis Streams
+  # ══════════════════════════════════════════════════════════════════════════
+  ingestor-service:
+    build:
+      context: .                             # Raíz del monorepo (requiere packages/)
+      dockerfile: apps/ingestor-service/Dockerfile
+    image: amazonia/ingestor-service:latest
+    container_name: amazonia-ingestor-service
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=3002
+      # HiveMQ Cloud (MQTT broker)
+      - HIVEMQ_HOST=${HIVEMQ_HOST}
+      - HIVEMQ_PORT=${HIVEMQ_PORT:-8883}
+      - HIVEMQ_USERNAME=${INGESTOR_HIVEMQ_USERNAME}
+      - HIVEMQ_PASSWORD=${INGESTOR_HIVEMQ_PASSWORD}
+      # API Key de autenticación
+      - INGESTOR_API_KEY=${INGESTOR_API_KEY}
+      # Upstash Redis Streams
+      - REDIS_URL=${REDIS_URL}
+      - REDIS_TOKEN=${REDIS_TOKEN}
+    ports:
+      - "3002:3002"                          # Solo para health checks desde el host
+    networks:
+      - amazonia-internal
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  # ══════════════════════════════════════════════════════════════════════════
+  # Telemetry Worker — Redis Streams → MongoDB Atlas
+  # ══════════════════════════════════════════════════════════════════════════
+  telemetry-worker:
+    build:
+      context: .                             # Raíz del monorepo (requiere packages/)
+      dockerfile: apps/telemetry-worker/Dockerfile
+    image: amazonia/telemetry-worker:latest
+    container_name: amazonia-telemetry-worker
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=3003
+      # Upstash Redis Streams
+      - REDIS_URL=${REDIS_URL}
+      - REDIS_TOKEN=${REDIS_TOKEN}
+      # MongoDB Atlas
+      - MONGODB_URI=${MONGODB_URI}
+      # Configuración del worker
+      - POLL_INTERVAL_MS=${POLL_INTERVAL_MS:-30000}
+    ports:
+      - "3003:3003"                          # Solo para health checks desde el host
+    networks:
+      - amazonia-internal
+    depends_on:
+      ingestor-service:
+        condition: service_healthy           # Espera que el ingestor esté listo
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Redes
+# ══════════════════════════════════════════════════════════════════════════════
+networks:
+  amazonia-internal:
+    driver: bridge
+    name: amazonia-network
