@@ -16,6 +16,9 @@ import type {
   VoteType,
 } from 'event-types';
 
+// ponytail: schema is per schemas.md (no metadata columns); returns null until DB is extended
+const MISSING_METADATA: string | null = null;
+
 @Injectable()
 export class BlockchainExplorerService {
   constructor(private readonly prisma: PrismaService) {}
@@ -41,7 +44,7 @@ export class BlockchainExplorerService {
 
     return proposals.map((p) => ({
       id: p.id,
-      title: p.title,
+      title: MISSING_METADATA,
       proposerName: userMap.get(p.proposerUserId) ?? null,
       status: p.status as ProposalStatus,
       votesFor: p.votesFor,
@@ -77,15 +80,15 @@ export class BlockchainExplorerService {
 
     return {
       id: proposal.id,
-      title: proposal.title,
+      title: MISSING_METADATA,
       proposerName: userMap.get(proposal.proposerUserId) ?? null,
       status: proposal.status as ProposalStatus,
       votesFor: proposal.votesFor,
       votesAgainst: proposal.votesAgainst,
       createdAt: proposal.createdAt.toISOString(),
-      description: proposal.description,
-      productId: proposal.productId,
-      buyerAddress: proposal.buyerAddress,
+      description: MISSING_METADATA,
+      productId: MISSING_METADATA,
+      buyerAddress: MISSING_METADATA,
       votes,
     };
   }
