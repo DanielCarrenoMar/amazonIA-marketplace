@@ -503,13 +503,6 @@ model Proposal {
   createdAt       DateTime       @default(now()) @map("created_at") @db.Timestamptz
   confirmedAt     DateTime?      @map("confirmed_at") @db.Timestamptz
 
-  // Context fields added in the blockchain-explorer change. Nullable because
-  // existing Proposal rows predate these columns. Backfilled by future work.
-  title        String? @map("title") @db.VarChar(255)
-  description  String? @map("description") @db.Text
-  productId    String? @map("product_id") @db.VarChar(100)
-  buyerAddress String? @map("buyer_address") @db.VarChar(42)
-
   votes Vote[]
 
   @@index([status])
