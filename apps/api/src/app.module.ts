@@ -16,6 +16,7 @@ import { ShippingCarrierModule } from './shipping-carrier/shipping-carrier.modul
 import { ProductCommentModule } from './product-comment/product-comment.module';
 import { OrderChatModule } from './order-chat/order-chat.module';
 import { MessagingModule } from 'messaging';
+import { BlockchainModule } from './blockchain/blockchain.module';
 import { HealthModule } from './health/health.module';
 
 import { ConfigModule } from '@nestjs/config';
@@ -50,6 +51,7 @@ import { APP_GUARD } from '@nestjs/core';
     ShippingCarrierModule,
     ProductCommentModule,
     OrderChatModule,
+    BlockchainModule,
     HealthModule,
   ],
   controllers: [AppController],
