@@ -1,4 +1,4 @@
-import 'dotenv/config';
+try { require('dotenv/config'); } catch {}
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import helmet from 'helmet';

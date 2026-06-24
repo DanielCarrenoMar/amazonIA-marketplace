@@ -159,7 +159,7 @@ describe('ProductOrderService', () => {
       expect(outbox.append).not.toHaveBeenCalled();
     });
 
-    it('includes correct Kafka topic in outbox payload for shipment events', async () => {
+    it('includes correct Stream topic in outbox payload for shipment events', async () => {
       const order = makeOrder();
       const tx = {
         productOrder: {

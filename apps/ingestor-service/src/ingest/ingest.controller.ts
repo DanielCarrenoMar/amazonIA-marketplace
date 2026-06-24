@@ -9,7 +9,7 @@ import { CreateClimateEventDto, CreateShipmentEventDto } from 'event-types';
 /**
  * Ingestion endpoints for IoT telemetry data via MQTT microservice.
  *
- * Flow: MQTT EventPattern → validate DTO → enrich (event_id, ingested_at) → publish to Kafka
+ * Flow: MQTT EventPattern → validate DTO → enrich (event_id, ingested_at) → publish to Redis Streams
  */
 @Controller()
 export class IngestController {

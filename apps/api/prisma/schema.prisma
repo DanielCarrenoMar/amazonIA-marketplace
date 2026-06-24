@@ -384,7 +384,7 @@ model OrderChat {
 }
 
 // ---------------------------------------------------------------------------
-// OutboxEvent  (transactional outbox — reliable Kafka publishing)
+// OutboxEvent  (transactional outbox — reliable Redis Streams publishing)
 // ---------------------------------------------------------------------------
 
 model OutboxEvent {
