@@ -1,7 +1,7 @@
 {
   "name": "telemetry-worker",
   "version": "0.0.1",
-  "description": "Kafka consumer that persists IoT telemetry into MongoDB Atlas Time Series Collections",
+  "description": "Redis Streams consumer that persists IoT telemetry into MongoDB Atlas Time Series Collections",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {

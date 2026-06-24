@@ -56,7 +56,7 @@ AppModule (apps/api)
 ### Paso 1: Crear `packages/database/`
 
 **`packages/database/package.json`**
-- Name: `"database"` (bare name, siguiendo convencion de `event-types` y `kafka-client`)
+- Name: `"database"` (bare name, siguiendo convencion de `event-types` y `messaging`)
 - `main`: `./dist/index.js`, `types`: `./dist/index.d.ts`
 - `exports` con condiciones `types` y `default` apuntando a `./dist/`
 - Build: `tsc`

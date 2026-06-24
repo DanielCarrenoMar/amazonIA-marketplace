@@ -51,6 +51,22 @@ pnpm dev --filter frontend
 pnpm dev --filter blockchain-notary
 ```
 
+### 5. Ejecución con Docker (Orquestación Completa)
+Si querés levantar los microservicios de IoT, Ingestión y Web con sus dependencias aisladas, utilizá el `docker-compose.yml` provisto.
+Asegurate de haber creado primero tu archivo `.env` en la raíz (podés usar el formato en `.env.compose.example` o de `DOCKER_GUIDE.md`).
+
+```bash
+# Construir todas las imágenes (IoT Simulator, Ingestor Service, Telemetry Worker)
+docker compose build
+
+# Levantar los servicios en segundo plano
+docker compose up -d
+
+# Ver los logs en tiempo real
+docker compose logs -f
+```
+Consultá la [Guía de Docker](./DOCKER_GUIDE.md) para conocer la arquitectura de las imágenes y la estrategia multi-stage con Turborepo.
+
 ---
 
 ## 🛠️ Herramientas y Convenciones
