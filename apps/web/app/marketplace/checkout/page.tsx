@@ -157,7 +157,11 @@ export default function CheckoutPage() {
               </span>
             </div>
 
-            <Button variant="primary" className="w-full py-3 mt-4" onClick={() => router.push('/marketplace')}>
+            <Button variant="primary" className="w-full py-3 mt-4" onClick={() => router.push('/marketplace/explorer/prop-101')}>
+              Ver el estado de tu pedido en el Explorer
+            </Button>
+
+            <Button variant="outline" className="w-full py-3 mt-2" onClick={() => router.push('/marketplace')}>
               Volver al Catálogo
             </Button>
           </div>
