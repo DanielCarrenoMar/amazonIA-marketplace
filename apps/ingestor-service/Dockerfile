@@ -48,11 +48,14 @@ COPY --from=pruner /monorepo/out/full/ .
 
 RUN pnpm turbo build --filter=ingestor-service
 
+# 3c. Aislar el microservicio y sus dependencias de producción (sin symlinks)
+RUN pnpm deploy --filter=ingestor-service --prod --legacy /deploy/ingestor-service
+
 # ─── Stage 4: Runtime ─────────────────────────────────────────────────────────
 FROM node:22-alpine AS runtime
 
 LABEL org.opencontainers.image.title="amazonia-ingestor-service" \
-      org.opencontainers.image.description="Gateway MQTT → Redis Streams para telemetría IoT de AmazonIA"
+    org.opencontainers.image.description="Gateway MQTT → Redis Streams para telemetría IoT de AmazonIA"
 
 RUN apk add --no-cache dumb-init
 
@@ -62,11 +65,11 @@ RUN addgroup --system --gid 1001 nodejs \
 
 WORKDIR /app
 
-# Copiar solo lo necesario del builder: dist + node_modules de producción
+# Copiar el servicio aislado por pnpm deploy (contiene package.json y node_modules standalone)
+COPY --from=builder --chown=nestjs:nodejs /deploy/ingestor-service ./
+
+# Copiar explícitamente el build compilado (dist/) ya que pnpm deploy ignora carpetas .gitignored
 COPY --from=builder --chown=nestjs:nodejs /monorepo/apps/ingestor-service/dist ./dist
-COPY --from=builder --chown=nestjs:nodejs /monorepo/apps/ingestor-service/node_modules ./node_modules
-# node_modules de packages internos resueltos por turbo
-COPY --from=builder --chown=nestjs:nodejs /monorepo/packages ./packages
 
 USER nestjs
 

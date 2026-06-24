@@ -101,11 +101,88 @@ services:
       - "3003:3003"                          # Solo para health checks desde el host
     networks:
       - amazonia-internal
-    depends_on:
-      ingestor-service:
-        condition: service_healthy           # Espera que el ingestor esté listo
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:3003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  # ══════════════════════════════════════════════════════════════════════════
+  # API Principal
+  # ══════════════════════════════════════════════════════════════════════════
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    image: amazonia/api:latest
+    container_name: amazonia-api
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
+      - FRONTEND_URL=${FRONTEND_URL}
+      - MONGODB_URI=${MONGODB_URI}
+      - REDIS_URL=${REDIS_URL}
+      - REDIS_TOKEN=${REDIS_TOKEN}
+      - NOTARY_API_KEY=${NOTARY_API_KEY}
+      - NOTARY_SERVICE_URL=http://blockchain-notary:3004/api/v1
+      - WEBHOOK_BASE_URL=http://api:3001/api
+      - CB_FAILURE_THRESHOLD=${CB_FAILURE_THRESHOLD:-3}
+      - CB_COOLDOWN_MS=${CB_COOLDOWN_MS:-30000}
+      - MONGODB_TIMEOUT_MS=${MONGODB_TIMEOUT_MS:-5000}
+    ports:
+      - "3001:3001"
+    networks:
+      - amazonia-internal
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  # ══════════════════════════════════════════════════════════════════════════
+  # Blockchain Notary
+  # ══════════════════════════════════════════════════════════════════════════
+  blockchain-notary:
+    build:
+      context: .
+      dockerfile: apps/blockchain-notary/Dockerfile
+    image: amazonia/blockchain-notary:latest
+    container_name: amazonia-blockchain-notary
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=3004
+      - DATABASE_URL=${NOTARY_DATABASE_URL}
+      - RPC_URL=${RPC_URL}
+      - PRIVATE_KEY=${PRIVATE_KEY}
+      - CONTRACT_ADDRESS=${CONTRACT_ADDRESS}
+      - API_KEY=${NOTARY_API_KEY}
+      - NETWORK_NAME=${NETWORK_NAME:-arbitrum}
+      - WEBHOOK_BASE_URL=http://api:3001/api
+    ports:
+      - "3004:3004"
+    networks:
+      - amazonia-internal
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3004/api/v1/health"]
       interval: 30s
       timeout: 10s
       retries: 3

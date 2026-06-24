@@ -26,10 +26,10 @@
 **/.next/
 **/*.tsbuildinfo
 
-# Archivos de entorno — NUNCA deben entrar al contexto de build
+# Archivos de entorno — NUNCA deben entrar al contexto de build (excepto examples)
 **/.env
-**/.env.*
 **/*.env
+!**/.env.example
 
 # Logs
 **/*.log
@@ -47,7 +47,6 @@ Thumbs.db
 
 # Documentación adicional que no es código
 **/README.md
-**/*.md
 !apps/*/nest-cli.json
 
 # Postman

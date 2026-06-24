@@ -7,6 +7,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "turbo build",
     "build:events": "turbo build --filter=event-types",
+    "build:ingestor": "turbo build --filter=ingestor-service",
+    "build:worker": "turbo build --filter=telemetry-worker",
+    "build:iot": "turbo build --filter=iot-simulator",
     "dev": "turbo dev --filter=web... --filter=api...",
     "dev:api": "turbo dev --filter=api...",
     "dev:web": "turbo dev --filter=web",
@@ -18,6 +21,7 @@
     "simulate:climate": "pnpm --filter iot-simulator simulate:climate",
     "simulate:shipment": "pnpm --filter iot-simulator simulate:shipment",
     "simulate:mixed": "pnpm --filter iot-simulator simulate:mixed"
+
   },
   "keywords": [],
   "author": "",
