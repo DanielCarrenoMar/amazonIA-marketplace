@@ -1,9 +1,11 @@
 // =============================================================================
 // Proposal DTOs — match apps/web/lib/explorer-mock.ts `ProposalSummary`,
 // `VoteRegistry`, and `ProposalDetail` exactly.
-// All context fields are nullable for backward compatibility with existing
-// Proposal rows that predate the title/description/productId/buyerAddress
-// columns added in the blockchain-explorer change.
+// `title`, `description`, `productId`, `buyerAddress` are typed `string | null`
+// because the underlying `proposal` table does not have those columns yet —
+// see apps/blockchain-notary/md/schemas.md for the authoritative DB DDL.
+// The explorer service returns null for them. When the columns are added to
+// the DB, the service can populate them and these types stay as-is.
 // =============================================================================
 
 export type ProposalStatus = 'PENDING' | 'CONFIRMED' | 'VETOED';
