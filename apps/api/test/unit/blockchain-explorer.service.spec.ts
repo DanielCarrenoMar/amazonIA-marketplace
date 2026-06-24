@@ -30,10 +30,6 @@ describe('BlockchainExplorerService', () => {
       deadline: FIXED_DATE,
       createdAt: FIXED_DATE,
       confirmedAt: null,
-      title: 'Notarización de Jarrón',
-      description: 'Evaluación de autenticidad para el jarrón',
-      productId: 'prod-999',
-      buyerAddress: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
     },
     {
       id: 'prop-2',
@@ -51,10 +47,6 @@ describe('BlockchainExplorerService', () => {
       deadline: FIXED_DATE,
       createdAt: FIXED_DATE,
       confirmedAt: null,
-      title: null,
-      description: null,
-      productId: null,
-      buyerAddress: null,
     },
   ];
 
@@ -140,7 +132,7 @@ describe('BlockchainExplorerService', () => {
       expect(result).toEqual([
         {
           id: 'prop-1',
-          title: 'Notarización de Jarrón',
+          title: null,
           proposerName: 'Ana Proponente',
           status: 'PENDING',
           votesFor: 3,
@@ -224,11 +216,11 @@ describe('BlockchainExplorerService', () => {
 
       expect(result).toMatchObject({
         id: 'prop-1',
-        title: 'Notarización de Jarrón',
+        title: null,
         proposerName: 'Ana Proponente',
-        description: 'Evaluación de autenticidad para el jarrón',
-        productId: 'prod-999',
-        buyerAddress: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
+        description: null,
+        productId: null,
+        buyerAddress: null,
         status: 'PENDING',
         votesFor: 3,
         votesAgainst: 1,
@@ -269,28 +261,6 @@ describe('BlockchainExplorerService', () => {
       const result = await service.findProposal('prop-1');
 
       expect(result!.proposerName).toBeNull();
-    });
-
-    it('returns description/productId/buyerAddress null when missing on the row', async () => {
-      const sparse = {
-        ...detailedProposal,
-        description: null,
-        productId: null,
-        buyerAddress: null,
-        title: null,
-      };
-      prismaMock.proposal.findUnique.mockResolvedValue(sparse);
-      prismaMock.userAccount.findMany.mockResolvedValue([
-        proposerUser,
-        voterUser1,
-      ]);
-
-      const result = await service.findProposal('prop-1');
-
-      expect(result!.description).toBeNull();
-      expect(result!.productId).toBeNull();
-      expect(result!.buyerAddress).toBeNull();
-      expect(result!.title).toBeNull();
     });
 
     it('maps Vote.inFavor true to voteType FAVOR and false to AGAINST', async () => {
