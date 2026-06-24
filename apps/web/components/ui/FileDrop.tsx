@@ -1,7 +1,7 @@
 "use client";
 
 import React, { forwardRef, useRef, useState, useCallback } from "react";
-import { UploadCloud, File as FileIcon, X } from "lucide-react";
+import { Icon } from "@iconify/react";
 
 export interface FileDropProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type'> {
   label?: string;
@@ -195,7 +195,7 @@ export const FileDrop = forwardRef<HTMLInputElement, FileDropProps>(
               p-3.5 rounded-2xl transition-colors duration-200
               ${isDragging || selectedFiles.length > 0 ? "bg-brand-primary text-white" : "bg-brand-primary/10 text-brand-primary"}
             `}>
-              <UploadCloud className="w-7 h-7" />
+              <Icon icon="lucide:upload-cloud" className="w-7 h-7" />
             </div>
             <div className="space-y-1">
               <p className="text-sm font-semibold text-foreground">
@@ -220,7 +220,7 @@ export const FileDrop = forwardRef<HTMLInputElement, FileDropProps>(
               >
                 <div className="flex items-center gap-3 overflow-hidden">
                   <div className="p-2 bg-brand-nature-bg text-brand-primary rounded-lg shrink-0">
-                    <FileIcon className="w-4 h-4" />
+                    <Icon icon="lucide:file" className="w-4 h-4" />
                   </div>
                   <div className="flex flex-col truncate">
                     <span className="font-medium text-foreground truncate">{file.name}</span>
@@ -238,7 +238,7 @@ export const FileDrop = forwardRef<HTMLInputElement, FileDropProps>(
                     onClick={(e) => removeFile(e, idx)}
                     className="p-1.5 text-muted hover:text-brand-urgency hover:bg-brand-urgency/10 rounded-full transition-colors"
                   >
-                    <X className="w-4 h-4" />
+                    <Icon icon="lucide:x" className="w-4 h-4" />
                   </button>
                 )}
               </li>

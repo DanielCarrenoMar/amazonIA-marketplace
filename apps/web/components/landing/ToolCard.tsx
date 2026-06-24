@@ -1,17 +1,17 @@
 import React from 'react';
 import Link from 'next/link';
-import { LucideIcon } from 'lucide-react';
+import { Icon } from "@iconify/react";
 import { Button } from '../ui/Button';
 
 export interface ToolCardProps {
   id?: string;
   title: string;
   description: string;
-  icon: LucideIcon;
+  icon: string;
   href?: string;
 }
 
-export function ToolCard({ id, title, description, icon: Icon, href }: ToolCardProps) {
+export function ToolCard({ id, title, description, icon, href }: ToolCardProps) {
   return (
     <div
       id={id}
@@ -19,7 +19,7 @@ export function ToolCard({ id, title, description, icon: Icon, href }: ToolCardP
     >
       <div className="flex justify-between items-start mb-6">
         <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-          <Icon className="w-7 h-7 text-white" strokeWidth={2} />
+          <Icon icon={icon} className="w-7 h-7 text-white" />
         </div>
       </div>
 

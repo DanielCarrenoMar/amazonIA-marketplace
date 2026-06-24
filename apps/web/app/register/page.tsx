@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { Icon } from "@iconify/react";
 import { registerUser } from "@/lib/api";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -104,7 +104,7 @@ export default function RegisterPage() {
         href="/"
         className="absolute top-6 left-6 md:top-8 md:left-8 inline-flex items-center gap-1.5 text-foreground/80 hover:text-brand-primary-dark md:text-white/90 md:hover:text-white text-sm sm:text-base font-semibold transition-colors duration-200 group z-50 md:drop-shadow-md"
       >
-        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+        <Icon icon="lucide:arrow-left" className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
         Volver al inicio
       </Link>
 
@@ -181,7 +181,7 @@ export default function RegisterPage() {
                   onClick={() => setShowPassword(!showPassword)}
                   className="text-foreground/60 hover:text-brand-primary transition-colors focus:outline-none p-1 rounded-md cursor-pointer"
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showPassword ? <Icon icon="lucide:eye-off" className="w-4 h-4" /> : <Icon icon="lucide:eye" className="w-4 h-4" />}
                 </button>
               }
             />

@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { Star, Heart, ShoppingCart, Minus, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Icon } from "@iconify/react";
 import { mockProducts } from '@/lib/mock-data';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -80,7 +80,7 @@ export default function ProductDetailPage() {
                 size="icon" 
                 className="absolute top-4 right-4 bg-white/80 backdrop-blur-md shadow-sm hover:scale-110 text-red-500"
               >
-                <Heart className="w-6 h-6 fill-red-500" />
+                <Icon icon="lucide:heart" className="w-6 h-6 fill-red-500" />
               </Button>
             </div>
             
@@ -111,7 +111,7 @@ export default function ProductDetailPage() {
             <div className="flex items-center gap-4 mb-6">
               <div className="flex gap-1 text-amber-400">
                 {[1,2,3,4,5].map((star) => (
-                  <Star key={star} className={`w-5 h-5 ${star <= 4 ? 'fill-amber-400' : 'text-gray-300 stroke-2'}`} />
+                  <Icon icon="lucide:star" key={star} className={`w-5 h-5 ${star <= 4 ? 'fill-amber-400' : 'text-gray-300 stroke-2'}`} />
                 ))}
               </div>
               <span className="text-gray-600 font-medium">4/5</span>
@@ -156,13 +156,13 @@ export default function ProductDetailPage() {
                 <label className="text-sm font-semibold text-gray-900 block mb-1.5">Cantidad</label>
                 <div className="flex items-center h-[50px] border border-gray-200 rounded-xl overflow-hidden shadow-sm bg-white">
                   <button onClick={handleDecrease} className="w-12 h-full flex items-center justify-center hover:bg-gray-50 text-gray-600 transition-colors">
-                    <Minus className="w-4 h-4" />
+                    <Icon icon="lucide:minus" className="w-4 h-4" />
                   </button>
                   <div className="flex-1 h-full flex items-center justify-center font-semibold text-gray-900 border-x border-gray-200">
                     {quantity}
                   </div>
                   <button onClick={handleIncrease} className="w-12 h-full flex items-center justify-center hover:bg-gray-50 text-gray-600 transition-colors">
-                    <Plus className="w-4 h-4" />
+                    <Icon icon="lucide:plus" className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -173,7 +173,7 @@ export default function ProductDetailPage() {
                 variant="primary" 
                 size="lg" 
                 className="w-full text-lg h-14"
-                leftIcon={<ShoppingCart className="w-5 h-5" />}
+                leftIcon={<Icon icon="lucide:shopping-cart" className="w-5 h-5" />}
               >
                 Añadir al carrito
               </Button>
@@ -208,7 +208,7 @@ export default function ProductDetailPage() {
                   </div>
                 </div>
                 <div className="flex gap-0.5 shrink-0 pt-1">
-                  {[1,2,3,4,5].map((star) => <Star key={star} className="w-4 h-4 fill-amber-400 text-amber-400" />)}
+                  {[1,2,3,4,5].map((star) => <Icon icon="lucide:star" key={star} className="w-4 h-4 fill-amber-400 text-amber-400" />)}
                 </div>
               </div>
               <p className="text-muted leading-relaxed text-sm">
@@ -227,8 +227,8 @@ export default function ProductDetailPage() {
                   </div>
                 </div>
                 <div className="flex gap-0.5 shrink-0 pt-1">
-                  {[1,2,3,4].map((star) => <Star key={star} className="w-4 h-4 fill-amber-400 text-amber-400" />)}
-                  <Star className="w-4 h-4 text-gray-300 stroke-2" />
+                  {[1,2,3,4].map((star) => <Icon icon="lucide:star" key={star} className="w-4 h-4 fill-amber-400 text-amber-400" />)}
+                  <Icon icon="lucide:star" className="w-4 h-4 text-gray-300 stroke-2" />
                 </div>
               </div>
               <p className="text-muted leading-relaxed text-sm">
@@ -248,13 +248,13 @@ export default function ProductDetailPage() {
               onClick={() => scroll('left')}
               className="absolute -left-4 md:-left-5 top-[40%] -translate-y-1/2 w-12 h-12 rounded-full bg-white hover:bg-gray-50 flex items-center justify-center shadow-lg border border-gray-100 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
             >
-              <ChevronLeft className="w-6 h-6 text-slate-700" />
+              <Icon icon="lucide:chevron-left" className="w-6 h-6 text-slate-700" />
             </button>
             <button 
               onClick={() => scroll('right')}
               className="absolute -right-4 md:-right-5 top-[40%] -translate-y-1/2 w-12 h-12 rounded-full bg-white hover:bg-gray-50 flex items-center justify-center shadow-lg border border-gray-100 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
             >
-              <ChevronRight className="w-6 h-6 text-slate-700" />
+              <Icon icon="lucide:chevron-right" className="w-6 h-6 text-slate-700" />
             </button>
 
             {/* Scroll Container */}

@@ -6,7 +6,7 @@ import { ProductCard } from '@/components/ui/ProductCard';
 import { Button } from '@/components/ui/Button';
 import { Checkbox } from '@/components/ui/Checkbox';
 import { Input } from '@/components/ui/Input';
-import { Star } from 'lucide-react';
+import { Icon } from "@iconify/react";
 import { MarketplaceNavbar } from '@/components/layout/MarketplaceNavbar';
 import { BannerCarousel } from '@/components/ui/BannerCarousel';
 import { Footer } from '@/components/layout/Footer';
@@ -112,8 +112,8 @@ export default function MarketplacePage() {
               <h3 className="font-bold text-slate-900 text-lg mb-4">Calificación</h3>
               <div className="flex items-center justify-between cursor-pointer group">
                 <div className="flex gap-1 text-amber-400 group-hover:scale-105 transition-transform">
-                  {[1,2,3,4].map(s => <Star key={s} className="w-5 h-5 fill-amber-400" />)}
-                  <Star className="w-5 h-5 text-gray-300 stroke-2" />
+                  {[1,2,3,4].map(s => <Icon icon="lucide:star" key={s} className="w-5 h-5 fill-amber-400" />)}
+                  <Icon icon="lucide:star" className="w-5 h-5 text-gray-300 stroke-2" />
                 </div>
                 <span className="text-sm font-semibold text-muted group-hover:text-amber-500 transition-colors">4+ Estrellas</span>
               </div>

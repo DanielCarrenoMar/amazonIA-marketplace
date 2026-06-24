@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { X, Trash2 } from 'lucide-react';
+import { Icon } from "@iconify/react";
 import { Button } from './Button';
 import Link from 'next/link';
 
@@ -38,7 +38,7 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
           <h2 className="text-xl font-bold text-slate-900">Mi Carrito (3)</h2>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-            <X className="w-5 h-5 text-gray-500" />
+            <Icon icon="lucide:x" className="w-5 h-5 text-gray-500" />
           </button>
         </div>
 
@@ -52,7 +52,7 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                 <div className="flex justify-between items-start">
                   <h4 className="font-bold text-sm text-slate-900 leading-tight">{item.title}</h4>
                   <button className="text-gray-400 hover:text-brand-urgency p-1 transition-colors">
-                    <Trash2 className="w-4 h-4" />
+                    <Icon icon="lucide:trash-2" className="w-4 h-4" />
                   </button>
                 </div>
                 <p className="text-sm text-gray-500 mt-1 font-medium">Tamaño: Único</p>

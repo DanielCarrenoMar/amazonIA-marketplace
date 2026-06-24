@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Icon } from "@iconify/react";
 import { Button } from './Button';
 
 interface BannerProps {
@@ -61,13 +61,13 @@ export function BannerCarousel({ banners }: { banners: BannerProps[] }) {
         onClick={prev}
         className="absolute left-2 md:left-4 top-[45%] -translate-y-1/2 w-12 h-12 rounded-full bg-slate-900/50 backdrop-blur-md hover:bg-slate-900/70 flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-all border border-white/20 z-10 text-white"
       >
-        <ChevronLeft className="w-6 h-6" />
+        <Icon icon="lucide:chevron-left" className="w-6 h-6" />
       </button>
       <button 
         onClick={next}
         className="absolute right-2 md:right-4 top-[45%] -translate-y-1/2 w-12 h-12 rounded-full bg-slate-900/50 backdrop-blur-md hover:bg-slate-900/70 flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-all border border-white/20 z-10 text-white"
       >
-        <ChevronRight className="w-6 h-6" />
+        <Icon icon="lucide:chevron-right" className="w-6 h-6" />
       </button>
 
       {/* Dots */}

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Search, ShoppingCart, Heart, Home } from 'lucide-react';
+import { Icon } from "@iconify/react";
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
 import { CartDrawer } from '../ui/CartDrawer';
@@ -49,7 +49,7 @@ export function MarketplaceNavbar() {
           {/* Search Bar (Center) */}
           <div className="flex-1 max-w-2xl hidden md:flex items-center">
             <Input 
-              leftIcon={<Search className="w-5 h-5 text-gray-400" />}
+              leftIcon={<Icon icon="lucide:search" className="w-5 h-5 text-gray-400" />}
               placeholder="Buscar artesanías, ropa, hogar..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -98,12 +98,12 @@ export function MarketplaceNavbar() {
 
             {/* Home */}
             <Link href="/" title="Volver a Inicio" className="relative p-2.5 text-slate-600 hover:text-brand-primary transition-colors cursor-pointer flex items-center justify-center">
-              <Home className="w-[22px] h-[22px]" />
+              <Icon icon="lucide:home" className="w-[22px] h-[22px]" />
             </Link>
 
             {/* Favorites */}
             <Link href="/marketplace/favorites" className="relative p-2.5 text-slate-600 hover:text-red-500 transition-colors cursor-pointer flex items-center justify-center">
-              <Heart className="w-[22px] h-[22px]" />
+              <Icon icon="lucide:heart" className="w-[22px] h-[22px]" />
               <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm">
                 3
               </span>
@@ -114,7 +114,7 @@ export function MarketplaceNavbar() {
               onClick={() => setIsCartOpen(true)} 
               className="relative p-2.5 text-slate-600 hover:text-brand-primary transition-colors cursor-pointer"
             >
-              <ShoppingCart className="w-[22px] h-[22px]" />
+              <Icon icon="lucide:shopping-cart" className="w-[22px] h-[22px]" />
               <span className="absolute -top-1 -right-1 w-5 h-5 bg-brand-primary text-white text-[11px] font-bold rounded-full flex items-center justify-center border-2 border-white shadow-sm">
                 3
               </span>
@@ -126,7 +126,7 @@ export function MarketplaceNavbar() {
         <div className="md:hidden px-4 pb-4">
           <div className="flex w-full items-center">
             <Input 
-              leftIcon={<Search className="w-4 h-4 text-gray-400" />}
+              leftIcon={<Icon icon="lucide:search" className="w-4 h-4 text-gray-400" />}
               placeholder="Buscar productos..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -134,7 +134,7 @@ export function MarketplaceNavbar() {
               className="h-[42px]"
             />
             <Button className="rounded-l-none rounded-r-full px-5 h-[42px] shadow-sm" variant="primary">
-              <Search className="w-4 h-4" />
+              <Icon icon="lucide:search" className="w-4 h-4" />
             </Button>
           </div>
         </div>

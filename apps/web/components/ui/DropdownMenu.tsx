@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { Check } from "lucide-react";
+import { Icon } from "@iconify/react";
 
 export interface MenuItem {
   label: string;
@@ -83,7 +83,7 @@ export function DropdownMenu({
                 <span className="flex-1 truncate">{option.label}</span>
                 
                 {isSelected && (
-                  <Check className="w-4 h-4 text-brand-primary shrink-0" />
+                  <Icon icon="lucide:check" className="w-4 h-4 text-brand-primary shrink-0" />
                 )}
               </li>
             );

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Loader2 } from "lucide-react";
+import { Icon } from "@iconify/react";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "outline" | "ghost" | "danger";
@@ -58,7 +58,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         className={combinedClassName}
         {...props}
       >
-        {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+        {isLoading && <Icon icon="lucide:loader-2" className="w-4 h-4 mr-2 animate-spin" />}
         {!isLoading && leftIcon && <span className="mr-2">{leftIcon}</span>}
         {children}
         {!isLoading && rightIcon && <span className="ml-2">{rightIcon}</span>}

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { X } from "lucide-react";
+import { Icon } from "@iconify/react";
 import { Button } from "./Button";
 
 export interface ModalProps {
@@ -96,7 +96,7 @@ export function Modal({
                 className="shrink-0 -mr-2 text-muted hover:text-foreground"
                 aria-label="Cerrar modal"
               >
-                <X className="w-5 h-5" />
+                <Icon icon="lucide:x" className="w-5 h-5" />
               </Button>
             )}
           </div>

@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
+import { Icon } from "@iconify/react";
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import { ProductCard } from '../ui/ProductCard';
@@ -67,7 +67,7 @@ export function FeaturedProductsSection() {
         <Link href="/marketplace">
           <Button
             variant="primary"
-            rightIcon={<ArrowRight className="w-5 h-5" />}
+            rightIcon={<Icon icon="lucide:arrow-right" className="w-5 h-5" />}
           >
             Ver Catálogo Completo
           </Button>

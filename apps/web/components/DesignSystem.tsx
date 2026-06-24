@@ -1,26 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { 
-  Leaf, 
-  Trees, 
-  Waves, 
-  Store, 
-  Globe, 
-  ShieldCheck, 
-  Heart, 
-  Star, 
-  ArrowLeft,
-  ShoppingBag,
-  Package,
-  TrendingUp,
-  Users,
-  Search,
-  Mail,
-  Lock,
-  MapPin,
-  Info
-} from "lucide-react";
+import { Icon } from "@iconify/react";
 import { 
   Button, 
   Badge, 
@@ -86,14 +67,14 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
   ];
 
   const icons = [
-    { Icon: Leaf, label: "Naturaleza", color: "text-brand-primary" },
-    { Icon: Trees, label: "Selva", color: "text-brand-primary-dark" },
-    { Icon: Waves, label: "Ríos", color: "text-brand-secondary" },
-    { Icon: Store, label: "Mercado", color: "text-brand-primary" },
-    { Icon: Globe, label: "Global", color: "text-brand-secondary" },
-    { Icon: ShieldCheck, label: "Seguridad", color: "text-brand-primary-dark" },
-    { Icon: Heart, label: "Justicia", color: "text-brand-urgency" },
-    { Icon: Star, label: "Calidad", color: "text-brand-accent" }
+    { icon: "lucide:leaf", label: "Naturaleza", color: "text-brand-primary" },
+    { icon: "lucide:trees", label: "Selva", color: "text-brand-primary-dark" },
+    { icon: "lucide:waves", label: "Ríos", color: "text-brand-secondary" },
+    { icon: "lucide:store", label: "Mercado", color: "text-brand-primary" },
+    { icon: "lucide:globe", label: "Global", color: "text-brand-secondary" },
+    { icon: "lucide:shield-check", label: "Seguridad", color: "text-brand-primary-dark" },
+    { icon: "lucide:heart", label: "Justicia", color: "text-brand-urgency" },
+    { icon: "lucide:star", label: "Calidad", color: "text-brand-accent" }
   ];
 
   return (
@@ -109,7 +90,7 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
           onClick={onBack}
           variant="outline"
           size="sm"
-          leftIcon={<ArrowLeft className="w-4 h-4" />}
+          leftIcon={<Icon icon="lucide:arrow-left" className="w-4 h-4" />}
           className="order-first md:order-last"
         >
           Volver al Inicio
@@ -169,10 +150,10 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
           <h2 className="text-2xl font-poppins font-semibold border-l-4 border-brand-primary-dark pl-4">Iconografía</h2>
           <Card padding="lg" rounded="3xl">
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-8">
-              {icons.map(({ Icon, label, color }, idx) => (
+              {icons.map(({ icon, label, color }, idx) => (
                 <div key={idx} className="flex flex-col items-center gap-3">
                   <div className={`p-4 rounded-2xl bg-gray-50 ${color} transition-transform hover:scale-110`}>
-                    <Icon className="w-8 h-8" />
+                    <Icon icon={icon} className="w-8 h-8" />
                   </div>
                   <span className="text-xs font-medium text-muted">{label}</span>
                 </div>
@@ -205,7 +186,7 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
                   <Button size="sm">Small</Button>
                   <Button size="md">Medium</Button>
                   <Button size="lg">Large</Button>
-                  <Button size="icon"><Leaf className="w-5 h-5" /></Button>
+                  <Button size="icon"><Icon icon="lucide:leaf" className="w-5 h-5" /></Button>
                 </div>
               </div>
 
@@ -213,9 +194,9 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold text-muted uppercase tracking-wider">Con Iconos</h3>
                 <div className="flex flex-wrap gap-4 items-center">
-                  <Button leftIcon={<ShoppingBag className="w-4 h-4" />}>Marketplace</Button>
-                  <Button variant="secondary" rightIcon={<Globe className="w-4 h-4" />}>Explorar</Button>
-                  <Button variant="outline" leftIcon={<Heart className="w-4 h-4" />}>Favorito</Button>
+                  <Button leftIcon={<Icon icon="lucide:shopping-bag" className="w-4 h-4" />}>Marketplace</Button>
+                  <Button variant="secondary" rightIcon={<Icon icon="lucide:globe" className="w-4 h-4" />}>Explorar</Button>
+                  <Button variant="outline" leftIcon={<Icon icon="lucide:heart" className="w-4 h-4" />}>Favorito</Button>
                 </div>
               </div>
 
@@ -297,19 +278,19 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
                   <Input 
                     label="Buscar productos" 
                     placeholder="Café, cacao, artesanías..." 
-                    leftIcon={<Search className="w-5 h-5" />} 
+                    leftIcon={<Icon icon="lucide:search" className="w-5 h-5" />} 
                   />
                   <Input 
                     label="Doble Icono" 
                     placeholder="Ingresa tu email" 
-                    leftIcon={<Mail className="w-5 h-5" />} 
-                    rightIcon={<div className="w-6 h-6 bg-brand-primary/10 rounded flex items-center justify-center"><Search className="w-3 h-3 text-brand-primary" /></div>}
+                    leftIcon={<Icon icon="lucide:mail" className="w-5 h-5" />} 
+                    rightIcon={<div className="w-6 h-6 bg-brand-primary/10 rounded flex items-center justify-center"><Icon icon="lucide:search" className="w-3 h-3 text-brand-primary" /></div>}
                   />
                   <Input 
                     label="Contraseña" 
                     type="password" 
                     placeholder="••••••••" 
-                    leftIcon={<Lock className="w-5 h-5" />} 
+                    leftIcon={<Icon icon="lucide:lock" className="w-5 h-5" />} 
                   />
                 </div>
               </div>
@@ -330,11 +311,11 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
                   
                   <Select 
                     label="Comunidad (Icono)" 
-                    leftIcon={<MapPin className="w-5 h-5" />}
+                    leftIcon={<Icon icon="lucide:map-pin" className="w-5 h-5" />}
                     placeholder="Selecciona comunidad..."
                     options={[
-                      { value: "amazonas", label: "Achuar, Perú", icon: <Globe className="w-4 h-4"/> },
-                      { value: "loreto", label: "Kichwa, Loreto", icon: <Leaf className="w-4 h-4"/> }
+                      { value: "amazonas", label: "Achuar, Perú", icon: <Icon icon="lucide:globe" className="w-4 h-4"/> },
+                      { value: "loreto", label: "Kichwa, Loreto", icon: <Icon icon="lucide:leaf" className="w-4 h-4"/> }
                     ]}
                   />
 
@@ -530,7 +511,7 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
               <Card variant="default" hoverable>
                 <div className="relative -mx-6 -mt-6 mb-4 overflow-hidden rounded-t-2xl">
                   <div className="w-full h-48 bg-linear-to-br from-brand-primary/20 via-brand-secondary/15 to-brand-accent/20 flex items-center justify-center">
-                    <Package className="w-16 h-16 text-brand-primary/40" />
+                    <Icon icon="lucide:package" className="w-16 h-16 text-brand-primary/40" />
                   </div>
                   <div className="absolute top-3 right-3">
                     <Badge variant="primary" size="sm">Orgánico</Badge>
@@ -543,7 +524,7 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
                 <CardBody>
                   <div className="flex items-center gap-1 mb-2">
                     {[1, 2, 3, 4, 5].map((i) => (
-                      <Star key={i} className="w-4 h-4 text-brand-accent fill-current" />
+                      <Icon icon="lucide:star" key={i} className="w-4 h-4 text-brand-accent fill-current" />
                     ))}
                     <span className="ml-1 text-xs text-muted">4.9 (128)</span>
                   </div>
@@ -552,7 +533,7 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
                 <CardFooter>
                   <Button size="sm" className="flex-1">Añadir al Carrito</Button>
                   <Button size="icon" variant="outline">
-                    <Heart className="w-4 h-4" />
+                    <Icon icon="lucide:heart" className="w-4 h-4" />
                   </Button>
                 </CardFooter>
               </Card>
@@ -563,7 +544,7 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
                   <div className="flex items-center justify-between">
                     <CardTitle>Ventas Mensuales</CardTitle>
                     <div className="p-2 rounded-xl bg-brand-primary/10">
-                      <TrendingUp className="w-5 h-5 text-brand-primary" />
+                      <Icon icon="lucide:trending-up" className="w-5 h-5 text-brand-primary" />
                     </div>
                   </div>
                 </CardHeader>
@@ -604,7 +585,7 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
                   </div>
                 </CardBody>
                 <CardFooter>
-                  <Button variant="ghost" size="sm" rightIcon={<ArrowLeft className="w-4 h-4 rotate-180" />}>
+                  <Button variant="ghost" size="sm" rightIcon={<Icon icon="lucide:arrow-left" className="w-4 h-4 rotate-180" />}>
                     Ver detalles
                   </Button>
                 </CardFooter>
@@ -615,7 +596,7 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
                 <CardHeader>
                   <div className="flex items-center gap-3">
                     <div className="p-3 rounded-2xl bg-brand-primary/15">
-                      <Users className="w-6 h-6 text-brand-primary" />
+                      <Icon icon="lucide:users" className="w-6 h-6 text-brand-primary" />
                     </div>
                     <div>
                       <CardTitle>Comunidad Achuar</CardTitle>
@@ -678,7 +659,7 @@ export function DesignSystem({ onBack }: DesignSystemProps) {
 
                 <Tooltip content="Despacho en 48 horas laborales" position="top" className="bg-brand-primary-dark">
                   <span className="cursor-help flex items-center text-sm font-medium text-brand-primary hover:text-brand-primary-dark transition-colors">
-                    <Info className="w-5 h-5 mr-1.5" />
+                    <Icon icon="lucide:info" className="w-5 h-5 mr-1.5" />
                     Info. de Envío
                   </span>
                 </Tooltip>

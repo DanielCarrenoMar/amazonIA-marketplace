@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ChevronLeft, ShieldCheck, CreditCard, Truck, MapPin, Building2, User, CheckCircle2 } from 'lucide-react';
+import { Icon } from "@iconify/react";
 import { MarketplaceNavbar } from '@/components/layout/MarketplaceNavbar';
 import { Footer } from '@/components/layout/Footer';
 import { Input } from '@/components/ui/Input';
@@ -33,7 +33,7 @@ export default function CheckoutPage() {
           {/* Header & Back Link */}
           <div className="mb-8">
             <Link href="/marketplace" className="inline-flex items-center text-sm font-medium text-muted hover:text-brand-primary transition-colors mb-4">
-              <ChevronLeft className="w-4 h-4 mr-1" />
+              <Icon icon="lucide:chevron-left" className="w-4 h-4 mr-1" />
               Volver al catálogo
             </Link>
             <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">Completar Compra</h1>
@@ -46,7 +46,7 @@ export default function CheckoutPage() {
               {/* Step 1: Notas del Pedido */}
               <section className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-sm">
                 <div className="flex items-center gap-3 mb-6">
-                  <User className="w-6 h-6 text-brand-primary shrink-0" />
+                  <Icon icon="lucide:user" className="w-6 h-6 text-brand-primary shrink-0" />
                   <h2 className="text-xl font-bold text-slate-900">Notas Adicionales</h2>
                 </div>
                 <div className="mb-2">
@@ -62,7 +62,7 @@ export default function CheckoutPage() {
               {/* Step 2: Pago */}
               <section className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-sm">
                 <div className="flex items-center gap-3 mb-6">
-                  <CreditCard className="w-6 h-6 text-brand-primary shrink-0" />
+                  <Icon icon="lucide:credit-card" className="w-6 h-6 text-brand-primary shrink-0" />
                   <h2 className="text-xl font-bold text-slate-900">Pago Inteligente</h2>
                 </div>
 
@@ -93,7 +93,7 @@ export default function CheckoutPage() {
 
                 {/* Seguridad */}
                 <div className="flex items-center gap-2 mt-6 text-sm text-green-600 bg-green-50 p-4 rounded-xl">
-                  <ShieldCheck className="w-5 h-5" />
+                  <Icon icon="lucide:shield-check" className="w-5 h-5" />
                   <span className="font-medium">Validaremos tu pago automáticamente usando el comprobante.</span>
                 </div>
               </section>
@@ -145,18 +145,18 @@ export default function CheckoutPage() {
                   </div>
                 </div>
 
-                <Button variant="primary" className="w-full py-4 text-base shadow-md font-bold rounded-xl" rightIcon={<ShieldCheck className="w-5 h-5"/>}>
+                <Button variant="primary" className="w-full py-4 text-base shadow-md font-bold rounded-xl" rightIcon={<Icon icon="lucide:shield-check" className="w-5 h-5"/>}>
                   Completar Pedido
                 </Button>
 
                 {/* Trust Badges mini */}
                 <div className="flex justify-center items-center gap-4 mt-6">
                   <div className="flex items-center gap-1.5 text-xs text-muted font-medium">
-                    <Truck className="w-4 h-4" /> Envíos Seguros
+                    <Icon icon="lucide:truck" className="w-4 h-4" /> Envíos Seguros
                   </div>
                   <div className="w-1 h-1 rounded-full bg-gray-300" />
                   <div className="flex items-center gap-1.5 text-xs text-muted font-medium">
-                    <CheckCircle2 className="w-4 h-4" /> Garantía Total
+                    <Icon icon="lucide:check-circle-2" className="w-4 h-4" /> Garantía Total
                   </div>
                 </div>
               </div>
