@@ -1,4 +1,9 @@
 # =============================================================================
+# Dockerfile — iot-simulator
+#
+# Build desde el directorio del simulador:
+#   docker build -t amazonia/iot-simulator:latest ./apps/iot-simulator
+#
 # Stage 1 — deps: instala solo dependencias de producción
 # =============================================================================
 FROM node:22-alpine AS deps

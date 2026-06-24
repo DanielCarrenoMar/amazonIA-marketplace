@@ -4,10 +4,10 @@
 # Build desde la RAÍZ del repositorio:
 #   docker build -f apps/telemetry-worker/Dockerfile -t amazonia/telemetry-worker:latest .
 #
-# Estrategia multi-stage con Turborepo pruning:
+# Estrategia multi-stage con Turborepo pruning + pnpm deploy:
 #   Stage 1 (base)    : imagen base con pnpm
 #   Stage 2 (pruner)  : `turbo prune` genera un subárbol mínimo del monorepo
-#   Stage 3 (builder) : instala deps y compila TypeScript → dist/
+#   Stage 3 (builder) : instala deps, compila TypeScript, y ejecuta `pnpm deploy --prod`
 #   Stage 4 (runtime) : imagen final mínima con solo el artefacto compilado
 # =============================================================================
 
@@ -45,6 +45,21 @@ COPY --from=pruner /monorepo/out/full/ .
 
 RUN pnpm turbo build --filter=telemetry-worker
 
+# 3c. pnpm deploy: crea un directorio flat con solo deps de producción
+#     (resuelve symlinks → funciona en runtime sin el store de pnpm)
+RUN pnpm --filter=telemetry-worker deploy --prod --legacy /deploy
+
+# Copiar el dist compilado al directorio deployado
+RUN cp -r /monorepo/apps/telemetry-worker/dist /deploy/dist
+
+# Copiar los dist/ de workspace packages internos compilados por turbo
+# (pnpm deploy --legacy copia el src pero no el dist compilado)
+RUN for pkg in event-types messaging database; do \
+      if [ -d "/monorepo/packages/$pkg/dist" ]; then \
+        cp -r "/monorepo/packages/$pkg/dist" "/deploy/node_modules/$pkg/dist"; \
+      fi; \
+    done
+
 # ─── Stage 4: Runtime ─────────────────────────────────────────────────────────
 FROM node:22-alpine AS runtime
 
@@ -59,9 +74,9 @@ RUN addgroup --system --gid 1001 nodejs \
 
 WORKDIR /app
 
-COPY --from=builder --chown=nestjs:nodejs /monorepo/apps/telemetry-worker/dist ./dist
-COPY --from=builder --chown=nestjs:nodejs /monorepo/apps/telemetry-worker/node_modules ./node_modules
-COPY --from=builder --chown=nestjs:nodejs /monorepo/packages ./packages
+# Copiar la salida de pnpm deploy (deps flat) + dist compilado
+COPY --from=builder --chown=nestjs:nodejs /deploy/node_modules ./node_modules
+COPY --from=builder --chown=nestjs:nodejs /deploy/dist ./dist
 
 USER nestjs
 
