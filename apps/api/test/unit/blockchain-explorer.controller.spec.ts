@@ -1,5 +1,8 @@
 import 'reflect-metadata';
+import { plainToInstance } from 'class-transformer';
+import { validate } from 'class-validator';
 import { BlockchainExplorerController } from '../../src/blockchain/blockchain-explorer.controller';
+import { ListProposalsDto } from 'event-types';
 
 // =============================================================================
 // BlockchainExplorerController — route metadata + delegation tests.
@@ -128,6 +131,51 @@ describe('BlockchainExplorerController', () => {
 
       expect(serviceMock.findProposal).toHaveBeenCalledWith(params.id);
       expect(result).toBeNull();
+    });
+  });
+
+  // ── DTO validation (REQ-3: 3-value status filter) ───────────────────────
+  // The controller spec mocks the service, so the global ValidationPipe is
+  // never exercised in the delegation tests above. These cases validate the
+  // DTO directly via class-validator, which is what the ValidationPipe does
+  // at request time. This guards against the regression where
+  // ListProposalsDto used @IsEnum(ProposalStatusEnum) (5-value) instead of
+  // a strict 3-value filter.
+  describe('ListProposalsDto validation (REQ-3: 3-value status filter)', () => {
+    it.each(['PENDING', 'CONFIRMED', 'VETOED'])(
+      'accepts %s as a valid status',
+      async (status) => {
+        const dto = plainToInstance(ListProposalsDto, { status });
+        const errors = await validate(dto);
+        expect(errors).toHaveLength(0);
+      },
+    );
+
+    it.each(['APPROVED', 'FAILED', 'foo', 'pending', 'PENDING '])(
+      'rejects %j as an invalid status',
+      async (status) => {
+        const dto = plainToInstance(ListProposalsDto, { status });
+        const errors = await validate(dto);
+        expect(errors.length).toBeGreaterThan(0);
+        const statusError = errors.find((e) => e.property === 'status');
+        expect(statusError).toBeDefined();
+        expect(statusError?.constraints?.isIn).toBeDefined();
+        expect(statusError?.constraints?.isIn).toContain(
+          'status must be one of: PENDING, CONFIRMED, VETOED',
+        );
+      },
+    );
+
+    it('accepts undefined status (filter is optional)', async () => {
+      const dto = plainToInstance(ListProposalsDto, {});
+      const errors = await validate(dto);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('accepts non-status query params (page, limit) without status', async () => {
+      const dto = plainToInstance(ListProposalsDto, { page: 1, limit: 20 });
+      const errors = await validate(dto);
+      expect(errors).toHaveLength(0);
     });
   });
 });
