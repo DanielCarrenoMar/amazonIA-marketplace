@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Icon } from "@iconify/react";
 import { mockProducts } from '@/lib/mock-data';
-import { getProductById } from '@/lib/api';
+import { getProductById, getProducts } from '@/lib/api';
 import type { ProductResponseDto } from 'event-types';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -23,6 +23,7 @@ export default function ProductDetailPage() {
   const [product, setProduct] = useState<ProductResponseDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [relatedProducts, setRelatedProducts] = useState<ProductResponseDto[]>([]);
 
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState<string>('');
@@ -52,6 +53,17 @@ export default function ProductDetailPage() {
     }
   }, [product?.imageUrl]);
 
+  useEffect(() => {
+    if (product?.categoryId) {
+      getProducts({ categoryId: product.categoryId, limit: 10 })
+        .then(res => {
+          if (res.data) {
+            setRelatedProducts(res.data.filter(p => p.id !== product.id));
+          }
+        })
+        .catch(console.error);
+    }
+  }, [product?.categoryId, product?.id]);
 
   const handleDecrease = () => setQuantity(q => Math.max(1, q - 1));
   const handleIncrease = () => setQuantity(q => q + 1);
@@ -100,7 +112,7 @@ export default function ProductDetailPage() {
     <>
       <MarketplaceNavbar />
       <main className="min-h-screen bg-background pt-28 md:pt-32 pb-16 px-4 md:px-8 max-w-[1400px] mx-auto font-sans">
-        
+
         {/* BREADCRUMBS */}
         <nav className="text-sm text-gray-500 mb-8 flex items-center gap-2">
           <Link href="/" className="hover:text-brand-primary transition-colors">Inicio</Link>
@@ -111,28 +123,28 @@ export default function ProductDetailPage() {
         </nav>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          
+
           {/* LEFT: IMAGES */}
           <div className="flex flex-col gap-4">
-            <div className="relative w-full aspect-[4/3] md:aspect-square rounded-2xl overflow-hidden border-2 border-gray-100 shadow-sm bg-gray-50">
-              <Image 
+            <div className="relative w-full aspect-4/3 md:aspect-square rounded-2xl overflow-hidden border-2 border-gray-100 shadow-sm bg-gray-50">
+              <Image
                 src={activeImage}
                 alt="Imagen principal del producto"
                 fill
                 className="object-cover"
               />
-              <Button 
-                variant="ghost" 
-                size="icon" 
+              <Button
+                variant="ghost"
+                size="icon"
                 className="absolute top-4 right-4 bg-white/80 backdrop-blur-md shadow-sm hover:scale-110 text-red-500"
               >
                 <Icon icon="lucide:heart" className="w-6 h-6 fill-red-500" />
               </Button>
             </div>
-            
+
             <div className="grid grid-cols-4 gap-4 mt-2">
               {thumbnails.map((thumb, idx) => (
-                <button 
+                <button
                   key={idx}
                   onClick={() => setActiveImage(thumb)}
                   className={`relative aspect-square rounded-xl overflow-hidden border-2 transition-all ${activeImage === thumb ? 'border-brand-primary shadow-md scale-105 z-10' : 'border-transparent opacity-70 hover:opacity-100'}`}
@@ -159,7 +171,7 @@ export default function ProductDetailPage() {
 
             <div className="flex items-center gap-4 mb-6">
               <div className="flex gap-1 text-amber-400">
-                {[1,2,3,4,5].map((star) => (
+                {[1, 2, 3, 4, 5].map((star) => (
                   <Icon icon="lucide:star" key={star} className={`w-5 h-5 ${star <= 4 ? 'fill-amber-400' : 'text-gray-300 stroke-2'}`} />
                 ))}
               </div>
@@ -177,7 +189,7 @@ export default function ProductDetailPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
               <div>
-                <Select 
+                <Select
                   label="Material"
                   value={selectedMaterial}
                   onChange={setSelectedMaterial}
@@ -189,7 +201,7 @@ export default function ProductDetailPage() {
                 />
               </div>
               <div>
-                <Select 
+                <Select
                   label="Tamaño"
                   value={selectedSize}
                   onChange={setSelectedSize}
@@ -217,17 +229,17 @@ export default function ProductDetailPage() {
             </div>
 
             <div className="flex flex-col gap-4 mt-auto">
-              <Button 
-                variant="primary" 
-                size="lg" 
+              <Button
+                variant="primary"
+                size="lg"
                 className="w-full text-lg h-14"
                 leftIcon={<Icon icon="lucide:shopping-cart" className="w-5 h-5" />}
               >
                 Añadir al carrito
               </Button>
-              <Button 
-                variant="outline" 
-                size="lg" 
+              <Button
+                variant="outline"
+                size="lg"
                 className="w-full text-lg h-14 border-2"
               >
                 Comprar Ahora
@@ -243,7 +255,7 @@ export default function ProductDetailPage() {
             <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900">Reseñas de Compradores</h2>
             <Button variant="outline" className="rounded-xl border-gray-300">Escribir Reseña</Button>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Review 1 */}
             <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col gap-4">
@@ -256,7 +268,7 @@ export default function ProductDetailPage() {
                   </div>
                 </div>
                 <div className="flex gap-0.5 shrink-0 pt-1">
-                  {[1,2,3,4,5].map((star) => <Icon icon="lucide:star" key={star} className="w-4 h-4 fill-amber-400 text-amber-400" />)}
+                  {[1, 2, 3, 4, 5].map((star) => <Icon icon="lucide:star" key={star} className="w-4 h-4 fill-amber-400 text-amber-400" />)}
                 </div>
               </div>
               <p className="text-muted leading-relaxed text-sm">
@@ -275,7 +287,7 @@ export default function ProductDetailPage() {
                   </div>
                 </div>
                 <div className="flex gap-0.5 shrink-0 pt-1">
-                  {[1,2,3,4].map((star) => <Icon icon="lucide:star" key={star} className="w-4 h-4 fill-amber-400 text-amber-400" />)}
+                  {[1, 2, 3, 4].map((star) => <Icon icon="lucide:star" key={star} className="w-4 h-4 fill-amber-400 text-amber-400" />)}
                   <Icon icon="lucide:star" className="w-4 h-4 text-gray-300 stroke-2" />
                 </div>
               </div>
@@ -289,16 +301,16 @@ export default function ProductDetailPage() {
         {/* RELATED PRODUCTS */}
         <section className="mt-24">
           <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 mb-8">Productos Relacionados</h2>
-          
+
           <div className="relative group">
             {/* Side Arrows */}
-            <button 
+            <button
               onClick={() => scroll('left')}
               className="absolute -left-4 md:-left-5 top-[40%] -translate-y-1/2 w-12 h-12 rounded-full bg-white hover:bg-gray-50 flex items-center justify-center shadow-lg border border-gray-100 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
             >
               <Icon icon="lucide:chevron-left" className="w-6 h-6 text-slate-700" />
             </button>
-            <button 
+            <button
               onClick={() => scroll('right')}
               className="absolute -right-4 md:-right-5 top-[40%] -translate-y-1/2 w-12 h-12 rounded-full bg-white hover:bg-gray-50 flex items-center justify-center shadow-lg border border-gray-100 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
             >
@@ -306,15 +318,28 @@ export default function ProductDetailPage() {
             </button>
 
             {/* Scroll Container */}
-            <div 
+            <div
               ref={scrollRef}
               className="flex overflow-x-auto gap-6 pb-6 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
             >
-              {mockProducts.filter(p => p.id !== product.id).map(related => (
-                <div key={related.id} className="min-w-[280px] w-[280px] md:min-w-[300px] md:w-[300px] snap-start shrink-0">
-                  <ProductCard {...related} href={`/marketplace/${related.id}`} />
-                </div>
-              ))}
+              {relatedProducts.length > 0 ? (
+                relatedProducts.map(related => (
+                  <div key={related.id} className="min-w-[280px] w-[280px] md:min-w-[300px] md:w-[300px] snap-start shrink-0">
+                    <ProductCard 
+                      id={related.id}
+                      title={related.name}
+                      description={related.description || ""}
+                      price={`$${Number(related.price).toFixed(2)}`}
+                      image={related.imageUrl || "/bolso-de-moriche.webp"} 
+                      rating={related.averageRating ? Math.round(Number(related.averageRating)) : 0}
+                      category={related.category?.name || "Categoría"}
+                      href={`/marketplace/${related.id}`} 
+                    />
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-500 py-4">No hay productos relacionados disponibles.</p>
+              )}
             </div>
           </div>
         </section>
