@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Icon } from "@iconify/react";
 import { mockProducts } from '@/lib/mock-data';
+import { getProductById } from '@/lib/api';
+import type { ProductResponseDto } from 'event-types';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Select';
@@ -17,17 +19,39 @@ import { Footer } from '@/components/layout/Footer';
 export default function ProductDetailPage() {
   const params = useParams();
   const id = params.id as string;
-  const product = mockProducts.find(p => p.id === id) || mockProducts[0];
+
+  const [product, setProduct] = useState<ProductResponseDto | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [quantity, setQuantity] = useState(1);
-  const [activeImage, setActiveImage] = useState(product.image);
+  const [activeImage, setActiveImage] = useState<string>('');
   const [selectedMaterial, setSelectedMaterial] = useState('Algodón');
   const [selectedSize, setSelectedSize] = useState('100m');
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setActiveImage(product.image);
-  }, [product.image]);
+    const fetchProduct = async () => {
+      try {
+        setLoading(true);
+        const data = await getProductById(id);
+        setProduct(data);
+        setActiveImage(data.imageUrl || '/cesta-wayuu.jpg');
+      } catch (err: any) {
+        setError(err.message || 'Error al cargar el producto');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProduct();
+  }, [id]);
+
+  useEffect(() => {
+    if (product?.imageUrl) {
+      setActiveImage(product.imageUrl);
+    }
+  }, [product?.imageUrl]);
+
 
   const handleDecrease = () => setQuantity(q => Math.max(1, q - 1));
   const handleIncrease = () => setQuantity(q => q + 1);
@@ -48,6 +72,30 @@ export default function ProductDetailPage() {
     '/collar-de-semillas.jpg'
   ];
 
+  if (loading) {
+    return (
+      <>
+        <MarketplaceNavbar />
+        <main className="min-h-screen bg-background pt-32 pb-16 px-4 md:px-8 max-w-[1400px] mx-auto font-sans flex justify-center items-center">
+          <p className="text-gray-500">Cargando producto...</p>
+        </main>
+        <Footer />
+      </>
+    );
+  }
+
+  if (error || !product) {
+    return (
+      <>
+        <MarketplaceNavbar />
+        <main className="min-h-screen bg-background pt-32 pb-16 px-4 md:px-8 max-w-[1400px] mx-auto font-sans flex justify-center items-center">
+          <p className="text-red-500">{error || 'Producto no encontrado'}</p>
+        </main>
+        <Footer />
+      </>
+    );
+  }
+
   return (
     <>
       <MarketplaceNavbar />
@@ -59,9 +107,7 @@ export default function ProductDetailPage() {
           <span>&gt;</span>
           <Link href="/marketplace" className="hover:text-brand-primary transition-colors">Catálogo</Link>
           <span>&gt;</span>
-          <Link href={`/marketplace?category=${encodeURIComponent(product.category)}`} className="hover:text-brand-primary transition-colors">{product.category}</Link>
-          <span>&gt;</span>
-          <span className="text-gray-900 font-medium">{product.title}</span>
+          <span className="text-gray-900 font-medium">{product.name}</span>
         </nav>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
@@ -100,12 +146,15 @@ export default function ProductDetailPage() {
           {/* RIGHT: DETAILS */}
           <div className="flex flex-col pt-2">
             <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-4 leading-tight">
-              {product.title}
+              {product.name}
             </h1>
 
             <div className="flex items-center gap-3 mb-4">
-              <Badge variant="secondary" className="px-4 py-1.5 text-sm">{product.category}</Badge>
-              {product.discount && <Badge variant="primary" className="px-4 py-1.5 text-sm bg-brand-primary text-white">-{product.discount}</Badge>}
+              {product.category && (
+                <Badge variant="secondary" className="px-4 py-1.5 text-sm">
+                  {product.category.name || 'Categoría'}
+                </Badge>
+              )}
             </div>
 
             <div className="flex items-center gap-4 mb-6">
@@ -119,8 +168,7 @@ export default function ProductDetailPage() {
             </div>
 
             <div className="flex items-end gap-3 mb-6">
-              <span className="text-4xl font-bold text-brand-primary">{product.price}</span>
-              {product.originalPrice && <span className="text-xl text-gray-400 line-through font-semibold mb-1">{product.originalPrice}</span>}
+              <span className="text-4xl font-bold text-brand-primary">${Number(product.price).toFixed(2)}</span>
             </div>
 
             <p className="text-gray-600 leading-relaxed mb-8">

@@ -15,6 +15,14 @@ import { getProducts, getCategories } from '@/lib/api';
 import type { ProductResponseDto, ProductCategoryResponseDto } from 'event-types';
 
 export default function MarketplacePage() {
+  return (
+    <React.Suspense fallback={<div className="flex justify-center p-20">Cargando marketplace...</div>}>
+      <MarketplaceContent />
+    </React.Suspense>
+  );
+}
+
+function MarketplaceContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   

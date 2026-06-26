@@ -125,6 +125,11 @@ export function getProducts(params?: Record<string, any>): Promise<PaginatedResp
   return apiFetch<PaginatedResponseDto<ProductResponseDto>>(url);
 }
 
+export function getProductById(id: string): Promise<ProductResponseDto> {
+  return apiFetch<ProductResponseDto>(`/product/${id}`);
+}
+
+
 // Categories
 export function getCategories(): Promise<PaginatedResponseDto<ProductCategoryResponseDto>> {
   return apiFetch<PaginatedResponseDto<ProductCategoryResponseDto>>("/product-category");
