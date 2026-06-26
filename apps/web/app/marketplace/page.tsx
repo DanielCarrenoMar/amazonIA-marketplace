@@ -11,32 +11,72 @@ import { MarketplaceNavbar } from '@/components/layout/MarketplaceNavbar';
 import { BannerCarousel } from '@/components/ui/BannerCarousel';
 import { Footer } from '@/components/layout/Footer';
 
-import { mockCategories, mockBrands, mockProducts } from '@/lib/mock-data';
+import { getProducts, getCategories } from '@/lib/api';
+import type { ProductResponseDto, ProductCategoryResponseDto } from 'event-types';
 
 export default function MarketplacePage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   
   const categoryParam = searchParams.get('category');
-  const [activeCategory, setActiveCategory] = useState(categoryParam || "Todas");
+  const [activeCategory, setActiveCategory] = useState<string | null>(categoryParam || null);
 
+  const [products, setProducts] = useState<ProductResponseDto[]>([]);
+  const [categories, setCategories] = useState<ProductCategoryResponseDto[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Sync state with URL
   useEffect(() => {
     if (categoryParam) {
       setActiveCategory(categoryParam);
     }
   }, [categoryParam]);
 
-  const handleCategoryClick = (cat: string) => {
-    setActiveCategory(cat);
-    router.push(
-      cat === "Todas" ? "/marketplace" : `/marketplace?category=${encodeURIComponent(cat)}`,
-      { scroll: false }
-    );
-  };
+  // Fetch categories on mount
+  useEffect(() => {
+    getCategories()
+      .then(res => setCategories(res.data || []))
+      .catch(console.error);
+  }, []);
 
-  const filteredProducts = activeCategory === "Todas" 
-    ? mockProducts 
-    : mockProducts.filter(p => p.category === activeCategory);
+  // Fetch products when activeCategory or categories change
+  useEffect(() => {
+    async function loadProducts() {
+      setLoading(true);
+      try {
+        let categoryId: number | undefined;
+        if (activeCategory && categories.length > 0) {
+          const found = categories.find(c => c.categoryName === activeCategory);
+          if (found) categoryId = found.id;
+        }
+
+        const params: any = {};
+        if (categoryId) params.categoryId = categoryId;
+
+        const res = await getProducts(params);
+        setProducts(res.data || []);
+      } catch (err) {
+        console.error("Error loading products", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    // Load if no active category, or if we have categories loaded to map the name to ID
+    if (!activeCategory || categories.length > 0) {
+      loadProducts();
+    }
+  }, [activeCategory, categories]);
+
+  const handleCategoryClick = (cat: string) => {
+    if (activeCategory === cat) {
+      setActiveCategory(null);
+      router.push("/marketplace", { scroll: false });
+    } else {
+      setActiveCategory(cat);
+      router.push(`/marketplace?category=${encodeURIComponent(cat)}`, { scroll: false });
+    }
+  };
 
   const heroBanners = [
     {
@@ -62,6 +102,9 @@ export default function MarketplacePage() {
     }
   ];
 
+  // Dynamic categories list (mapped categories only)
+  const categoryNames = Array.from(new Set(categories.map(c => c.categoryName)));
+
   return (
     <>
       <MarketplaceNavbar />
@@ -72,7 +115,7 @@ export default function MarketplacePage() {
 
         {/* CATEGORIES PILLS */}
         <div className="flex gap-3 overflow-x-auto pb-4 mb-8 scrollbar-hide">
-          {mockCategories.map(cat => (
+          {categoryNames.map(cat => (
             <button
               key={cat}
               onClick={() => handleCategoryClick(cat)}
@@ -119,51 +162,49 @@ export default function MarketplacePage() {
               </div>
             </div>
 
-            {/* Brands / Origen */}
-            <div>
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="font-bold text-slate-900 text-lg">Origen / Marca</h3>
-                <button className="text-xs text-muted hover:text-brand-primary transition-colors">Limpiar</button>
-              </div>
-              <div className="flex flex-col gap-3.5">
-                {mockBrands.map(brand => (
-                  <Checkbox key={brand} label={brand} />
-                ))}
-              </div>
-              <button className="text-sm text-brand-primary font-bold mt-5 hover:underline decoration-2 underline-offset-4">
-                Ver más opciones
-              </button>
-            </div>
 
-            {/* Delivery Options */}
-            <div>
-              <h3 className="font-bold text-slate-900 text-lg mb-4">Opciones de Envío</h3>
-              <div className="flex gap-2 bg-gray-50 p-1 rounded-xl border border-gray-100">
-                <Button variant="primary" size="sm" className="flex-1 rounded-lg py-2 shadow-sm">Estándar</Button>
-                <Button variant="ghost" size="sm" className="flex-1 rounded-lg py-2 text-muted hover:text-foreground">Recoger</Button>
-              </div>
-            </div>
 
           </aside>
 
           {/* PRODUCT GRID */}
           <div className="flex-1">
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filteredProducts.length > 0 ? (
-                filteredProducts.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    {...product}
-                    href={`/marketplace/${product.id}`}
-                  />
-                ))
-              ) : (
-                <div className="col-span-full py-12 text-center text-gray-500">
-                  <p>No se encontraron productos en la categoría "{activeCategory}".</p>
-                  <Button variant="outline" className="mt-4" onClick={() => handleCategoryClick("Todas")}>Ver todos los productos</Button>
-                </div>
-              )}
-            </div>
+            {loading ? (
+              <div className="flex justify-center items-center py-20">
+                <Icon icon="lucide:loader-2" className="w-8 h-8 animate-spin text-brand-primary" />
+                <span className="ml-2 text-muted">Cargando productos...</span>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                {products.length > 0 ? (
+                  products.map((product) => {
+                    const mappedCategory = product.category?.categoryName 
+                      || categories.find(c => c.id === product.categoryId)?.categoryName 
+                      || "Categoría";
+                    
+                    return (
+                      <ProductCard
+                        key={product.id}
+                        id={product.id}
+                        title={product.name}
+                        description={product.description || ""}
+                        price={`$${Number(product.price).toFixed(2)}`}
+                        image={product.imageUrl || "/bolso-de-moriche.webp"} // Default placeholder
+                        rating={product.averageRating ? Math.round(Number(product.averageRating)) : 0}
+                        category={mappedCategory}
+                        href={`/marketplace/${product.id}`}
+                      />
+                    );
+                  })
+                ) : (
+                  <div className="col-span-full py-12 text-center text-gray-500">
+                    <p>No se encontraron productos {activeCategory ? `en la categoría "${activeCategory}"` : "disponibles"}.</p>
+                    {activeCategory && (
+                      <Button variant="outline" className="mt-4" onClick={() => handleCategoryClick(activeCategory)}>Limpiar filtro</Button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
         </div>

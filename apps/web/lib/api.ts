@@ -10,6 +10,9 @@ export interface AuthUser {
   username: string;
 }
 
+import type { PaginatedResponseDto, ProductResponseDto, ProductCategoryResponseDto } from "event-types";
+
+
 export interface AuthResponse {
   accessToken: string;
   refreshToken: string;
@@ -114,3 +117,15 @@ export function getMe(accessToken: string): Promise<AuthUser> {
     },
   });
 }
+
+// Products
+export function getProducts(params?: Record<string, any>): Promise<PaginatedResponseDto<ProductResponseDto>> {
+  const query = params ? new URLSearchParams(params as any).toString() : "";
+  const url = query ? `/product?${query}` : '/product';
+  return apiFetch<PaginatedResponseDto<ProductResponseDto>>(url);
+}
+
+// Categories
+export function getCategories(): Promise<PaginatedResponseDto<ProductCategoryResponseDto>> {
+  return apiFetch<PaginatedResponseDto<ProductCategoryResponseDto>>("/product-category");
+}
