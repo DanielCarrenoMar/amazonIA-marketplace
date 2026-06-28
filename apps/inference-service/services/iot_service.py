@@ -5,7 +5,7 @@ from core.config import settings
 class IoTService:
     def __init__(self):
         # Initialize connection pool to avoid creating a new connection per request
-        self.redis = Redis.from_url(settings.REDIS_URL, decode_responses=True)
+        self.redis = Redis.from_url(settings.get_redis_tcp_url, decode_responses=True)
 
     async def get_iot_telemetry(self, shipment_id: str) -> Dict[str, Any]:
         """

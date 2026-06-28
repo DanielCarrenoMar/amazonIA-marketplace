@@ -1,32 +1,48 @@
-# Usa la versión oficial y ligera de Python 3.12
-FROM python:3.12-slim
+# =============================================================================
+# Dockerfile — inference-service (FastAPI / XGBoost)
+# =============================================================================
 
-# Evita que Python escriba archivos .pyc en el disco
+FROM python:3.11-slim
+
+LABEL org.opencontainers.image.title="amazonia-inference-service" \
+      org.opencontainers.image.description="Motor de Inteligencia Artificial para el cálculo de riesgos logísticos"
+
+# Evitar que Python escriba archivos .pyc y forzar logs sin buffer
 ENV PYTHONDONTWRITEBYTECODE=1
-# Evita que la salida de Python se almacene en búfer, enviándola directo a la terminal
 ENV PYTHONUNBUFFERED=1
 
-# Establecer el directorio de trabajo dentro del contenedor
-WORKDIR /app
-
-# Instalar dependencias del sistema requeridas por XGBoost y otras librerías
+# Instalar dependencias del sistema requeridas por XGBoost (libgomp1)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libgomp1 \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copiar solo el archivo de requerimientos para aprovechar la caché de Docker
-COPY requirements.txt .
+# Crear usuario no root
+RUN addgroup --system --gid 1001 pythonapp \
+    && adduser --system --uid 1001 --gid 1001 pythonapp
 
-# Instalar las librerías de Python
+WORKDIR /app
+
+# Instalar dependencias primero para cachear la capa de pip
+COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# Copiar el resto del código del microservicio
+# Copiar el código fuente y los modelos pre-entrenados
 COPY . .
+
+# Cambiar permisos al usuario no root
+RUN chown -R pythonapp:pythonapp /app
+
+USER pythonapp
 
 # Exponer el puerto de FastAPI
 EXPOSE 8000
 
-# Comando para iniciar la aplicación (Render inyectará el puerto dinámicamente)
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+  CMD curl -f http://localhost:8000/health || exit 1
+
+# Comando de inicio
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

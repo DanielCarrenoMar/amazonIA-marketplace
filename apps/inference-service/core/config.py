@@ -6,6 +6,17 @@ class Settings(BaseSettings):
     
     # Redis
     REDIS_URL: str = "redis://localhost:6379/0"
+    REDIS_TOKEN: str = ""
+    
+    @property
+    def get_redis_tcp_url(self) -> str:
+        url = self.REDIS_URL
+        if url.startswith("https://"):
+            host = url.replace("https://", "")
+            if host.endswith("/"):
+                host = host[:-1]
+            return f"rediss://default:{self.REDIS_TOKEN}@{host}:6379"
+        return url
     
     # MongoDB
     MONGODB_URL: str = "mongodb://localhost:27017"

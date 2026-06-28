@@ -35,8 +35,11 @@ amazonia-marketplace/                    (RAÍZ del monorepo)
 │   ├── telemetry-worker/
 │   │   └── Dockerfile                  ✅ IMPLEMENTADO
 │   │
+│   ├── inference-service/
+│   │   └── Dockerfile                  ✅ IMPLEMENTADO (Python/FastAPI)
+│   │
 │   ├── api/
-│   │   └── Dockerfile                  ⬜ POR IMPLEMENTAR (ver sección 6)
+│   │   └── Dockerfile                  ✅ IMPLEMENTADO
 │   │
 │   └── web/
 │       └── Dockerfile                  ⬜ POR IMPLEMENTAR (Next.js — ver sección 6)
