@@ -1,6 +1,11 @@
 import os
 import pickle
 from typing import Dict, Any
+import base64
+import io
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 class ModelService:
       def __init__(self):
@@ -45,8 +50,21 @@ class ModelService:
 
           try:
               import pandas as pd
-              # Create DataFrame matching exactly the features and categorical types
-              df = pd.DataFrame([features])
+              # Ensure DataFrame matches exactly the features and categorical types of the trained model
+              model_features = [
+                  "max_temperatura_c",
+                  "precipitacion_acum_mm",
+                  "max_viento_ms",
+                  "tipo_transporte",
+                  "tipo_producto",
+                  "nivel_rio_m",
+                  "regimen_hidrologico",
+                  "velocidad_corriente_rio_ms"
+              ]
+              
+              # Extract only needed features and preserve order
+              filtered_features = {k: features.get(k) for k in model_features}
+              df = pd.DataFrame([filtered_features])
               
               # Set categorical dtypes for XGBoost 2.x enable_categorical=True
               categorias = ['tipo_transporte', 'tipo_producto', 'regimen_hidrologico']
@@ -76,6 +94,7 @@ class ModelService:
                   "risk_score": prob,
                   "shap_values": shap_values_dict,
                   "top_reasons": top_reasons,
+                  "shap_plot_base64": self.generate_shap_plot_base64(shap_values_dict),
                   "source": "ml_model"
               }
           except Exception as e:
@@ -128,6 +147,7 @@ class ModelService:
               "risk_score": base_risk,
               "shap_values": shap_vals,
               "top_reasons": top_reasons,
+              "shap_plot_base64": self.generate_shap_plot_base64(shap_vals),
               "source": "fallback_heuristics"
           }
 
@@ -149,6 +169,34 @@ class ModelService:
               "tipo_transporte": 0.0,
               "tipo_producto": 0.0
           }
+
+      def generate_shap_plot_base64(self, shap_values: dict) -> str:
+          """
+          Generates a horizontal bar chart of SHAP values and returns it as a base64 string.
+          """
+          features = list(shap_values.keys())
+          impacts = list(shap_values.values())
+          
+          # Sort by absolute impact
+          sorted_indices = sorted(range(len(impacts)), key=lambda k: abs(impacts[k]))
+          sorted_features = [features[i] for i in sorted_indices]
+          sorted_impacts = [impacts[i] for i in sorted_indices]
+          
+          # Colors: Red for pushing risk up, Blue for pushing risk down
+          colors = ['#ff4b4b' if x > 0 else '#4b4bff' for x in sorted_impacts]
+          
+          plt.figure(figsize=(8, 5))
+          plt.barh(sorted_features, sorted_impacts, color=colors)
+          plt.xlabel('Impact on Logistics Risk (SHAP Value)')
+          plt.title('Explainable AI: Why did the model make this prediction?')
+          plt.tight_layout()
+          
+          buf = io.BytesIO()
+          plt.savefig(buf, format='png', dpi=100)
+          plt.close()
+          
+          buf.seek(0)
+          return base64.b64encode(buf.read()).decode('utf-8')
 
       def get_top_risk_reasons(self, shap_values: dict, top_n: int = 3) -> list:
           """

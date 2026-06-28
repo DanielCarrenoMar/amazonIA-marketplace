@@ -17,4 +17,5 @@ class RiskResponse(BaseModel):
     message: str
     main_reasons: List[RiskReason]
     critical_segment: Optional[HeuristicSegment]
+    shap_plot_base64: Optional[str] = None
     metadata: dict = Field(default_factory=dict)

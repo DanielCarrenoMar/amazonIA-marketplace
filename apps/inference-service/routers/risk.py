@@ -174,6 +174,7 @@ async def evaluate_risk(request: EvaluationRequest, user_payload: dict = Depends
         message="Evaluación de riesgo completada.",
         main_reasons=main_reasons,
         critical_segment=critical_segment,
+        shap_plot_base64=prediction.get("shap_plot_base64"),
         metadata=metadata
     )
     
