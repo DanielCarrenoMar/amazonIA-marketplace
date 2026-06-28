@@ -251,6 +251,8 @@ importers:
         specifier: ^5.1.3
         version: 5.9.3
 
+  apps/inference-service: {}
+
   apps/ingestor-service:
     dependencies:
       '@nestjs/common':

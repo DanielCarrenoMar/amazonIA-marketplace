@@ -43,12 +43,12 @@ async def evaluate_risk(request: EvaluationRequest, user_payload: dict = Depends
     # Also fetch hydro data for the first point as reference
     ref_lat = request.route_points[0]["lat"] if request.route_points else 0.0
     ref_lon = request.route_points[0]["lon"] if request.route_points else 0.0
-    hydro_task = hydro_service.get_river_level(ref_lat, ref_lon, departure_dt)
+    hydro_task = hydro_service.get_hydro_data(ref_lat, ref_lon, departure_dt)
     
     # 3. Gather in parallel to minimize latency
     results = await asyncio.gather(iot_task, hydro_task, *climate_tasks)
     iot_res = results[0]
-    river_level = results[1]
+    hydro_res = results[1]
     climate_res_list = results[2:]
     
     # 4. Map to Pydantic and evaluate confidence
@@ -91,7 +91,10 @@ async def evaluate_risk(request: EvaluationRequest, user_payload: dict = Depends
         humidity=iot_res.get("data", {}).get("humedad_interna_carga_pct") if iot_res else None,
     )
     
-    hydro_data = HydroData(river_level_m=river_level)
+    hydro_data = HydroData(
+        river_level_m=hydro_res["river_level_m"],
+        river_current_speed_ms=hydro_res["river_current_speed_ms"]
+    )
     
     shipment = ShipmentData(
         transport_type=request.transport_types[0] if request.transport_types else "terrestre",

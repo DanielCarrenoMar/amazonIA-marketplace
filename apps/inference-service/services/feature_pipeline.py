@@ -60,5 +60,6 @@ def construir_features_globales(
         month_of_year=shipment.month_of_year,
         hydrological_regime=regime,
         river_level_m=hydro.river_level_m or 20.0,
+        river_current_speed_ms=hydro.river_current_speed_ms or 1.5,
         is_inpa_fallback=is_inpa_fallback
     )

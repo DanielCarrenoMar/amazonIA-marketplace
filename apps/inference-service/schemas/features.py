@@ -27,6 +27,7 @@ class ClimateData(BaseModel):
 class HydroData(BaseModel):
     """Hydrological data from ANA (Agência Nacional de Águas)."""
     river_level_m: Optional[float] = None
+    river_current_speed_ms: Optional[float] = None
 
 class TelemetryData(BaseModel):
     """IoT telemetry data from the shipment."""
@@ -66,5 +67,6 @@ class XGBoostFeatures(BaseModel):
     month_of_year: int = Field(..., alias="mes_del_anio")
     hydrological_regime: str = Field(..., alias="regimen_hidrologico")
     river_level_m: float = Field(..., alias="nivel_rio_m")
+    river_current_speed_ms: float = Field(..., alias="velocidad_corriente_rio_ms")
     
     is_inpa_fallback: bool = Field(False, alias="es_fallback_inpa")

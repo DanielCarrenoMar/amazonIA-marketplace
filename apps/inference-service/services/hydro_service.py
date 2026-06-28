@@ -7,30 +7,44 @@ class HydroService:
         # En producción, esto apuntaría a la API de Telemetría de la ANA (Brasil)
         self.api_url = "https://www.ana.gov.br/telemetria/api"
 
-    async def get_river_level(self, lat: float, lon: float, query_date: date) -> float:
+    async def get_hydro_data(self, lat: float, lon: float, query_date: date) -> dict:
         """
-        Obtiene la cota fluviométrica (nivel del río en metros) para las coordenadas dadas.
-        Dado que este es el MVP, retornamos valores simulados realistas basados en 
-        el régimen hidrológico del mes para la región del Amazonas.
+        Obtiene datos hidrológicos reales conectándose a la Flood API de Open-Meteo
+        (Global Flood Awareness System - GloFAS).
         """
-        mes = query_date.month
-        
-        # Simulación de la curva hidrológica típica del Amazonas (Manaus)
-        # Aguas bajas en Sep-Nov (peligro para navegación fluvial)
-        # Aguas altas en Mar-Jul
-        niveles_medios = {
-            1: 20.0, 2: 22.5, 3: 25.0, 4: 27.0,
-            5: 28.5, 6: 29.0, 7: 28.0, 8: 25.0,
-            9: 20.0, 10: 16.5, 11: 15.0, 12: 17.5
+        api_url = "https://flood-api.open-meteo.com/v1/flood"
+        params = {
+            "latitude": lat,
+            "longitude": lon,
+            "start_date": query_date.isoformat(),
+            "end_date": query_date.isoformat(),
+            "daily": "river_discharge",
+            "timezone": "auto"
         }
         
-        nivel_base = niveles_medios.get(mes, 20.0)
-        
-        # En producción haríamos algo como:
-        # async with httpx.AsyncClient() as client:
-        #     response = await client.get(self.api_url, params={"lat": lat, "lon": lon, "date": query_date})
-        #     return response.json()["cota_m"]
-            
-        return nivel_base
+        try:
+            async with httpx.AsyncClient() as client:
+                resp = await client.get(api_url, params=params, timeout=10.0)
+                resp.raise_for_status()
+                data = resp.json().get("daily", {})
+                
+                descargas = data.get("river_discharge", [None])
+                discharge = descargas[0] if descargas and descargas[0] is not None else 1.5
+                
+                # Transformamos la descarga volumétrica en nuestra métrica proxy de corriente
+                # Asumimos un nivel base correlacionado para la API de inferencia
+                nivel_base = max(10.0, discharge * 2.0)
+                velocidad_corriente = discharge
+                
+                return {
+                    "river_level_m": round(nivel_base, 2),
+                    "river_current_speed_ms": round(velocidad_corriente, 2)
+                }
+        except Exception as e:
+            print(f"Error fetching real hydro data: {e}. Fallback to heuristics.")
+            return {
+                "river_level_m": 20.0,
+                "river_current_speed_ms": 1.5
+            }
 
 hydro_service = HydroService()

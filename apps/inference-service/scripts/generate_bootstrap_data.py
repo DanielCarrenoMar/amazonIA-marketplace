@@ -15,7 +15,7 @@ ROUTES = [
 PRODUCTS = ["perecedero_alto", "perecedero_bajo", "electronica", "general"]
 NUM_SAMPLES = 15000 # Increased dataset size
 
-def check_failure(route_type: str, product: str, max_temp: float, precip_sum: float, wind_speed: float) -> int:
+def check_failure(route_type: str, product: str, max_temp: float, precip_sum: float, wind_speed: float, river_discharge: float) -> int:
     """
     Applies hard heuristics of Amazon logistics to determine if the shipment fails.
     """
@@ -28,7 +28,10 @@ def check_failure(route_type: str, product: str, max_temp: float, precip_sum: fl
     # 3. Strong winds on vessels
     if route_type == "fluvial" and wind_speed > 25.0:
         return 1
-    # 4. Base stochastic factor (random accidents, etc.)
+    # 4. Fluvial routes with dangerous river currents (from Flood API discharge proxy)
+    if route_type == "fluvial" and river_discharge > 2.3:
+        return 1
+    # 5. Base stochastic factor (random accidents, etc.)
     if random.random() < 0.05:
         return 1
         
@@ -68,18 +71,48 @@ async def fetch_yearly_weather(client: httpx.AsyncClient, lat: float, lon: float
         print(f"HTTP Error fetching {start_d} to {end_d}: {e}")
         return {}
 
+async def fetch_yearly_hydro(client: httpx.AsyncClient, lat: float, lon: float, start_d: date, end_d: date) -> dict:
+    url = "https://flood-api.open-meteo.com/v1/flood"
+    params = {
+        "latitude": lat,
+        "longitude": lon,
+        "start_date": start_d.isoformat(),
+        "end_date": end_d.isoformat(),
+        "daily": "river_discharge",
+        "timezone": "auto"
+    }
+    
+    try:
+        resp = await client.get(url, params=params, timeout=30.0)
+        resp.raise_for_status()
+        data = resp.json().get("daily", {})
+        
+        hydro_map = {}
+        if "time" in data:
+            for i, d_str in enumerate(data["time"]):
+                val = data["river_discharge"][i]
+                hydro_map[d_str] = val if val is not None else 1.5
+        return hydro_map
+    except Exception as e:
+        print(f"HTTP Error fetching hydro {start_d} to {end_d}: {e}")
+        return {}
+
 async def generate():
     print(f"Starting Synthetic Bootstrap Dataset generation ({NUM_SAMPLES} samples)...")
     start_date = date(2022, 1, 1)
     end_date = date(2023, 12, 31) # 2 years of data
     
     # 1. Pre-fetch all weather data for our 3 routes to save time and API calls
-    print("Pre-fetching 2 years of climate data for all routes...")
+    print("Pre-fetching 2 years of climate and hydro data for all routes...")
     climate_cache = {}
+    hydro_cache = {}
     async with httpx.AsyncClient() as client:
         for route in ROUTES:
-            print(f"Fetching climate for {route['name']}...")
+            print(f"Fetching climate & hydro for {route['name']}...")
             climate_cache[route["name"]] = await fetch_yearly_weather(
+                client, route["lat"], route["lon"], start_date, end_date
+            )
+            hydro_cache[route["name"]] = await fetch_yearly_hydro(
                 client, route["lat"], route["lon"], start_date, end_date
             )
             await asyncio.sleep(1) # Be nice to the API
@@ -97,23 +130,33 @@ async def generate():
         
         # Aggregate the 7-day trip from cache
         route_climate = climate_cache.get(route["name"], {})
+        route_hydro = hydro_cache.get(route["name"], {})
         
-        t_max_list, p_sum_list, w_max_list = [], [], []
+        t_max_list, p_sum_list, w_max_list, h_list = [], [], [], []
         
         for day_offset in range(7):
             current_day = (d + timedelta(days=day_offset)).isoformat()
             daily_stats = route_climate.get(current_day)
+            daily_hydro = route_hydro.get(current_day)
+            
             if daily_stats:
                 t_max_list.append(daily_stats["temp"])
                 p_sum_list.append(daily_stats["precip"])
                 w_max_list.append(daily_stats["wind"])
+            
+            if daily_hydro is not None:
+                h_list.append(daily_hydro)
                 
-        if t_max_list:
+        if t_max_list and h_list:
             max_temp = max(t_max_list)
             precip_sum = sum(p_sum_list)
             wind_speed = max(w_max_list)
             
-            failure = check_failure(route["type"], product, max_temp, precip_sum, wind_speed)
+            # Hydro data extraction (using avg discharge for the trip)
+            avg_discharge = sum(h_list) / len(h_list)
+            nivel_rio = max(10.0, avg_discharge * 2.0)
+            
+            failure = check_failure(route["type"], product, max_temp, precip_sum, wind_speed, avg_discharge)
             
             dataset.append({
                 "fecha_despacho": d.isoformat(),
@@ -125,6 +168,8 @@ async def generate():
                 "max_temperatura_c": max_temp,
                 "precipitacion_acum_mm": precip_sum,
                 "max_viento_ms": wind_speed,
+                "nivel_rio_m": round(nivel_rio, 2),
+                "velocidad_corriente_rio_ms": round(avg_discharge, 2),
                 "fracaso_logistico": failure
             })
             

@@ -25,7 +25,8 @@ def train():
         "tipo_transporte",
         "tipo_producto",
         "nivel_rio_m",
-        "regimen_hidrologico"
+        "regimen_hidrologico",
+        "velocidad_corriente_rio_ms"
     ]
     
     X = df[feature_cols].copy()
@@ -45,13 +46,23 @@ def train():
     
     print(f"Data Split -> Train: {len(X_train)} | Val: {len(X_val)} | Test: {len(X_test)}")
     
+    # 3. Calcular scale_pos_weight para balancear las clases (mayor peso a fracasos)
+    # scale_pos_weight = count(negative examples) / count(positive examples)
+    neg_count = len(y_train[y_train == 0])
+    pos_count = len(y_train[y_train == 1])
+    spw = neg_count / pos_count
+    print(f"Calculated scale_pos_weight: {spw:.2f} (to penalize false negatives)")
+    
+    # 4. Configurar modelo con parámetros optimizados
     model = xgb.XGBClassifier(
-        n_estimators=150,
-        max_depth=5,
-        learning_rate=0.05,
+        n_estimators=300,
+        max_depth=6,
+        learning_rate=0.03,
         enable_categorical=True,
-        early_stopping_rounds=10,
-        random_state=42
+        early_stopping_rounds=15,
+        random_state=42,
+        base_score=0.5,
+        scale_pos_weight=spw
     )
     
     print("Fitting model...")
