@@ -24,6 +24,10 @@ class ClimateData(BaseModel):
                     f"Critical climate array '{field_name}' is entirely missing or null."
                 )
 
+class HydroData(BaseModel):
+    """Hydrological data from ANA (Agência Nacional de Águas)."""
+    river_level_m: Optional[float] = None
+
 class TelemetryData(BaseModel):
     """IoT telemetry data from the shipment."""
     internal_cargo_temp_c: Optional[float] = None
@@ -52,12 +56,15 @@ class XGBoostFeatures(BaseModel):
     wind_speed_ms: float = Field(..., alias="velocidad_viento_ms")
     longwave_radiation: float = Field(..., alias="radiacion_onda_larga")
     precip_7d_accum: float = Field(..., alias="precipitacion_7d_acum")
-    transport_type_enc: int = Field(..., alias="tipo_transporte_enc")
-    product_type_enc: int = Field(..., alias="tipo_producto_enc")
+    transport_type: str = Field(..., alias="tipo_transporte")
+    product_type: str = Field(..., alias="tipo_producto")
     distance_km: float = Field(..., alias="distancia_km")
     estimated_duration_days: float = Field(..., alias="duracion_estimada_dias")
     internal_cargo_temp_c: float = Field(..., alias="temp_interna_carga_c")
     internal_cargo_humidity_pct: float = Field(..., alias="humedad_interna_carga_pct")
     thermal_delta: float = Field(..., alias="delta_termico")
     month_of_year: int = Field(..., alias="mes_del_anio")
-    hydrological_regime_enc: int = Field(..., alias="regimen_hidrologico_enc")
+    hydrological_regime: str = Field(..., alias="regimen_hidrologico")
+    river_level_m: float = Field(..., alias="nivel_rio_m")
+    
+    is_inpa_fallback: bool = Field(False, alias="es_fallback_inpa")
