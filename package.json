@@ -21,7 +21,6 @@
     "simulate:climate": "pnpm --filter iot-simulator simulate:climate",
     "simulate:shipment": "pnpm --filter iot-simulator simulate:shipment",
     "simulate:mixed": "pnpm --filter iot-simulator simulate:mixed"
-
   },
   "keywords": [],
   "author": "",
@@ -29,5 +28,8 @@
   "packageManager": "pnpm@10.33.1",
   "dependencies": {
     "turbo": "^2.9.6"
+  },
+  "devDependencies": {
+    "mongodb": "^7.4.0"
   }
 }
