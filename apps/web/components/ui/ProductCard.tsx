@@ -78,7 +78,7 @@ export function ProductCard({
                 key={i}
                 className={`w-4 h-4 ${i < rating
                   ? 'text-amber-400 fill-amber-400'
-                  : 'text-gray-300 stroke-2'
+                  : 'text-gray-300 fill-gray-300'
                   }`}
               />
             ))}

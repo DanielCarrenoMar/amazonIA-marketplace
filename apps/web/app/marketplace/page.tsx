@@ -32,6 +32,9 @@ function MarketplaceContent() {
   const [products, setProducts] = useState<ProductResponseDto[]>([]);
   const [categories, setCategories] = useState<ProductCategoryResponseDto[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  const [minRating, setMinRating] = useState<number>(0);
+  const [hoverRating, setHoverRating] = useState<number>(0);
 
   // Sync state with URL
   useEffect(() => {
@@ -172,13 +175,40 @@ function MarketplaceContent() {
 
             {/* Star Rating */}
             <div>
-              <h3 className="font-bold text-slate-900 text-lg mb-4">Calificación</h3>
-              <div className="flex items-center justify-between cursor-pointer group">
-                <div className="flex gap-1 text-amber-400 group-hover:scale-105 transition-transform">
-                  {[1,2,3,4].map(s => <Icon icon="lucide:star" key={s} className="w-5 h-5 fill-amber-400" />)}
-                  <Icon icon="lucide:star" className="w-5 h-5 text-gray-300 stroke-2" />
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-bold text-slate-900 text-lg">Calificación</h3>
+                {minRating > 0 && (
+                  <button 
+                    onClick={() => setMinRating(0)}
+                    className="text-xs text-muted hover:text-brand-primary transition-colors cursor-pointer"
+                  >
+                    Limpiar
+                  </button>
+                )}
+              </div>
+              <div className="flex items-center justify-between group">
+                <div 
+                  className="flex gap-1 transition-transform"
+                  onMouseLeave={() => setHoverRating(0)}
+                >
+                  {[1, 2, 3, 4, 5].map(star => {
+                    const isFilled = star <= (hoverRating || minRating);
+                    return (
+                      <Icon 
+                        key={star}
+                        icon="lucide:star" 
+                        onMouseEnter={() => setHoverRating(star)}
+                        onClick={() => setMinRating(star)}
+                        className={`w-6 h-6 cursor-pointer transition-colors ${
+                          isFilled ? "fill-amber-400 text-amber-400 hover:scale-110" : "fill-gray-300 text-gray-300 hover:scale-110 hover:fill-amber-200 hover:text-amber-200"
+                        }`} 
+                      />
+                    );
+                  })}
                 </div>
-                <span className="text-sm font-semibold text-muted group-hover:text-amber-500 transition-colors">4+ Estrellas</span>
+                <span className="text-sm font-semibold text-muted">
+                  {minRating > 0 ? `${minRating} Estrella${minRating !== 1 ? 's' : ''}` : 'Todas'}
+                </span>
               </div>
             </div>
 
