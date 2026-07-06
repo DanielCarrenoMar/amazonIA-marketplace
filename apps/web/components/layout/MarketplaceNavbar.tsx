@@ -54,14 +54,8 @@ export function MarketplaceNavbar() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="focus-within:z-10"
-              wrapperClassName="rounded-l-full rounded-r-none border-r-0 bg-gray-50/80 shadow-inner border-gray-200 focus-within:bg-white focus-within:border-brand-primary/30 focus-within:ring-2 focus-within:ring-brand-primary/20 transition-all"
+              wrapperClassName="rounded-full bg-gray-50/80 shadow-inner border-gray-200 focus-within:bg-white focus-within:border-brand-primary/30 focus-within:ring-2 focus-within:ring-brand-primary/20 transition-all"
             />
-            <Button 
-              className="rounded-l-none rounded-r-full px-8 h-[46px] shadow-sm font-bold tracking-wide"
-              variant="primary"
-            >
-              Buscar
-            </Button>
           </div>
 
           {/* Right Actions */}
@@ -130,12 +124,9 @@ export function MarketplaceNavbar() {
               placeholder="Buscar productos..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              wrapperClassName="rounded-l-full rounded-r-none border-r-0 bg-gray-50/80"
+              wrapperClassName="rounded-full bg-gray-50/80"
               className="h-[42px]"
             />
-            <Button className="rounded-l-none rounded-r-full px-5 h-[42px] shadow-sm" variant="primary">
-              <Icon icon="lucide:search" className="w-4 h-4" />
-            </Button>
           </div>
         </div>
       </nav>

@@ -151,10 +151,22 @@ function MarketplaceContent() {
                 <button className="text-xs text-muted hover:text-brand-primary transition-colors cursor-pointer">Limpiar</button>
               </div>
               <p className="text-xs text-muted mb-4 font-medium">El precio promedio es $30.00</p>
-              <div className="flex items-center gap-3">
-                <Input placeholder="Min" type="number" wrapperClassName="h-10" className="text-sm" />
-                <span className="text-muted font-medium">-</span>
-                <Input placeholder="Max" type="number" wrapperClassName="h-10" className="text-sm" />
+              <div className="flex items-center gap-2">
+                <Input 
+                  placeholder="Min" 
+                  type="number" 
+                  leftIcon={<span className="text-gray-400 font-medium font-sans">$</span>}
+                  wrapperClassName="h-10 rounded-2xl bg-gray-50/50 border-gray-200" 
+                  className="text-sm" 
+                />
+                <span className="text-gray-300 font-medium">-</span>
+                <Input 
+                  placeholder="Max" 
+                  type="number" 
+                  leftIcon={<span className="text-gray-400 font-medium font-sans">$</span>}
+                  wrapperClassName="h-10 rounded-2xl bg-gray-50/50 border-gray-200" 
+                  className="text-sm" 
+                />
               </div>
             </div>
 
