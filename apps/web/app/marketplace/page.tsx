@@ -127,7 +127,7 @@ function MarketplaceContent() {
             <button
               key={cat}
               onClick={() => handleCategoryClick(cat)}
-              className={`px-5 py-2 rounded-full font-medium whitespace-nowrap transition-colors border shadow-sm ${
+              className={`px-5 py-2 rounded-full font-medium whitespace-nowrap transition-colors border shadow-sm cursor-pointer ${
                 activeCategory === cat 
                   ? 'bg-brand-primary text-white border-brand-primary' 
                   : 'bg-white text-foreground border-gray-200 hover:border-brand-primary/50 hover:bg-brand-primary/5'
@@ -148,7 +148,7 @@ function MarketplaceContent() {
             <div>
               <div className="flex justify-between items-center mb-4">
                 <h3 className="font-bold text-slate-900 text-lg">Rango de Precio</h3>
-                <button className="text-xs text-muted hover:text-brand-primary transition-colors">Limpiar</button>
+                <button className="text-xs text-muted hover:text-brand-primary transition-colors cursor-pointer">Limpiar</button>
               </div>
               <p className="text-xs text-muted mb-4 font-medium">El precio promedio es $30.00</p>
               <div className="flex items-center gap-3">

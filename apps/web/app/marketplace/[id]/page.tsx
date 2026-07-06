@@ -29,7 +29,34 @@ export default function ProductDetailPage() {
   const [activeImage, setActiveImage] = useState<string>('');
   const [selectedMaterial, setSelectedMaterial] = useState('Algodón');
   const [selectedSize, setSelectedSize] = useState('100m');
+  const [activeMediaIndex, setActiveMediaIndex] = useState(0);
+  const [activeTab, setActiveTab] = useState<'description' | 'additional_info'>('description');
+  const [activeReviewIndex, setActiveReviewIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const MOCK_REVIEWS = [
+    { name: 'Alex Mathio', date: '13 Oct 2024', stars: 5, text: '"La dedicación a la sostenibilidad y prácticas éticas resuena fuertemente con los consumidores de hoy, posicionando este producto como una opción responsable y hermosa."', initials: 'AM' },
+    { name: 'María Jiménez', date: '02 Sep 2024', stars: 5, text: '"¡Absolutamente hermosa! La calidad del tejido es increíble y se nota el trabajo artesanal en cada detalle. Llegó muy rápido y en perfectas condiciones."', initials: 'MJ' },
+    { name: 'Carlos Alberto', date: '18 Ago 2024', stars: 4, text: '"Compré este producto como regalo y le encantó a quien lo recibió. Los colores son muy vivos y el material es de buena calidad. 100% recomendado."', initials: 'CA' },
+  ];
+
+  const handlePrevReview = () => setActiveReviewIndex(i => (i === 0 ? MOCK_REVIEWS.length - 1 : i - 1));
+  const handleNextReview = () => setActiveReviewIndex(i => (i === MOCK_REVIEWS.length - 1 ? 0 : i + 1));
+
+  // Mock data for the behind-the-scenes carousel
+  const behindTheScenesMedia = [
+    { type: 'video', src: activeImage || '/ceramica-pemón.jpg', title: 'Proceso de Creación' },
+    { type: 'image', src: '/bolso-de-moriche.webp', title: 'El Taller' },
+    { type: 'video', src: '/cesta-wayuu.jpg', title: 'Técnicas Ancestrales' },
+  ];
+
+  const handlePrevMedia = () => {
+    setActiveMediaIndex((prev) => (prev === 0 ? behindTheScenesMedia.length - 1 : prev - 1));
+  };
+
+  const handleNextMedia = () => {
+    setActiveMediaIndex((prev) => (prev === behindTheScenesMedia.length - 1 ? 0 : prev + 1));
+  };
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -147,7 +174,7 @@ export default function ProductDetailPage() {
                 <button
                   key={idx}
                   onClick={() => setActiveImage(thumb)}
-                  className={`relative aspect-square rounded-xl overflow-hidden border-2 transition-all ${activeImage === thumb ? 'border-brand-primary shadow-md scale-105 z-10' : 'border-transparent opacity-70 hover:opacity-100'}`}
+                  className={`relative aspect-square rounded-xl overflow-hidden border-2 transition-all cursor-pointer ${activeImage === thumb ? 'border-brand-primary shadow-md scale-105 z-10' : 'border-transparent opacity-70 hover:opacity-100'}`}
                 >
                   <Image src={thumb} alt={`Miniatura ${idx + 1}`} fill className="object-cover bg-gray-100" />
                 </button>
@@ -215,13 +242,13 @@ export default function ProductDetailPage() {
               <div>
                 <label className="text-sm font-semibold text-gray-900 block mb-1.5">Cantidad</label>
                 <div className="flex items-center h-[50px] border border-gray-200 rounded-xl overflow-hidden shadow-sm bg-white">
-                  <button onClick={handleDecrease} className="w-12 h-full flex items-center justify-center hover:bg-gray-50 text-gray-600 transition-colors">
+                  <button onClick={handleDecrease} className="w-12 h-full flex items-center justify-center hover:bg-gray-50 text-gray-600 transition-colors cursor-pointer">
                     <Icon icon="lucide:minus" className="w-4 h-4" />
                   </button>
                   <div className="flex-1 h-full flex items-center justify-center font-semibold text-gray-900 border-x border-gray-200">
                     {quantity}
                   </div>
-                  <button onClick={handleIncrease} className="w-12 h-full flex items-center justify-center hover:bg-gray-50 text-gray-600 transition-colors">
+                  <button onClick={handleIncrease} className="w-12 h-full flex items-center justify-center hover:bg-gray-50 text-gray-600 transition-colors cursor-pointer">
                     <Icon icon="lucide:plus" className="w-4 h-4" />
                   </button>
                 </div>
@@ -249,51 +276,249 @@ export default function ProductDetailPage() {
           </div>
         </div>
 
-        {/* REVIEWS SECTION */}
-        <section id="reviews" className="mt-24">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900">Reseñas de Compradores</h2>
-            <Button variant="outline" className="rounded-xl border-gray-300">Escribir Reseña</Button>
+        {/* TABS NAVIGATION */}
+        <div className="mt-20 border-b border-gray-200">
+          <div className="flex justify-center gap-12">
+            <button
+              onClick={() => setActiveTab('description')}
+              className={`pb-4 text-lg font-semibold cursor-pointer transition-colors relative ${
+                activeTab === 'description' ? 'text-brand-primary' : 'text-gray-500 hover:text-gray-900'
+              }`}
+            >
+              Descripción
+              {activeTab === 'description' && (
+                <div className="absolute bottom-0 left-0 w-full h-1 bg-brand-primary rounded-t-full" />
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab('additional_info')}
+              className={`pb-4 text-lg font-semibold cursor-pointer transition-colors relative ${
+                activeTab === 'additional_info' ? 'text-brand-primary' : 'text-gray-500 hover:text-gray-900'
+              }`}
+            >
+              Información Adicional
+              {activeTab === 'additional_info' && (
+                <div className="absolute bottom-0 left-0 w-full h-1 bg-brand-primary rounded-t-full" />
+              )}
+            </button>
           </div>
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Review 1 */}
-            <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col gap-4">
-              <div className="flex justify-between items-start">
-                <div className="flex items-center gap-4">
-                  <Avatar fallback="MJ" size="md" />
-                  <div>
-                    <h4 className="font-bold text-slate-900">María Jiménez</h4>
-                    <p className="text-xs text-muted font-medium mt-0.5">Comprador Verificado • Hace 2 semanas</p>
+        {/* TAB CONTENTS */}
+        <div className="py-12">
+          {activeTab === 'description' && (
+            <section>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                {/* Multimedia / Video Carousel */}
+            <div className="relative w-full aspect-video rounded-3xl overflow-hidden group shadow-lg border border-gray-100">
+              <div className="relative w-full h-full transition-transform duration-500">
+                <Image 
+                  src={behindTheScenesMedia[activeMediaIndex].src} 
+                  alt="Detrás de escena" 
+                  fill 
+                  className={`object-cover ${behindTheScenesMedia[activeMediaIndex].type === 'video' ? 'blur-[2px] brightness-75 cursor-pointer group-hover:scale-105 transition-transform duration-500' : 'brightness-90 transition-transform duration-500 group-hover:scale-105'}`} 
+                />
+              </div>
+              
+              {behindTheScenesMedia[activeMediaIndex].type === 'video' && (
+                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors flex items-center justify-center cursor-pointer pointer-events-none">
+                  <div className="w-20 h-20 bg-white/30 backdrop-blur-md rounded-full flex items-center justify-center border border-white/50 group-hover:scale-110 transition-transform shadow-xl">
+                    <Icon icon="lucide:play" className="w-8 h-8 text-white fill-white ml-1" />
                   </div>
                 </div>
-                <div className="flex gap-0.5 shrink-0 pt-1">
-                  {[1, 2, 3, 4, 5].map((star) => <Icon icon="lucide:star" key={star} className="w-4 h-4 fill-amber-400 text-amber-400" />)}
-                </div>
+              )}
+
+              <div className="absolute bottom-6 left-6 right-6 flex items-end justify-end pointer-events-none">
+                <h3 className="text-white font-bold text-xl drop-shadow-md">
+                  {activeMediaIndex + 1} / {behindTheScenesMedia.length}
+                </h3>
               </div>
-              <p className="text-muted leading-relaxed text-sm">
-                "¡Absolutamente hermosa! La calidad del tejido es increíble y se nota el trabajo artesanal en cada detalle. Llegó muy rápido y en perfectas condiciones. Definitivamente volveré a comprar en este marketplace."
-              </p>
+
+              {/* Carousel Navigation Buttons */}
+              <button 
+                onClick={handlePrevMedia}
+                className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/70 hover:bg-white backdrop-blur flex items-center justify-center shadow transition-colors z-10 opacity-0 group-hover:opacity-100 cursor-pointer"
+              >
+                <Icon icon="lucide:chevron-left" className="w-6 h-6 text-slate-800" />
+              </button>
+              <button 
+                onClick={handleNextMedia}
+                className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/70 hover:bg-white backdrop-blur flex items-center justify-center shadow transition-colors z-10 opacity-0 group-hover:opacity-100 cursor-pointer"
+              >
+                <Icon icon="lucide:chevron-right" className="w-6 h-6 text-slate-800" />
+              </button>
             </div>
 
-            {/* Review 2 */}
-            <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col gap-4">
-              <div className="flex justify-between items-start">
-                <div className="flex items-center gap-4">
-                  <Avatar fallback="CA" size="md" />
-                  <div>
-                    <h4 className="font-bold text-slate-900">Carlos Alberto</h4>
-                    <p className="text-xs text-muted font-medium mt-0.5">Comprador Verificado • Hace 1 mes</p>
+            {/* Artisan Info */}
+            <div className="flex flex-col">
+              <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 mb-6">Sobre el Artesano</h2>
+              
+              <div className="flex items-center gap-5 mb-6 bg-brand-nature-bg p-4 rounded-2xl border border-brand-nature-content/10">
+                {/* Fallback avatar uses the first letter of seller name if available */}
+                <Avatar fallback={product?.seller?.user?.fullName?.charAt(0) || "AT"} size="lg" className="border-2 border-brand-primary/20" />
+                <div>
+                  <h4 className="font-bold text-xl text-slate-900">
+                    {product?.seller?.user?.fullName || "Comunidad Artesanal Amazónica"}
+                  </h4>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Icon icon="lucide:map-pin" className="w-4 h-4 text-brand-primary" />
+                    <p className="text-sm text-gray-600 font-medium">
+                      {product?.locationCity ? `${product.locationCity}, ${product.locationRegion || 'Venezuela'}` : 'Amazonas, Venezuela'}
+                    </p>
                   </div>
                 </div>
-                <div className="flex gap-0.5 shrink-0 pt-1">
-                  {[1, 2, 3, 4].map((star) => <Icon icon="lucide:star" key={star} className="w-4 h-4 fill-amber-400 text-amber-400" />)}
-                  <Icon icon="lucide:star" className="w-4 h-4 text-gray-300 stroke-2" />
+              </div>
+
+              <p className="text-gray-600 leading-relaxed mb-6 text-lg">
+                {product?.seller?.bio || 
+                "Somos un grupo de artesanos dedicados a preservar las técnicas ancestrales de tejido y tallado que se han transmitido de generación en generación en nuestra comunidad. Cada pieza que creamos cuenta una historia única de nuestra selva, utilizando materiales 100% sostenibles y recolectados con respeto por la naturaleza."}
+              </p>
+
+              <div className="flex flex-wrap gap-3 mb-8">
+                <Badge variant="outline" className="text-brand-primary border-brand-primary/30 bg-brand-primary/5 py-1.5 px-4 text-sm font-semibold rounded-xl">
+                  <Icon icon="lucide:leaf" className="w-4 h-4 mr-1.5 inline" />
+                  Sostenible
+                </Badge>
+                <Badge variant="outline" className="text-amber-600 border-amber-600/30 bg-amber-50 py-1.5 px-4 text-sm font-semibold rounded-xl">
+                  <Icon icon="lucide:award" className="w-4 h-4 mr-1.5 inline" />
+                  Comercio Justo
+                </Badge>
+              </div>
+
+              <Button variant="outline" className="w-fit px-8 rounded-xl h-12 font-bold border-gray-300 hover:border-brand-primary hover:text-brand-primary hover:bg-transparent">
+                Ver Perfil Completo
+              </Button>
+            </div>
+          </div>
+        </section>
+        )}
+
+        {activeTab === 'additional_info' && (
+          <section className="max-w-4xl mx-auto">
+            <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-brand-primary text-white">
+                    <th className="py-4 px-6 font-semibold">Especificación</th>
+                    <th className="py-4 px-6 font-semibold">Detalles</th>
+                  </tr>
+                </thead>
+                <tbody className="text-gray-700">
+                  <tr className="border-b border-gray-100 hover:bg-gray-50">
+                    <td className="py-4 px-6 font-medium text-slate-900">Categoría</td>
+                    <td className="py-4 px-6">{product.category?.name || "No especificada"}</td>
+                  </tr>
+                  <tr className="border-b border-gray-100 hover:bg-gray-50">
+                    <td className="py-4 px-6 font-medium text-slate-900">Stock Disponible</td>
+                    <td className="py-4 px-6">
+                      {product.stockAvailable > 0 ? `${product.stockAvailable} unidades` : "Agotado"}
+                    </td>
+                  </tr>
+                  <tr className="border-b border-gray-100 hover:bg-gray-50">
+                    <td className="py-4 px-6 font-medium text-slate-900">Ubicación del Vendedor</td>
+                    <td className="py-4 px-6">
+                      {product.locationFormattedAddress || `${product.locationCity || 'No especificada'}, ${product.locationRegion || ''}`}
+                    </td>
+                  </tr>
+                  <tr className="border-b border-gray-100 hover:bg-gray-50">
+                    <td className="py-4 px-6 font-medium text-slate-900">Fecha de Publicación</td>
+                    <td className="py-4 px-6">
+                      {product.createdAt ? new Date(product.createdAt).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' }) : "No disponible"}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
+        </div>
+
+        {/* REVIEWS SECTION */}
+        <section id="reviews" className="mt-24">
+          <div className="flex flex-col md:flex-row gap-12 mt-12">
+            {/* Left: Summary */}
+            <div className="w-full md:w-1/3 flex flex-col">
+              <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 mb-8">Rating & Reviews</h2>
+              
+              <div className="flex items-center gap-6 mb-2">
+                <div className="flex items-baseline text-slate-900">
+                  <span className="text-7xl font-extrabold tracking-tighter">4.5</span>
+                  <span className="text-3xl font-bold text-gray-400">/5</span>
+                </div>
+                
+                <div className="flex-1 flex flex-col gap-2">
+                  {[
+                    { stars: 5, pct: 80 },
+                    { stars: 4, pct: 15 },
+                    { stars: 3, pct: 3 },
+                    { stars: 2, pct: 1 },
+                    { stars: 1, pct: 1 },
+                  ].map(row => (
+                    <div key={row.stars} className="flex items-center gap-2 text-sm">
+                      <span className="flex items-center gap-1 font-semibold text-gray-700 w-8">
+                        <Icon icon="lucide:star" className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                        {row.stars}
+                      </span>
+                      <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-slate-900 rounded-full" style={{ width: `${row.pct}%` }} />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-              <p className="text-muted leading-relaxed text-sm">
-                "Compré esta tela como regalo para mi madre y le encantó. Los colores son muy vivos y el material es de buena calidad. Le doy 4 estrellas solo porque esperaba que fuera un poco más grande de lo que llegó."
-              </p>
+              <p className="text-gray-500 font-medium">(50 New Reviews)</p>
+            </div>
+
+            {/* Right: Reviews Carousel */}
+            <div className="w-full md:w-2/3 flex items-center gap-4">
+              <button
+                onClick={handlePrevReview}
+                className="shrink-0 w-10 h-10 rounded-full bg-white border border-gray-200 shadow flex items-center justify-center hover:bg-gray-50 transition-colors cursor-pointer"
+              >
+                <Icon icon="lucide:chevron-left" className="w-5 h-5 text-slate-700" />
+              </button>
+
+              <div className="bg-white border border-gray-100 shadow-sm rounded-3xl p-8 flex-1 min-h-[220px]">
+                <div className="flex justify-between items-center mb-4">
+                  <div>
+                    <h4 className="font-bold text-slate-900 text-lg">{MOCK_REVIEWS[activeReviewIndex].name}</h4>
+                    <div className="flex items-center gap-1 mt-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Icon
+                          key={star}
+                          icon="lucide:star"
+                          className={`w-4 h-4 ${star <= MOCK_REVIEWS[activeReviewIndex].stars ? 'fill-amber-400 text-amber-400' : 'text-gray-200'}`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-400 font-medium">{MOCK_REVIEWS[activeReviewIndex].date}</p>
+                </div>
+
+                <p className="text-gray-600 leading-relaxed mb-6">{MOCK_REVIEWS[activeReviewIndex].text}</p>
+
+                <div className="flex items-center justify-between">
+                  <Avatar fallback={MOCK_REVIEWS[activeReviewIndex].initials} size="md" />
+                  <div className="flex gap-2">
+                    {MOCK_REVIEWS.map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setActiveReviewIndex(i)}
+                        className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                          i === activeReviewIndex ? 'w-8 bg-slate-900' : 'w-8 bg-gray-200'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={handleNextReview}
+                className="shrink-0 w-10 h-10 rounded-full bg-white border border-gray-200 shadow flex items-center justify-center hover:bg-gray-50 transition-colors cursor-pointer"
+              >
+                <Icon icon="lucide:chevron-right" className="w-5 h-5 text-slate-700" />
+              </button>
             </div>
           </div>
         </section>
@@ -306,13 +531,13 @@ export default function ProductDetailPage() {
             {/* Side Arrows */}
             <button
               onClick={() => scroll('left')}
-              className="absolute -left-4 md:-left-5 top-[40%] -translate-y-1/2 w-12 h-12 rounded-full bg-white hover:bg-gray-50 flex items-center justify-center shadow-lg border border-gray-100 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
+              className="absolute -left-4 md:-left-5 top-[40%] -translate-y-1/2 w-12 h-12 rounded-full bg-white hover:bg-gray-50 flex items-center justify-center shadow-lg border border-gray-100 z-10 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
             >
               <Icon icon="lucide:chevron-left" className="w-6 h-6 text-slate-700" />
             </button>
             <button
               onClick={() => scroll('right')}
-              className="absolute -right-4 md:-right-5 top-[40%] -translate-y-1/2 w-12 h-12 rounded-full bg-white hover:bg-gray-50 flex items-center justify-center shadow-lg border border-gray-100 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
+              className="absolute -right-4 md:-right-5 top-[40%] -translate-y-1/2 w-12 h-12 rounded-full bg-white hover:bg-gray-50 flex items-center justify-center shadow-lg border border-gray-100 z-10 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
             >
               <Icon icon="lucide:chevron-right" className="w-6 h-6 text-slate-700" />
             </button>
