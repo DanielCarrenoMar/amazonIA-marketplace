@@ -12,6 +12,7 @@ import { BannerCarousel } from '@/components/ui/BannerCarousel';
 import { Footer } from '@/components/layout/Footer';
 
 import { getProducts, getCategories } from '@/lib/api';
+import { mockProductDtos } from '@/lib/mock-data';
 import type { ProductResponseDto, ProductCategoryResponseDto } from 'event-types';
 
 export default function MarketplacePage() {

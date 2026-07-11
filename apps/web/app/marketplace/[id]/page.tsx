@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Icon } from "@iconify/react";
-import { mockProducts } from '@/lib/mock-data';
+import { mockProductDtos } from '@/lib/mock-data';
 import { getProductById, getProducts } from '@/lib/api';
 import type { ProductResponseDto } from 'event-types';
 import { Badge } from '@/components/ui/Badge';
@@ -30,7 +30,7 @@ export default function ProductDetailPage() {
   const [selectedMaterial, setSelectedMaterial] = useState('Algodón');
   const [selectedSize, setSelectedSize] = useState('100m');
   const [activeMediaIndex, setActiveMediaIndex] = useState(0);
-  const [activeTab, setActiveTab] = useState<'description' | 'additional_info'>('description');
+  const [activeTab, setActiveTab] = useState<'process' | 'additional_info' | 'artisan'>('process');
   const [activeReviewIndex, setActiveReviewIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -280,13 +280,24 @@ export default function ProductDetailPage() {
         <div className="mt-20 border-b border-gray-200">
           <div className="flex justify-center gap-12">
             <button
-              onClick={() => setActiveTab('description')}
+              onClick={() => setActiveTab('process')}
               className={`pb-4 text-lg font-semibold cursor-pointer transition-colors relative ${
-                activeTab === 'description' ? 'text-brand-primary' : 'text-gray-500 hover:text-gray-900'
+                activeTab === 'process' ? 'text-brand-primary' : 'text-gray-500 hover:text-gray-900'
               }`}
             >
-              Descripción
-              {activeTab === 'description' && (
+              Proceso
+              {activeTab === 'process' && (
+                <div className="absolute bottom-0 left-0 w-full h-1 bg-brand-primary rounded-t-full" />
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab('artisan')}
+              className={`pb-4 text-lg font-semibold cursor-pointer transition-colors relative ${
+                activeTab === 'artisan' ? 'text-brand-primary' : 'text-gray-500 hover:text-gray-900'
+              }`}
+            >
+              Sobre el Artesano
+              {activeTab === 'artisan' && (
                 <div className="absolute bottom-0 left-0 w-full h-1 bg-brand-primary rounded-t-full" />
               )}
             </button>
@@ -306,7 +317,7 @@ export default function ProductDetailPage() {
 
         {/* TAB CONTENTS */}
         <div className="py-12">
-          {activeTab === 'description' && (
+          {activeTab === 'process' && (
             <section>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                 {/* Multimedia / Video Carousel */}
@@ -349,45 +360,13 @@ export default function ProductDetailPage() {
               </button>
             </div>
 
-            {/* Artisan Info */}
+            {/* Elaboraton Process */}
             <div className="flex flex-col">
-              <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 mb-6">Sobre el Artesano</h2>
+              <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 mb-6">Proceso de Elaboración</h2>
               
-              <div className="flex items-center gap-5 mb-6 bg-brand-nature-bg p-4 rounded-2xl border border-brand-nature-content/10">
-                {/* Fallback avatar uses the first letter of seller name if available */}
-                <Avatar fallback={product?.seller?.user?.fullName?.charAt(0) || "AT"} size="lg" className="border-2 border-brand-primary/20" />
-                <div>
-                  <h4 className="font-bold text-xl text-slate-900">
-                    {product?.seller?.user?.fullName || "Comunidad Artesanal Amazónica"}
-                  </h4>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Icon icon="lucide:map-pin" className="w-4 h-4 text-brand-primary" />
-                    <p className="text-sm text-gray-600 font-medium">
-                      {product?.locationCity ? `${product.locationCity}, ${product.locationRegion || 'Venezuela'}` : 'Amazonas, Venezuela'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
               <p className="text-gray-600 leading-relaxed mb-6 text-lg">
-                {product?.seller?.bio || 
-                "Somos un grupo de artesanos dedicados a preservar las técnicas ancestrales de tejido y tallado que se han transmitido de generación en generación en nuestra comunidad. Cada pieza que creamos cuenta una historia única de nuestra selva, utilizando materiales 100% sostenibles y recolectados con respeto por la naturaleza."}
+                Esta pieza fue elaborada utilizando técnicas ancestrales transmitidas de generación en generación. Desde la recolección responsable de la materia prima en las profundidades de la selva, hasta el minucioso proceso de secado, teñido natural y ensamblaje final. Cada etapa se realiza a mano, respetando los tiempos de la naturaleza y garantizando un nivel de detalle que las máquinas no pueden replicar.
               </p>
-
-              <div className="flex flex-wrap gap-3 mb-8">
-                <Badge variant="outline" className="text-brand-primary border-brand-primary/30 bg-brand-primary/5 py-1.5 px-4 text-sm font-semibold rounded-xl">
-                  <Icon icon="lucide:leaf" className="w-4 h-4 mr-1.5 inline" />
-                  Sostenible
-                </Badge>
-                <Badge variant="outline" className="text-amber-600 border-amber-600/30 bg-amber-50 py-1.5 px-4 text-sm font-semibold rounded-xl">
-                  <Icon icon="lucide:award" className="w-4 h-4 mr-1.5 inline" />
-                  Comercio Justo
-                </Badge>
-              </div>
-
-              <Button variant="outline" className="w-fit px-8 rounded-xl h-12 font-bold border-gray-300 hover:border-brand-primary hover:text-brand-primary hover:bg-transparent">
-                Ver Perfil Completo
-              </Button>
             </div>
           </div>
         </section>
@@ -428,6 +407,30 @@ export default function ProductDetailPage() {
                   </tr>
                 </tbody>
               </table>
+            </div>
+          </section>
+        )}
+
+        {activeTab === 'artisan' && (
+          <section className="max-w-3xl mx-auto py-8">
+            <div className="flex flex-col items-center text-center">
+              <Avatar src="https://i.pravatar.cc/150?u=artesano" fallback={product.seller?.user?.fullName?.charAt(0) || "AT"} size="2xl" className="mb-6" />
+              <h3 className="text-3xl font-extrabold text-slate-900 mb-2">
+                {product.seller?.user?.fullName || "Comunidad Artesanal Amazónica"}
+              </h3>
+              <div className="flex items-center justify-center gap-2 mb-6">
+                <Icon icon="lucide:map-pin" className="w-5 h-5 text-brand-primary" />
+                <p className="text-gray-600 font-medium">
+                  {product.locationCity ? `${product.locationCity}, ${product.locationRegion || 'Venezuela'}` : 'Amazonas, Venezuela'}
+                </p>
+              </div>
+              <p className="text-gray-600 leading-relaxed text-lg mb-8 max-w-2xl">
+                {product.seller?.bio || 
+                "Somos un grupo de artesanos dedicados a preservar las técnicas ancestrales de tejido y tallado que se han transmitido de generación en generación en nuestra comunidad. Cada pieza que creamos cuenta una historia única de nuestra selva, utilizando materiales 100% sostenibles y recolectados con respeto por la naturaleza."}
+              </p>
+              <Button variant="outline" className="px-8 rounded-xl h-12 font-bold border-gray-300 hover:border-brand-primary hover:text-brand-primary hover:bg-transparent">
+                Ver Perfil Completo
+              </Button>
             </div>
           </section>
         )}
