@@ -261,6 +261,10 @@
             "method": "POST",
             "header": [
               {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
                 "key": "Content-Type",
                 "value": "application/json"
               }
@@ -279,17 +283,7 @@
                 "logout"
               ]
             },
-            "description": "Acepta un refreshToken válido (7d) y devuelve un nuevo par de tokens (rotación).",
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{accessToken}}",
-                  "type": "string"
-                }
-              ]
-            }
+            "description": "Acepta un refreshToken válido (7d) y devuelve un nuevo par de tokens (rotación)."
           },
           "response": []
         },
@@ -648,28 +642,22 @@
             "method": "POST",
             "header": [
               {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
                 "key": "Content-Type",
                 "value": "application/json"
               }
             ],
             "url": {
-              "raw": "{{backendBaseUrl}}/tribe/request-creation",
+              "raw": "{{baseUrl}}/tribe/request-creation",
               "host": [
-                "{{backendBaseUrl}}"
+                "{{baseUrl}}"
               ],
               "path": [
                 "tribe",
                 "request-creation"
-              ]
-            },
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{accessToken}}",
-                  "type": "string"
-                }
               ]
             },
             "body": {
@@ -685,14 +673,18 @@
             "method": "PATCH",
             "header": [
               {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
                 "key": "Content-Type",
                 "value": "application/json"
               }
             ],
             "url": {
-              "raw": "{{backendBaseUrl}}/tribe/:id/review-creation",
+              "raw": "{{baseUrl}}/tribe/:id/review-creation",
               "host": [
-                "{{backendBaseUrl}}"
+                "{{baseUrl}}"
               ],
               "path": [
                 "tribe",
@@ -703,16 +695,6 @@
                 {
                   "key": "id",
                   "value": "{{id}}"
-                }
-              ]
-            },
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{accessToken}}",
-                  "type": "string"
                 }
               ]
             },
@@ -729,14 +711,18 @@
             "method": "POST",
             "header": [
               {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
                 "key": "Content-Type",
                 "value": "application/json"
               }
             ],
             "url": {
-              "raw": "{{backendBaseUrl}}/tribe/:id/request-membership",
+              "raw": "{{baseUrl}}/tribe/:id/request-membership",
               "host": [
-                "{{backendBaseUrl}}"
+                "{{baseUrl}}"
               ],
               "path": [
                 "tribe",
@@ -747,16 +733,6 @@
                 {
                   "key": "id",
                   "value": "{{id}}"
-                }
-              ]
-            },
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{accessToken}}",
-                  "type": "string"
                 }
               ]
             },
@@ -773,14 +749,18 @@
             "method": "PATCH",
             "header": [
               {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
                 "key": "Content-Type",
                 "value": "application/json"
               }
             ],
             "url": {
-              "raw": "{{backendBaseUrl}}/tribe/:id/membership/:requestId/review",
+              "raw": "{{baseUrl}}/tribe/:id/membership/:requestId/review",
               "host": [
-                "{{backendBaseUrl}}"
+                "{{baseUrl}}"
               ],
               "path": [
                 "tribe",
@@ -800,16 +780,6 @@
                 }
               ]
             },
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{accessToken}}",
-                  "type": "string"
-                }
-              ]
-            },
             "body": {
               "mode": "raw",
               "raw": "{}"
@@ -823,14 +793,18 @@
             "method": "PATCH",
             "header": [
               {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
                 "key": "Content-Type",
                 "value": "application/json"
               }
             ],
             "url": {
-              "raw": "{{backendBaseUrl}}/tribe/:id/assign-leader",
+              "raw": "{{baseUrl}}/tribe/:id/assign-leader",
               "host": [
-                "{{backendBaseUrl}}"
+                "{{baseUrl}}"
               ],
               "path": [
                 "tribe",
@@ -841,16 +815,6 @@
                 {
                   "key": "id",
                   "value": "{{id}}"
-                }
-              ]
-            },
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{accessToken}}",
-                  "type": "string"
                 }
               ]
             },
@@ -867,14 +831,18 @@
             "method": "DELETE",
             "header": [
               {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
                 "key": "Content-Type",
                 "value": "application/json"
               }
             ],
             "url": {
-              "raw": "{{backendBaseUrl}}/tribe/:id/remove-leader",
+              "raw": "{{baseUrl}}/tribe/:id/remove-leader",
               "host": [
-                "{{backendBaseUrl}}"
+                "{{baseUrl}}"
               ],
               "path": [
                 "tribe",
@@ -887,16 +855,6 @@
                   "value": "{{id}}"
                 }
               ]
-            },
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{accessToken}}",
-                  "type": "string"
-                }
-              ]
             }
           },
           "response": []
@@ -907,28 +865,22 @@
             "method": "POST",
             "header": [
               {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
                 "key": "Content-Type",
                 "value": "application/json"
               }
             ],
             "url": {
-              "raw": "{{backendBaseUrl}}/tribe/leave",
+              "raw": "{{baseUrl}}/tribe/leave",
               "host": [
-                "{{backendBaseUrl}}"
+                "{{baseUrl}}"
               ],
               "path": [
                 "tribe",
                 "leave"
-              ]
-            },
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{accessToken}}",
-                  "type": "string"
-                }
               ]
             },
             "body": {
@@ -944,14 +896,18 @@
             "method": "DELETE",
             "header": [
               {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
                 "key": "Content-Type",
                 "value": "application/json"
               }
             ],
             "url": {
-              "raw": "{{backendBaseUrl}}/tribe/:id/members/:sellerId",
+              "raw": "{{baseUrl}}/tribe/:id/members/:sellerId",
               "host": [
-                "{{backendBaseUrl}}"
+                "{{baseUrl}}"
               ],
               "path": [
                 "tribe",
@@ -969,16 +925,6 @@
                   "value": "{{sellerId}}"
                 }
               ]
-            },
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{accessToken}}",
-                  "type": "string"
-                }
-              ]
             }
           },
           "response": []
@@ -989,28 +935,22 @@
             "method": "GET",
             "header": [
               {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
                 "key": "Content-Type",
                 "value": "application/json"
               }
             ],
             "url": {
-              "raw": "{{backendBaseUrl}}/tribe/pending-creations",
+              "raw": "{{baseUrl}}/tribe/pending-creations",
               "host": [
-                "{{backendBaseUrl}}"
+                "{{baseUrl}}"
               ],
               "path": [
                 "tribe",
                 "pending-creations"
-              ]
-            },
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{accessToken}}",
-                  "type": "string"
-                }
               ]
             }
           },
@@ -1022,14 +962,18 @@
             "method": "GET",
             "header": [
               {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
                 "key": "Content-Type",
                 "value": "application/json"
               }
             ],
             "url": {
-              "raw": "{{backendBaseUrl}}/tribe/:id/membership-requests",
+              "raw": "{{baseUrl}}/tribe/:id/membership-requests",
               "host": [
-                "{{backendBaseUrl}}"
+                "{{baseUrl}}"
               ],
               "path": [
                 "tribe",
@@ -1040,16 +984,6 @@
                 {
                   "key": "id",
                   "value": "{{id}}"
-                }
-              ]
-            },
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{accessToken}}",
-                  "type": "string"
                 }
               ]
             }
@@ -1222,14 +1156,18 @@
             "method": "POST",
             "header": [
               {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
                 "key": "Content-Type",
                 "value": "application/json"
               }
             ],
             "url": {
-              "raw": "{{backendBaseUrl}}/seller/:userId",
+              "raw": "{{baseUrl}}/seller/:userId",
               "host": [
-                "{{backendBaseUrl}}"
+                "{{baseUrl}}"
               ],
               "path": [
                 "seller",
@@ -1239,16 +1177,6 @@
                 {
                   "key": "userId",
                   "value": "{{userId}}"
-                }
-              ]
-            },
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{accessToken}}",
-                  "type": "string"
                 }
               ]
             },
@@ -1422,9 +1350,9 @@
               }
             ],
             "url": {
-              "raw": "{{backendBaseUrl}}/product-category/:id",
+              "raw": "{{baseUrl}}/product-category/:id",
               "host": [
-                "{{backendBaseUrl}}"
+                "{{baseUrl}}"
               ],
               "path": [
                 "product-category",
@@ -1494,16 +1422,6 @@
         {
           "name": "🔒 Mis Productos (GET /product/my-products) — Solo SELLER",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{accessToken}}",
-                  "type": "string"
-                }
-              ]
-            },
             "method": "GET",
             "header": [
               {
@@ -2108,18 +2026,13 @@
         {
           "name": "🔒 Órdenes de mis Productos — Solo SELLER",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{accessToken}}",
-                  "type": "string"
-                }
-              ]
-            },
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/product-order/seller-orders?page=1&limit=10",
               "host": [
@@ -2147,18 +2060,13 @@
         {
           "name": "🔒 Mis Órdenes",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{accessToken}}",
-                  "type": "string"
-                }
-              ]
-            },
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/product-order/my-orders",
               "host": [
@@ -2175,18 +2083,13 @@
         {
           "name": "🔒 Mi Orden — detalle",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{accessToken}}",
-                  "type": "string"
-                }
-              ]
-            },
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/product-order/my-orders/60e40196-f0eb-4c08-88c4-7243b0cf52c7",
               "host": [
@@ -2207,14 +2110,18 @@
             "method": "GET",
             "header": [
               {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
                 "key": "Content-Type",
                 "value": "application/json"
               }
             ],
             "url": {
-              "raw": "{{backendBaseUrl}}/product-order/my-orders/:userId",
+              "raw": "{{baseUrl}}/product-order/my-orders/:userId",
               "host": [
-                "{{backendBaseUrl}}"
+                "{{baseUrl}}"
               ],
               "path": [
                 "product-order",
@@ -2227,16 +2134,6 @@
                   "value": "{{userId}}"
                 }
               ]
-            },
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{accessToken}}",
-                  "type": "string"
-                }
-              ]
             }
           },
           "response": []
@@ -2247,14 +2144,18 @@
             "method": "GET",
             "header": [
               {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
                 "key": "Content-Type",
                 "value": "application/json"
               }
             ],
             "url": {
-              "raw": "{{backendBaseUrl}}/product-order/:id/timeline",
+              "raw": "{{baseUrl}}/product-order/:id/timeline",
               "host": [
-                "{{backendBaseUrl}}"
+                "{{baseUrl}}"
               ],
               "path": [
                 "product-order",
@@ -2265,16 +2166,6 @@
                 {
                   "key": "id",
                   "value": "{{id}}"
-                }
-              ]
-            },
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{accessToken}}",
-                  "type": "string"
                 }
               ]
             }
@@ -2292,27 +2183,21 @@
             "method": "POST",
             "header": [
               {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
                 "key": "Content-Type",
                 "value": "application/json"
               }
             ],
             "url": {
-              "raw": "{{backendBaseUrl}}/product-comment",
+              "raw": "{{baseUrl}}/product-comment",
               "host": [
-                "{{backendBaseUrl}}"
+                "{{baseUrl}}"
               ],
               "path": [
                 "product-comment"
-              ]
-            },
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{accessToken}}",
-                  "type": "string"
-                }
               ]
             },
             "body": {
@@ -2333,9 +2218,9 @@
               }
             ],
             "url": {
-              "raw": "{{backendBaseUrl}}/product-comment/product/:productId",
+              "raw": "{{baseUrl}}/product-comment/product/:productId",
               "host": [
-                "{{backendBaseUrl}}"
+                "{{baseUrl}}"
               ],
               "path": [
                 "product-comment",
@@ -2358,14 +2243,18 @@
             "method": "PATCH",
             "header": [
               {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
                 "key": "Content-Type",
                 "value": "application/json"
               }
             ],
             "url": {
-              "raw": "{{backendBaseUrl}}/product-comment/:id",
+              "raw": "{{baseUrl}}/product-comment/:id",
               "host": [
-                "{{backendBaseUrl}}"
+                "{{baseUrl}}"
               ],
               "path": [
                 "product-comment",
@@ -2375,16 +2264,6 @@
                 {
                   "key": "id",
                   "value": "{{id}}"
-                }
-              ]
-            },
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{accessToken}}",
-                  "type": "string"
                 }
               ]
             },
@@ -2401,14 +2280,18 @@
             "method": "DELETE",
             "header": [
               {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
                 "key": "Content-Type",
                 "value": "application/json"
               }
             ],
             "url": {
-              "raw": "{{backendBaseUrl}}/product-comment/:id",
+              "raw": "{{baseUrl}}/product-comment/:id",
               "host": [
-                "{{backendBaseUrl}}"
+                "{{baseUrl}}"
               ],
               "path": [
                 "product-comment",
@@ -2418,16 +2301,6 @@
                 {
                   "key": "id",
                   "value": "{{id}}"
-                }
-              ]
-            },
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{accessToken}}",
-                  "type": "string"
                 }
               ]
             }
@@ -2445,27 +2318,21 @@
             "method": "POST",
             "header": [
               {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
                 "key": "Content-Type",
                 "value": "application/json"
               }
             ],
             "url": {
-              "raw": "{{backendBaseUrl}}/order-chat",
+              "raw": "{{baseUrl}}/order-chat",
               "host": [
-                "{{backendBaseUrl}}"
+                "{{baseUrl}}"
               ],
               "path": [
                 "order-chat"
-              ]
-            },
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{accessToken}}",
-                  "type": "string"
-                }
               ]
             },
             "body": {
@@ -2481,14 +2348,18 @@
             "method": "GET",
             "header": [
               {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
                 "key": "Content-Type",
                 "value": "application/json"
               }
             ],
             "url": {
-              "raw": "{{backendBaseUrl}}/order-chat/:orderId",
+              "raw": "{{baseUrl}}/order-chat/:orderId",
               "host": [
-                "{{backendBaseUrl}}"
+                "{{baseUrl}}"
               ],
               "path": [
                 "order-chat",
@@ -2498,16 +2369,6 @@
                 {
                   "key": "orderId",
                   "value": "{{orderId}}"
-                }
-              ]
-            },
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{accessToken}}",
-                  "type": "string"
                 }
               ]
             }
@@ -2525,14 +2386,18 @@
             "method": "GET",
             "header": [
               {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
                 "key": "Content-Type",
                 "value": "application/json"
               }
             ],
             "url": {
-              "raw": "{{backendBaseUrl}}/shipments/sensor/:sensor_id/history",
+              "raw": "{{baseUrl}}/shipments/sensor/:sensor_id/history",
               "host": [
-                "{{backendBaseUrl}}"
+                "{{baseUrl}}"
               ],
               "path": [
                 "shipments",
@@ -2546,16 +2411,6 @@
                   "value": "{{sensor_id}}"
                 }
               ]
-            },
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{accessToken}}",
-                  "type": "string"
-                }
-              ]
             }
           },
           "response": []
@@ -2566,14 +2421,18 @@
             "method": "GET",
             "header": [
               {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
                 "key": "Content-Type",
                 "value": "application/json"
               }
             ],
             "url": {
-              "raw": "{{backendBaseUrl}}/shipments/:tracking_number/history",
+              "raw": "{{baseUrl}}/shipments/:tracking_number/history",
               "host": [
-                "{{backendBaseUrl}}"
+                "{{baseUrl}}"
               ],
               "path": [
                 "shipments",
@@ -2584,16 +2443,6 @@
                 {
                   "key": "tracking_number",
                   "value": "{{tracking_number}}"
-                }
-              ]
-            },
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{accessToken}}",
-                  "type": "string"
                 }
               ]
             }
@@ -2616,9 +2465,9 @@
               }
             ],
             "url": {
-              "raw": "{{backendBaseUrl}}/blockchain/webhook",
+              "raw": "{{baseUrl}}/blockchain/webhook",
               "host": [
-                "{{backendBaseUrl}}"
+                "{{baseUrl}}"
               ],
               "path": [
                 "blockchain",
@@ -2648,9 +2497,9 @@
               }
             ],
             "url": {
-              "raw": "{{backendBaseUrl}}/shipping-carriers",
+              "raw": "{{baseUrl}}/shipping-carriers",
               "host": [
-                "{{backendBaseUrl}}"
+                "{{baseUrl}}"
               ],
               "path": [
                 "shipping-carriers"
@@ -2698,11 +2547,6 @@
     {
       "key": "adminUserId",
       "value": ""
-    },
-    {
-      "key": "backendBaseUrl",
-      "value": "http://localhost:3001",
-      "type": "string"
     },
     {
       "key": "id",
