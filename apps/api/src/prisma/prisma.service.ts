@@ -1,4 +1,4 @@
-import 'dotenv/config';
+try { require('dotenv/config'); } catch {}
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';

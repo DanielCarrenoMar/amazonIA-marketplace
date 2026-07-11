@@ -65,4 +65,59 @@ export class ShipmentsService {
       },
     };
   }
+  async getHistoryBySensor(
+    sensorId: string,
+    query: PaginationDto,
+    user: { id: string; role: string },
+  ): Promise<ShipmentHistoryDto> {
+    if (user.role !== 'ADMIN') {
+      const order = await this.prismaService.productOrder.findFirst({
+        where: { sensorId },
+        include: { product: true },
+      });
+
+      if (!order) {
+        throw new UnauthorizedException('You do not have access to this sensor');
+      }
+
+      const isBuyer = order.buyerId === user.id;
+      const isSeller = order.product.sellerId === user.id;
+
+      if (!isBuyer && !isSeller) {
+        throw new UnauthorizedException('You do not have access to this sensor');
+      }
+    }
+
+    const { limit = 10, page = 1 } = query;
+
+    const result = await this.telemetryIntegration.getShipmentHistoryBySensor(
+      sensorId,
+      page,
+      limit,
+    );
+
+    if (result === null) {
+      throw new ServiceUnavailableException(
+        'Telemetry service temporarily unavailable. Please retry shortly.',
+      );
+    }
+
+    if (result.total === 0) {
+      throw new NotFoundException(
+        `No events found for sensor ID ${sensorId}`,
+      );
+    }
+
+    const offset = (page - 1) * limit;
+
+    return {
+      data: result.data as IShipmentEvent[],
+      meta: {
+        total: result.total,
+        limit,
+        offset,
+        hasMore: offset + limit < result.total,
+      },
+    };
+  }
 }

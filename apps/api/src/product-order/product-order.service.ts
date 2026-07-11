@@ -210,9 +210,14 @@ export class ProductOrderService {
    */
   async findOneWithTelemetry(id: string, reqUser: { id: string; role: UserRole }): Promise<ProductOrderResponseDto> {
     const order = await this.findOne(id, reqUser);
-    const telemetry = await this.telemetryIntegration.getShipmentTelemetry(
+    let telemetry = await this.telemetryIntegration.getShipmentTelemetry(
       order.trackingNumber ?? null,
     );
+    if ((!telemetry || telemetry.length === 0) && order.sensorId) {
+      telemetry = await this.telemetryIntegration.getShipmentTelemetryBySensor(
+        order.sensorId,
+      );
+    }
     return { ...order, telemetry };
   }
 

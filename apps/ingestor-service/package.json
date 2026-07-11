@@ -1,7 +1,7 @@
 {
   "name": "ingestor-service",
   "version": "0.0.1",
-  "description": "HTTP ingestion gateway for IoT telemetry — publishes to Kafka",
+  "description": "MQTT ingestion gateway for IoT telemetry — publishes to Redis Streams",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {

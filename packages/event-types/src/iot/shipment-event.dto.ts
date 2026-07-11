@@ -17,6 +17,7 @@ import { GeoPointDto, IGeoPoint } from './climate-event.dto';
 export interface IShipmentMetadata {
   tracking_number: string;
   container_id: string;
+  sensor_id?: string;
 }
 
 export interface IBusinessContext {
@@ -52,6 +53,10 @@ export class ShipmentMetadataDto implements IShipmentMetadata {
 
   @IsString()
   container_id: string;
+
+  @IsOptional()
+  @IsString()
+  sensor_id?: string;
 }
 
 export class BusinessContextDto implements IBusinessContext {

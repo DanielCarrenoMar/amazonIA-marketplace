@@ -16,3 +16,6 @@ apps/backend/AmazonIA-Marketplace.postman_collection.json
 *.env
 
 .vscode
+
+# Claude Code
+CLAUDE.md

@@ -18,6 +18,10 @@ export class UpdateProductOrderDto extends PartialType(CreateProductOrderDto) {
   @IsOptional()
   trackingNumber?: string;
 
+  @IsString()
+  @IsOptional()
+  sensorId?: string;
+
   @IsInt()
   @IsOptional()
   carrierId?: number;

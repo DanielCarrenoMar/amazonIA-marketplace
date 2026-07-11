@@ -219,7 +219,7 @@ Mensajería directa y privada asociada a un pedido entre comprador y vendedor.
 ---
 
 ### 12. `outbox_events` (Modelo `OutboxEvent`)
-Patrón Transaccional Outbox para garantizar la publicación confiable de eventos asíncronos hacia Apache Kafka.
+Patrón Transaccional Outbox para garantizar la publicación confiable de eventos asíncronos hacia Redis Streams.
 
 | Campo | Tipo Prisma | Tipo PostgreSQL | Restricciones | Descripción / Mapeo |
 | :--- | :--- | :--- | :--- | :--- |
@@ -229,7 +229,7 @@ Patrón Transaccional Outbox para garantizar la publicación confiable de evento
 | `eventType` | `String` | `varchar(100)`| Requerido | Nombre del evento de negocio (`event_type`). |
 | `payload` | `Json` | `jsonb` | Requerido | Objeto JSON con el estado de los datos. |
 | `createdAt` | `DateTime` | `timestamptz` | `default(now())` | Fecha de registro del evento (`created_at`). |
-| `publishedAt`| `DateTime?`| `timestamptz` | Opcional, Index | Fecha en que se publicó en Kafka (`published_at`). Null si está pendiente. |
+| `publishedAt`| `DateTime?`| `timestamptz` | Opcional, Index | Fecha en que se publicó en Redis Streams (`published_at`). Null si está pendiente. |
 
 ---
 
