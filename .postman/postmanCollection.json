@@ -641,6 +641,420 @@
             "description": "Requiere token (ADMIN)."
           },
           "response": []
+        },
+        {
+          "name": "🔒 Solicitar Creación de Tribu (POST /tribe/request-creation)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{backendBaseUrl}}/tribe/request-creation",
+              "host": [
+                "{{backendBaseUrl}}"
+              ],
+              "path": [
+                "tribe",
+                "request-creation"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Revisar Creación de Tribu (PATCH /tribe/:id/review-creation)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{backendBaseUrl}}/tribe/:id/review-creation",
+              "host": [
+                "{{backendBaseUrl}}"
+              ],
+              "path": [
+                "tribe",
+                ":id",
+                "review-creation"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{id}}"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Solicitar Membresía a Tribu (POST /tribe/:id/request-membership)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{backendBaseUrl}}/tribe/:id/request-membership",
+              "host": [
+                "{{backendBaseUrl}}"
+              ],
+              "path": [
+                "tribe",
+                ":id",
+                "request-membership"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{id}}"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Revisar Membresía de Tribu (PATCH /tribe/:id/membership/:requestId/review)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{backendBaseUrl}}/tribe/:id/membership/:requestId/review",
+              "host": [
+                "{{backendBaseUrl}}"
+              ],
+              "path": [
+                "tribe",
+                ":id",
+                "membership",
+                ":requestId",
+                "review"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{id}}"
+                },
+                {
+                  "key": "requestId",
+                  "value": "{{requestId}}"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Asignar Líder de Tribu (PATCH /tribe/:id/assign-leader)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{backendBaseUrl}}/tribe/:id/assign-leader",
+              "host": [
+                "{{backendBaseUrl}}"
+              ],
+              "path": [
+                "tribe",
+                ":id",
+                "assign-leader"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{id}}"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Remover Líder de Tribu (DELETE /tribe/:id/remove-leader)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{backendBaseUrl}}/tribe/:id/remove-leader",
+              "host": [
+                "{{backendBaseUrl}}"
+              ],
+              "path": [
+                "tribe",
+                ":id",
+                "remove-leader"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{id}}"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Abandonar Tribu (POST /tribe/leave)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{backendBaseUrl}}/tribe/leave",
+              "host": [
+                "{{backendBaseUrl}}"
+              ],
+              "path": [
+                "tribe",
+                "leave"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Expulsar Miembro de Tribu (DELETE /tribe/:id/members/:sellerId)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{backendBaseUrl}}/tribe/:id/members/:sellerId",
+              "host": [
+                "{{backendBaseUrl}}"
+              ],
+              "path": [
+                "tribe",
+                ":id",
+                "members",
+                ":sellerId"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{id}}"
+                },
+                {
+                  "key": "sellerId",
+                  "value": "{{sellerId}}"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Ver Creaciones Pendientes (GET /tribe/pending-creations)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{backendBaseUrl}}/tribe/pending-creations",
+              "host": [
+                "{{backendBaseUrl}}"
+              ],
+              "path": [
+                "tribe",
+                "pending-creations"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Ver Solicitudes de Membresía (GET /tribe/:id/membership-requests)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{backendBaseUrl}}/tribe/:id/membership-requests",
+              "host": [
+                "{{backendBaseUrl}}"
+              ],
+              "path": [
+                "tribe",
+                ":id",
+                "membership-requests"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{id}}"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
         }
       ]
     },
@@ -801,6 +1215,49 @@
             "description": "Requiere token (ADMIN)."
           },
           "response": []
+        },
+        {
+          "name": "🔒 Crear/Actualizar Vendedor (POST /seller/:userId)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{backendBaseUrl}}/seller/:userId",
+              "host": [
+                "{{backendBaseUrl}}"
+              ],
+              "path": [
+                "seller",
+                ":userId"
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "response": []
         }
       ]
     },
@@ -951,6 +1408,35 @@
               ]
             },
             "description": "Requiere token (ADMIN)."
+          },
+          "response": []
+        },
+        {
+          "name": "Ver Categoría por ID (GET /product-category/:id) — Público",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{backendBaseUrl}}/product-category/:id",
+              "host": [
+                "{{backendBaseUrl}}"
+              ],
+              "path": [
+                "product-category",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{id}}"
+                }
+              ]
+            }
           },
           "response": []
         }
@@ -1714,773 +2200,464 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "🔒 Ver Mis Órdenes (GET /product-order/my-orders/:userId)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{backendBaseUrl}}/product-order/my-orders/:userId",
+              "host": [
+                "{{backendBaseUrl}}"
+              ],
+              "path": [
+                "product-order",
+                "my-orders",
+                ":userId"
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Ver Línea de Tiempo de Orden (GET /product-order/:id/timeline)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{backendBaseUrl}}/product-order/:id/timeline",
+              "host": [
+                "{{backendBaseUrl}}"
+              ],
+              "path": [
+                "product-order",
+                ":id",
+                "timeline"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{id}}"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
         }
       ]
     },
     {
-      "name": "Nuevas Funcionalidades (V2)",
+      "name": "💬 Product Comment",
       "item": [
         {
-          "name": "Product Comments",
-          "item": [
-            {
-              "name": "Create Comment",
-              "request": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  },
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{accessToken}}"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{}"
-                },
-                "url": {
-                  "raw": "{{backendBaseUrl}}/product-comment",
-                  "host": [
-                    "{{backendBaseUrl}}"
-                  ],
-                  "path": [
-                    "product-comment"
-                  ]
-                }
-              },
-              "response": []
+          "name": "🔒 Crear Comentario de Producto (POST /product-comment)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{backendBaseUrl}}/product-comment",
+              "host": [
+                "{{backendBaseUrl}}"
+              ],
+              "path": [
+                "product-comment"
+              ]
             },
-            {
-              "name": "Get Comments by Product",
-              "request": {
-                "method": "GET",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  },
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{accessToken}}"
-                  }
-                ],
-                "url": {
-                  "raw": "{{backendBaseUrl}}/product-comment/product/{{productId}}",
-                  "host": [
-                    "{{backendBaseUrl}}"
-                  ],
-                  "path": [
-                    "product-comment",
-                    "product",
-                    "{{productId}}"
-                  ]
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
                 }
-              },
-              "response": []
+              ]
             },
-            {
-              "name": "Update Comment",
-              "request": {
-                "method": "PATCH",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  },
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{accessToken}}"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{}"
-                },
-                "url": {
-                  "raw": "{{backendBaseUrl}}/product-comment/{{commentId}}",
-                  "host": [
-                    "{{backendBaseUrl}}"
-                  ],
-                  "path": [
-                    "product-comment",
-                    "{{commentId}}"
-                  ]
-                }
-              },
-              "response": []
-            },
-            {
-              "name": "Delete Comment",
-              "request": {
-                "method": "DELETE",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  },
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{accessToken}}"
-                  }
-                ],
-                "url": {
-                  "raw": "{{backendBaseUrl}}/product-comment/{{commentId}}",
-                  "host": [
-                    "{{backendBaseUrl}}"
-                  ],
-                  "path": [
-                    "product-comment",
-                    "{{commentId}}"
-                  ]
-                }
-              },
-              "response": []
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
             }
-          ]
+          },
+          "response": []
         },
         {
-          "name": "Order Chat",
-          "item": [
-            {
-              "name": "Send Chat Message",
-              "request": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  },
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{accessToken}}"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{}"
-                },
-                "url": {
-                  "raw": "{{backendBaseUrl}}/order-chat",
-                  "host": [
-                    "{{backendBaseUrl}}"
-                  ],
-                  "path": [
-                    "order-chat"
-                  ]
+          "name": "Listar Comentarios por Producto (GET /product-comment/product/:productId) — Público",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{backendBaseUrl}}/product-comment/product/:productId",
+              "host": [
+                "{{backendBaseUrl}}"
+              ],
+              "path": [
+                "product-comment",
+                "product",
+                ":productId"
+              ],
+              "variable": [
+                {
+                  "key": "productId",
+                  "value": "{{productId}}"
                 }
-              },
-              "response": []
-            },
-            {
-              "name": "Get Chat by Order",
-              "request": {
-                "method": "GET",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  },
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{accessToken}}"
-                  }
-                ],
-                "url": {
-                  "raw": "{{backendBaseUrl}}/order-chat/{{orderId}}",
-                  "host": [
-                    "{{backendBaseUrl}}"
-                  ],
-                  "path": [
-                    "order-chat",
-                    "{{orderId}}"
-                  ]
-                }
-              },
-              "response": []
+              ]
             }
-          ]
+          },
+          "response": []
         },
         {
-          "name": "Shipments & Telemetry (Mongo)",
-          "item": [
-            {
-              "name": "Get Order Timeline",
-              "request": {
-                "method": "GET",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  },
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{accessToken}}"
-                  }
-                ],
-                "url": {
-                  "raw": "{{backendBaseUrl}}/product-order/{{orderId}}/timeline",
-                  "host": [
-                    "{{backendBaseUrl}}"
-                  ],
-                  "path": [
-                    "product-order",
-                    "{{orderId}}",
-                    "timeline"
-                  ]
+          "name": "🔒 Actualizar Comentario (PATCH /product-comment/:id)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{backendBaseUrl}}/product-comment/:id",
+              "host": [
+                "{{backendBaseUrl}}"
+              ],
+              "path": [
+                "product-comment",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{id}}"
                 }
-              },
-              "response": []
+              ]
             },
-            {
-              "name": "Get Shipment History by Tracking",
-              "request": {
-                "method": "GET",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  },
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{accessToken}}"
-                  }
-                ],
-                "url": {
-                  "raw": "{{backendBaseUrl}}/shipments/{{tracking_number}}/history",
-                  "host": [
-                    "{{backendBaseUrl}}"
-                  ],
-                  "path": [
-                    "shipments",
-                    "{{tracking_number}}",
-                    "history"
-                  ]
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
                 }
-              },
-              "response": []
+              ]
             },
-            {
-              "name": "Get Shipment History by Sensor",
-              "request": {
-                "method": "GET",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  },
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{accessToken}}"
-                  }
-                ],
-                "url": {
-                  "raw": "{{backendBaseUrl}}/shipments/sensor/{{sensor_id}}/history",
-                  "host": [
-                    "{{backendBaseUrl}}"
-                  ],
-                  "path": [
-                    "shipments",
-                    "sensor",
-                    "{{sensor_id}}",
-                    "history"
-                  ]
-                }
-              },
-              "response": []
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
             }
-          ]
+          },
+          "response": []
         },
         {
-          "name": "Blockchain Notary",
-          "item": [
-            {
-              "name": "Webhook Receiver",
-              "request": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  },
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{accessToken}}"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{}"
-                },
-                "url": {
-                  "raw": "{{backendBaseUrl}}/blockchain/webhook",
-                  "host": [
-                    "{{backendBaseUrl}}"
-                  ],
-                  "path": [
-                    "blockchain",
-                    "webhook"
-                  ]
+          "name": "🔒 Eliminar Comentario (DELETE /product-comment/:id)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{backendBaseUrl}}/product-comment/:id",
+              "host": [
+                "{{backendBaseUrl}}"
+              ],
+              "path": [
+                "product-comment",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{id}}"
                 }
-              },
-              "response": []
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
             }
-          ]
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "💬 Order Chat",
+      "item": [
+        {
+          "name": "🔒 Enviar Mensaje a Chat de Orden (POST /order-chat)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{backendBaseUrl}}/order-chat",
+              "host": [
+                "{{backendBaseUrl}}"
+              ],
+              "path": [
+                "order-chat"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "response": []
         },
         {
-          "name": "Tribe Advanced Flows",
-          "item": [
-            {
-              "name": "Request Tribe Creation",
-              "request": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  },
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{accessToken}}"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{}"
-                },
-                "url": {
-                  "raw": "{{backendBaseUrl}}/tribe/request-creation",
-                  "host": [
-                    "{{backendBaseUrl}}"
-                  ],
-                  "path": [
-                    "tribe",
-                    "request-creation"
-                  ]
+          "name": "🔒 Ver Chat de Orden (GET /order-chat/:orderId)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{backendBaseUrl}}/order-chat/:orderId",
+              "host": [
+                "{{backendBaseUrl}}"
+              ],
+              "path": [
+                "order-chat",
+                ":orderId"
+              ],
+              "variable": [
+                {
+                  "key": "orderId",
+                  "value": "{{orderId}}"
                 }
-              },
-              "response": []
+              ]
             },
-            {
-              "name": "Review Tribe Creation (Admin)",
-              "request": {
-                "method": "PATCH",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  },
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{accessToken}}"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{}"
-                },
-                "url": {
-                  "raw": "{{backendBaseUrl}}/tribe/{{tribeId}}/review-creation",
-                  "host": [
-                    "{{backendBaseUrl}}"
-                  ],
-                  "path": [
-                    "tribe",
-                    "{{tribeId}}",
-                    "review-creation"
-                  ]
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
                 }
-              },
-              "response": []
-            },
-            {
-              "name": "Request Membership",
-              "request": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  },
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{accessToken}}"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{}"
-                },
-                "url": {
-                  "raw": "{{backendBaseUrl}}/tribe/{{tribeId}}/request-membership",
-                  "host": [
-                    "{{backendBaseUrl}}"
-                  ],
-                  "path": [
-                    "tribe",
-                    "{{tribeId}}",
-                    "request-membership"
-                  ]
-                }
-              },
-              "response": []
-            },
-            {
-              "name": "Review Membership (Leader)",
-              "request": {
-                "method": "PATCH",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  },
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{accessToken}}"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{}"
-                },
-                "url": {
-                  "raw": "{{backendBaseUrl}}/tribe/{{tribeId}}/membership/{{requestId}}/review",
-                  "host": [
-                    "{{backendBaseUrl}}"
-                  ],
-                  "path": [
-                    "tribe",
-                    "{{tribeId}}",
-                    "membership",
-                    "{{requestId}}",
-                    "review"
-                  ]
-                }
-              },
-              "response": []
-            },
-            {
-              "name": "Assign Leader",
-              "request": {
-                "method": "PATCH",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  },
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{accessToken}}"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{}"
-                },
-                "url": {
-                  "raw": "{{backendBaseUrl}}/tribe/{{tribeId}}/assign-leader",
-                  "host": [
-                    "{{backendBaseUrl}}"
-                  ],
-                  "path": [
-                    "tribe",
-                    "{{tribeId}}",
-                    "assign-leader"
-                  ]
-                }
-              },
-              "response": []
-            },
-            {
-              "name": "Remove Leader",
-              "request": {
-                "method": "DELETE",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  },
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{accessToken}}"
-                  }
-                ],
-                "url": {
-                  "raw": "{{backendBaseUrl}}/tribe/{{tribeId}}/remove-leader",
-                  "host": [
-                    "{{backendBaseUrl}}"
-                  ],
-                  "path": [
-                    "tribe",
-                    "{{tribeId}}",
-                    "remove-leader"
-                  ]
-                }
-              },
-              "response": []
-            },
-            {
-              "name": "Leave Tribe",
-              "request": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  },
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{accessToken}}"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{}"
-                },
-                "url": {
-                  "raw": "{{backendBaseUrl}}/tribe/leave",
-                  "host": [
-                    "{{backendBaseUrl}}"
-                  ],
-                  "path": [
-                    "tribe",
-                    "leave"
-                  ]
-                }
-              },
-              "response": []
-            },
-            {
-              "name": "Remove Member (Leader)",
-              "request": {
-                "method": "DELETE",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  },
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{accessToken}}"
-                  }
-                ],
-                "url": {
-                  "raw": "{{backendBaseUrl}}/tribe/{{tribeId}}/members/{{sellerId}}",
-                  "host": [
-                    "{{backendBaseUrl}}"
-                  ],
-                  "path": [
-                    "tribe",
-                    "{{tribeId}}",
-                    "members",
-                    "{{sellerId}}"
-                  ]
-                }
-              },
-              "response": []
+              ]
             }
-          ]
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🚚 Shipments & Telemetry",
+      "item": [
+        {
+          "name": "🔒 Ver Historial por Sensor (GET /shipments/sensor/:sensor_id/history)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{backendBaseUrl}}/shipments/sensor/:sensor_id/history",
+              "host": [
+                "{{backendBaseUrl}}"
+              ],
+              "path": [
+                "shipments",
+                "sensor",
+                ":sensor_id",
+                "history"
+              ],
+              "variable": [
+                {
+                  "key": "sensor_id",
+                  "value": "{{sensor_id}}"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
         },
         {
-          "name": "Otros Endpoints Faltantes",
-          "item": [
-            {
-              "name": "Get Product Category by ID",
-              "request": {
-                "method": "GET",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  },
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{accessToken}}"
-                  }
-                ],
-                "url": {
-                  "raw": "{{backendBaseUrl}}/product-category/{{id}}",
-                  "host": [
-                    "{{backendBaseUrl}}"
-                  ],
-                  "path": [
-                    "product-category",
-                    "{{id}}"
-                  ]
+          "name": "🔒 Ver Historial por Tracking (GET /shipments/:tracking_number/history)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{backendBaseUrl}}/shipments/:tracking_number/history",
+              "host": [
+                "{{backendBaseUrl}}"
+              ],
+              "path": [
+                "shipments",
+                ":tracking_number",
+                "history"
+              ],
+              "variable": [
+                {
+                  "key": "tracking_number",
+                  "value": "{{tracking_number}}"
                 }
-              },
-              "response": []
+              ]
             },
-            {
-              "name": "Get My Orders",
-              "request": {
-                "method": "GET",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  },
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{accessToken}}"
-                  }
-                ],
-                "url": {
-                  "raw": "{{backendBaseUrl}}/product-order/my-orders/{{userId}}",
-                  "host": [
-                    "{{backendBaseUrl}}"
-                  ],
-                  "path": [
-                    "product-order",
-                    "my-orders",
-                    "{{userId}}"
-                  ]
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
                 }
-              },
-              "response": []
-            },
-            {
-              "name": "Create/Update Seller",
-              "request": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  },
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{accessToken}}"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{}"
-                },
-                "url": {
-                  "raw": "{{backendBaseUrl}}/seller/{{userId}}",
-                  "host": [
-                    "{{backendBaseUrl}}"
-                  ],
-                  "path": [
-                    "seller",
-                    "{{userId}}"
-                  ]
-                }
-              },
-              "response": []
-            },
-            {
-              "name": "Get Shipping Carriers",
-              "request": {
-                "method": "GET",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  },
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{accessToken}}"
-                  }
-                ],
-                "url": {
-                  "raw": "{{backendBaseUrl}}/shipping-carriers",
-                  "host": [
-                    "{{backendBaseUrl}}"
-                  ],
-                  "path": [
-                    "shipping-carriers"
-                  ]
-                }
-              },
-              "response": []
-            },
-            {
-              "name": "Get Pending Tribe Creations (Admin)",
-              "request": {
-                "method": "GET",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  },
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{accessToken}}"
-                  }
-                ],
-                "url": {
-                  "raw": "{{backendBaseUrl}}/tribe/pending-creations",
-                  "host": [
-                    "{{backendBaseUrl}}"
-                  ],
-                  "path": [
-                    "tribe",
-                    "pending-creations"
-                  ]
-                }
-              },
-              "response": []
-            },
-            {
-              "name": "Get Tribe Membership Requests (Leader)",
-              "request": {
-                "method": "GET",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  },
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{accessToken}}"
-                  }
-                ],
-                "url": {
-                  "raw": "{{backendBaseUrl}}/tribe/{{id}}/membership-requests",
-                  "host": [
-                    "{{backendBaseUrl}}"
-                  ],
-                  "path": [
-                    "tribe",
-                    "{{id}}",
-                    "membership-requests"
-                  ]
-                }
-              },
-              "response": []
-            },
-            {
-              "name": "Get Tribe by ID",
-              "request": {
-                "method": "GET",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  },
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{accessToken}}"
-                  }
-                ],
-                "url": {
-                  "raw": "{{backendBaseUrl}}/tribe/{{id}}",
-                  "host": [
-                    "{{backendBaseUrl}}"
-                  ],
-                  "path": [
-                    "tribe",
-                    "{{id}}"
-                  ]
-                }
-              },
-              "response": []
+              ]
             }
-          ]
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "⛓️ Blockchain Notary",
+      "item": [
+        {
+          "name": "Webhook de Notario Blockchain (POST /blockchain/webhook) — Público",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{backendBaseUrl}}/blockchain/webhook",
+              "host": [
+                "{{backendBaseUrl}}"
+              ],
+              "path": [
+                "blockchain",
+                "webhook"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🚚 Shipping Carrier",
+      "item": [
+        {
+          "name": "Listar Proveedores de Envío (GET /shipping-carriers) — Público",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{backendBaseUrl}}/shipping-carriers",
+              "host": [
+                "{{backendBaseUrl}}"
+              ],
+              "path": [
+                "shipping-carriers"
+              ]
+            }
+          },
+          "response": []
         }
       ]
     }
