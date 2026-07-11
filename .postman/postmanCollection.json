@@ -2282,6 +2282,205 @@
               "response": []
             }
           ]
+        },
+        {
+          "name": "Otros Endpoints Faltantes",
+          "item": [
+            {
+              "name": "Get Product Category by ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{backendBaseUrl}}/product-category/{{id}}",
+                  "host": [
+                    "{{backendBaseUrl}}"
+                  ],
+                  "path": [
+                    "product-category",
+                    "{{id}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get My Orders",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{backendBaseUrl}}/product-order/my-orders/{{userId}}",
+                  "host": [
+                    "{{backendBaseUrl}}"
+                  ],
+                  "path": [
+                    "product-order",
+                    "my-orders",
+                    "{{userId}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Create/Update Seller",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}"
+                },
+                "url": {
+                  "raw": "{{backendBaseUrl}}/seller/{{userId}}",
+                  "host": [
+                    "{{backendBaseUrl}}"
+                  ],
+                  "path": [
+                    "seller",
+                    "{{userId}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Shipping Carriers",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{backendBaseUrl}}/shipping-carriers",
+                  "host": [
+                    "{{backendBaseUrl}}"
+                  ],
+                  "path": [
+                    "shipping-carriers"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Pending Tribe Creations (Admin)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{backendBaseUrl}}/tribe/pending-creations",
+                  "host": [
+                    "{{backendBaseUrl}}"
+                  ],
+                  "path": [
+                    "tribe",
+                    "pending-creations"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Tribe Membership Requests (Leader)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{backendBaseUrl}}/tribe/{{id}}/membership-requests",
+                  "host": [
+                    "{{backendBaseUrl}}"
+                  ],
+                  "path": [
+                    "tribe",
+                    "{{id}}",
+                    "membership-requests"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Tribe by ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{backendBaseUrl}}/tribe/{{id}}",
+                  "host": [
+                    "{{backendBaseUrl}}"
+                  ],
+                  "path": [
+                    "tribe",
+                    "{{id}}"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
         }
       ]
     }
