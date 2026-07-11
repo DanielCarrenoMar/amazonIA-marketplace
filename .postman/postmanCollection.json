@@ -318,7 +318,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\"sellerId\":\"{{sellerId}}\",\"categoryId\":{{categoryId}},\"name\":\"Collar de semillas\",\"description\":\"Hecho a mano\",\"price\":25.5,\"stockAvailable\":10}"
+          "raw": "{\r\n  \"sellerId\": \"{{sellerId}}\",\r\n  \"categoryId\": {{categoryId}},\r\n  \"name\": \"Collar de semillas\",\r\n  \"description\": \"Hecho a mano\",\r\n  \"price\": 25.5,\r\n  \"stockAvailable\": 10,\r\n  \"elaborationSteps\": [\r\n    {\r\n      \"stepNumber\": 1,\r\n      \"title\": \"Recolección\",\r\n      \"description\": \"Recolección de semillas en el bosque\",\r\n      \"mediaUrls\": [\"https://ejemplo.com/foto1.jpg\"]\r\n    },\r\n    {\r\n      \"stepNumber\": 2,\r\n      \"title\": \"Tallado\",\r\n      \"description\": \"Tallado y ensamblaje del collar\",\r\n      \"mediaUrls\": [\"https://ejemplo.com/video1.mp4\"]\r\n    }\r\n  ]\r\n}"
         },
         "url": {
           "raw": "{{backendBaseUrl}}/product",

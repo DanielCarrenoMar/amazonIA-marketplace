@@ -123,6 +123,9 @@ CREATE TABLE IF NOT EXISTS product (
     location_formatted_address  TEXT,
     location_city               VARCHAR(100),
     location_region             VARCHAR(100),
+    -- General elaboration (alternative to step-by-step)
+    elaboration_text            TEXT,
+    elaboration_media_urls      TEXT[],
     -- Audit
     created_at                  TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at                  TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -153,6 +156,32 @@ $$;
 DROP TRIGGER IF EXISTS trg_product_updated_at ON product;
 CREATE TRIGGER trg_product_updated_at
     BEFORE UPDATE ON product
+    FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
+
+
+-- ---------------------------------------------------------------------------
+-- 6.5. product_elaboration_step
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS product_elaboration_step (
+    id                          INTEGER                  GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    product_id                  UUID                     NOT NULL,
+    step_number                 INTEGER                  NOT NULL CHECK (step_number > 0),
+    title                       VARCHAR(255),
+    description                 TEXT                     NOT NULL,
+    media_urls                  TEXT[],                  -- Array of text for URLs
+    created_at                  TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at                  TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_elaboration_step_product
+        FOREIGN KEY (product_id) REFERENCES product (id) ON DELETE CASCADE,
+    CONSTRAINT uq_product_step_number UNIQUE (product_id, step_number)
+);
+
+CREATE INDEX IF NOT EXISTS idx_elaboration_step_product_id
+    ON product_elaboration_step (product_id);
+
+DROP TRIGGER IF EXISTS trg_elaboration_step_updated_at ON product_elaboration_step;
+CREATE TRIGGER trg_elaboration_step_updated_at
+    BEFORE UPDATE ON product_elaboration_step
     FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
 
 
