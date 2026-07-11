@@ -319,6 +319,7 @@ model ProductOrder {
   totalAmount       Decimal     @map("total_amount") @db.Decimal(12, 2)
   orderNotes        String?     @map("order_notes")
   trackingNumber    String?     @map("tracking_number") @db.VarChar(100)
+  sensorId          String?     @map("sensor_id") @db.VarChar(100)
   carrierId         Int?        @map("carrier_id")
   sellerRatingValue Int?        @map("seller_rating_value")
   buyerRatingValue  Int?        @map("buyer_rating_value")
@@ -338,6 +339,7 @@ model ProductOrder {
 
   @@index([buyerId])
   @@index([currentStatus])
+  @@index([sensorId])
   @@map("product_order")
 }
 
@@ -382,7 +384,7 @@ model OrderChat {
 }
 
 // ---------------------------------------------------------------------------
-// OutboxEvent  (transactional outbox — reliable Kafka publishing)
+// OutboxEvent  (transactional outbox — reliable Redis Streams publishing)
 // ---------------------------------------------------------------------------
 
 model OutboxEvent {

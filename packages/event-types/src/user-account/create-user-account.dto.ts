@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNotEmpty, IsOptional, MaxLength, IsInt, Min, IsEmail, MinLength, Matches } from 'class-validator';
 
 export class CreateUserAccountDto {
@@ -6,11 +7,13 @@ export class CreateUserAccountDto {
   @MaxLength(50)
   username?: string;
 
+  @ApiProperty({ example: 'Buyer Test' })
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
   fullName: string;
 
+  @ApiProperty({ example: 'CompradorFake3' })
   @IsString()
   @IsNotEmpty()
   @MaxLength(50)
@@ -26,6 +29,7 @@ export class CreateUserAccountDto {
   @MaxLength(100)
   nationality?: string;
 
+  @ApiProperty({ example: 'Password123!' })
   @IsString()
   @IsNotEmpty()
   @MinLength(8, { message: 'La contraseña debe tener al menos 8 caracteres' })
@@ -33,6 +37,7 @@ export class CreateUserAccountDto {
   @MaxLength(255)
   password: string; // Plain text — will be hashed by the service before saving to the database
 
+  @ApiProperty({ example: 'buyerfake3@test.com' })
   @IsEmail()
   @IsNotEmpty()
   @MaxLength(255)

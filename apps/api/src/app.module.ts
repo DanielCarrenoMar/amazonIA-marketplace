@@ -16,6 +16,7 @@ import { ShippingCarrierModule } from './shipping-carrier/shipping-carrier.modul
 import { ProductCommentModule } from './product-comment/product-comment.module';
 import { OrderChatModule } from './order-chat/order-chat.module';
 import { MessagingModule } from 'messaging';
+import { HealthModule } from './health/health.module';
 
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
@@ -49,6 +50,7 @@ import { APP_GUARD } from '@nestjs/core';
     ShippingCarrierModule,
     ProductCommentModule,
     OrderChatModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [
