@@ -199,11 +199,13 @@ export default function ProductDetailPage() {
             <div className="flex items-center gap-4 mb-6">
               <div className="flex gap-1 text-amber-400">
                 {[1, 2, 3, 4, 5].map((star) => (
-                  <Icon icon="lucide:star" key={star} className={`w-5 h-5 ${star <= 4 ? 'fill-amber-400' : 'text-gray-300 stroke-2'}`} />
+                  <Icon icon="lucide:star" key={star} className={`w-5 h-5 ${star <= Math.round(Number(product.averageRating || 0)) ? 'fill-amber-400' : 'text-gray-300 stroke-2'}`} />
                 ))}
               </div>
-              <span className="text-gray-600 font-medium">4/5</span>
-              <a href="#reviews" className="text-brand-primary hover:underline text-sm font-medium">Ver 24 Reseñas</a>
+              <span className="text-gray-600 font-medium">{Number(product.averageRating || 0).toFixed(1).replace('.0', '')}/5</span>
+              <a href="#reviews" className="text-brand-primary hover:underline text-sm font-medium">
+                {product.totalReviews > 0 ? `Ver ${product.totalReviews} Reseñas` : 'Aún no hay reseñas'}
+              </a>
             </div>
 
             <div className="flex items-end gap-3 mb-6">
@@ -214,31 +216,7 @@ export default function ProductDetailPage() {
               {product.description}
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
-              <div>
-                <Select
-                  label="Material"
-                  value={selectedMaterial}
-                  onChange={setSelectedMaterial}
-                  options={[
-                    { label: 'Algodón', value: 'Algodón' },
-                    { label: 'Seda', value: 'Seda' },
-                    { label: 'Lino', value: 'Lino' }
-                  ]}
-                />
-              </div>
-              <div>
-                <Select
-                  label="Tamaño"
-                  value={selectedSize}
-                  onChange={setSelectedSize}
-                  options={[
-                    { label: '50m', value: '50m' },
-                    { label: '100m', value: '100m' },
-                    { label: '200m', value: '200m' }
-                  ]}
-                />
-              </div>
+            <div className="mb-10 max-w-40">
               <div>
                 <label className="text-sm font-semibold text-gray-900 block mb-1.5">Cantidad</label>
                 <div className="flex items-center h-[50px] border border-gray-200 rounded-xl overflow-hidden shadow-sm bg-white">
