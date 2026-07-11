@@ -13,7 +13,7 @@ export class ProductService {
   ) {}
 
   async create(createProductDto: CreateProductDto, sellerId: string): Promise<ProductResponseDto> {
-    const { coords, ...rest } = createProductDto;
+    const { coords, elaborationSteps, ...rest } = createProductDto;
 
     // Use $transaction so we don't end up with orphaned rows if the spatial query fails
     return this.prisma.$transaction(async (tx) => {
@@ -22,6 +22,11 @@ export class ProductService {
         data: {
           ...rest,
           sellerId,
+          ...(elaborationSteps && elaborationSteps.length > 0 ? {
+            elaborationSteps: {
+              create: elaborationSteps,
+            }
+          } : {})
         },
       });
 
@@ -57,7 +62,7 @@ export class ProductService {
         where,
         skip,
         take: limit,
-        include: { seller: true, category: true },
+        include: { seller: true, category: true, elaborationSteps: { orderBy: { stepNumber: 'asc' } } },
         orderBy: { createdAt: 'desc' }, // Newest first
       }),
     ]);
@@ -126,7 +131,7 @@ export class ProductService {
         where: { sellerId },
         skip,
         take: limit,
-        include: { seller: true, category: true },
+        include: { seller: true, category: true, elaborationSteps: { orderBy: { stepNumber: 'asc' } } },
         orderBy: { createdAt: 'desc' },
       }),
     ]);
@@ -145,7 +150,7 @@ export class ProductService {
   async findOne(id: string): Promise<ProductResponseDto> {
     const product = await this.prisma.product.findUnique({
       where: { id },
-      include: { seller: true, category: true },
+      include: { seller: true, category: true, elaborationSteps: { orderBy: { stepNumber: 'asc' } } },
     });
 
     if (!product) throw new NotFoundException(`Product with ID ${id} not found`);
@@ -165,9 +170,21 @@ export class ProductService {
       delete updateProductDto.sellerId;
     }
 
+    // Handle elaboration steps if provided
+    const { elaborationSteps, ...rest } = updateProductDto;
+
     return this.prisma.product.update({
       where: { id },
-      data: updateProductDto,
+      data: {
+        ...rest,
+        ...(elaborationSteps ? {
+          elaborationSteps: {
+            deleteMany: {},
+            create: elaborationSteps,
+          }
+        } : {})
+      },
+      include: { elaborationSteps: { orderBy: { stepNumber: 'asc' } } },
     });
   }
 
