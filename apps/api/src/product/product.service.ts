@@ -170,20 +170,12 @@ export class ProductService {
       delete updateProductDto.sellerId;
     }
 
-    // Handle elaboration steps if provided
+    // Elaboration steps are now managed via dedicated ProductElaborationController
     const { elaborationSteps, ...rest } = updateProductDto;
 
     return this.prisma.product.update({
       where: { id },
-      data: {
-        ...rest,
-        ...(elaborationSteps ? {
-          elaborationSteps: {
-            deleteMany: {},
-            create: elaborationSteps,
-          }
-        } : {})
-      },
+      data: rest,
       include: { elaborationSteps: { orderBy: { stepNumber: 'asc' } } },
     });
   }

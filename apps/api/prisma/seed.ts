@@ -261,7 +261,8 @@ async function main() {
         // General elaboration description
         elaborationText: 'El casabe se elabora a partir de la yuca amarga, que se pela, se ralla, se exprime para sacarle el yare (jugo tóxico) y luego se tuesta en un budare.',
         elaborationMediaUrls: [
-          'https://iqkevgyeyoixwhmcptgq.supabase.co/storage/v1/object/public/amazonia-marketplace/casabe/casabe-DSC1560.jpg'
+          'https://iqkevgyeyoixwhmcptgq.supabase.co/storage/v1/object/public/amazonia-marketplace/casabe/casabe-DSC1560.jpg',
+          'https://iqkevgyeyoixwhmcptgq.supabase.co/storage/v1/object/public/amazonia-marketplace/casabe/WhatsApp_Image_2026-06-09_at_12.03.51_PM.jpeg'
         ],
 
         // Step-by-step elaboration
@@ -277,7 +278,7 @@ async function main() {
               stepNumber: 2,
               title: 'Rallado',
               description: 'La yuca se ralla para formar una masa húmeda.',
-              mediaUrls: ['https://iqkevgyeyoixwhmcptgq.supabase.co/storage/v1/object/public/amazonia-marketplace/casabe/Secando_casabe.jpg']
+              mediaUrls: ['https://iqkevgyeyoixwhmcptgq.supabase.co/storage/v1/object/public/amazonia-marketplace/casabe/WhatsApp_Image_2026-06-09_at_12.03.51_PM.jpeg']
             },
             {
               stepNumber: 3,
@@ -289,7 +290,7 @@ async function main() {
               stepNumber: 4,
               title: 'Tostado en budare',
               description: 'La masa seca se extiende en forma circular sobre un budare caliente hasta que quede crujiente.',
-              mediaUrls: ['https://iqkevgyeyoixwhmcptgq.supabase.co/storage/v1/object/public/amazonia-marketplace/casabe/Como_Hacer_CASABE.mp4']
+              mediaUrls: ['https://iqkevgyeyoixwhmcptgq.supabase.co/storage/v1/object/public/amazonia-marketplace/casabe/WhatsApp_Video_2026-06-23_at_2.01.48_PM.mp4']
             }
           ]
         }

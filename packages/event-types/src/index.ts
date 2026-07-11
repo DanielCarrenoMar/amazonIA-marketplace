@@ -63,6 +63,8 @@ export * from './product/find-products.dto';
 export * from './product/location-coords.dto';
 export * from './product/update-product.dto';
 export * from './product/product-response.dto';
+export * from './product/create-elaboration-step.dto';
+export * from './product/update-elaboration-step.dto';
 export * from './product-category/create-product-category.dto';
 export * from './product-category/update-product-category.dto';
 export * from './product-category/product-category-response.dto';

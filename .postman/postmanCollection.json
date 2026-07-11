@@ -1,494 +1,2646 @@
 {
   "info": {
-    "_postman_id": "a4c5cf7d-42e1-4ab2-904a-bbf9e5574b47",
-    "name": "AmazonIA Flow",
+    "_postman_id": "bdc24beb-7dba-4434-b6fe-5743f05f5b4c",
+    "name": "AmazonIA Marketplace API",
+    "description": "Colección completa del backend — Roles y Ownership aplicados.\n\n**Usuarios de prueba (Password: Password123!)**\n- 👑 Admin: admin@amazonia.com\n- 🏪 Vendedor 1 (Electrónica): vendedor1@amazonia.com\n- 🏪 Vendedor 2 (Moda): vendedor2@amazonia.com\n- 🛒 Comprador: comprador@amazonia.com\n\n**Setup:**\n1. Ejecuta el Login del rol que necesites — el token se guarda solo.\n2. Rutas 🔒 requieren el accessToken correspondiente.\n\n**Roles:**\n- BUYER: puede comprar, calificar productos, ver sus órdenes.\n- SELLER: puede crear/editar sus productos, subir imágenes, ver sus órdenes.\n- ADMIN: acceso completo a todos los endpoints protegidos.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_exporter_id": "54390240",
-    "_collection_link": "https://go.postman.co/collection/54390240-a4c5cf7d-42e1-4ab2-904a-bbf9e5574b47?source=collection_link"
+    "_exporter_id": "54140480",
+    "_collection_link": "https://go.postman.co/collection/54140480-bdc24beb-7dba-4434-b6fe-5743f05f5b4c?source=collection_link"
   },
   "item": [
     {
-      "name": "Auth - Register Buyer",
-      "event": [
+      "name": "🔑 Auth",
+      "item": [
         {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "const json = pm.response.json();",
-              "pm.environment.set('accessToken', json.accessToken);",
-              "pm.environment.set('userId', json.user.id);"
-            ],
-            "type": "text/javascript",
-            "packages": {},
-            "requests": {}
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"fullName\":\"Buyer Test\",\"nationalId\":\"CompradorFake3\",\"password\":\"Password123!\",\"email\":\"buyerfake3@test.com\"}"
-        },
-        "url": {
-          "raw": "{{backendBaseUrl}}/auth/register",
-          "host": [
-            "{{backendBaseUrl}}"
-          ],
-          "path": [
-            "auth",
-            "register"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Auth - Register Seller (User)",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "const json = pm.response.json();",
-              "pm.environment.set('sellerAccessToken', json.accessToken);",
-              "pm.environment.set('sellerId', json.user.id);"
-            ],
-            "type": "text/javascript",
-            "packages": {},
-            "requests": {}
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"fullName\":\"Seller Test\",\"nationalId\":\"SellerFake3\",\"password\":\"Password123!\",\"email\":\"sellerfake3@test.com\"}"
-        },
-        "url": {
-          "raw": "{{backendBaseUrl}}/auth/register",
-          "host": [
-            "{{backendBaseUrl}}"
-          ],
-          "path": [
-            "auth",
-            "register"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "User - Promote Seller (dev)",
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          },
-          {
-            "key": "x-dev-key",
-            "value": "{{devRoleKey}}"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{}"
-        },
-        "url": {
-          "raw": "{{backendBaseUrl}}/user-account/{{sellerId}}/make-seller",
-          "host": [
-            "{{backendBaseUrl}}"
-          ],
-          "path": [
-            "user-account",
-            "{{sellerId}}",
-            "make-seller"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Auth - Login Seller",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "const json = pm.response.json();\r",
-              "pm.environment.set('sellerAccessToken', json.accessToken);\r",
-              "pm.environment.set('sellerId', json.user.id);"
-            ],
-            "type": "text/javascript",
-            "packages": {},
-            "requests": {}
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\r\n  \"email\": \"sellerfake3@test.com\",\r\n  \"password\": \"Password123!\"\r\n}",
-          "options": {
-            "raw": {
-              "language": "json"
+          "name": "Login (Comprador) ← EMPIEZA AQUÍ",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.accessToken) {",
+                  "  pm.collectionVariables.set('accessToken', res.accessToken);",
+                  "  console.log('✅ accessToken guardado automáticamente');",
+                  "}",
+                  "if (res.user && res.user.id) {",
+                  "  pm.collectionVariables.set('buyerUserId', res.user.id);",
+                  "  console.log('✅ buyerUserId guardado: ' + res.user.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
             }
-          }
-        },
-        "url": {
-          "raw": "{{backendBaseUrl}}/auth/login",
-          "host": [
-            "{{backendBaseUrl}}"
           ],
-          "path": [
-            "auth",
-            "login"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Auth - Login Buyer",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "const json = pm.response.json();\r",
-              "pm.environment.set('accessToken', json.accessToken);\r",
-              "pm.environment.set('userId', json.user.id);"
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
-            "type": "text/javascript",
-            "packages": {},
-            "requests": {}
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json",
-            "type": "text"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\r\n  \"email\": \"buyerfake3@test.com\",\r\n  \"password\": \"Password123!\"\r\n}",
-          "options": {
-            "raw": {
-              "language": "json"
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"comprador@amazonia.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Login como comprador. Guarda automáticamente `accessToken` y `buyerUserId`."
+          },
+          "response": []
+        },
+        {
+          "name": "Login (Vendedor 1 - Electrónica)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.accessToken) {",
+                  "  pm.collectionVariables.set('accessToken', res.accessToken);",
+                  "  console.log('✅ accessToken guardado automáticamente');",
+                  "}",
+                  "if (res.user && res.user.id) {",
+                  "  pm.collectionVariables.set('sellerUserId', res.user.id);",
+                  "  console.log('✅ sellerUserId guardado: ' + res.user.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
             }
-          }
-        },
-        "url": {
-          "raw": "{{backendBaseUrl}}/auth/login",
-          "host": [
-            "{{backendBaseUrl}}"
           ],
-          "path": [
-            "auth",
-            "login"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Seller - Create (requires JWT)",
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          },
-          {
-            "key": "Authorization",
-            "value": "Bearer {{sellerAccessToken}}"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\r\n  \"id\": \"{{sellerId}}\",\r\n  \"description\": \"Vendedor de prueba\"\r\n}"
-        },
-        "url": {
-          "raw": "{{backendBaseUrl}}/seller",
-          "host": [
-            "{{backendBaseUrl}}"
-          ],
-          "path": [
-            "seller"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "ProductCategory - Create",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "const json = pm.response.json();",
-              "pm.environment.set('categoryId', json.id);"
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
-            "type": "text/javascript"
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"vendedor1@amazonia.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Login como Vendedor 1. Guarda automáticamente `accessToken` y `sellerUserId`."
           },
-          {
-            "key": "Authorization",
-            "value": "Bearer {{sellerAccessToken}}"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"categoryName\":\"Artesanias\",\"subcategoryName\":\"Madera\"}"
+          "response": []
         },
-        "url": {
-          "raw": "{{backendBaseUrl}}/product-category",
-          "host": [
-            "{{backendBaseUrl}}"
-          ],
-          "path": [
-            "product-category"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Product - Create (SELLER role required)",
-      "event": [
         {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "const json = pm.response.json();",
-              "pm.environment.set('productId', json.id);"
-            ],
-            "type": "text/javascript"
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          },
-          {
-            "key": "Authorization",
-            "value": "Bearer {{sellerAccessToken}}"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\r\n  \"sellerId\": \"{{sellerId}}\",\r\n  \"categoryId\": {{categoryId}},\r\n  \"name\": \"Collar de semillas\",\r\n  \"description\": \"Hecho a mano\",\r\n  \"price\": 25.5,\r\n  \"stockAvailable\": 10,\r\n  \"elaborationText\": \"El collar se elabora recolectando semillas y tallándolas a mano.\",\r\n  \"elaborationMediaUrls\": [\r\n    \"https://ejemplo.com/general1.jpg\",\r\n    \"https://ejemplo.com/general2.mp4\"\r\n  ],\r\n  \"elaborationSteps\": [\r\n    {\r\n      \"stepNumber\": 1,\r\n      \"title\": \"Recolección\",\r\n      \"description\": \"Recolección de semillas en el bosque\",\r\n      \"mediaUrls\": [\"https://ejemplo.com/foto1.jpg\"]\r\n    },\r\n    {\r\n      \"stepNumber\": 2,\r\n      \"title\": \"Tallado\",\r\n      \"description\": \"Tallado y ensamblaje del collar\",\r\n      \"mediaUrls\": [\"https://ejemplo.com/video1.mp4\"]\r\n    }\r\n  ]\r\n}"
-        },
-        "url": {
-          "raw": "{{backendBaseUrl}}/product",
-          "host": [
-            "{{backendBaseUrl}}"
+          "name": "Login (Vendedor 2 - Moda)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.accessToken) {",
+                  "  pm.collectionVariables.set('accessToken', res.accessToken);",
+                  "  console.log('✅ accessToken guardado automáticamente');",
+                  "}",
+                  "if (res.user && res.user.id) {",
+                  "  pm.collectionVariables.set('sellerUserId', res.user.id);",
+                  "  console.log('✅ sellerUserId guardado: ' + res.user.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
           ],
-          "path": [
-            "product"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Order - Create",
-      "event": [
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"vendedor2@amazonia.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Login como Vendedor 2 (José Rodríguez)."
+          },
+          "response": []
+        },
         {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "const json = pm.response.json();",
-              "pm.environment.set('orderId', json.id);"
+          "name": "Login (Administrador)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.accessToken) {",
+                  "  pm.collectionVariables.set('accessToken', res.accessToken);",
+                  "  console.log('✅ accessToken guardado automáticamente');",
+                  "}",
+                  "if (res.user && res.user.id) {",
+                  "  pm.collectionVariables.set('adminUserId', res.user.id);",
+                  "  console.log('✅ adminUserId guardado: ' + res.user.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
-            "type": "text/javascript"
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@amazonia.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Login como Administrador (Role: ADMIN). Guarda automáticamente `accessToken` y `adminUserId`."
           },
-          {
-            "key": "Authorization",
-            "value": "Bearer {{accessToken}}"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"productId\":\"{{productId}}\",\"quantity\":1,\"totalAmount\":25.5,\"orderNotes\":\"Compra de prueba\"}"
+          "response": []
         },
-        "url": {
-          "raw": "{{backendBaseUrl}}/product-order",
-          "host": [
-            "{{backendBaseUrl}}"
-          ],
-          "path": [
-            "product-order"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Order - Pay (set PAID)",
-      "request": {
-        "method": "PATCH",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
+        {
+          "name": "Register (Nuevo Usuario)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Ana Martínez\",\n  \"nationalId\": \"V-44444444\",\n  \"email\": \"ana@amazonia.com\",\n  \"password\": \"Password123!\",\n  \"username\": \"anamtz\",\n  \"age\": 25,\n  \"nationality\": \"Venezolana\",\n  \"phonePrimary\": \"+58 412 9999999\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "description": "Crea un nuevo usuario y devuelve tokens de inmediato. Ruta pública."
           },
-          {
-            "key": "Authorization",
-            "value": "Bearer {{accessToken}}"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\"currentStatus\":\"PAID\",\"statusNote\":\"Pago confirmado\"}"
+          "response": []
         },
-        "url": {
-          "raw": "{{backendBaseUrl}}/product-order/{{orderId}}",
-          "host": [
-            "{{backendBaseUrl}}"
-          ],
-          "path": [
-            "product-order",
-            "{{orderId}}"
-          ]
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"<pega_el_refreshToken_aqui>\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "refresh"
+              ]
+            },
+            "description": "Acepta un refreshToken válido (7d) y devuelve un nuevo par de tokens (rotación)."
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Logout (POST /auth/logout)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"colocar_el_refresh_token_aqui\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Acepta un refreshToken válido (7d) y devuelve un nuevo par de tokens (rotación)."
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Mi Perfil (GET /auth/me)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Devuelve el payload del JWT del usuario autenticado."
+          },
+          "response": []
         }
-      },
-      "response": []
+      ]
     },
     {
-      "name": "Notary - Status",
-      "request": {
-        "method": "GET",
-        "header": [
-          {
-            "key": "x-api-key",
-            "value": "{{apiKey}}"
-          }
-        ],
-        "url": {
-          "raw": "{{notaryBaseUrl}}/transactions/status/{{orderId}}",
-          "host": [
-            "{{notaryBaseUrl}}"
-          ],
-          "path": [
-            "transactions",
-            "status",
-            "{{orderId}}"
-          ]
+      "name": "👤 User Account",
+      "item": [
+        {
+          "name": "Crear Usuario (POST /user-account) — Público",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Carlos Pérez\",\n  \"nationalId\": \"V-55555555\",\n  \"email\": \"carlos@amazonia.com\",\n  \"password\": \"Password123!\",\n  \"username\": \"carlosperez\",\n  \"age\": 32,\n  \"nationality\": \"Venezolana\",\n  \"phonePrimary\": \"+58 414 1234567\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/user-account",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "user-account"
+              ]
+            },
+            "description": "Crea un UserAccount directamente sin token. Useful para tests de registro manual."
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Listar Todos los Usuarios (GET /user-account) — Solo ADMIN",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/user-account?page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "user-account"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Requiere token de ADMIN. Devuelve todos los usuarios sin passwordHash."
+          },
+          "response": []
+        },
+        {
+          "name": "Ver Usuario por ID (GET /user-account/:id) — Público",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/user-account/{{buyerUserId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "user-account",
+                "{{buyerUserId}}"
+              ]
+            },
+            "description": "Usa la variable {{buyerUserId}} guardada al hacer Login (Comprador)."
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Actualizar Usuario (PATCH /user-account/:id)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phonePrimary\": \"+58 412 9876543\",\n  \"locationCity\": \"Maracaibo\",\n  \"locationRegion\": \"Zulia\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/user-account/{{buyerUserId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "user-account",
+                "{{buyerUserId}}"
+              ]
+            },
+            "description": "Requiere token. Solo el mismo usuario o un ADMIN pueden editar la cuenta."
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Cambiar Contraseña (PATCH /user-account/:id/password)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"myOldPassword1\",\n  \"newPassword\": \"MyNewPassword123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/user-account/{{buyerUserId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "user-account",
+                "{{buyerUserId}}",
+                "password"
+              ]
+            },
+            "description": "Requiere token. Solo el mismo usuario o un ADMIN pueden editar la cuenta."
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Eliminar Usuario (DELETE /user-account/:id)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/user-account/{{buyerUserId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "user-account",
+                "{{buyerUserId}}"
+              ]
+            },
+            "description": "Requiere token (ADMIN). Solo ADMIN puede eliminar."
+          },
+          "response": []
         }
-      },
-      "response": []
-    }
-  ],
-  "event": [
-    {
-      "listen": "prerequest",
-      "script": {
-        "type": "text/javascript",
-        "packages": {},
-        "requests": {},
-        "exec": [
-          ""
-        ]
-      }
+      ]
     },
     {
-      "listen": "test",
-      "script": {
-        "type": "text/javascript",
-        "packages": {},
-        "requests": {},
-        "exec": [
-          ""
-        ]
-      }
+      "name": "🏘️ Tribe",
+      "item": [
+        {
+          "name": "🔒 Crear Tribu (POST /tribe)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.id) {",
+                  "  pm.collectionVariables.set('tribeId', String(res.id));",
+                  "  console.log('✅ tribeId guardado: ' + res.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Tribu Comida\",\n  \"description\": \"Vendedores de alimentos y bebidas artesanales\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tribe",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tribe"
+              ]
+            },
+            "description": "Requiere token (ADMIN)."
+          },
+          "response": []
+        },
+        {
+          "name": "Listar Tribus (GET /tribe) — Público",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tribe?page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tribe"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ver Tribu por ID (GET /tribe/:id) — Público",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tribe/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tribe",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Actualizar Tribu (PATCH /tribe/:id)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Tribu Tecnología\",\n  \"description\": \"Descripción actualizada de la tribu\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tribe/{{tribeId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tribe",
+                "{{tribeId}}"
+              ]
+            },
+            "description": "Requiere token (ADMIN)."
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Eliminar Tribu (DELETE /tribe/:id)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tribe/{{tribeId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tribe",
+                "{{tribeId}}"
+              ]
+            },
+            "description": "Requiere token (ADMIN)."
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Solicitar Creación de Tribu (POST /tribe/request-creation)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tribe/request-creation",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tribe",
+                "request-creation"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Revisar Creación de Tribu (PATCH /tribe/:id/review-creation)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tribe/:id/review-creation",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tribe",
+                ":id",
+                "review-creation"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{id}}"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Solicitar Membresía a Tribu (POST /tribe/:id/request-membership)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tribe/:id/request-membership",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tribe",
+                ":id",
+                "request-membership"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{id}}"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Revisar Membresía de Tribu (PATCH /tribe/:id/membership/:requestId/review)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tribe/:id/membership/:requestId/review",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tribe",
+                ":id",
+                "membership",
+                ":requestId",
+                "review"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{id}}"
+                },
+                {
+                  "key": "requestId",
+                  "value": "{{requestId}}"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Asignar Líder de Tribu (PATCH /tribe/:id/assign-leader)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tribe/:id/assign-leader",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tribe",
+                ":id",
+                "assign-leader"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{id}}"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Remover Líder de Tribu (DELETE /tribe/:id/remove-leader)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tribe/:id/remove-leader",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tribe",
+                ":id",
+                "remove-leader"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{id}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Abandonar Tribu (POST /tribe/leave)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tribe/leave",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tribe",
+                "leave"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Expulsar Miembro de Tribu (DELETE /tribe/:id/members/:sellerId)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tribe/:id/members/:sellerId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tribe",
+                ":id",
+                "members",
+                ":sellerId"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{id}}"
+                },
+                {
+                  "key": "sellerId",
+                  "value": "{{sellerId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Ver Creaciones Pendientes (GET /tribe/pending-creations)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tribe/pending-creations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tribe",
+                "pending-creations"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Ver Solicitudes de Membresía (GET /tribe/:id/membership-requests)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/tribe/:id/membership-requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tribe",
+                ":id",
+                "membership-requests"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{id}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🏪 Seller",
+      "item": [
+        {
+          "name": "🔒 Auto-Registrar Vendedor (POST /seller/register-me)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tribeId\": 1,\n  \"description\": \"Soy un nuevo vendedor que se auto-registra.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/seller/register-me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "seller",
+                "register-me"
+              ]
+            },
+            "description": "Requiere token. Extrae el ID del JWT y promueve al usuario actual a SELLER. No requiere enviar el ID en el body."
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Crear Perfil de Vendedor (Admin) (POST /seller)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"{{buyerUserId}}\",\n  \"tribeId\": 1,\n  \"description\": \"Vendo artículos de tecnología y gadgets importados.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/seller",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "seller"
+              ]
+            },
+            "description": "Requiere token (ADMIN). Permite a un administrador promover a cualquier usuario a vendedor especificando su ID en el body."
+          },
+          "response": []
+        },
+        {
+          "name": "Listar Vendedores (GET /seller) — Público",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/seller",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "seller"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ver Vendedor por ID (GET /seller/:id) — Público",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/seller/{{sellerUserId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "seller",
+                "{{sellerUserId}}"
+              ]
+            },
+            "description": "El ID del seller es el mismo UUID del UserAccount."
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Actualizar Vendedor (PATCH /seller/:id)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Descripción actualizada del vendedor.\",\n  \"tribeId\": 2\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/seller/{{sellerUserId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "seller",
+                "{{sellerUserId}}"
+              ]
+            },
+            "description": "Requiere token (ADMIN)."
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Eliminar Vendedor (DELETE /seller/:id)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/seller/{{sellerUserId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "seller",
+                "{{sellerUserId}}"
+              ]
+            },
+            "description": "Requiere token (ADMIN)."
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Crear/Actualizar Vendedor (POST /seller/:userId)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/seller/:userId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "seller",
+                ":userId"
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📦 Product Category",
+      "item": [
+        {
+          "name": "🔒 Crear Categoría (POST /product-category)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.id) {",
+                  "  pm.collectionVariables.set('categoryId', String(res.id));",
+                  "  console.log('✅ categoryId guardado: ' + res.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"categoryName\": \"Hogar\",\n  \"subcategoryName\": \"Muebles\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/product-category",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-category"
+              ]
+            },
+            "description": "Requiere token (ADMIN)."
+          },
+          "response": []
+        },
+        {
+          "name": "Listar Categorías (GET /product-category) — Público",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/product-category?page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-category"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ver Categoría por ID (GET /product-category/:id) — Público",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/product-category/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-category",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Actualizar Categoría (PATCH /product-category/:id)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subcategoryName\": \"Smartphones\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/product-category/{{categoryId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-category",
+                "{{categoryId}}"
+              ]
+            },
+            "description": "Requiere token (ADMIN)."
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Eliminar Categoría (DELETE /product-category/:id)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/product-category/{{categoryId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-category",
+                "{{categoryId}}"
+              ]
+            },
+            "description": "Requiere token (ADMIN)."
+          },
+          "response": []
+        },
+        {
+          "name": "Ver Categoría por ID (GET /product-category/:id) — Público",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/product-category/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-category",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{id}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🛒 Product",
+      "item": [
+        {
+          "name": "Crear Producto (con elaboración)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.id) {",
+                  "  pm.collectionVariables.set('productId', res.id);",
+                  "  console.log('✅ productId guardado: ' + res.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sellerId\": \"{{sellerId}}\",\n  \"categoryId\": {{categoryId}},\n  \"name\": \"Casabe Artesanal\",\n  \"description\": \"Casabe fresco y crujiente, elaborado tradicionalmente a base de yuca amarga.\",\n  \"price\": 15,\n  \"stockAvailable\": 100,\n  \"elaborationText\": \"El casabe se elabora a partir de la yuca amarga, que se pela, se ralla, se exprime para sacarle el yare (jugo tóxico) y luego se tuesta en un budare.\",\n  \"elaborationMediaUrls\": [\n    \"https://iqkevgyeyoixwhmcptgq.supabase.co/storage/v1/object/public/amazonia-marketplace/casabe/casabe-DSC1560.jpg\",\n    \"https://iqkevgyeyoixwhmcptgq.supabase.co/storage/v1/object/public/amazonia-marketplace/casabe/WhatsApp_Image_2026-06-09_at_12.03.51_PM.jpeg\"\n  ],\n  \"elaborationSteps\": [\n    {\n      \"stepNumber\": 1,\n      \"title\": \"Recolección y pelado de la yuca\",\n      \"description\": \"Se extrae la yuca de la tierra, se lava y se pela cuidadosamente.\",\n      \"mediaUrls\": [\n        \"https://iqkevgyeyoixwhmcptgq.supabase.co/storage/v1/object/public/amazonia-marketplace/casabe/casabe-DSC1560.jpg\"\n      ]\n    },\n    {\n      \"stepNumber\": 2,\n      \"title\": \"Rallado\",\n      \"description\": \"La yuca se ralla para formar una masa húmeda.\",\n      \"mediaUrls\": [\n        \"https://iqkevgyeyoixwhmcptgq.supabase.co/storage/v1/object/public/amazonia-marketplace/casabe/WhatsApp_Image_2026-06-09_at_12.03.51_PM.jpeg\"\n      ]\n    },\n    {\n      \"stepNumber\": 3,\n      \"title\": \"Prensado en el sebucán\",\n      \"description\": \"Se exprime la masa en el sebucán para extraer todo el líquido tóxico (yare).\",\n      \"mediaUrls\": [\n        \"https://iqkevgyeyoixwhmcptgq.supabase.co/storage/v1/object/public/amazonia-marketplace/casabe/Secando_casabe.jpg\"\n      ]\n    },\n    {\n      \"stepNumber\": 4,\n      \"title\": \"Tostado en budare\",\n      \"description\": \"La masa seca se extiende en forma circular sobre un budare caliente hasta que quede crujiente.\",\n      \"mediaUrls\": [\n        \"https://iqkevgyeyoixwhmcptgq.supabase.co/storage/v1/object/public/amazonia-marketplace/casabe/WhatsApp_Video_2026-06-23_at_2.01.48_PM.mp4\"\n      ]\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/product",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product"
+              ]
+            },
+            "description": "Requiere token de Vendedor. Primero haz Login (Vendedor 1) para tener `sellerUserId` y `accessToken`."
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Mis Productos (GET /product/my-products) — Solo SELLER",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/product/my-products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product",
+                "my-products"
+              ]
+            },
+            "description": "Devuelve los productos del seller autenticado. Requiere token de SELLER. Los admins pueden usar GET /product?sellerId=<uuid>."
+          },
+          "response": []
+        },
+        {
+          "name": "Listar Productos (GET /product) — Público",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/product?page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar Productos por Nombre (GET /product?search=) — Público",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/product?search=Samsung&page=1&limit=5",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "Samsung"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Filtrar por Categoría (GET /product?categoryId=) — Público",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/product?categoryId=1&page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product"
+              ],
+              "query": [
+                {
+                  "key": "categoryId",
+                  "value": "1"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Filtrar por Vendedor (GET /product?sellerId=) — Público",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/product?sellerId={{sellerUserId}}&page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product"
+              ],
+              "query": [
+                {
+                  "key": "sellerId",
+                  "value": "{{sellerUserId}}"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Filtra todos los productos de un seller por su UUID. Útil para admins que quieran inspeccionar el catálogo de un vendedor."
+          },
+          "response": []
+        },
+        {
+          "name": "Productos Cercanos — PostGIS (GET /product/nearby) — Público",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/product/nearby?lat=10.4985&lng=-66.8792&radiusKm=50",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product",
+                "nearby"
+              ],
+              "query": [
+                {
+                  "key": "lat",
+                  "value": "10.4985"
+                },
+                {
+                  "key": "lng",
+                  "value": "-66.8792"
+                },
+                {
+                  "key": "radiusKm",
+                  "value": "50"
+                }
+              ]
+            },
+            "description": "Busca productos en un radio de 50 km desde Caracas (lat: 10.4985, lng: -66.8792). NOTA: la ruta `/nearby` debe quedar ANTES de `/:id` en el router de NestJS."
+          },
+          "response": []
+        },
+        {
+          "name": "Ver Producto por ID (GET /product/:id) — Público",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/product/{{productId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product",
+                "{{productId}}"
+              ]
+            },
+            "description": "Usa {{productId}} guardado al crear un producto."
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Actualizar Producto (PATCH /product/:id)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 229.99,\n  \"stockAvailable\": 18\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/product/{{productId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product",
+                "{{productId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Eliminar Producto (DELETE /product/:id)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/product/{{productId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product",
+                "{{productId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Subir Imagen de Producto (POST /product/:id/image)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "value": null
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/product/{{productId}}/image",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product",
+                "{{productId}}",
+                "image"
+              ]
+            },
+            "description": "Sube y optimiza una imagen (WebP, 800px) para el producto. Requiere token de Vendedor/Admin."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "⚙️ Product Elaboration",
+      "item": [
+        {
+          "name": "🔒 Añadir Paso de Elaboración (POST /product/:productId/elaboration-step)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/product/:productId/elaboration-step",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product",
+                ":productId",
+                "elaboration-step"
+              ],
+              "variable": [
+                {
+                  "key": "productId",
+                  "value": "{{productId}}"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stepNumber\": 5,\n  \"title\": \"Empaquetado\",\n  \"description\": \"El casabe se envuelve en hojas frescas o papel ecológico para preservar su crujencia.\",\n  \"mediaUrls\": []\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Actualizar Paso (PATCH /product/elaboration-step/:id)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/product/elaboration-step/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product",
+                "elaboration-step",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{id}}"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Empaquetado Ecológico\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Borrar Paso (DELETE /product/elaboration-step/:id)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/product/elaboration-step/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product",
+                "elaboration-step",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{id}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "⭐ Product Rating",
+      "item": [
+        {
+          "name": "🔒 Crear Rating (POST /product-rating)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"{{productId}}\",\n  \"ratingValue\": 5\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/product-rating",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-rating"
+              ]
+            },
+            "description": "El `userAccountId` se extrae del JWT (no se envía en el body). Califica del 1 al 5."
+          },
+          "response": []
+        },
+        {
+          "name": "Listar Ratings (GET /product-rating) — Público",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/product-rating",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-rating"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ver Rating de un Usuario en un Producto (GET /product-rating/:productId/:userAccountId) — Público",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/product-rating/{{productId}}/{{buyerUserId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-rating",
+                "{{productId}}",
+                "{{buyerUserId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Actualizar Rating (PATCH /product-rating/:productId)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ratingValue\": 4\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/product-rating/{{productId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-rating",
+                "{{productId}}"
+              ]
+            },
+            "description": "El `userAccountId` se extrae del JWT. Solo actualiza el rating del usuario autenticado."
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Eliminar Rating (DELETE /product-rating/:productId)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/product-rating/{{productId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-rating",
+                "{{productId}}"
+              ]
+            },
+            "description": "El `userAccountId` se extrae del JWT. Solo elimina el rating del usuario autenticado."
+          },
+          "response": []
+        },
+        {
+          "name": "Listar Ratings de un Producto (GET /product-rating/product/:productId)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/product-rating/product/{{productId}}?page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-rating",
+                "product",
+                "{{productId}}"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Devuelve de forma paginada todos los ratings que ha recibido un producto específico."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📋 Product Order",
+      "item": [
+        {
+          "name": "🔒 Crear Orden (POST /product-order)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.id) {",
+                  "  pm.collectionVariables.set('orderId', res.id);",
+                  "  console.log('✅ orderId guardado: ' + res.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"{{productId}}\",\n  \"quantity\": 1,\n  \"orderNotes\": \"Entrega urgente por favor.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/product-order",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-order"
+              ]
+            },
+            "description": "El `buyerId` se extrae del JWT. Primero haz Login como Comprador y asegúrate de tener un `productId` válido."
+          },
+          "response": []
+        },
+        {
+          "name": "Listar Órdenes (GET /product-order) — Público",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/product-order",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-order"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ver Orden por ID (GET /product-order/:id) — Público",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/product-order/{{orderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-order",
+                "{{orderId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Historial de Estado de Orden (GET /product-order/:id/history) — Público",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/product-order/{{orderId}}/history",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-order",
+                "{{orderId}}",
+                "history"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Actualizar Estado de Orden (PATCH /product-order/:id)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentStatus\": \"SHIPPED\",\n  \"statusNote\": \"Paquete enviado via MRW, tracking: MRW123456\",\n  \"sellerRatingValue\": 5,\n  \"buyerRatingValue\": 5\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/product-order/{{orderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-order",
+                "{{orderId}}"
+              ]
+            },
+            "description": "El `changedByUserId` se extrae del JWT. Estados válidos: PENDING → PAID → SHIPPED → DELIVERED / CANCELED / REFUNDED"
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Eliminar Orden (DELETE /product-order/:id)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/product-order/{{orderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-order",
+                "{{orderId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Órdenes de mis Productos — Solo SELLER",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/product-order/seller-orders?page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-order",
+                "seller-orders"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Devuelve las órdenes de los productos del seller autenticado. Requiere token de SELLER o ADMIN."
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Mis Órdenes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/product-order/my-orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-order",
+                "my-orders"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Mi Orden — detalle",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/product-order/my-orders/60e40196-f0eb-4c08-88c4-7243b0cf52c7",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-order",
+                "my-orders",
+                "60e40196-f0eb-4c08-88c4-7243b0cf52c7"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Ver Mis Órdenes (GET /product-order/my-orders/:userId)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/product-order/my-orders/:userId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-order",
+                "my-orders",
+                ":userId"
+              ],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Ver Línea de Tiempo de Orden (GET /product-order/:id/timeline)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/product-order/:id/timeline",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-order",
+                ":id",
+                "timeline"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{id}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "💬 Product Comment",
+      "item": [
+        {
+          "name": "🔒 Crear Comentario de Producto (POST /product-comment)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/product-comment",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-comment"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar Comentarios por Producto (GET /product-comment/product/:productId) — Público",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/product-comment/product/:productId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-comment",
+                "product",
+                ":productId"
+              ],
+              "variable": [
+                {
+                  "key": "productId",
+                  "value": "{{productId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Actualizar Comentario (PATCH /product-comment/:id)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/product-comment/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-comment",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{id}}"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Eliminar Comentario (DELETE /product-comment/:id)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/product-comment/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product-comment",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{id}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "💬 Order Chat",
+      "item": [
+        {
+          "name": "🔒 Enviar Mensaje a Chat de Orden (POST /order-chat)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/order-chat",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "order-chat"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Ver Chat de Orden (GET /order-chat/:orderId)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/order-chat/:orderId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "order-chat",
+                ":orderId"
+              ],
+              "variable": [
+                {
+                  "key": "orderId",
+                  "value": "{{orderId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🚚 Shipments & Telemetry",
+      "item": [
+        {
+          "name": "🔒 Ver Historial por Sensor (GET /shipments/sensor/:sensor_id/history)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/shipments/sensor/:sensor_id/history",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "shipments",
+                "sensor",
+                ":sensor_id",
+                "history"
+              ],
+              "variable": [
+                {
+                  "key": "sensor_id",
+                  "value": "{{sensor_id}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Ver Historial por Tracking (GET /shipments/:tracking_number/history)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/shipments/:tracking_number/history",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "shipments",
+                ":tracking_number",
+                "history"
+              ],
+              "variable": [
+                {
+                  "key": "tracking_number",
+                  "value": "{{tracking_number}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "⛓️ Blockchain Notary",
+      "item": [
+        {
+          "name": "Webhook de Notario Blockchain (POST /blockchain/webhook) — Público",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/blockchain/webhook",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "blockchain",
+                "webhook"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🚚 Shipping Carrier",
+      "item": [
+        {
+          "name": "Listar Proveedores de Envío (GET /shipping-carriers) — Público",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/shipping-carriers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "shipping-carriers"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
     }
   ],
   "variable": [
     {
-      "key": "backendBaseUrl",
-      "value": "http://localhost:3000"
-    },
-    {
-      "key": "notaryBaseUrl",
-      "value": "http://localhost:3001/api/v1"
-    },
-    {
-      "key": "apiKey",
-      "value": "notary_api_key_6a2f9c1b0d7e"
-    },
-    {
-      "key": "devRoleKey",
-      "value": "dev_role_key_9f3a2b7c1d4e"
+      "key": "baseUrl",
+      "value": "http://localhost:3001"
     },
     {
       "key": "accessToken",
       "value": ""
     },
     {
-      "key": "sellerAccessToken",
+      "key": "sellerUserId",
       "value": ""
     },
     {
-      "key": "userId",
-      "value": ""
-    },
-    {
-      "key": "sellerId",
-      "value": ""
-    },
-    {
-      "key": "categoryId",
+      "key": "buyerUserId",
       "value": ""
     },
     {
@@ -498,6 +2650,48 @@
     {
       "key": "orderId",
       "value": ""
+    },
+    {
+      "key": "tribeId",
+      "value": ""
+    },
+    {
+      "key": "categoryId",
+      "value": ""
+    },
+    {
+      "key": "adminUserId",
+      "value": ""
+    },
+    {
+      "key": "id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "requestId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "sellerId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "sensor_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tracking_number",
+      "value": "",
+      "type": "string"
     }
   ]
 }

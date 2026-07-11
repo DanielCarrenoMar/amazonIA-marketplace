@@ -39,6 +39,25 @@ services:
         max-file: "3"
 
   # ══════════════════════════════════════════════════════════════════════════
+  # MongoDB - Base de datos local para Telemetría y Envíos
+  # ══════════════════════════════════════════════════════════════════════════
+  mongodb:
+    image: mongo:6.0
+    container_name: amazonia-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    networks:
+      - amazonia-internal
+    volumes:
+      - mongodb_data:/data/db
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ══════════════════════════════════════════════════════════════════════════
   # Ingestor Service — Gateway MQTT → Redis Streams
   # ══════════════════════════════════════════════════════════════════════════
   ingestor-service:
@@ -227,9 +246,13 @@ services:
         max-file: "5"
 
 # ══════════════════════════════════════════════════════════════════════════════
-# Redes
+# Redes y Volúmenes
 # ══════════════════════════════════════════════════════════════════════════════
 networks:
   amazonia-internal:
     driver: bridge
     name: amazonia-network
+
+volumes:
+  mongodb_data:
+    name: amazonia-mongodb-data
