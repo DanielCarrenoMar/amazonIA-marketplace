@@ -168,6 +168,7 @@ services:
       - REDIS_URL=${REDIS_URL}
       - REDIS_TOKEN=${REDIS_TOKEN}
       - NOTARY_API_KEY=${NOTARY_API_KEY}
+      - INFERENCE_SERVICE_URL=http://inference-service:8000
       - NOTARY_SERVICE_URL=http://blockchain-notary:3004/api/v1
       - WEBHOOK_BASE_URL=http://api:3001/api
       - CB_FAILURE_THRESHOLD=${CB_FAILURE_THRESHOLD:-3}

@@ -114,3 +114,21 @@ export function getMe(accessToken: string): Promise<AuthUser> {
     },
   });
 }
+
+// Inference
+export interface SpatialRiskQuery {
+  lat: number;
+  lon: number;
+  transportType?: string;
+  productType?: string;
+}
+
+export function getSpatialRisk(query: SpatialRiskQuery): Promise<any> {
+  const params = new URLSearchParams();
+  params.append('lat', query.lat.toString());
+  params.append('lon', query.lon.toString());
+  if (query.transportType) params.append('transportType', query.transportType);
+  if (query.productType) params.append('productType', query.productType);
+  
+  return apiFetch<any>(`/inference/spatial-risk?${params.toString()}`);
+}
