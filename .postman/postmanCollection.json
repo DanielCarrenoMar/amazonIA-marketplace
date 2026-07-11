@@ -1013,7 +1013,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3ODY1ZDhkZC0wNWQwLTQzYzYtYjg5OS0wNzk1NzRjZDRjMzkiLCJlbWFpbCI6InZlbmRlZG9yMUBhbWF6b25pYS5jb20iLCJyb2xlIjoiU0VMTEVSIiwiaWF0IjoxNzc3MjQxNjM2LCJleHAiOjE3NzcyNDI1MzZ9.NnEQJ5-VQOoA2FiIM3Np6nOWQGNN2NHBjc45YnAP1Uk",
+                  "value": "{{accessToken}}",
                   "type": "string"
                 }
               ]
