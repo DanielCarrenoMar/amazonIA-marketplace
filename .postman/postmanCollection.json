@@ -1708,6 +1708,121 @@
       ]
     },
     {
+      "name": "⚙️ Product Elaboration",
+      "item": [
+        {
+          "name": "🔒 Añadir Paso de Elaboración (POST /product/:productId/elaboration-step)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/product/:productId/elaboration-step",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product",
+                ":productId",
+                "elaboration-step"
+              ],
+              "variable": [
+                {
+                  "key": "productId",
+                  "value": "{{productId}}"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stepNumber\": 5,\n  \"title\": \"Empaquetado\",\n  \"description\": \"El casabe se envuelve en hojas frescas o papel ecológico para preservar su crujencia.\",\n  \"mediaUrls\": []\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Actualizar Paso (PATCH /product/elaboration-step/:id)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/product/elaboration-step/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product",
+                "elaboration-step",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{id}}"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Empaquetado Ecológico\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "🔒 Borrar Paso (DELETE /product/elaboration-step/:id)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/product/elaboration-step/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "product",
+                "elaboration-step",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{id}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
       "name": "⭐ Product Rating",
       "item": [
         {
