@@ -4,24 +4,72 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Icon } from "@iconify/react";
+import { useRouter } from 'next/navigation';
 import { MarketplaceNavbar } from '@/components/layout/MarketplaceNavbar';
 import { Footer } from '@/components/layout/Footer';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
-import { Select } from '@/components/ui/Select';
-import { Radio } from '@/components/ui/Radio';
-import { mockProducts } from '@/lib/mock-data';
+import { useToast } from '@/components/ui/Toast';
+import { useCart } from '@/lib/cartContext';
+import { createOrder } from '@/lib/api';
 
 export default function CheckoutPage() {
-  // Simularemos que hay 2 productos en el carrito para el resumen
-  const cartItems = mockProducts.slice(0, 2).map(p => ({ ...p, quantity: 1 }));
+  const router = useRouter();
+  const { toast } = useToast();
+  const { items: cartItems, subtotal, clearCart } = useCart();
   
-  const subtotal = cartItems.reduce((acc, item) => acc + (parseFloat(item.price.replace('$', '')) * item.quantity), 0);
-  const shippingCost = 5.00;
+  const shippingCost = cartItems.length > 0 ? 5.00 : 0;
   const total = subtotal + shippingCost;
 
   const [orderNotes, setOrderNotes] = useState('');
   const [transactionHash, setTransactionHash] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmitOrder = async () => {
+    if (cartItems.length === 0) return;
+    if (!transactionHash) {
+      toast({ title: "Falta el hash", description: "Por favor, ingresa el hash de la transacción.", variant: "error" });
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      await Promise.all(
+        cartItems.map(item => 
+          createOrder({
+            productId: item.id,
+            quantity: item.quantity,
+            orderNotes: orderNotes || undefined,
+            transactionHash
+          })
+        )
+      );
+
+      toast({ title: "¡Compra completada!", description: "Tus pedidos han sido creados exitosamente.", variant: "success" });
+      clearCart();
+      router.push('/dashboard/orders');
+    } catch (error: any) {
+      toast({ title: "Error al procesar", description: error.message || "No se pudo completar la compra.", variant: "error" });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (cartItems.length === 0) {
+    return (
+      <>
+        <MarketplaceNavbar />
+        <main className="min-h-screen bg-gray-50/50 pt-32 pb-20 px-4 md:px-8 font-sans flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-slate-900 mb-4">Tu carrito está vacío</h2>
+            <Link href="/marketplace">
+              <Button variant="primary">Volver al catálogo</Button>
+            </Link>
+          </div>
+        </main>
+      </>
+    );
+  }
 
   return (
     <>
@@ -116,7 +164,7 @@ export default function CheckoutPage() {
                         <p className="text-xs text-muted mb-1">{item.category}</p>
                         <div className="flex justify-between items-center mt-1">
                           <span className="text-sm font-medium text-slate-700">Cant: {item.quantity}</span>
-                          <span className="font-bold text-slate-900">{item.price}</span>
+                          <span className="font-bold text-slate-900">${parseFloat(item.price).toFixed(2)}</span>
                         </div>
                       </div>
                     </div>
@@ -145,7 +193,13 @@ export default function CheckoutPage() {
                   </div>
                 </div>
 
-                <Button variant="primary" className="w-full py-4 text-base shadow-md font-bold rounded-xl" rightIcon={<Icon icon="lucide:shield-check" className="w-5 h-5"/>}>
+                <Button 
+                  variant="primary" 
+                  className="w-full py-4 text-base shadow-md font-bold rounded-xl" 
+                  rightIcon={<Icon icon="lucide:shield-check" className="w-5 h-5"/>}
+                  onClick={handleSubmitOrder}
+                  isLoading={isSubmitting}
+                >
                   Completar Pedido
                 </Button>
 

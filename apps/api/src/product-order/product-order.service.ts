@@ -75,7 +75,7 @@ export class ProductOrderService {
       this.prisma.productOrder.count(),
       this.prisma.productOrder.findMany({
         include: { 
-          product: true, 
+          product: { include: { seller: { include: { user: { omit: { passwordHash: true } } } } } }, 
           buyer: { omit: { passwordHash: true } }, 
           statusHistory: true 
         },
@@ -119,7 +119,7 @@ export class ProductOrderService {
       this.prisma.productOrder.findMany({
         where,
         include: {
-          product: true,
+          product: { include: { seller: { include: { user: { omit: { passwordHash: true } } } } } },
           statusHistory: { orderBy: { createdAt: 'desc' } },
         },
         orderBy: { createdAt: 'desc' },
@@ -186,7 +186,7 @@ export class ProductOrderService {
     const order = await this.prisma.productOrder.findUnique({
       where: { id },
       include: {
-        product: true,
+        product: { include: { seller: { include: { user: { omit: { passwordHash: true } } } } } },
         buyer: { omit: { passwordHash: true } },
         statusHistory: true,
       },

@@ -16,7 +16,8 @@ interface OrderCardProps {
 
 export function OrderCard({ order, viewMode, onAction }: OrderCardProps) {
   const shortId = order.id.slice(0, 8);
-  const otherParty = viewMode === "seller" ? order.buyer : order.product.seller;
+  const otherPartyName = viewMode === "seller" ? order.buyer?.fullName : order.product?.seller?.user?.fullName;
+  const initial = otherPartyName ? otherPartyName.charAt(0) : "?";
 
   const renderStatusButton = () => {
     if (viewMode === "seller") {
@@ -58,7 +59,19 @@ export function OrderCard({ order, viewMode, onAction }: OrderCardProps) {
         );
       }
     } else { // buyer
-       if (order.currentStatus === 'SHIPPED') {
+      if (order.currentStatus === 'PENDING') {
+        return (
+          <Button 
+            size="sm" 
+            variant="outline"
+            className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+            onClick={() => onAction?.('cancel', order.id)}
+          >
+            Cancelar Pedido
+          </Button>
+        );
+      }
+      if (order.currentStatus === 'SHIPPED') {
         return (
           <Button 
             size="sm" 
@@ -103,10 +116,10 @@ export function OrderCard({ order, viewMode, onAction }: OrderCardProps) {
 
       <div className="space-y-2 mb-4">
         <div className="flex items-center gap-2 text-sm text-muted">
-          <div className="w-6 h-6 rounded-full bg-brand-primary-light text-brand-primary flex shrink-0 items-center justify-center font-bold text-xs">
-            {otherParty.user.fullName.charAt(0)}
+          <div className="w-6 h-6 rounded-full bg-brand-primary-light text-brand-primary flex shrink-0 items-center justify-center font-bold text-xs uppercase">
+            {initial}
           </div>
-          <span className="truncate">{otherParty.user.fullName}</span>
+          <span className="truncate">{otherPartyName || "Usuario Desconocido"}</span>
         </div>
         
         <div className="flex items-center gap-2 text-xs text-muted">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { DashboardHeader, KanbanBoard, ShipmentModal } from "@/components/dashboard";
+import { DashboardHeader, KanbanBoard, ShipmentModal, RatingModal } from "@/components/dashboard";
 import { Tabs } from "@/components/ui/Tabs";
 import { getSellerOrders, getMyOrders, updateOrder } from "@/lib/api";
 import type { ProductOrderResponseDto } from "event-types";
@@ -14,6 +14,8 @@ export default function OrdersPage() {
   const [purchases, setPurchases] = useState<ProductOrderResponseDto[]>([]);
   const [shipModalOpen, setShipModalOpen] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const [ratingModalOpen, setRatingModalOpen] = useState(false);
+  const [selectedOrderIdForRating, setSelectedOrderIdForRating] = useState<string | null>(null);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -41,7 +43,17 @@ export default function OrdersPage() {
     } else if (action === 'track' || action === 'confirm') {
       router.push(`/dashboard/orders/${orderId}`);
     } else if (action === 'rate') {
-      toast({ title: "Calificación", description: "Módulo de calificación en construcción" });
+      setSelectedOrderIdForRating(orderId);
+      setRatingModalOpen(true);
+    } else if (action === 'cancel') {
+      updateOrder(orderId, { currentStatus: "CANCELED" })
+        .then(() => {
+          toast({ title: "Pedido Cancelado", variant: "success" });
+          loadOrders();
+        })
+        .catch(err => {
+          toast({ title: "Error", description: err.message, variant: "error" });
+        });
     }
   };
 
@@ -62,13 +74,29 @@ export default function OrdersPage() {
     }
   };
 
+  const handleRateSubmit = async (rating: number) => {
+    if (!selectedOrderIdForRating) return;
+    try {
+      await updateOrder(selectedOrderIdForRating, {
+        sellerRatingValue: rating
+      });
+      toast({ title: "Calificación enviada", description: "¡Gracias por tu opinión!", variant: "success" });
+      setRatingModalOpen(false);
+      loadOrders();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "error" });
+    }
+  };
+
   const salesColumns = [
+    { key: "PENDING", label: "Esperando Pago", color: "gray" as const },
     { key: "PAID", label: "Por Enviar", color: "yellow" as const },
     { key: "SHIPPED", label: "Enviado", color: "blue" as const },
     { key: "DELIVERED", label: "Entregado", color: "green" as const }
   ];
 
   const purchaseColumns = [
+    { key: "PENDING", label: "Esperando Pago", color: "gray" as const },
     { key: "PAID", label: "En Preparación", color: "yellow" as const },
     { key: "SHIPPED", label: "En Camino", color: "blue" as const },
     { key: "DELIVERED", label: "Recibido", color: "green" as const }
@@ -107,6 +135,12 @@ export default function OrdersPage() {
         isOpen={shipModalOpen} 
         onClose={() => setShipModalOpen(false)} 
         onSubmit={handleShipSubmit} 
+      />
+
+      <RatingModal
+        isOpen={ratingModalOpen}
+        onClose={() => setRatingModalOpen(false)}
+        onSubmit={handleRateSubmit}
       />
     </div>
   );

@@ -3,13 +3,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { Icon } from "@iconify/react";
 import { mockProductDtos } from '@/lib/mock-data';
-import { getProductById, getProducts } from '@/lib/api';
+import { getProductById, getProducts, createOrder } from '@/lib/api';
 import type { ProductResponseDto } from 'event-types';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import { useToast } from '@/components/ui/Toast';
+import { useCart } from '@/lib/cartContext';
 import { Select } from '@/components/ui/Select';
 import { Avatar } from '@/components/ui/Avatar';
 import { ProductCard } from '@/components/ui/ProductCard';
@@ -19,6 +21,9 @@ import { Footer } from '@/components/layout/Footer';
 export default function ProductDetailPage() {
   const params = useParams();
   const id = params.id as string;
+  const router = useRouter();
+  const { toast } = useToast();
+  const { addItem } = useCart();
 
   const [product, setProduct] = useState<ProductResponseDto | null>(null);
   const [loading, setLoading] = useState(true);
@@ -33,6 +38,7 @@ export default function ProductDetailPage() {
   const [activeTab, setActiveTab] = useState<'process' | 'additional_info' | 'artisan'>('process');
   const [activeReviewIndex, setActiveReviewIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [isBuying, setIsBuying] = useState(false);
 
   const MOCK_REVIEWS = [
     { name: 'Alex Mathio', date: '13 Oct 2024', stars: 5, text: '"La dedicación a la sostenibilidad y prácticas éticas resuena fuertemente con los consumidores de hoy, posicionando este producto como una opción responsable y hermosa."', initials: 'AM' },
@@ -94,6 +100,38 @@ export default function ProductDetailPage() {
 
   const handleDecrease = () => setQuantity(q => Math.max(1, q - 1));
   const handleIncrease = () => setQuantity(q => q + 1);
+
+  const handleAddToCart = () => {
+    if (!product) return;
+    if (product.stockAvailable < quantity) {
+      toast({ title: "Stock insuficiente", description: `Solo quedan ${product.stockAvailable} unidades.`, variant: "error" });
+      return;
+    }
+    addItem(product, quantity);
+    toast({ title: "¡Añadido al carrito!", description: `${quantity}x ${product.name} añadido a tu carrito.`, variant: "success" });
+  };
+
+  const handleBuyNow = async () => {
+    if (!product) return;
+    if (product.stockAvailable < quantity) {
+      toast({ title: "Stock insuficiente", description: `Solo quedan ${product.stockAvailable} unidades disponibles.`, variant: "error" });
+      return;
+    }
+
+    try {
+      setIsBuying(true);
+      await createOrder({
+        productId: product.id,
+        quantity
+      });
+      toast({ title: "¡Compra exitosa!", description: "Tu pedido ha sido creado.", variant: "success" });
+      router.push('/dashboard/orders');
+    } catch (err: any) {
+      toast({ title: "Error al comprar", description: err.message, variant: "error" });
+    } finally {
+      setIsBuying(false);
+    }
+  };
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
@@ -239,6 +277,8 @@ export default function ProductDetailPage() {
                 size="lg"
                 className="w-full text-lg h-14"
                 leftIcon={<Icon icon="lucide:shopping-cart" className="w-5 h-5" />}
+                onClick={handleAddToCart}
+                disabled={product?.stockAvailable === 0}
               >
                 Añadir al carrito
               </Button>
@@ -246,6 +286,9 @@ export default function ProductDetailPage() {
                 variant="outline"
                 size="lg"
                 className="w-full text-lg h-14 border-2"
+                onClick={handleBuyNow}
+                isLoading={isBuying}
+                disabled={product.stockAvailable === 0}
               >
                 Comprar Ahora
               </Button>

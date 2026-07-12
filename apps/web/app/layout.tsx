@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { Poppins, Outfit } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/useAuth";
+import { CartProvider } from "@/lib/cartContext";
 import { Toaster } from "sonner";
+import { ToastProvider } from "@/components/ui/Toast";
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -36,10 +38,14 @@ export default function RootLayout({
       className={`${poppins.variable} ${outfit.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans">
-        <AuthProvider>
-          {children}
-          <Toaster richColors position="top-right" />
-        </AuthProvider>
+        <ToastProvider>
+          <AuthProvider>
+            <CartProvider>
+              {children}
+              <Toaster richColors position="top-right" />
+            </CartProvider>
+          </AuthProvider>
+        </ToastProvider>
       </body>
     </html>
   );
