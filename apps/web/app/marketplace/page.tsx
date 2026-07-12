@@ -20,6 +20,7 @@ function MarketplaceContent() {
   const router = useRouter();
 
   const categoryParam = searchParams.get('category');
+  const qParam = searchParams.get('q');
   const [activeCategory, setActiveCategory] = useState<string | null>(categoryParam || null);
 
   const [products, setProducts] = useState<ProductResponseDto[]>([]);
@@ -65,6 +66,7 @@ function MarketplaceContent() {
 
         const params: any = {};
         if (categoryId) params.categoryId = categoryId;
+        if (qParam) params.search = qParam;
 
         const res = await getProducts(params);
         setProducts(res.data || []);
@@ -79,7 +81,7 @@ function MarketplaceContent() {
     if (!activeCategory || categories.length > 0) {
       loadProducts();
     }
-  }, [activeCategory, categories]);
+  }, [activeCategory, categories, qParam]);
 
   const handleCategoryClick = (cat: string) => {
     if (activeCategory === cat) {

@@ -18,7 +18,7 @@ export function requestTribeMembership(tribeId: number, payload: RequestTribeMem
 }
 
 export function getActiveTribes(params?: URLSearchParams): Promise<PaginatedResponseDto<TribeResponseDto>> {
-  const query = params ? `?${params.toString()}` : "?status=ACTIVE";
+  const query = params ? `?${params.toString()}` : "";
   return apiFetch<PaginatedResponseDto<TribeResponseDto>>(`/tribe${query}`);
 }
 
@@ -46,4 +46,12 @@ export function reviewTribeMembership(tribeId: number, requestId: number, payloa
 
 export function getMyTribe(): Promise<TribeResponseDto> {
   return authFetch<TribeResponseDto>("/tribe/my-tribe");
+}
+
+export function getTribe(id: number): Promise<TribeResponseDto> {
+  return apiFetch<TribeResponseDto>(`/tribe/${id}`);
+}
+
+export function removeTribeMember(tribeId: number, sellerId: string): Promise<void> {
+  return authFetch<void>(`/tribe/${tribeId}/members/${sellerId}`, { method: "DELETE" });
 }

@@ -55,7 +55,7 @@ export class SellerService {
     const skip = (page - 1) * limit;
 
     const where: Prisma.SellerWhereInput = {
-      ...(tribeId ? { tribeId } : {}),
+      ...(tribeId ? { tribeId: Number(tribeId) } : {}),
       ...(search
         ? {
             OR: [

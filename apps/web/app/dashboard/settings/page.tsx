@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { DashboardHeader } from "@/components/dashboard";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
@@ -195,6 +196,25 @@ export default function SettingsPage() {
           </div>
         </div>
       </Card>
+
+      {/* Tribes CTA for Buyers */}
+      {isBuyer && !isLeader && (
+        <Card className="bg-linear-to-r from-brand-primary/10 to-brand-secondary/10 border-brand-primary/20">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-6">
+            <div>
+              <h3 className="font-bold text-brand-primary text-lg flex items-center gap-2">
+                <span className="text-xl">⛺</span> ¿Quieres unirte a una Tribu?
+              </h3>
+              <p className="text-sm text-gray-600 mt-1 max-w-xl">
+                Descubre comunidades de vendedores locales, únete a una tribu y forma parte del ecosistema productivo de AmazonIA.
+              </p>
+            </div>
+            <Link href="/tribes" className="shrink-0">
+              <Button variant="primary" className="shadow-sm">Explorar Tribus</Button>
+            </Link>
+          </div>
+        </Card>
+      )}
 
       {/* Settings Layout */}
       <div className="flex flex-col md:flex-row gap-6">
