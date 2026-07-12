@@ -24,7 +24,16 @@ export default function InventoryPage() {
   useEffect(() => {
     if (user) {
       loadProducts();
-      getCategories().then(res => setCategories(res.data)).catch(console.error);
+      getCategories().then(res => {
+        const flat = res.flatMap(cat =>
+          cat.subcategories.map(sub => ({
+            id: sub.id,
+            categoryName: cat.categoryName,
+            subcategoryName: sub.subcategoryName
+          }))
+        );
+        setCategories(flat);
+      }).catch(console.error);
     }
   }, [user]);
 
@@ -62,7 +71,10 @@ export default function InventoryPage() {
 
   const catOptions = [
     { value: "", label: "Todas las categorías" },
-    ...categories.map(c => ({ value: c.id.toString(), label: c.categoryName }))
+    ...categories.map(c => ({
+      value: c.id.toString(),
+      label: c.subcategoryName ? `${c.categoryName} - ${c.subcategoryName}` : c.categoryName
+    }))
   ];
 
   return (

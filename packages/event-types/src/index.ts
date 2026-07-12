@@ -13,6 +13,7 @@ export * from './product/product-response.dto';
 export * from './product-category/create-product-category.dto';
 export * from './product-category/update-product-category.dto';
 export * from './product-category/product-category-response.dto';
+export * from './product-category/grouped-category-response.dto';
 export * from './product-order/create-product-order.dto';
 export * from './product-order/update-product-order.dto';
 export * from './product-order/find-orders.dto';

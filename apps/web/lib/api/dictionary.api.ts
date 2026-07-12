@@ -1,8 +1,8 @@
-import type { ProductCategoryResponseDto, ShippingCarrierResponseDto, PaginatedResponseDto } from 'event-types';
+import type { ProductCategoryResponseDto, ShippingCarrierResponseDto, PaginatedResponseDto, GroupedCategoryResponseDto } from 'event-types';
 import { apiFetch, authFetch } from './client';
 
-export function getCategories(): Promise<PaginatedResponseDto<ProductCategoryResponseDto>> {
-  return apiFetch<PaginatedResponseDto<ProductCategoryResponseDto>>("/product-category");
+export function getCategories(): Promise<GroupedCategoryResponseDto[]> {
+  return apiFetch<GroupedCategoryResponseDto[]>("/product-category");
 }
 
 export function getShippingCarriers(): Promise<ShippingCarrierResponseDto[]> {

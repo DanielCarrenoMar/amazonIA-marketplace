@@ -18,6 +18,7 @@ import {
   PaginationDto,
   ProductCategoryResponseDto,
   PaginatedResponseDto,
+  GroupedCategoryResponseDto,
 } from 'event-types';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -37,8 +38,8 @@ export class ProductCategoryController {
   }
 
   @Get()
-  findAll(@Query() query: PaginationDto): Promise<PaginatedResponseDto<ProductCategoryResponseDto>> {
-    return this.productCategoryService.findAll(query);
+  findAll(): Promise<GroupedCategoryResponseDto[]> {
+    return this.productCategoryService.findAll();
   }
 
   @Get(':id')

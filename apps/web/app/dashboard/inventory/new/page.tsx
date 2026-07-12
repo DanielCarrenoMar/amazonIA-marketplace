@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/Textarea";
 import { FileDrop } from "@/components/ui/FileDrop";
 import { Card } from "@/components/ui/Card";
 import { getCategories, createProduct, uploadProductImage } from "@/lib/api";
-import type { ProductCategoryResponseDto } from "event-types";
+import type { ProductCategoryResponseDto, GroupedCategoryResponseDto } from "event-types";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/Toast";
 import { MapPin } from "lucide-react";
@@ -19,7 +19,7 @@ export default function NewProductPage() {
   const { toast } = useToast();
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [categories, setCategories] = useState<ProductCategoryResponseDto[]>([]);
+  const [categories, setCategories] = useState<GroupedCategoryResponseDto[]>([]);
 
   // Form State
   const [name, setName] = useState("");
@@ -89,7 +89,12 @@ export default function NewProductPage() {
               label="Categoría / Técnica" 
               value={categoryId} 
               onChange={setCategoryId}
-              options={categories.map(c => ({ value: c.id.toString(), label: c.categoryName }))}
+              options={categories.flatMap(cat =>
+                cat.subcategories.map(sub => ({
+                  value: sub.id.toString(),
+                  label: sub.subcategoryName ? `${cat.categoryName} - ${sub.subcategoryName}` : cat.categoryName
+                }))
+              )}
               required 
             />
             
