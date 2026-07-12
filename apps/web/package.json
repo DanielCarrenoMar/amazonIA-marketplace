@@ -10,6 +10,7 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "date-fns": "^4.4.0",
     "event-types": "workspace:*",
     "lucide-react": "^0.487.0",
     "next": "16.2.4",

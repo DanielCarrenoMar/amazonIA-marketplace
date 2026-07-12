@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { ProductCard } from '@/components/ui/ProductCard';
 import { Button } from '@/components/ui/Button';
@@ -13,7 +13,7 @@ import { Footer } from '@/components/layout/Footer';
 
 import { mockCategories, mockBrands, mockProducts } from '@/lib/mock-data';
 
-export default function MarketplacePage() {
+function MarketplaceContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   
@@ -171,5 +171,13 @@ export default function MarketplacePage() {
       </main>
       <Footer />
     </>
+  );
+}
+
+export default function MarketplacePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-background pt-32 pb-12 px-4 md:px-8 max-w-[1400px] mx-auto text-center">Cargando marketplace...</div>}>
+      <MarketplaceContent />
+    </Suspense>
   );
 }

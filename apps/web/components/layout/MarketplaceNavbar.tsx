@@ -7,26 +7,19 @@ import { Search, ShoppingCart, Heart, Home } from 'lucide-react';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
 import { CartDrawer } from '../ui/CartDrawer';
-import { getMe, type AuthUser } from '@/lib/api';
+import { useAuth } from '@/lib/useAuth';
 import logo from '@/public/logo.png';
 
 export function MarketplaceNavbar() {
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const { user, logout, isBuyer } = useAuth();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const userMenuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    if (!token) return;
-    getMe(token).then(setUser).catch(() => {});
-  }, []);
-
   const handleLogout = () => {
-    localStorage.removeItem('accessToken');
-    setUser(null);
+    logout();
     setUserMenuOpen(false);
     router.push('/');
   };
@@ -75,7 +68,7 @@ export function MarketplaceNavbar() {
                   className="flex items-center gap-2.5 hover:bg-gray-50 rounded-full py-1.5 px-2 md:px-3 transition-colors border border-transparent hover:border-gray-200"
                 >
                   <div className="w-9 h-9 rounded-full bg-brand-secondary flex items-center justify-center text-sm font-bold text-white shrink-0 shadow-sm">
-                    {getInitials(user.fullName || user.username)}
+                    {getInitials(user.fullName || user.username || 'U')}
                   </div>
                   <span className="text-sm font-bold text-slate-700 hidden lg:block">
                     {user.fullName?.split(' ')[0] || user.username}

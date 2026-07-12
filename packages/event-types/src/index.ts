@@ -80,6 +80,7 @@ export * from './seller/create-seller.dto';
 export * from './seller/update-seller.dto';
 export * from './seller/find-sellers.dto';
 export * from './seller/seller-response.dto';
+export * from './seller/seller-metrics-response.dto';
 
 // Product Comments
 export * from './product-comment/create-product-comment.dto';
