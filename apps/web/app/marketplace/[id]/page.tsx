@@ -423,7 +423,7 @@ export default function ProductDetailPage() {
               
               <div className="flex items-center gap-6 mb-2">
                 <div className="flex items-baseline text-slate-900">
-                  <span className="text-7xl font-extrabold tracking-tighter">4.5</span>
+                  <span className="text-7xl font-extrabold tracking-tighter">{Number(product.averageRating || 0).toFixed(1).replace('.0', '')}</span>
                   <span className="text-3xl font-bold text-gray-400">/5</span>
                 </div>
                 
@@ -447,60 +447,68 @@ export default function ProductDetailPage() {
                   ))}
                 </div>
               </div>
-              <p className="text-gray-500 font-medium">(50 New Reviews)</p>
+              <p className="text-gray-500 font-medium">({product.totalReviews || 0} Reseñas)</p>
             </div>
 
             {/* Right: Reviews Carousel */}
-            <div className="w-full md:w-2/3 flex items-center gap-4">
-              <button
-                onClick={handlePrevReview}
-                className="shrink-0 w-10 h-10 rounded-full bg-white border border-gray-200 shadow flex items-center justify-center hover:bg-gray-50 transition-colors cursor-pointer"
-              >
-                <Icon icon="lucide:chevron-left" className="w-5 h-5 text-slate-700" />
-              </button>
+            {product.totalReviews > 0 ? (
+              <div className="w-full md:w-2/3 flex items-center gap-4">
+                <button
+                  onClick={handlePrevReview}
+                  className="shrink-0 w-10 h-10 rounded-full bg-white border border-gray-200 shadow flex items-center justify-center hover:bg-gray-50 transition-colors cursor-pointer"
+                >
+                  <Icon icon="lucide:chevron-left" className="w-5 h-5 text-slate-700" />
+                </button>
 
-              <div className="bg-white border border-gray-100 shadow-sm rounded-3xl p-8 flex-1 min-h-[220px]">
-                <div className="flex justify-between items-center mb-4">
-                  <div>
-                    <h4 className="font-bold text-slate-900 text-lg">{MOCK_REVIEWS[activeReviewIndex].name}</h4>
-                    <div className="flex items-center gap-1 mt-1">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Icon
-                          key={star}
-                          icon="lucide:star"
-                          className={`w-4 h-4 ${star <= MOCK_REVIEWS[activeReviewIndex].stars ? 'fill-amber-400 text-amber-400' : 'text-gray-200'}`}
+                <div className="bg-white border border-gray-100 shadow-sm rounded-3xl p-8 flex-1 min-h-[220px]">
+                  <div className="flex justify-between items-center mb-4">
+                    <div>
+                      <h4 className="font-bold text-slate-900 text-lg">{MOCK_REVIEWS[activeReviewIndex].name}</h4>
+                      <div className="flex items-center gap-1 mt-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Icon
+                            key={star}
+                            icon="lucide:star"
+                            className={`w-4 h-4 ${star <= MOCK_REVIEWS[activeReviewIndex].stars ? 'fill-amber-400 text-amber-400' : 'text-gray-200'}`}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <p className="text-sm text-gray-400 font-medium">{MOCK_REVIEWS[activeReviewIndex].date}</p>
+                  </div>
+
+                  <p className="text-gray-600 leading-relaxed mb-6">{MOCK_REVIEWS[activeReviewIndex].text}</p>
+
+                  <div className="flex items-center justify-between">
+                    <Avatar fallback={MOCK_REVIEWS[activeReviewIndex].initials} size="md" />
+                    <div className="flex gap-2">
+                      {MOCK_REVIEWS.map((_, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setActiveReviewIndex(i)}
+                          className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                            i === activeReviewIndex ? 'w-8 bg-slate-900' : 'w-8 bg-gray-200'
+                          }`}
                         />
                       ))}
                     </div>
                   </div>
-                  <p className="text-sm text-gray-400 font-medium">{MOCK_REVIEWS[activeReviewIndex].date}</p>
                 </div>
 
-                <p className="text-gray-600 leading-relaxed mb-6">{MOCK_REVIEWS[activeReviewIndex].text}</p>
-
-                <div className="flex items-center justify-between">
-                  <Avatar fallback={MOCK_REVIEWS[activeReviewIndex].initials} size="md" />
-                  <div className="flex gap-2">
-                    {MOCK_REVIEWS.map((_, i) => (
-                      <button
-                        key={i}
-                        onClick={() => setActiveReviewIndex(i)}
-                        className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                          i === activeReviewIndex ? 'w-8 bg-slate-900' : 'w-8 bg-gray-200'
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </div>
+                <button
+                  onClick={handleNextReview}
+                  className="shrink-0 w-10 h-10 rounded-full bg-white border border-gray-200 shadow flex items-center justify-center hover:bg-gray-50 transition-colors cursor-pointer"
+                >
+                  <Icon icon="lucide:chevron-right" className="w-5 h-5 text-slate-700" />
+                </button>
               </div>
-
-              <button
-                onClick={handleNextReview}
-                className="shrink-0 w-10 h-10 rounded-full bg-white border border-gray-200 shadow flex items-center justify-center hover:bg-gray-50 transition-colors cursor-pointer"
-              >
-                <Icon icon="lucide:chevron-right" className="w-5 h-5 text-slate-700" />
-              </button>
-            </div>
+            ) : (
+              <div className="w-full md:w-2/3 flex flex-col items-center justify-center bg-gray-50 rounded-3xl p-8 min-h-[220px] border border-dashed border-gray-200 text-center">
+                <Icon icon="lucide:message-square-dashed" className="w-12 h-12 text-gray-300 mb-4" />
+                <h4 className="font-bold text-slate-900 text-xl mb-2">Aún no hay reseñas</h4>
+                <p className="text-gray-500 max-w-sm">¡Sé el primero en comprar y dejar tu opinión sobre este producto!</p>
+              </div>
+            )}
           </div>
         </section>
 
