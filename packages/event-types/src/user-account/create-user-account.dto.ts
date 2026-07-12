@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsOptional, MaxLength, IsInt, Min, IsEmail, MinLength, Matches } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, MaxLength, IsInt, Min, IsEmail, MinLength, Matches, IsNumber } from 'class-validator';
 
 export class CreateUserAccountDto {
   @IsString()
@@ -83,4 +83,12 @@ export class CreateUserAccountDto {
   @IsOptional()
   @MaxLength(100)
   locationRegion?: string;
+
+  @IsNumber()
+  @IsOptional()
+  locationLat?: number;
+
+  @IsNumber()
+  @IsOptional()
+  locationLng?: number;
 }

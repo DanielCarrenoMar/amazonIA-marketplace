@@ -10,14 +10,16 @@ import * as bcrypt from 'bcrypt';
 import { CreateUserAccountDto, UpdateUserAccountDto, ChangePasswordDto, UserRole, PaginationDto, UserAccountResponseDto, PaginatedResponseDto } from 'event-types';
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
+import { SpatialService } from '../spatial/spatial.service';
 
-const SALT_ROUNDS = 12;
+const SALT_ROUNDS = 10;
 
 @Injectable()
 export class UserAccountService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly storageService: StorageService,
+    private readonly spatialService: SpatialService,
   ) {}
 
   async create(createUserAccountDto: CreateUserAccountDto): Promise<UserAccountResponseDto> {
@@ -94,15 +96,26 @@ export class UserAccountService {
     const user = await this.prisma.userAccount.findUnique({ where: { id } });
     if (!user) throw new NotFoundException(`UserAccount with ID ${id} not found`);
 
-    // Only owner or ADMIN can edit sensitive fields
+    // Solo el dueño o ADMIN puede editar
     if (reqUser.id !== id && reqUser.role !== UserRole.ADMIN) {
       throw new ForbiddenException('No tienes permiso para actualizar esta cuenta');
     }
 
-    return this.prisma.userAccount.update({
+    // Separar campos espaciales
+    const { locationLat, locationLng, ...restDto } = updateUserAccountDto;
+
+    // Actualización de campos de texto estándar
+    const updatedUser = await this.prisma.userAccount.update({
       where: { id },
-      data: updateUserAccountDto,
+      data: restDto,
     }) as unknown as UserAccountResponseDto;
+
+    // Actualización de campo geográfico PostGIS
+    if (locationLat !== undefined && locationLng !== undefined) {
+      await this.spatialService.updateUserLocation(id, locationLat, locationLng);
+    }
+
+    return updatedUser;
   }
 
   async changePassword(

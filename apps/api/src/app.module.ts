@@ -18,6 +18,7 @@ import { OrderChatModule } from './order-chat/order-chat.module';
 import { MessagingModule } from 'messaging';
 import { HealthModule } from './health/health.module';
 import { InferenceModule } from './inference/inference.module';
+import { SpatialModule } from './spatial/spatial.module';
 
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
@@ -53,6 +54,7 @@ import { APP_GUARD } from '@nestjs/core';
     OrderChatModule,
     HealthModule,
     InferenceModule,
+    SpatialModule,
   ],
   controllers: [AppController],
   providers: [

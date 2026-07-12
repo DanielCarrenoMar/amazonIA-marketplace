@@ -8,6 +8,12 @@ import { useAuth } from "@/lib/useAuth";
 import { updateMe, changeMyPassword, uploadAvatar } from "@/lib/api";
 import { Camera, Save, Shield, User, MapPin } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
+import dynamic from "next/dynamic";
+
+const LocationPickerHybrid = dynamic(
+  () => import("@/components/ui/LocationPickerHybrid"),
+  { ssr: false }
+);
 
 export default function SettingsPage() {
   const { user, refreshUser, isBuyer, isAdmin, isLeader } = useAuth();
@@ -30,6 +36,8 @@ export default function SettingsPage() {
     locationFormattedAddress: "",
     locationCity: "",
     locationRegion: "",
+    locationLat: undefined as number | undefined,
+    locationLng: undefined as number | undefined,
   });
 
   const [securityForm, setSecurityForm] = useState({
@@ -53,6 +61,8 @@ export default function SettingsPage() {
         locationFormattedAddress: user.locationFormattedAddress || "",
         locationCity: user.locationCity || "",
         locationRegion: user.locationRegion || "",
+        locationLat: undefined,
+        locationLng: undefined,
       });
     }
   }, [user]);
@@ -100,6 +110,8 @@ export default function SettingsPage() {
         locationFormattedAddress: locationForm.locationFormattedAddress || undefined,
         locationCity: locationForm.locationCity || undefined,
         locationRegion: locationForm.locationRegion || undefined,
+        locationLat: locationForm.locationLat,
+        locationLng: locationForm.locationLng,
       });
       await refreshUser();
       toast({ title: "Ubicación actualizada", variant: "success" });
@@ -257,6 +269,24 @@ export default function SettingsPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <Input label="Ciudad" name="locationCity" value={locationForm.locationCity} onChange={handleLocationChange} />
                     <Input label="Región / Estado" name="locationRegion" value={locationForm.locationRegion} onChange={handleLocationChange} />
+                  </div>
+                  
+                  {/* Mapa Interactivo (Beta) */}
+                  <div className="pt-4 border-t border-gray-100 dark:border-gray-800">
+                    <h4 className="text-sm font-semibold text-foreground mb-3">Fijar Ubicación Exacta en el Mapa</h4>
+                    <LocationPickerHybrid 
+                      onLocationSelect={(lat, lng, address, city, region) => {
+                        setLocationForm(prev => ({ 
+                          ...prev, 
+                          locationLat: lat, 
+                          locationLng: lng,
+                          ...(address && { locationFormattedAddress: address }),
+                          ...(city && { locationCity: city }),
+                          ...(region && { locationRegion: region })
+                        }));
+                        toast({ title: "Coordenadas y dirección capturadas", description: "No olvides guardar los cambios al final.", variant: "success" });
+                      }} 
+                    />
                   </div>
                 </div>
                 <div className="pt-4 flex justify-end">
