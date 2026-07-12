@@ -94,10 +94,6 @@ export class TribeService {
       let updatedTribe;
       if (dto.status === TribeStatus.ACTIVE) {
         updateData.primaryLeaderId = (tribe as any).requestedById;
-        updatedTribe = await tx.tribe.update({
-          where: { id: tribeId },
-          data: updateData,
-        });
 
         if ((tribe as any).requestedById) {
           const reqId = (tribe as any).requestedById;
@@ -117,6 +113,11 @@ export class TribeService {
             data: { role: UserRole.SELLER },
           });
         }
+
+        updatedTribe = await tx.tribe.update({
+          where: { id: tribeId },
+          data: updateData,
+        });
       } else {
         updatedTribe = await tx.tribe.update({
           where: { id: tribeId },
