@@ -1,3 +1,14 @@
+export class ProductElaborationStepResponseDto {
+  id: number;
+  productId: string;
+  stepNumber: number;
+  title: string | null;
+  description: string;
+  mediaUrls: string[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export class ProductResponseDto {
   id: string;
   sellerId: string;
@@ -14,12 +25,15 @@ export class ProductResponseDto {
   locationFormattedAddress: string | null;
   locationCity: string | null;
   locationRegion: string | null;
+  elaborationText: string | null;
+  elaborationMediaUrls: string[];
   createdAt: Date;
   updatedAt: Date;
   
   // Optional relations depending on the endpoint
   seller?: any; // SellerResponseDto
   category?: any; // ProductCategoryResponseDto
+  elaborationSteps?: ProductElaborationStepResponseDto[];
 }
 
 export class NearbyProductResponseDto {

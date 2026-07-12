@@ -1,7 +1,9 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 import asyncio
 import json
+import math
 from datetime import datetime, date, timedelta
+from typing import Optional
 from schemas.request import EvaluationRequest
 from schemas.response import RiskResponse, RiskReason, HeuristicSegment
 from middleware.auth import verify_jwt
@@ -13,8 +15,119 @@ from schemas.features import ClimateData, TelemetryData, ShipmentData, HydroData
 from services.feature_pipeline import construir_features_globales
 from services.inpa_fallback import get_inpa_fallback_climate
 from services.spatial import interpolate_climate_idw
+from services.spatial_risk_engine import ZONES
 
 router = APIRouter(prefix="/api/v1/risk", tags=["Risk"])
+
+def calculate_distance(lat1, lon1, lat2, lon2):
+    """Calcula distancia euclidiana simple para ponderar"""
+    return math.sqrt((lat1 - lat2)**2 + (lon1 - lon2)**2)
+
+@router.get("/spatial")
+async def get_spatial_risk(
+    lat: float = Query(..., description="Latitude"),
+    lon: float = Query(..., description="Longitude"),
+    transport_type: str = Query("terrestre"),
+    product_type: str = Query("perecedero_bajo"),
+    # user_payload: dict = Depends(verify_jwt) # Podemos activarlo luego si es necesario
+):
+    """
+    Consulta rápida del riesgo espacial basado en las zonas pre-calculadas en Redis.
+    (Respuesta rápida < 100ms)
+    """
+    try:
+        # 1. Leer datos pre-calculados de las zonas desde Redis
+        zone_data = []
+        for zone in ZONES:
+            raw = await iot_service.redis.get(f"zone:data:{zone['id']}")
+            if raw:
+                try:
+                    data = json.loads(raw)
+                    # Si el dato se parseo bien como string, lo pasamos a dict
+                    if isinstance(data, str):
+                        data = json.loads(data)
+                    zone_data.append({**zone, "data": data})
+                except Exception as e:
+                    print(f"Error parsing zone {zone['id']}: {e}")
+                    
+        if not zone_data:
+            return {"status": "error", "message": "No spatial data available yet. Background worker is warming up."}
+            
+        # 2. Encontrar la zona más cercana
+        nearest_zone = min(zone_data, key=lambda z: calculate_distance(lat, lon, z["lat"], z["lon"]))
+        climate_res = nearest_zone["data"]["climate"]
+        hydro_res = nearest_zone["data"]["hydro"]
+        
+        climate_data = ClimateData(
+            daily_max_temp=climate_res.get("temperatura_max_c", []),
+            daily_min_temp=climate_res.get("temperatura_min_c", []),
+            daily_precip=climate_res.get("precipitacion_mm", []),
+            daily_wind=climate_res.get("velocidad_viento_ms", [])
+        )
+        
+        hydro_data = HydroData(
+            river_level_m=hydro_res["river_level_m"],
+            river_current_speed_ms=hydro_res["river_current_speed_ms"]
+        )
+        
+        shipment = ShipmentData(
+            transport_type=transport_type,
+            product_type=product_type,
+            distance_km=100.0,
+            estimated_duration_days=5.0,
+            month_of_year=date.today().month
+        )
+        
+        telemetry = TelemetryData(temperature=None, humidity=None) # No live telemetry for spatial query
+        
+        # 3. Construir features y predecir
+        xgboost_features = construir_features_globales(
+            climate=climate_data,
+            telemetry=telemetry,
+            shipment=shipment,
+            hydro=hydro_data,
+            is_inpa_fallback=False
+        )
+        
+        prediction = model_service.predict_risk(xgboost_features.model_dump(by_alias=True))
+        composite_score_pct = min(100.0, prediction["risk_score"] * 100.0)
+        
+        if composite_score_pct < 30.0:
+            alert_level = "GREEN"
+        elif composite_score_pct < 70.0:
+            alert_level = "YELLOW"
+        else:
+            alert_level = "RED"
+            
+        human_labels = {
+            "temperatura_max_c": "Temperatura Extrema",
+            "precipitacion_7d_acum": "Lluvias Intensas",
+            "velocidad_viento_ms": "Vientos Fuertes",
+            "tipo_transporte": "Vulnerabilidad del Transporte",
+            "tipo_producto": "Sensibilidad del Producto",
+            "nivel_rio_m": "Nivel del Río"
+        }
+        
+        main_reasons = []
+        for reason in prediction.get("top_reasons", []):
+            raw_feat = reason["feature"]
+            main_reasons.append(RiskReason(impact=reason["impact"], feature=human_labels.get(raw_feat, raw_feat)))
+            
+        return RiskResponse(
+            shipment_id=f"spatial-{lat}-{lon}",
+            composite_score_pct=composite_score_pct,
+            alert_level=alert_level,
+            message=f"Riesgo espacial aproximado basado en la zona de {nearest_zone['name']}.",
+            main_reasons=main_reasons,
+            critical_segment=HeuristicSegment(segment_idx=0, coordinates={"lat": lat, "lon": lon}, observation=f"Zona: {nearest_zone['name']}"),
+            shap_plot_base64=None,
+            metadata={"nearest_zone": nearest_zone["name"]}
+        )
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return {"status": "error", "message": str(e)}
 
 @router.post("/evaluate", response_model=RiskResponse)
 async def evaluate_risk(request: EvaluationRequest, user_payload: dict = Depends(verify_jwt)):
@@ -58,11 +171,10 @@ async def evaluate_risk(request: EvaluationRequest, user_payload: dict = Depends
             climate_data_list.append(None)
         else:
             climate_data_list.append(ClimateData(
-                fuente=res.get("fuente", "api"),
-                temperatura_max_c=res.get("temperatura_max_c", []),
-                temperatura_min_c=res.get("temperatura_min_c", []),
-                precipitacion_mm=res.get("precipitacion_mm", []),
-                velocidad_viento_ms=res.get("velocidad_viento_ms", [])
+                daily_max_temp=res.get("temperatura_max_c", []),
+                daily_min_temp=res.get("temperatura_min_c", []),
+                daily_precip=res.get("precipitacion_mm", []),
+                daily_wind=res.get("velocidad_viento_ms", [])
             ))
             
     is_inpa = False
@@ -180,7 +292,7 @@ async def evaluate_risk(request: EvaluationRequest, user_payload: dict = Depends
     
     # 11. Auditoría SOTA: Desacoplar guardado usando Redis Streams
     try:
-        await iot_service.redis.xadd("STREAM_TOPICS.PREDICTIONS", {
+        await iot_service.redis.xadd("STREAM_TOPICS.PREDICTIONS", fields={
             "shipment_id": request.shipment_id,
             "features_json": json.dumps(features_dict),
             "shap_values_json": json.dumps(shap_values),

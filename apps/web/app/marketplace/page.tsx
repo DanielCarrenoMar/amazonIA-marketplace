@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { ProductCard } from '@/components/ui/ProductCard';
 import { Button } from '@/components/ui/Button';
@@ -15,25 +15,17 @@ import { getProducts, getCategories } from '@/lib/api';
 import { mockProductDtos } from '@/lib/mock-data';
 import type { ProductResponseDto, ProductCategoryResponseDto } from 'event-types';
 
-export default function MarketplacePage() {
-  return (
-    <React.Suspense fallback={<div className="flex justify-center p-20">Cargando marketplace...</div>}>
-      <MarketplaceContent />
-    </React.Suspense>
-  );
-}
-
 function MarketplaceContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  
+
   const categoryParam = searchParams.get('category');
   const [activeCategory, setActiveCategory] = useState<string | null>(categoryParam || null);
 
   const [products, setProducts] = useState<ProductResponseDto[]>([]);
   const [categories, setCategories] = useState<ProductCategoryResponseDto[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   const [minRating, setMinRating] = useState<number>(0);
   const [hoverRating, setHoverRating] = useState<number>(0);
 
@@ -73,7 +65,7 @@ function MarketplaceContent() {
         setLoading(false);
       }
     }
-    
+
     // Load if no active category, or if we have categories loaded to map the name to ID
     if (!activeCategory || categories.length > 0) {
       loadProducts();
@@ -121,7 +113,7 @@ function MarketplaceContent() {
     <>
       <MarketplaceNavbar />
       <main className="min-h-screen bg-background pt-28 md:pt-32 pb-12 px-4 md:px-8 max-w-[1400px] mx-auto font-sans">
-        
+
         {/* HERO BANNER CAROUSEL */}
         <BannerCarousel banners={heroBanners} />
 
@@ -131,11 +123,10 @@ function MarketplaceContent() {
             <button
               key={cat}
               onClick={() => handleCategoryClick(cat)}
-              className={`px-5 py-2 rounded-full font-medium whitespace-nowrap transition-colors border shadow-sm cursor-pointer ${
-                activeCategory === cat 
-                  ? 'bg-brand-primary text-white border-brand-primary' 
+              className={`px-5 py-2 rounded-full font-medium whitespace-nowrap transition-colors border shadow-sm cursor-pointer ${activeCategory === cat
+                  ? 'bg-brand-primary text-white border-brand-primary'
                   : 'bg-white text-foreground border-gray-200 hover:border-brand-primary/50 hover:bg-brand-primary/5'
-              }`}
+                }`}
             >
               {cat}
             </button>
@@ -144,10 +135,10 @@ function MarketplaceContent() {
 
         {/* MAIN LAYOUT (SIDEBAR + GRID) */}
         <div className="flex flex-col lg:flex-row gap-8">
-          
+
           {/* SIDEBAR FILTERS */}
           <aside className="w-full lg:w-[280px] shrink-0 flex flex-col gap-8 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm h-fit">
-            
+
             {/* Price Range */}
             <div>
               <div className="flex justify-between items-center mb-4">
@@ -156,20 +147,20 @@ function MarketplaceContent() {
               </div>
               <p className="text-xs text-muted mb-4 font-medium">El precio promedio es $30.00</p>
               <div className="flex items-center gap-2">
-                <Input 
-                  placeholder="Min" 
-                  type="number" 
+                <Input
+                  placeholder="Min"
+                  type="number"
                   leftIcon={<span className="text-gray-400 font-medium font-sans">$</span>}
-                  wrapperClassName="h-10 rounded-2xl bg-gray-50/50 border-gray-200" 
-                  className="text-sm" 
+                  wrapperClassName="h-10 rounded-2xl bg-gray-50/50 border-gray-200"
+                  className="text-sm"
                 />
                 <span className="text-gray-300 font-medium">-</span>
-                <Input 
-                  placeholder="Max" 
-                  type="number" 
+                <Input
+                  placeholder="Max"
+                  type="number"
                   leftIcon={<span className="text-gray-400 font-medium font-sans">$</span>}
-                  wrapperClassName="h-10 rounded-2xl bg-gray-50/50 border-gray-200" 
-                  className="text-sm" 
+                  wrapperClassName="h-10 rounded-2xl bg-gray-50/50 border-gray-200"
+                  className="text-sm"
                 />
               </div>
             </div>
@@ -179,7 +170,7 @@ function MarketplaceContent() {
               <div className="flex justify-between items-center mb-4">
                 <h3 className="font-bold text-slate-900 text-lg">Calificación</h3>
                 {minRating > 0 && (
-                  <button 
+                  <button
                     onClick={() => setMinRating(0)}
                     className="text-xs text-muted hover:text-brand-primary transition-colors cursor-pointer"
                   >
@@ -188,21 +179,20 @@ function MarketplaceContent() {
                 )}
               </div>
               <div className="flex items-center justify-between group">
-                <div 
+                <div
                   className="flex gap-1 transition-transform"
                   onMouseLeave={() => setHoverRating(0)}
                 >
                   {[1, 2, 3, 4, 5].map(star => {
                     const isFilled = star <= (hoverRating || minRating);
                     return (
-                      <Icon 
+                      <Icon
                         key={star}
-                        icon="lucide:star" 
+                        icon="lucide:star"
                         onMouseEnter={() => setHoverRating(star)}
                         onClick={() => setMinRating(star)}
-                        className={`w-6 h-6 cursor-pointer transition-colors ${
-                          isFilled ? "fill-amber-400 text-amber-400 hover:scale-110" : "fill-gray-300 text-gray-300 hover:scale-110 hover:fill-amber-200 hover:text-amber-200"
-                        }`} 
+                        className={`w-6 h-6 cursor-pointer transition-colors ${isFilled ? "fill-amber-400 text-amber-400 hover:scale-110" : "fill-gray-300 text-gray-300 hover:scale-110 hover:fill-amber-200 hover:text-amber-200"
+                          }`}
                       />
                     );
                   })}
@@ -228,10 +218,10 @@ function MarketplaceContent() {
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                 {products.length > 0 ? (
                   products.map((product) => {
-                    const mappedCategory = product.category?.categoryName 
-                      || categories.find(c => c.id === product.categoryId)?.categoryName 
+                    const mappedCategory = product.category?.categoryName
+                      || categories.find(c => c.id === product.categoryId)?.categoryName
                       || "Categoría";
-                    
+
                     return (
                       <ProductCard
                         key={product.id}
@@ -263,5 +253,13 @@ function MarketplaceContent() {
       </main>
       <Footer />
     </>
+  );
+}
+
+export default function MarketplacePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-background pt-32 pb-12 px-4 md:px-8 max-w-[1400px] mx-auto text-center">Cargando marketplace...</div>}>
+      <MarketplaceContent />
+    </Suspense>
   );
 }

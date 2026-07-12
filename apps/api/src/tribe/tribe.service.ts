@@ -13,12 +13,13 @@ import {
   AssignTribeLeaderDto,
   TribeStatus,
   MembershipRequestStatus,
-  TribeMembershipRequestResponseDto
+  TribeMembershipRequestResponseDto,
+  UserRole
 } from 'event-types';
 import { PrismaService } from '../prisma/prisma.service';
 import { ProductService } from '../product/product.service';
 
-const CREATION_COOLDOWN_DAYS = 30;
+const CREATION_COOLDOWN_DAYS = 15;
 const MEMBERSHIP_COOLDOWN_DAYS = 7;
 
 @Injectable()
@@ -32,8 +33,8 @@ export class TribeService {
   // Tribe Creation Flow
   // ===========================================================================
 
-  async requestCreation(sellerId: string, dto: RequestTribeCreationDto): Promise<TribeResponseDto> {
-    const seller = await this.prisma.seller.findUnique({ where: { id: sellerId } });
+  async requestCreation(userId: string, dto: RequestTribeCreationDto): Promise<TribeResponseDto> {
+    const seller = await this.prisma.seller.findUnique({ where: { id: userId } });
     if (seller?.tribeId) {
       throw new ConflictException('Ya perteneces a una tribu');
     }
@@ -41,7 +42,7 @@ export class TribeService {
     // Cooldown check
     const lastRejected = await this.prisma.tribe.findFirst({
       where: {
-        requestedById: sellerId,
+        requestedById: userId,
         status: 'REJECTED' as any,
       },
       orderBy: { reviewedAt: 'desc' },
@@ -58,7 +59,7 @@ export class TribeService {
     }
 
     const pendingRequest = await this.prisma.tribe.findFirst({
-      where: { requestedById: sellerId, status: 'PENDING_APPROVAL' as any },
+      where: { requestedById: userId, status: 'PENDING_APPROVAL' as any },
     });
     if (pendingRequest) {
       throw new ConflictException('Ya tienes una solicitud de creación pendiente');
@@ -67,7 +68,7 @@ export class TribeService {
     const tribeData: any = {
       ...dto,
       status: 'PENDING_APPROVAL',
-      requestedById: sellerId,
+      requestedById: userId,
     };
 
     return this.prisma.tribe.create({
@@ -99,9 +100,21 @@ export class TribeService {
         });
 
         if ((tribe as any).requestedById) {
-          await tx.seller.update({
-            where: { id: (tribe as any).requestedById },
-            data: { tribeId: tribeId },
+          const reqId = (tribe as any).requestedById;
+          // Ensure Seller exists, then assign tribe
+          const seller = await tx.seller.findUnique({ where: { id: reqId } });
+          if (!seller) {
+            await tx.seller.create({ data: { id: reqId, tribeId: tribeId } });
+          } else {
+            await tx.seller.update({
+              where: { id: reqId },
+              data: { tribeId: tribeId },
+            });
+          }
+          // Promote UserAccount role to SELLER
+          await tx.userAccount.update({
+            where: { id: reqId },
+            data: { role: UserRole.SELLER },
           });
         }
       } else {
@@ -138,8 +151,8 @@ export class TribeService {
   // Membership Flow
   // ===========================================================================
 
-  async requestMembership(tribeId: number, sellerId: string, dto: RequestTribeMembershipDto): Promise<TribeMembershipRequestResponseDto> {
-    const seller = await this.prisma.seller.findUnique({ where: { id: sellerId } });
+  async requestMembership(tribeId: number, userId: string, dto: RequestTribeMembershipDto): Promise<TribeMembershipRequestResponseDto> {
+    const seller = await this.prisma.seller.findUnique({ where: { id: userId } });
     if (seller?.tribeId) {
       throw new ConflictException('Ya perteneces a una tribu');
     }
@@ -150,14 +163,14 @@ export class TribeService {
     }
 
     const pendingRequest = await this.prisma.tribeMembershipRequest.findFirst({
-      where: { sellerId, tribeId, status: 'PENDING' as any },
+      where: { sellerId: userId, tribeId, status: 'PENDING' as any },
     });
     if (pendingRequest) {
       throw new ConflictException('Ya tienes una solicitud pendiente para esta tribu');
     }
 
     const lastRejected = await this.prisma.tribeMembershipRequest.findFirst({
-      where: { sellerId, tribeId, status: 'REJECTED' as any },
+      where: { sellerId: userId, tribeId, status: 'REJECTED' as any },
       orderBy: { reviewedAt: 'desc' },
     });
 
@@ -173,7 +186,7 @@ export class TribeService {
 
     const requestData: any = {
       tribeId,
-      sellerId,
+      sellerId: userId, // we keep the column as sellerId but it stores the userId
       message: dto.message,
     };
 
@@ -203,11 +216,15 @@ export class TribeService {
       if (dto.status === MembershipRequestStatus.APPROVED) {
         // Validate if the seller isn't already in a tribe (might have joined another while pending)
         const seller = await tx.seller.findUnique({ where: { id: request.sellerId } });
-        if (!seller?.tribeId) {
+        if (!seller) {
+           await tx.seller.create({ data: { id: request.sellerId, tribeId: request.tribeId } });
+           await tx.userAccount.update({ where: { id: request.sellerId }, data: { role: UserRole.SELLER } });
+        } else if (!seller.tribeId) {
           await tx.seller.update({
             where: { id: request.sellerId },
             data: { tribeId: request.tribeId },
           });
+          await tx.userAccount.update({ where: { id: request.sellerId }, data: { role: UserRole.SELLER } });
         }
       }
 
@@ -334,6 +351,30 @@ export class TribeService {
         });
       }
     });
+  }
+
+  // ===========================================================================
+  // My Tribe endpoints
+  // ===========================================================================
+
+  async getMyCreationRequests(userId: string): Promise<TribeResponseDto[]> {
+    const data = await this.prisma.tribe.findMany({
+      where: { requestedById: userId },
+      orderBy: { createdAt: 'desc' },
+    });
+    return data as unknown as TribeResponseDto[];
+  }
+
+  async getMyTribe(sellerId: string): Promise<TribeResponseDto> {
+    const seller = await this.prisma.seller.findUnique({
+      where: { id: sellerId },
+      include: { tribe: true },
+    });
+
+    if (!seller?.tribeId || !seller.tribe) {
+      throw new NotFoundException('No perteneces a ninguna tribu');
+    }
+    return seller.tribe as unknown as TribeResponseDto;
   }
 
   // ===========================================================================

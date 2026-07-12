@@ -39,6 +39,25 @@ services:
         max-file: "3"
 
   # ══════════════════════════════════════════════════════════════════════════
+  # MongoDB - Base de datos local para Telemetría y Envíos
+  # ══════════════════════════════════════════════════════════════════════════
+  mongodb:
+    image: mongo:6.0
+    container_name: amazonia-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    networks:
+      - amazonia-internal
+    volumes:
+      - mongodb_data:/data/db
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ══════════════════════════════════════════════════════════════════════════
   # Ingestor Service — Gateway MQTT → Redis Streams
   # ══════════════════════════════════════════════════════════════════════════
   ingestor-service:
@@ -168,6 +187,7 @@ services:
       - REDIS_URL=${REDIS_URL}
       - REDIS_TOKEN=${REDIS_TOKEN}
       - NOTARY_API_KEY=${NOTARY_API_KEY}
+      - INFERENCE_SERVICE_URL=http://inference-service:8000
       - NOTARY_SERVICE_URL=http://blockchain-notary:3004/api/v1
       - WEBHOOK_BASE_URL=http://api:3001/api
       - CB_FAILURE_THRESHOLD=${CB_FAILURE_THRESHOLD:-3}
@@ -226,9 +246,13 @@ services:
         max-file: "5"
 
 # ══════════════════════════════════════════════════════════════════════════════
-# Redes
+# Redes y Volúmenes
 # ══════════════════════════════════════════════════════════════════════════════
 networks:
   amazonia-internal:
     driver: bridge
     name: amazonia-network
+
+volumes:
+  mongodb_data:
+    name: amazonia-mongodb-data

@@ -19,6 +19,7 @@ import {
   UserRole,
   SellerResponseDto,
   PaginatedResponseDto,
+  SellerMetricsResponseDto,
 } from 'event-types';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -32,6 +33,13 @@ export class SellerController {
   @Post('register-me')
   registerMe(@Body() createSellerDto: CreateSellerDto, @Request() req: any) {
     return this.sellerService.create(req.user.id, createSellerDto);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SELLER)
+  @Get('me/metrics')
+  getMyMetrics(@Request() req: any): Promise<SellerMetricsResponseDto> {
+    return this.sellerService.getMetrics(req.user.id);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

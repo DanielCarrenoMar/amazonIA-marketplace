@@ -1,26 +1,36 @@
-// Fallback seguro para desarrollo
-//Revisar más adelante esto
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+import type {
+  UserMeResponseDto,
+  ProductResponseDto,
+  PaginatedResponseDto,
+  SellerMetricsResponseDto,
+  ProductOrderResponseDto,
+  OrderTimelineResponseDto,
+  ShippingCarrierResponseDto,
+  ProductCategoryResponseDto,
+  SellerResponseDto,
+  LoginDto,
+  AuthResponseDto,
+  CreateUserAccountDto,
+  RequestTribeCreationDto,
+  ReviewTribeCreationDto,
+  RequestTribeMembershipDto,
+  ReviewTribeMembershipDto,
+  TribeResponseDto,
+  TribeMembershipRequestResponseDto
+} from './types';
 
-// Tipos de respuesta
-export interface AuthUser {
-  id: string;
-  email: string;
-  fullName: string;
-  username: string;
+export interface SpatialRiskQuery {
+  lat: number;
+  lon: number;
+  transportType?: string;
+  productType?: string;
 }
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002";
 
-import type { PaginatedResponseDto, ProductResponseDto, ProductCategoryResponseDto } from "event-types";
 
 
-export interface AuthResponse {
-  accessToken: string;
-  refreshToken: string;
-  user: AuthUser;
-}
-
-// Helper interno
-async function apiFetch<T>(
+// Helper interno original
+export async function apiFetch<T>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
@@ -60,7 +70,7 @@ async function apiFetch<T>(
           localStorage.removeItem('refreshToken');
         }
       } catch (err) {
-        // Ignoramos el error del refresh y dejamos que la petición original lance su error 401
+        // Ignoramos el error del refresh
       }
     }
   }
@@ -79,58 +89,190 @@ async function apiFetch<T>(
   return res.json() as Promise<T>;
 }
 
-// Register
-export interface RegisterPayload {
-  fullName: string;
-  nationalId: string;
-  email: string;
-  password: string;
-  username?: string;
+// Helper autenticado
+export async function authFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+  const headers = new Headers(options.headers || {});
+
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`);
+  }
+  if (!options.body || typeof options.body === 'string') {
+    if (!headers.has('Content-Type')) {
+      headers.set('Content-Type', 'application/json');
+    }
+  }
+
+  return apiFetch<T>(path, { ...options, headers });
 }
 
-export function registerUser(payload: RegisterPayload): Promise<AuthResponse> {
-  return apiFetch<AuthResponse>("/auth/register", {
+// ==========================================
+// AUTH & USERS
+// ==========================================
+export function registerUser(payload: CreateUserAccountDto): Promise<AuthResponseDto> {
+  return apiFetch<AuthResponseDto>("/auth/register", { method: "POST", body: JSON.stringify(payload) });
+}
+
+export function loginUser(payload: LoginDto): Promise<AuthResponseDto> {
+  return apiFetch<AuthResponseDto>("/auth/login", { method: "POST", body: JSON.stringify(payload) });
+}
+
+export function getMe(): Promise<UserMeResponseDto> {
+  return authFetch<UserMeResponseDto>("/auth/me");
+}
+
+// ==========================================
+// SELLER
+// ==========================================
+export function getSellerMetrics(): Promise<SellerMetricsResponseDto> {
+  return authFetch<SellerMetricsResponseDto>("/seller/me/metrics");
+}
+
+export function registerSeller(payload: any): Promise<SellerResponseDto> {
+  return authFetch<SellerResponseDto>("/seller/register-me", {
     method: "POST",
     body: JSON.stringify(payload),
   });
 }
 
-// Login
-export interface LoginPayload {
-  email: string;
-  password: string;
+// ==========================================
+// TRIBE
+// ==========================================
+export function requestTribeCreation(payload: RequestTribeCreationDto): Promise<TribeResponseDto> {
+  return authFetch<TribeResponseDto>("/tribe/request-creation", { method: "POST", body: JSON.stringify(payload) });
 }
 
-export function loginUser(payload: LoginPayload): Promise<AuthResponse> {
-  return apiFetch<AuthResponse>("/auth/login", {
+export function requestTribeMembership(tribeId: number, payload: RequestTribeMembershipDto): Promise<TribeMembershipRequestResponseDto> {
+  return authFetch<TribeMembershipRequestResponseDto>(`/tribe/${tribeId}/request-membership`, { method: "POST", body: JSON.stringify(payload) });
+}
+
+export function getActiveTribes(params?: URLSearchParams): Promise<PaginatedResponseDto<TribeResponseDto>> {
+  const query = params ? `?${params.toString()}` : "?status=ACTIVE";
+  return apiFetch<PaginatedResponseDto<TribeResponseDto>>(`/tribe${query}`);
+}
+
+export function getMyCreationRequests(): Promise<TribeResponseDto[]> {
+  return authFetch<TribeResponseDto[]>("/tribe/my-creation-requests");
+}
+
+export function getPendingTribeCreations(params?: URLSearchParams): Promise<PaginatedResponseDto<TribeResponseDto>> {
+  const query = params ? `?${params.toString()}` : "";
+  return authFetch<PaginatedResponseDto<TribeResponseDto>>(`/tribe/pending-creations${query}`);
+}
+
+export function reviewTribeCreation(id: number, payload: ReviewTribeCreationDto): Promise<TribeResponseDto> {
+  return authFetch<TribeResponseDto>(`/tribe/${id}/review-creation`, { method: "PATCH", body: JSON.stringify(payload) });
+}
+
+export function getTribeMembershipRequests(tribeId: number, params?: URLSearchParams): Promise<PaginatedResponseDto<TribeMembershipRequestResponseDto>> {
+  const query = params ? `?${params.toString()}` : "";
+  return authFetch<PaginatedResponseDto<TribeMembershipRequestResponseDto>>(`/tribe/${tribeId}/membership-requests${query}`);
+}
+
+export function reviewTribeMembership(tribeId: number, requestId: number, payload: ReviewTribeMembershipDto): Promise<TribeMembershipRequestResponseDto> {
+  return authFetch<TribeMembershipRequestResponseDto>(`/tribe/${tribeId}/membership/${requestId}/review`, { method: "PATCH", body: JSON.stringify(payload) });
+}
+
+export function getMyTribe(): Promise<TribeResponseDto> {
+  return authFetch<TribeResponseDto>("/tribe/my-tribe");
+}
+
+// ==========================================
+// PRODUCTS
+// ==========================================
+export function getMyProducts(params?: URLSearchParams): Promise<PaginatedResponseDto<ProductResponseDto>> {
+  const query = params ? `?${params.toString()}` : "";
+  return authFetch<PaginatedResponseDto<ProductResponseDto>>(`/product/my-products${query}`);
+}
+
+export function createProduct(payload: any): Promise<ProductResponseDto> {
+  return authFetch<ProductResponseDto>("/product", {
     method: "POST",
     body: JSON.stringify(payload),
   });
 }
 
-//esto es para sacar la info de quien esta logueado
-export function getMe(accessToken: string): Promise<AuthUser> {
-  return apiFetch<AuthUser>("/auth/me", {
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${accessToken}`,
-    },
+export function updateProduct(id: string, payload: any): Promise<ProductResponseDto> {
+  return authFetch<ProductResponseDto>(`/product/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
   });
 }
 
-// Products
-export function getProducts(params?: Record<string, any>): Promise<PaginatedResponseDto<ProductResponseDto>> {
-  const query = params ? new URLSearchParams(params as any).toString() : "";
-  const url = query ? `/product?${query}` : '/product';
-  return apiFetch<PaginatedResponseDto<ProductResponseDto>>(url);
+export function deleteProduct(id: string): Promise<any> {
+  return authFetch(`/product/${id}`, { method: "DELETE" });
 }
 
-export function getProductById(id: string): Promise<ProductResponseDto> {
-  return apiFetch<ProductResponseDto>(`/product/${id}`);
+export function uploadProductImage(id: string, file: File): Promise<ProductResponseDto> {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+  const headers = new Headers();
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+
+  return apiFetch<ProductResponseDto>(`/product/${id}/image`, {
+    method: "POST",
+    headers, // Omit Content-Type so fetch sets the boundary automatically
+    body: formData,
+  });
 }
 
+// ==========================================
+// ORDERS
+// ==========================================
+export function getSellerOrders(params?: URLSearchParams): Promise<PaginatedResponseDto<ProductOrderResponseDto>> {
+  const query = params ? `?${params.toString()}` : "";
+  return authFetch<PaginatedResponseDto<ProductOrderResponseDto>>(`/product-order/seller-orders${query}`);
+}
 
-// Categories
-export function getCategories(): Promise<PaginatedResponseDto<ProductCategoryResponseDto>> {
-  return apiFetch<PaginatedResponseDto<ProductCategoryResponseDto>>("/product-category");
-}
+export function getMyOrders(params?: URLSearchParams): Promise<PaginatedResponseDto<ProductOrderResponseDto>> {
+  const query = params ? `?${params.toString()}` : "";
+  return authFetch<PaginatedResponseDto<ProductOrderResponseDto>>(`/product-order/my-orders${query}`);
+}
+
+export function getOrder(id: string): Promise<ProductOrderResponseDto> {
+  return authFetch<ProductOrderResponseDto>(`/product-order/${id}`);
+}
+
+export function getOrderTimeline(id: string): Promise<OrderTimelineResponseDto> {
+  return authFetch<OrderTimelineResponseDto>(`/product-order/${id}/timeline`);
+}
+
+export function updateOrder(id: string, payload: any): Promise<ProductOrderResponseDto> {
+  return authFetch<ProductOrderResponseDto>(`/product-order/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+
+// ==========================================
+// DICTIONARIES (Categories, Carriers)
+// ==========================================
+export function getCategories(): Promise<ProductCategoryResponseDto[]> {
+  return apiFetch<ProductCategoryResponseDto[]>("/product-category");
+}
+
+export function getShippingCarriers(): Promise<ShippingCarrierResponseDto[]> {
+  return authFetch<ShippingCarrierResponseDto[]>("/shipping-carriers");
+}
+
+// ==========================================
+// INFERENCE
+// ==========================================
+export interface SpatialRiskQuery {
+  lat: number;
+  lon: number;
+  transportType?: string;
+  productType?: string;
+}
+
+export function getSpatialRisk(query: SpatialRiskQuery): Promise<any> {
+  const params = new URLSearchParams();
+  params.append('lat', query.lat.toString());
+  params.append('lon', query.lon.toString());
+  if (query.transportType) params.append('transportType', query.transportType);
+  if (query.productType) params.append('productType', query.productType);
+
+  return apiFetch<any>(`/inference/spatial-risk?${params.toString()}`);
+}
