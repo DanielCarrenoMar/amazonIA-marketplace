@@ -2,7 +2,7 @@ import type { ProductResponseDto, PaginatedResponseDto, ProductMetricsDto } from
 import { apiFetch, authFetch } from './client';
 
 export function getProducts(params?: Record<string, any>): Promise<PaginatedResponseDto<ProductResponseDto>> {
-  const query = params ? `?${new URLSearchParams(params).toString()}` : "";
+  const query = params ? `?${new URLSearchParams(params as Record<string, string>).toString()}` : "";
   return apiFetch<PaginatedResponseDto<ProductResponseDto>>(`/product${query}`);
 }
 
@@ -55,5 +55,29 @@ export function getProductMetrics(id: string): Promise<ProductMetricsDto> {
 export function deleteProductImage(id: string): Promise<ProductResponseDto> {
   return authFetch<ProductResponseDto>(`/product/${id}/image`, {
     method: "DELETE",
+  });
+}
+
+export function getProductRatings(productId: string, params?: Record<string, any>): Promise<PaginatedResponseDto<any>> {
+  const query = params ? `?${new URLSearchParams(params as Record<string, string>).toString()}` : "";
+  return apiFetch<PaginatedResponseDto<any>>(`/product-rating/product/${productId}${query}`);
+}
+
+export function getProductComments(productId: string, params?: Record<string, any>): Promise<any[]> {
+  const query = params ? `?${new URLSearchParams(params as Record<string, string>).toString()}` : "";
+  return apiFetch<any[]>(`/product-comment/product/${productId}${query}`);
+}
+
+export function createProductComment(payload: any): Promise<any> {
+  return authFetch<any>("/product-comment", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function createProductRating(payload: any): Promise<any> {
+  return authFetch<any>("/product-rating", {
+    method: "POST",
+    body: JSON.stringify(payload),
   });
 }

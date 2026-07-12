@@ -16,18 +16,6 @@ export class ProductRatingService {
   async create(userAccountId: string, createProductRatingDto: CreateProductRatingDto): Promise<ProductRatingResponseDto> {
     const { productId, ratingValue } = createProductRatingDto;
 
-    const order = await this.prisma.productOrder.findFirst({
-      where: {
-        buyerId: userAccountId,
-        productId,
-        currentStatus: OrderStatus.DELIVERED,
-      },
-    });
-
-    if (!order) {
-      throw new ForbiddenException('Debes haber recibido el producto para calificarlo');
-    }
-
     return this.prisma.$transaction(async (tx) => {
       let newRating;
       try {
