@@ -1,4 +1,4 @@
-import type { ProductResponseDto, PaginatedResponseDto } from 'event-types';
+import type { ProductResponseDto, PaginatedResponseDto, ProductMetricsDto } from 'event-types';
 import { apiFetch, authFetch } from './client';
 
 export function getProducts(params?: Record<string, any>): Promise<PaginatedResponseDto<ProductResponseDto>> {
@@ -45,5 +45,15 @@ export function uploadProductImage(id: string, file: File): Promise<ProductRespo
     method: "POST",
     headers, // Omit Content-Type so fetch sets the boundary automatically
     body: formData,
+  });
+}
+
+export function getProductMetrics(id: string): Promise<ProductMetricsDto> {
+  return authFetch<ProductMetricsDto>(`/product/${id}/metrics`);
+}
+
+export function deleteProductImage(id: string): Promise<ProductResponseDto> {
+  return authFetch<ProductResponseDto>(`/product/${id}/image`, {
+    method: "DELETE",
   });
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { Icon } from "@iconify/react";
 
 export interface MenuItem {
@@ -28,11 +28,18 @@ export function DropdownMenu({
   className = "",
   triggerRef,
 }: DropdownMenuProps) {
+  const menuRef = useRef<HTMLDivElement>(null);
+
   // Manejo de clic fuera del menú
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
       // Ignorar clics en el botón/trigger que abrió el menú para no afectar su propio toggle.
       if (triggerRef?.current && triggerRef.current.contains(event.target as Node)) {
+        return;
+      }
+      
+      // Ignorar clics dentro del propio menú dropdown
+      if (menuRef.current && menuRef.current.contains(event.target as Node)) {
         return;
       }
       
@@ -49,6 +56,7 @@ export function DropdownMenu({
 
   return (
     <div 
+      ref={menuRef}
       className={`absolute top-[calc(100%+8px)] left-0 w-full min-w-[200px] bg-white border border-border rounded-xl shadow-xl z-9999 overflow-hidden animate-in fade-in zoom-in-95 duration-100 ${className}`}
       onClick={(e) => e.stopPropagation()} // Prevenir que el clic cierre contenedores padre por error
     >

@@ -7,6 +7,7 @@ import { TribeStatus } from "event-types/enums";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { MapPin, User, Calendar } from "lucide-react";
+import { toast } from "sonner";
 
 export default function AdminDashboardPage() {
   const [requests, setRequests] = useState<TribeResponseDto[]>([]);
@@ -33,9 +34,10 @@ export default function AdminDashboardPage() {
       await reviewTribeCreation(id, { status });
       // Remove from list or reload
       setRequests(prev => prev.filter(r => r.id !== id));
+      toast.success(status === TribeStatus.ACTIVE ? "Tribu aprobada exitosamente" : "Tribu rechazada");
     } catch (err) {
       console.error(err);
-      alert("Error al revisar la solicitud");
+      toast.error("Error al revisar la solicitud");
     }
   };
 

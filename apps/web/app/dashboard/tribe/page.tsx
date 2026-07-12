@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/useAuth";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Users, MapPin, UserCheck, UserX, User } from "lucide-react";
+import { toast } from "sonner";
 
 export default function MyTribePage() {
   const { isLeader, user } = useAuth();
@@ -42,9 +43,10 @@ export default function MyTribePage() {
       await reviewTribeMembership(tribe.id, requestId, { status });
       // Remove from pending list
       setRequests(prev => prev.filter(r => r.id !== requestId));
+      toast.success(status === MembershipRequestStatus.APPROVED ? "Solicitud aprobada" : "Solicitud rechazada");
     } catch (err) {
       console.error(err);
-      alert("Error al revisar la solicitud");
+      toast.error("Error al revisar la solicitud");
     }
   };
 

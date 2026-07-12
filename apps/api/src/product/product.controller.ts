@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ProductService } from './product.service';
-import { CreateProductDto, UpdateProductDto, FindProductsDto, FindNearbyDto, UserRole, PaginationDto, ProductResponseDto, NearbyProductResponseDto, PaginatedResponseDto } from 'event-types';
+import { CreateProductDto, UpdateProductDto, FindProductsDto, FindNearbyDto, UserRole, PaginationDto, ProductResponseDto, NearbyProductResponseDto, PaginatedResponseDto, ProductMetricsDto } from 'event-types';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -47,6 +47,14 @@ export class ProductController {
   @Get(':id')
   findOne(@Param('id', ParseUUIDPipe) id: string): Promise<ProductResponseDto> {
     return this.productService.findOne(id);
+  }
+
+  // Only the authenticated seller or admin can see metrics
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SELLER, UserRole.ADMIN)
+  @Get(':id/metrics')
+  getMetrics(@Param('id', ParseUUIDPipe) id: string, @Req() req: any): Promise<ProductMetricsDto> {
+    return this.productService.getMetrics(id, req.user);
   }
 
   // Only authenticated sellers or admins can update — service enforces ownership
@@ -92,5 +100,16 @@ export class ProductController {
     }
 
     return this.productService.uploadImage(id, file, req.user);
+  }
+
+  // Only sellers and admins can delete product images
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SELLER, UserRole.ADMIN)
+  @Delete(':id/image')
+  async removeImage(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Req() req: any,
+  ): Promise<ProductResponseDto> {
+    return this.productService.removeImage(id, req.user);
   }
 }

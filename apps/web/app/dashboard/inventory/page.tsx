@@ -11,6 +11,7 @@ import { Search, LayoutGrid, List } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/components/ui/Toast";
 import { useAuth } from "@/lib/useAuth";
+import { useRouter } from "next/navigation";
 
 export default function InventoryPage() {
   const [products, setProducts] = useState<ProductResponseDto[]>([]);
@@ -20,6 +21,7 @@ export default function InventoryPage() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const { user, isAdmin } = useAuth();
   const { toast } = useToast();
+  const router = useRouter();
 
   useEffect(() => {
     if (user) {
@@ -59,8 +61,7 @@ export default function InventoryPage() {
   };
 
   const handleEdit = (product: ProductResponseDto) => {
-    // Navigate to edit page or open modal
-    toast({ title: "Pronto disponible", description: "La edición estará lista pronto." });
+    router.push(`/dashboard/inventory/${product.id}`);
   };
 
   const filteredProducts = products.filter(p => {
