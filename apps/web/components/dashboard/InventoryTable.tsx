@@ -2,8 +2,9 @@
 import React from "react";
 import type { ProductResponseDto } from "event-types";
 import { ProductCard } from "@/components/ui/ProductCard";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, Eye } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import Link from "next/link";
 
 interface InventoryTableProps {
   products: ProductResponseDto[];
@@ -36,6 +37,11 @@ export function InventoryTable({ products, viewMode, onEdit, onDelete }: Invento
                 image={product.imageUrl || "/placeholder.jpg"}
              />
              <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+               <Link href={`/marketplace/${product.id}`}>
+                 <Button size="icon" variant="secondary" className="shadow-lg bg-white hover:bg-gray-100 text-gray-700">
+                   <Eye className="w-4 h-4"/>
+                 </Button>
+               </Link>
                <Button size="icon" variant="primary" className="shadow-lg" onClick={() => onEdit(product)}>
                  <Edit className="w-4 h-4"/>
                </Button>
@@ -77,12 +83,17 @@ export function InventoryTable({ products, viewMode, onEdit, onDelete }: Invento
                 </span>
               </td>
               <td className="px-6 py-4 text-right">
-                <button onClick={() => onEdit(product)} className="p-2 text-muted hover:text-brand-primary transition-colors">
-                  <Edit className="w-4 h-4" />
-                </button>
-                <button onClick={() => onDelete(product.id)} className="p-2 text-muted hover:text-brand-urgency transition-colors">
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                <div className="flex items-center justify-end">
+                  <Link href={`/marketplace/${product.id}`} className="p-2 text-muted hover:text-blue-500 transition-colors">
+                    <Eye className="w-4 h-4" />
+                  </Link>
+                  <button onClick={() => onEdit(product)} className="p-2 text-muted hover:text-brand-primary transition-colors">
+                    <Edit className="w-4 h-4" />
+                  </button>
+                  <button onClick={() => onDelete(product.id)} className="p-2 text-muted hover:text-brand-urgency transition-colors">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </td>
             </tr>
           ))}
