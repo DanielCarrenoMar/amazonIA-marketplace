@@ -435,21 +435,27 @@ export default function ProductDetailPage() {
         {activeTab === 'artisan' && (
           <section className="max-w-3xl mx-auto py-8">
             <div className="flex flex-col items-center text-center">
-              <Avatar src="https://i.pravatar.cc/150?u=artesano" fallback={product.seller?.user?.fullName?.charAt(0) || "AT"} size="2xl" className="mb-6" />
+              <Avatar src={product.seller?.user?.avatarUrl || "https://i.pravatar.cc/150?u=artesano"} fallback={product.seller?.user?.fullName?.charAt(0) || "AT"} size="2xl" className="mb-6" />
               <h3 className="text-3xl font-extrabold text-slate-900 mb-2">
                 {product.seller?.user?.fullName || "Comunidad Artesanal Amazónica"}
               </h3>
               <div className="flex items-center justify-center gap-2 mb-6">
                 <Icon icon="lucide:map-pin" className="w-5 h-5 text-brand-primary" />
                 <p className="text-gray-600 font-medium">
-                  {product.locationCity ? `${product.locationCity}, ${product.locationRegion || 'Venezuela'}` : 'Amazonas, Venezuela'}
+                  {product.seller?.user?.locationCity 
+                    ? `${product.seller.user.locationCity}, ${product.seller.user.locationRegion || ''}` 
+                    : (product.locationCity ? `${product.locationCity}, ${product.locationRegion || 'Venezuela'}` : 'Amazonas, Venezuela')}
                 </p>
               </div>
               <p className="text-gray-600 leading-relaxed text-lg mb-8 max-w-2xl">
-                {product.seller?.bio || 
+                {product.seller?.description || 
                 "Somos un grupo de artesanos dedicados a preservar las técnicas ancestrales de tejido y tallado que se han transmitido de generación en generación en nuestra comunidad. Cada pieza que creamos cuenta una historia única de nuestra selva, utilizando materiales 100% sostenibles y recolectados con respeto por la naturaleza."}
               </p>
-              <Button variant="outline" className="px-8 rounded-xl h-12 font-bold border-gray-300 hover:border-brand-primary hover:text-brand-primary hover:bg-transparent">
+              <Button 
+                variant="outline" 
+                className="px-8 rounded-xl h-12 font-bold border-gray-300 hover:border-brand-primary hover:text-brand-primary hover:bg-transparent"
+                onClick={() => router.push(`/seller/${product.sellerId}`)}
+              >
                 Ver Perfil Completo
               </Button>
             </div>

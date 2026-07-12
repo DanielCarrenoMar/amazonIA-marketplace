@@ -21,7 +21,11 @@ export class SellerService {
                 username: true, 
                 email: true, 
                 age: true, 
-                nationality: true 
+                nationality: true,
+                avatarUrl: true,
+                locationFormattedAddress: true,
+                locationCity: true,
+                locationRegion: true,
               } 
             },
             tribe: true,
@@ -73,7 +77,11 @@ export class SellerService {
               username: true, 
               email: true, 
               age: true, 
-              nationality: true 
+              nationality: true,
+              avatarUrl: true,
+              locationFormattedAddress: true,
+              locationCity: true,
+              locationRegion: true,
             } 
           },
           tribe: true,
@@ -109,7 +117,11 @@ export class SellerService {
             username: true, 
             email: true, 
             age: true, 
-            nationality: true 
+            nationality: true,
+            avatarUrl: true,
+            locationFormattedAddress: true,
+            locationCity: true,
+            locationRegion: true,
           } 
         },
         tribe: true,
@@ -182,7 +194,11 @@ export class SellerService {
             username: true, 
             email: true, 
             age: true, 
-            nationality: true 
+            nationality: true,
+            avatarUrl: true,
+            locationFormattedAddress: true,
+            locationCity: true,
+            locationRegion: true,
           } 
         },
         tribe: true,

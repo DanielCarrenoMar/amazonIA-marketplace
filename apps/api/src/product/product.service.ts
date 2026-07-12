@@ -153,7 +153,13 @@ export class ProductService {
   async findOne(id: string): Promise<ProductResponseDto> {
     const product = await this.prisma.product.findUnique({
       where: { id },
-      include: { seller: true, category: true, elaborationSteps: { orderBy: { stepNumber: 'asc' } } },
+      include: { 
+        seller: {
+          include: { user: true }
+        }, 
+        category: true, 
+        elaborationSteps: { orderBy: { stepNumber: 'asc' } } 
+      },
     });
 
     if (!product) throw new NotFoundException(`Product with ID ${id} not found`);

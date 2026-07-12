@@ -23,7 +23,7 @@ export class UserAccountService {
   ) {}
 
   async create(createUserAccountDto: CreateUserAccountDto): Promise<UserAccountResponseDto> {
-    const { password, ...rest } = createUserAccountDto;
+    const { password, locationLat, locationLng, ...rest } = createUserAccountDto;
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
 
     try {
@@ -33,6 +33,11 @@ export class UserAccountService {
           passwordHash,
         },
       });
+
+      if (locationLat !== undefined && locationLng !== undefined && locationLat !== null && locationLng !== null) {
+        await this.spatialService.updateUserLocation(user.id, locationLat, locationLng);
+      }
+
       return user as unknown as UserAccountResponseDto;
     } catch (e: any) {
       if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
