@@ -292,7 +292,7 @@ export default function SettingsPage() {
                   </div>
                   
                   {/* Mapa Interactivo (Beta) */}
-                  <div className="pt-4 border-t border-gray-100 dark:border-gray-800">
+                  <div className="pt-4 border-t border-gray-100">
                     <h4 className="text-sm font-semibold text-foreground mb-3">Fijar Ubicación Exacta en el Mapa</h4>
                     <LocationPickerHybrid 
                       onLocationSelect={(lat, lng, address, city, region) => {

@@ -44,7 +44,7 @@ export class ProductService {
   }
 
   async findAll(query: FindProductsDto): Promise<PaginatedResponseDto<ProductResponseDto>> {
-    const { search, categoryId, sellerId } = query;
+    const { search, categoryId, sellerId, tribeId } = query;
     const page = Number(query.page) || 1;
     const limit = Number(query.limit) || 10;
     const skip = (page - 1) * limit;
@@ -54,6 +54,7 @@ export class ProductService {
       isActive: true, // Only show active products to buyers
       ...(categoryId ? { categoryId: Number(categoryId) } : {}),
       ...(sellerId ? { sellerId } : {}),
+      ...(tribeId ? { seller: { tribeId: Number(tribeId) } } : {}),
       ...(search ? { name: { contains: search, mode: 'insensitive' } } : {}),
     };
 

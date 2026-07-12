@@ -129,7 +129,8 @@ export class TribeService {
   }
 
   async findPendingCreations(query?: PaginationDto): Promise<PaginatedResponseDto<TribeResponseDto>> {
-    const { page = 1, limit = 10 } = query || {};
+    const page = parseInt(String(query?.page), 10) || 1;
+    const limit = parseInt(String(query?.limit), 10) || 10;
     const skip = (page - 1) * limit;
 
     const [total, data] = await Promise.all([
@@ -239,7 +240,9 @@ export class TribeService {
   }
 
   async findMembershipRequests(tribeId: number, query?: PaginationDto & { status?: string }): Promise<PaginatedResponseDto<TribeMembershipRequestResponseDto>> {
-    const { page = 1, limit = 10, status } = query || {};
+    const page = parseInt(String(query?.page), 10) || 1;
+    const limit = parseInt(String(query?.limit), 10) || 10;
+    const status = query?.status;
     const skip = (page - 1) * limit;
 
     const where: any = { tribeId };
@@ -421,7 +424,8 @@ export class TribeService {
   }
 
   async findAll(query?: PaginationDto): Promise<PaginatedResponseDto<TribeResponseDto>> {
-    const { page = 1, limit = 10 } = query || {};
+    const page = parseInt(String(query?.page), 10) || 1;
+    const limit = parseInt(String(query?.limit), 10) || 10;
     const skip = (page - 1) * limit;
 
     const [total, data] = await Promise.all([
