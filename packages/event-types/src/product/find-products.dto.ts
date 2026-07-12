@@ -25,8 +25,13 @@ export class FindProductsDto {
   @IsOptional()
   categoryId?: number;
 
-  // Filter by seller UUID — useful for admins to inspect a seller's catalog
   @IsUUID()
   @IsOptional()
   sellerId?: string;
+
+  // Filter by tribe ID to get all products from members of a tribe
+  @Type(() => Number)
+  @IsInt()
+  @IsOptional()
+  tribeId?: number;
 }

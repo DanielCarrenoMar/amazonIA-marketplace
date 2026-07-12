@@ -9,18 +9,21 @@ import {
   removeTribeMember 
 } from "@/lib/api/tribe.api";
 import { findSellers } from "@/lib/api/seller.api";
+import { getProducts } from "@/lib/api/product.api";
 import { useAuth } from "@/lib/useAuth";
-import type { TribeResponseDto, SellerResponseDto, TribeMembershipRequestResponseDto } from "event-types";
+import type { TribeResponseDto, SellerResponseDto, TribeMembershipRequestResponseDto, ProductResponseDto } from "event-types";
+import { ProductCard } from "@/components/ui/ProductCard";
 import { Button } from "@/components/ui/Button";
 import { toast } from "sonner";
 
 export default function TribeManagementPage() {
   const { user, isLeader } = useAuth();
-  const [activeTab, setActiveTab] = useState<"members" | "requests">("members");
+  const [activeTab, setActiveTab] = useState<"members" | "requests" | "products">("members");
   
   const [tribe, setTribe] = useState<TribeResponseDto | null>(null);
   const [members, setMembers] = useState<SellerResponseDto[]>([]);
   const [requests, setRequests] = useState<TribeMembershipRequestResponseDto[]>([]);
+  const [products, setProducts] = useState<ProductResponseDto[]>([]);
   
   const [isLoading, setIsLoading] = useState(true);
   const [isActionLoading, setIsActionLoading] = useState<number | string | null>(null);
@@ -35,6 +38,10 @@ export default function TribeManagementPage() {
         // Fetch Members
         const sellersRes = await findSellers(new URLSearchParams({ tribeId: myTribe.id.toString() }));
         setMembers(sellersRes.data);
+        
+        // Fetch Tribe Products
+        const productsRes = await getProducts({ tribeId: myTribe.id });
+        setProducts(productsRes.data);
         
         // Fetch pending requests (only if leader)
         if (isLeader) {
@@ -98,11 +105,11 @@ export default function TribeManagementPage() {
 
   if (!tribe) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-3xl p-10 border border-gray-100 dark:border-gray-700 shadow-sm text-center">
-        <div className="w-20 h-20 bg-gray-50 dark:bg-gray-700/50 rounded-full flex items-center justify-center mx-auto mb-6">
+      <div className="bg-white rounded-3xl p-10 border border-gray-100 shadow-sm text-center">
+        <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
           <Icon icon="lucide:tent" className="w-10 h-10 text-gray-400" />
         </div>
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">No perteneces a una tribu</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">No perteneces a una tribu</h2>
         <p className="text-gray-500 max-w-md mx-auto">
           Explora las tribus activas y solicita unirte a una para ver esta información.
         </p>
@@ -114,10 +121,10 @@ export default function TribeManagementPage() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold font-poppins text-gray-900 dark:text-white mb-2">
+          <h1 className="text-3xl font-bold font-poppins text-gray-900 mb-2">
             {isLeader ? "Gestión de la Tribu" : "Mi Tribu"}
           </h1>
-          <p className="text-gray-500 dark:text-gray-400">
+          <p className="text-gray-500">
             {isLeader ? "Administra los vendedores de " : "Perteneces a "}
             <span className="font-semibold text-brand-primary">{tribe.name}</span>
           </p>
@@ -128,7 +135,7 @@ export default function TribeManagementPage() {
             {members.length} Miembros
           </div>
           {isLeader && requests.length > 0 && (
-            <div className="px-4 py-2 bg-yellow-50 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-400 rounded-xl font-medium border border-yellow-200 dark:border-yellow-500/20 flex items-center">
+            <div className="px-4 py-2 bg-yellow-50 text-yellow-700 rounded-xl font-medium border border-yellow-200 flex items-center">
               <Icon icon="lucide:bell" className="w-4 h-4 mr-2" />
               {requests.length} Pendientes
             </div>
@@ -136,19 +143,31 @@ export default function TribeManagementPage() {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
         {/* Tabs */}
-        <div className="flex border-b border-gray-100 dark:border-gray-700">
+        <div className="flex border-b border-gray-100">
           <button
             onClick={() => setActiveTab("members")}
             className={`flex-1 flex items-center justify-center py-4 font-medium transition-colors ${
               activeTab === "members" 
                 ? "text-brand-primary border-b-2 border-brand-primary bg-brand-primary/5" 
-                : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                : "text-gray-500 hover:text-gray-700"
             }`}
           >
             <Icon icon="lucide:users" className="w-5 h-5 mr-2" />
             Vendedores Activos
+          </button>
+          
+          <button
+            onClick={() => setActiveTab("products")}
+            className={`flex-1 flex items-center justify-center py-4 font-medium transition-colors ${
+              activeTab === "products" 
+                ? "text-brand-primary border-b-2 border-brand-primary bg-brand-primary/5" 
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            <Icon icon="lucide:package" className="w-5 h-5 mr-2" />
+            Productos de la Tribu
           </button>
           
           {isLeader && (
@@ -157,7 +176,7 @@ export default function TribeManagementPage() {
               className={`flex-1 flex items-center justify-center py-4 font-medium transition-colors ${
                 activeTab === "requests" 
                   ? "text-brand-primary border-b-2 border-brand-primary bg-brand-primary/5" 
-                  : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                  : "text-gray-500 hover:text-gray-700"
               }`}
             >
               <Icon icon="lucide:mail" className="w-5 h-5 mr-2" />
@@ -185,9 +204,9 @@ export default function TribeManagementPage() {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {members.map(member => (
-                    <div key={member.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/30 rounded-2xl border border-gray-100 dark:border-gray-700 group">
+                    <div key={member.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 group">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-gray-200 dark:bg-gray-600 rounded-full flex items-center justify-center shrink-0 overflow-hidden">
+                        <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center shrink-0 overflow-hidden">
                           {member.user?.avatarUrl ? (
                             <img src={member.user.avatarUrl} alt={member.user?.username || member.user?.fullName || 'Vendedor'} className="w-full h-full object-cover" />
                           ) : (
@@ -195,8 +214,8 @@ export default function TribeManagementPage() {
                           )}
                         </div>
                         <div>
-                          <h4 className="font-bold text-gray-900 dark:text-white">{member.user?.username || member.user?.fullName || 'Vendedor'}</h4>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[150px]">
+                          <h4 className="font-bold text-gray-900">{member.user?.username || member.user?.fullName || 'Vendedor'}</h4>
+                          <p className="text-xs text-gray-500 truncate max-w-[150px]">
                             {member.id === tribe.primaryLeaderId || member.id === tribe.secondaryLeaderId ? "Líder" : "Miembro"}
                           </p>
                         </div>
@@ -207,7 +226,7 @@ export default function TribeManagementPage() {
                         <button
                           onClick={() => handleRemoveMember(member.id)}
                           disabled={isActionLoading === `remove-${member.id}`}
-                          className="w-10 h-10 rounded-full flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors disabled:opacity-50"
+                          className="w-10 h-10 rounded-full flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
                           title="Expulsar de la tribu"
                         >
                           {isActionLoading === `remove-${member.id}` ? (
@@ -224,19 +243,47 @@ export default function TribeManagementPage() {
             </div>
           )}
 
+          {/* PRODUCTS TAB */}
+          {activeTab === "products" && (
+            <div>
+              {products.length === 0 ? (
+                <div className="text-center py-12">
+                  <Icon icon="lucide:package-open" className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500">No hay productos publicados por los miembros de esta tribu.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {products.map(product => (
+                    <ProductCard
+                      key={product.id}
+                      id={product.id}
+                      title={product.name}
+                      price={`$${product.price.toString()}`}
+                      description={product.description || ""}
+                      image={product.imageUrl || "https://placehold.co/400x300/e2e8f0/64748b?text=Sin+Imagen"}
+                      category={product.category?.name || "General"}
+                      rating={product.averageRating ? Number(product.averageRating) : 5}
+                      href={`/store/product/${product.id}`}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* REQUESTS TAB */}
           {activeTab === "requests" && isLeader && (
             <div>
               {requests.length === 0 ? (
                 <div className="text-center py-12">
                   <Icon icon="lucide:mail-check" className="w-12 h-12 text-green-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Todo al día</h3>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Todo al día</h3>
                   <p className="text-gray-500">No tienes nuevas solicitudes de membresía pendientes.</p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {requests.map(req => (
-                    <div key={req.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-5 bg-gray-50 dark:bg-gray-700/30 rounded-2xl border border-gray-100 dark:border-gray-700 gap-4">
+                    <div key={req.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-5 bg-gray-50 rounded-2xl border border-gray-100 gap-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
                           <span className="bg-brand-primary/10 text-brand-primary text-xs font-bold px-2 py-0.5 rounded uppercase tracking-wider">
@@ -247,7 +294,7 @@ export default function TribeManagementPage() {
                           </span>
                         </div>
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-gray-200 dark:bg-gray-600 rounded-full flex items-center justify-center shrink-0 overflow-hidden">
+                          <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center shrink-0 overflow-hidden">
                             {req.seller?.user?.avatarUrl ? (
                               <img src={req.seller.user.avatarUrl} alt={req.seller.user.username || req.seller.user.fullName || 'Vendedor'} className="w-full h-full object-cover" />
                             ) : (
@@ -255,14 +302,14 @@ export default function TribeManagementPage() {
                             )}
                           </div>
                           <div>
-                            <p className="text-gray-900 dark:text-white font-medium">
+                            <p className="text-gray-900 font-medium">
                               {req.seller?.user?.username || req.seller?.user?.fullName || "Vendedor"}
                             </p>
                             <p className="text-xs text-gray-500 font-normal mb-1">
                               ID: {req.sellerId}
                             </p>
                             {(req.seller?.user?.email || req.seller?.user?.locationFormattedAddress) && (
-                              <div className="flex flex-col gap-1 text-xs text-gray-500 dark:text-gray-400 mt-1.5">
+                              <div className="flex flex-col gap-1 text-xs text-gray-500 mt-1.5">
                                 {req.seller?.user?.email && (
                                   <span className="flex items-center gap-1.5">
                                     <Icon icon="lucide:mail" className="w-3.5 h-3.5 opacity-70" />
@@ -279,7 +326,7 @@ export default function TribeManagementPage() {
                             )}
                           </div>
                         </div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 italic mt-3 bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
+                        <p className="text-sm text-gray-500 italic mt-3 bg-white p-3 rounded-lg border border-gray-100">
                           "{req.message || "Quiero unirme a la tribu."}"
                         </p>
                       </div>
@@ -289,7 +336,7 @@ export default function TribeManagementPage() {
                           variant="outline"
                           onClick={() => handleReviewRequest(req.id, "REJECTED")}
                           isLoading={isActionLoading === `req-${req.id}`}
-                          className="text-red-600! border-red-200! hover:bg-red-50! dark:border-red-500/20! dark:hover:bg-red-500/10!"
+                          className="text-red-600! border-red-200! hover:bg-red-50!"
                         >
                           Rechazar
                         </Button>
