@@ -7,9 +7,12 @@ import { getSellerOrders, getMyOrders, updateOrder } from "@/lib/api";
 import type { ProductOrderResponseDto } from "event-types";
 import { useToast } from "@/components/ui/Toast";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/useAuth";
 
 export default function OrdersPage() {
-  const [activeTab, setActiveTab] = useState("sales");
+  const { isSeller } = useAuth();
+  const [activeTab, setActiveTab] = useState("purchases"); // Default to purchases, will switch in useEffect if seller
+
   const [sales, setSales] = useState<ProductOrderResponseDto[]>([]);
   const [purchases, setPurchases] = useState<ProductOrderResponseDto[]>([]);
   const [shipModalOpen, setShipModalOpen] = useState(false);
@@ -20,8 +23,11 @@ export default function OrdersPage() {
   const router = useRouter();
 
   useEffect(() => {
+    if (isSeller) {
+      setActiveTab("sales");
+    }
     loadOrders();
-  }, []);
+  }, [isSeller]);
 
   async function loadOrders() {
     try {
@@ -110,7 +116,7 @@ export default function OrdersPage() {
         activeKey={activeTab} 
         onChange={setActiveTab}
         items={[
-          {
+          ...(isSeller ? [{
             key: "sales",
             label: "Mis Ventas",
             content: (
@@ -118,7 +124,7 @@ export default function OrdersPage() {
                 <KanbanBoard columns={salesColumns} orders={sales} viewMode="seller" onAction={handleAction} />
               </div>
             )
-          },
+          }] : []),
           {
             key: "purchases",
             label: "Mis Compras",

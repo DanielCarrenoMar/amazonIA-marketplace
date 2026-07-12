@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Icon } from "@iconify/react";
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
@@ -17,6 +17,22 @@ export function MarketplaceNavbar() {
   const [searchQuery, setSearchQuery] = useState('');
   const userMenuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Initialize search query from URL if present
+  useEffect(() => {
+    const q = searchParams.get('q');
+    if (q) setSearchQuery(q);
+  }, [searchParams]);
+
+  const handleSearch = (e?: React.KeyboardEvent) => {
+    if (e && e.key !== 'Enter') return;
+    if (searchQuery.trim()) {
+      router.push(`/marketplace?q=${encodeURIComponent(searchQuery.trim())}`);
+    } else {
+      router.push(`/marketplace`);
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -46,6 +62,7 @@ export function MarketplaceNavbar() {
               placeholder="Buscar artesanías, ropa, hogar..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleSearch}
               className="focus-within:z-10"
               wrapperClassName="rounded-full bg-gray-50/80 shadow-inner border-gray-200 focus-within:bg-white focus-within:border-brand-primary/30 focus-within:ring-2 focus-within:ring-brand-primary/20 transition-all"
             />
@@ -88,6 +105,11 @@ export function MarketplaceNavbar() {
               <Icon icon="lucide:home" className="w-[22px] h-[22px]" />
             </Link>
 
+            {/* Tribes */}
+            <Link href="/tribes" title="Explorar Tribus" className="relative p-2.5 text-slate-600 hover:text-brand-primary transition-colors cursor-pointer flex items-center justify-center">
+              <Icon icon="lucide:tent" className="w-[22px] h-[22px]" />
+            </Link>
+
             {/* Favorites */}
             <Link href="/marketplace/favorites" className="relative p-2.5 text-slate-600 hover:text-red-500 transition-colors cursor-pointer flex items-center justify-center">
               <Icon icon="lucide:heart" className="w-[22px] h-[22px]" />
@@ -117,6 +139,7 @@ export function MarketplaceNavbar() {
               placeholder="Buscar productos..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleSearch}
               wrapperClassName="rounded-full bg-gray-50/80"
               className="h-[42px]"
             />

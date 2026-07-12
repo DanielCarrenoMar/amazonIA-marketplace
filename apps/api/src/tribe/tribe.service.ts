@@ -153,9 +153,14 @@ export class TribeService {
   // ===========================================================================
 
   async requestMembership(tribeId: number, userId: string, dto: RequestTribeMembershipDto): Promise<TribeMembershipRequestResponseDto> {
-    const seller = await this.prisma.seller.findUnique({ where: { id: userId } });
+    let seller = await this.prisma.seller.findUnique({ where: { id: userId } });
     if (seller?.tribeId) {
       throw new ConflictException('Ya perteneces a una tribu');
+    }
+
+    // Ensure the Seller record exists to satisfy the foreign key constraint
+    if (!seller) {
+      seller = await this.prisma.seller.create({ data: { id: userId } });
     }
 
     const tribe = await this.prisma.tribe.findUnique({ where: { id: tribeId } });
