@@ -1,53 +1,25 @@
-import React from 'react';
-import { ArrowRight } from 'lucide-react';
+"use client";
+
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { Icon } from "@iconify/react";
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import { ProductCard } from '../ui/ProductCard';
-
-const MOCK_PRODUCTS = [
-  {
-    id: "1",
-    image: "/cesta-wayuu.jpg",
-    discount: "-50%",
-    title: "Cesta Wayuu",
-    rating: 4,
-    category: "Artesanía",
-    description: "Tejida a mano por mujeres artesanas. Ideal para decoración o almacenamiento con un toque natural.",
-    price: "$24.99",
-    originalPrice: "$49.98"
-  },
-  {
-    id: "2",
-    image: "/collar-de-semillas.jpg",
-    title: "Collar de Semillas",
-    rating: 5,
-    category: "Joyería",
-    description: "Elaborado con semillas de la selva amazónica recolectadas de forma sostenible. Un diseño único y ancestral.",
-    price: "$15.00"
-  },
-  {
-    id: "3",
-    image: "/ceramica-pemón.jpg",
-    discount: "-15%",
-    title: "Cerámica Pemón",
-    rating: 5,
-    category: "Cerámica",
-    description: "Pieza decorativa de arcilla tallada con patrones tradicionales que cuentan historias de la comunidad.",
-    price: "$45.50",
-    originalPrice: "$53.50"
-  },
-  {
-    id: "4",
-    image: "/bolso-de-moriche.webp",
-    title: "Bolso de Moriche",
-    rating: 4,
-    category: "Moda",
-    description: "Bolso resistente tejido con fibra de palma de moriche. Perfecto para el día a día.",
-    price: "$32.00"
-  }
-];
+import { getProducts } from '@/lib/api';
+import type { ProductResponseDto } from 'event-types';
 
 export function FeaturedProductsSection() {
+  const [products, setProducts] = useState<ProductResponseDto[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getProducts({ limit: 4 })
+      .then((res: any) => setProducts(res.data || []))
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
   return (
     <section id="productos" className="w-full bg-brand-nature-bg py-24 px-6 md:px-12 flex flex-col items-center">
       <div className="w-full max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
@@ -63,17 +35,35 @@ export function FeaturedProductsSection() {
           </p>
         </div>
 
-        <Button
-          variant="primary"
-          rightIcon={<ArrowRight className="w-5 h-5" />}
-        >
-          Ver Catálogo Completo
-        </Button>
+        <Link href="/marketplace">
+          <Button
+            variant="primary"
+            rightIcon={<Icon icon="lucide:arrow-right" className="w-5 h-5" />}
+          >
+            Ver Catálogo Completo
+          </Button>
+        </Link>
       </div>
       <div className="w-full max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {MOCK_PRODUCTS.map((product) => (
-          <ProductCard key={product.id} {...product} />
-        ))}
+        {loading ? (
+          <p className="text-gray-500 col-span-full text-center py-8">Cargando productos...</p>
+        ) : products.length > 0 ? (
+          products.slice(0, 4).map((product) => (
+            <ProductCard 
+              key={product.id} 
+              id={product.id}
+              title={product.name}
+              description={product.description || ""}
+              price={`$${Number(product.price).toFixed(2)}`}
+              image={product.imageUrl || "/bolso-de-moriche.webp"}
+              rating={product.averageRating ? Math.round(Number(product.averageRating)) : 0}
+              category={product.category?.name || "Categoría"}
+              href={`/marketplace/${product.id}`}
+            />
+          ))
+        ) : (
+          <p className="text-gray-500 col-span-full text-center py-8">No hay productos destacados disponibles.</p>
+        )}
       </div>
     </section>
   );

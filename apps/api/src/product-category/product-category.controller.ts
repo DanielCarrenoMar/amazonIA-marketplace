@@ -16,6 +16,9 @@ import {
   UpdateProductCategoryDto,
   UserRole,
   PaginationDto,
+  ProductCategoryResponseDto,
+  PaginatedResponseDto,
+  GroupedCategoryResponseDto,
 } from 'event-types';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -30,17 +33,17 @@ export class ProductCategoryController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @Post()
-  create(@Body() createProductCategoryDto: CreateProductCategoryDto) {
+  create(@Body() createProductCategoryDto: CreateProductCategoryDto): Promise<ProductCategoryResponseDto> {
     return this.productCategoryService.create(createProductCategoryDto);
   }
 
   @Get()
-  findAll(@Query() query: PaginationDto) {
-    return this.productCategoryService.findAll(query);
+  findAll(): Promise<GroupedCategoryResponseDto[]> {
+    return this.productCategoryService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id', ParseIntPipe) id: number): Promise<ProductCategoryResponseDto> {
     return this.productCategoryService.findOne(id);
   }
 
@@ -50,14 +53,14 @@ export class ProductCategoryController {
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateProductCategoryDto: UpdateProductCategoryDto,
-  ) {
+  ): Promise<ProductCategoryResponseDto> {
     return this.productCategoryService.update(id, updateProductCategoryDto);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(@Param('id', ParseIntPipe) id: number): Promise<ProductCategoryResponseDto> {
     return this.productCategoryService.remove(id);
   }
 }

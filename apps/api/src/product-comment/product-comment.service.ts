@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateProductCommentDto, UpdateProductCommentDto } from 'event-types';
+import { CreateProductCommentDto, UpdateProductCommentDto, ProductCommentResponseDto } from 'event-types';
 
 @Injectable()
 export class ProductCommentService {
@@ -32,9 +32,9 @@ export class ProductCommentService {
     });
   }
 
-  async findAllByProduct(productId: string) {
+  async findAllByProduct(productId: string): Promise<ProductCommentResponseDto[]> {
     // Traer todos los comentarios principales (parentCommentId = null) con sus respuestas
-    return this.prisma.productComment.findMany({
+    const comments = await this.prisma.productComment.findMany({
       where: {
         productId,
         parentCommentId: null,
@@ -64,6 +64,25 @@ export class ProductCommentService {
         publishedAt: 'desc',
       },
     });
+
+    return comments.map((comment) => ({
+      id: comment.id,
+      productId: comment.productId,
+      userId: comment.userId,
+      content: comment.content,
+      parentCommentId: comment.parentCommentId,
+      publishedAt: comment.publishedAt,
+      user: comment.user,
+      replies: comment.replies.map((reply) => ({
+        id: reply.id,
+        productId: reply.productId,
+        userId: reply.userId,
+        content: reply.content,
+        parentCommentId: reply.parentCommentId,
+        publishedAt: reply.publishedAt,
+        user: reply.user,
+      })),
+    }));
   }
 
   async update(id: number, userId: string, updateDto: UpdateProductCommentDto) {

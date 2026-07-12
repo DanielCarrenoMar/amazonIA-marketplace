@@ -1,12 +1,12 @@
 import { Injectable, BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateOrderChatDto } from 'event-types';
+import { CreateOrderChatDto, OrderStatus, OrderChatResponseDto, UserRole } from 'event-types';
 
 @Injectable()
 export class OrderChatService {
   constructor(private prisma: PrismaService) {}
 
-  async create(userId: string, createDto: CreateOrderChatDto) {
+  async create(userId: string, createDto: CreateOrderChatDto): Promise<OrderChatResponseDto> {
     // Verificar que la orden exista y el usuario sea el comprador o el vendedor
     const order = await this.prisma.productOrder.findUnique({
       where: { id: createDto.orderId },
@@ -25,16 +25,43 @@ export class OrderChatService {
       throw new ForbiddenException('No tienes permiso para comentar en este pedido');
     }
 
-    return this.prisma.orderChat.create({
+    const finalizedStatuses: string[] = [OrderStatus.DELIVERED, OrderStatus.CANCELED, OrderStatus.REFUNDED];
+    if (finalizedStatuses.includes(order.currentStatus)) {
+      throw new BadRequestException('No se pueden enviar mensajes en un pedido finalizado');
+    }
+
+    const result = await this.prisma.orderChat.create({
       data: {
         orderId: createDto.orderId,
         senderId: userId,
         message: createDto.message,
       },
+      include: {
+        sender: {
+          select: {
+            id: true,
+            fullName: true,
+            role: true,
+          }
+        }
+      }
     });
+
+    return {
+      id: result.id,
+      orderId: result.orderId,
+      senderId: result.senderId,
+      message: result.message,
+      sentAt: result.sentAt,
+      sender: {
+        id: result.sender.id,
+        fullName: result.sender.fullName,
+        role: result.sender.role as UserRole,
+      }
+    };
   }
 
-  async findByOrder(orderId: string, userId: string) {
+  async findByOrder(orderId: string, userId: string): Promise<OrderChatResponseDto[]> {
     // Opcional: Validar que el usuario tenga acceso a ver este chat
     const order = await this.prisma.productOrder.findUnique({
       where: { id: orderId },
@@ -53,7 +80,7 @@ export class OrderChatService {
       throw new ForbiddenException('No tienes permiso para ver este chat');
     }
 
-    return this.prisma.orderChat.findMany({
+    const results = await this.prisma.orderChat.findMany({
       where: { orderId },
       include: {
         sender: {
@@ -68,5 +95,18 @@ export class OrderChatService {
         sentAt: 'asc',
       },
     });
+
+    return results.map((result) => ({
+      id: result.id,
+      orderId: result.orderId,
+      senderId: result.senderId,
+      message: result.message,
+      sentAt: result.sentAt,
+      sender: {
+        id: result.sender.id,
+        fullName: result.sender.fullName,
+        role: result.sender.role as UserRole,
+      }
+    }));
   }
 }

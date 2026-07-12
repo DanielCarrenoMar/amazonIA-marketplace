@@ -30,6 +30,11 @@ export interface IClimateMetadata {
 export interface IClimateTelemetry {
   temperature_celsius: number;
   humidity_percent: number;
+  pressure_hpa?: number;
+  wind_speed_kmh?: number;
+  uv_index?: number;
+  rainfall_mm?: number;
+  [key: string]: unknown;
 }
 
 export interface IClimateEvent {
@@ -74,6 +79,27 @@ export class ClimateTelemetryDto implements IClimateTelemetry {
 
   @IsNumber()
   humidity_percent: number;
+
+  // ── Extended weather fields ─────────────────────────────────
+  // Used by ground-based weather stations in the Amazon basin
+
+  @IsOptional()
+  @IsNumber()
+  pressure_hpa?: number;
+
+  @IsOptional()
+  @IsNumber()
+  wind_speed_kmh?: number;
+
+  @IsOptional()
+  @IsNumber()
+  uv_index?: number;
+
+  @IsOptional()
+  @IsNumber()
+  rainfall_mm?: number;
+
+  [key: string]: unknown;
 }
 
 // ---------------------------------------------------------------------------
@@ -99,9 +125,10 @@ export class CreateClimateEventDto {
   @Type(() => ClimateMetadataDto)
   metadata: ClimateMetadataDto;
 
+  @IsOptional()
   @ValidateNested()
   @Type(() => GeoPointDto)
-  location: GeoPointDto;
+  location?: GeoPointDto;
 
   @ValidateNested()
   @Type(() => ClimateTelemetryDto)

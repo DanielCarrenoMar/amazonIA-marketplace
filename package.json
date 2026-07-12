@@ -6,8 +6,14 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "turbo build",
-    "dev": "turbo dev --filter=web... --filter=api...",
-    "dev:all": "turbo dev --filter=web... --filter=api... --filter=ingestor-service... --filter=telemetry-worker...",
+    "build:events": "turbo build --filter=event-types",
+    "build:ingestor": "turbo build --filter=ingestor-service",
+    "build:worker": "turbo build --filter=telemetry-worker",
+    "build:iot": "turbo build --filter=iot-simulator",
+    "dev": "turbo dev --ui=tui --filter=web... --filter=api...",
+    "dev:api": "turbo dev --filter=api...",
+    "dev:web": "turbo dev --filter=web",
+    "dev:all": "turbo dev --ui=tui --filter=web... --filter=api... --filter=ingestor-service... --filter=telemetry-worker...",
     "dev:ingestor": "turbo dev --filter=ingestor-service...",
     "dev:worker": "turbo dev --filter=telemetry-worker...",
     "dev:iot": "turbo dev --filter=ingestor-service... --filter=telemetry-worker...",
@@ -19,8 +25,11 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "packageManager": "pnpm@10.29.1",
+  "packageManager": "pnpm@10.33.1",
   "dependencies": {
     "turbo": "^2.9.6"
+  },
+  "devDependencies": {
+    "mongodb": "^7.4.0"
   }
 }

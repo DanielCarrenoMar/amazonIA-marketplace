@@ -1,6 +1,6 @@
 import { Controller, Post, Get, Patch, Delete, Body, Param, ParseIntPipe, UseGuards, Req } from '@nestjs/common';
 import { ProductCommentService } from './product-comment.service';
-import { CreateProductCommentDto, UpdateProductCommentDto } from 'event-types';
+import { CreateProductCommentDto, UpdateProductCommentDto, ProductCommentResponseDto } from 'event-types';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('product-comment')
@@ -14,7 +14,7 @@ export class ProductCommentController {
   }
 
   @Get('product/:productId')
-  findAllByProduct(@Param('productId') productId: string) {
+  findAllByProduct(@Param('productId') productId: string): Promise<ProductCommentResponseDto[]> {
     return this.productCommentService.findAllByProduct(productId);
   }
 

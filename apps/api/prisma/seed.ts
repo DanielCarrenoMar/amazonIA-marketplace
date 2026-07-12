@@ -59,17 +59,6 @@ async function main() {
   ]);
 
   // ──────────────────────────────────────────────
-  // 1.5 SHIPPING CARRIERS
-  // ──────────────────────────────────────────────
-  console.log('  → Shipping Carriers...');
-  const [carrierFedEx, carrierDHL, carrierUPS, carrierMRW] = await Promise.all([
-    prisma.shippingCarrier.upsert({ where: { name: 'FedEx' }, update: {}, create: { name: 'FedEx', website: 'https://www.fedex.com' } }),
-    prisma.shippingCarrier.upsert({ where: { name: 'DHL' }, update: {}, create: { name: 'DHL', website: 'https://www.dhl.com' } }),
-    prisma.shippingCarrier.upsert({ where: { name: 'UPS' }, update: {}, create: { name: 'UPS', website: 'https://www.ups.com' } }),
-    prisma.shippingCarrier.upsert({ where: { name: 'MRW' }, update: {}, create: { name: 'MRW', website: 'https://www.mrw.com.ve' } }),
-  ]);
-
-  // ──────────────────────────────────────────────
   // 2. USER ACCOUNTS
   // ──────────────────────────────────────────────
   console.log('  → UserAccounts...');
@@ -259,6 +248,54 @@ async function main() {
         locationFormattedAddress: 'Av. Bolívar Norte, Valencia',
       },
     }),
+
+    prisma.product.create({
+      data: {
+        sellerId: seller1.id,
+        categoryId: catPhones.id, // For simplicity we attach it to an existing category
+        name: 'Casabe Artesanal',
+        description: 'Casabe fresco y crujiente, elaborado tradicionalmente a base de yuca amarga.',
+        price: 15.0,
+        stockAvailable: 100,
+        
+        // General elaboration description
+        elaborationText: 'El casabe se elabora a partir de la yuca amarga, que se pela, se ralla, se exprime para sacarle el yare (jugo tóxico) y luego se tuesta en un budare.',
+        elaborationMediaUrls: [
+          'https://iqkevgyeyoixwhmcptgq.supabase.co/storage/v1/object/public/amazonia-marketplace/casabe/casabe-DSC1560.jpg',
+          'https://iqkevgyeyoixwhmcptgq.supabase.co/storage/v1/object/public/amazonia-marketplace/casabe/WhatsApp_Image_2026-06-09_at_12.03.51_PM.jpeg'
+        ],
+
+        // Step-by-step elaboration
+        elaborationSteps: {
+          create: [
+            {
+              stepNumber: 1,
+              title: 'Recolección y pelado de la yuca',
+              description: 'Se extrae la yuca de la tierra, se lava y se pela cuidadosamente.',
+              mediaUrls: ['https://iqkevgyeyoixwhmcptgq.supabase.co/storage/v1/object/public/amazonia-marketplace/casabe/casabe-DSC1560.jpg']
+            },
+            {
+              stepNumber: 2,
+              title: 'Rallado',
+              description: 'La yuca se ralla para formar una masa húmeda.',
+              mediaUrls: ['https://iqkevgyeyoixwhmcptgq.supabase.co/storage/v1/object/public/amazonia-marketplace/casabe/WhatsApp_Image_2026-06-09_at_12.03.51_PM.jpeg']
+            },
+            {
+              stepNumber: 3,
+              title: 'Prensado en el sebucán',
+              description: 'Se exprime la masa en el sebucán para extraer todo el líquido tóxico (yare).',
+              mediaUrls: ['https://iqkevgyeyoixwhmcptgq.supabase.co/storage/v1/object/public/amazonia-marketplace/casabe/Secando_casabe.jpg']
+            },
+            {
+              stepNumber: 4,
+              title: 'Tostado en budare',
+              description: 'La masa seca se extiende en forma circular sobre un budare caliente hasta que quede crujiente.',
+              mediaUrls: ['https://iqkevgyeyoixwhmcptgq.supabase.co/storage/v1/object/public/amazonia-marketplace/casabe/WhatsApp_Video_2026-06-23_at_2.01.48_PM.mp4']
+            }
+          ]
+        }
+      },
+    }),
     prisma.product.create({
       data: {
         sellerId: seller2.id,
@@ -340,7 +377,6 @@ async function main() {
       sellerRatingValue: 5,
       orderNotes: 'Entrega urgente, producto en perfecto estado.',
       trackingNumber: trackingNumber1,
-      carrierId: carrierMRW.id,
     },
   });
 
@@ -374,7 +410,6 @@ async function main() {
       currentStatus: 'PAID',
       orderNotes: 'Talla 42, color blanco.',
       trackingNumber: trackingNumber2,
-      carrierId: carrierDHL.id,
     },
   });
 

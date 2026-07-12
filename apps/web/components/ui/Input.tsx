@@ -8,6 +8,7 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
   helperText?: string;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
+  wrapperClassName?: string;
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
@@ -21,6 +22,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       rightIcon,
       id,
       disabled,
+      wrapperClassName,
       ...props
     },
     ref
@@ -28,8 +30,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     const generatedId = React.useId();
     const inputId = id || generatedId;
 
-    const baseStyles = "w-full flex items-center bg-white border rounded-xl shadow-sm transition-all duration-200 focus-within:ring-2 focus-within:border-brand-primary";
-    
+    const baseStyles = `w-full flex items-center bg-white border overflow-hidden shadow-sm transition-all duration-200 focus-within:ring-2 focus-within:border-brand-primary ${wrapperClassName || 'rounded-xl'}`;
     const stateStyles = error 
       ? "border-brand-urgency focus-within:ring-brand-urgency/20" 
       : disabled 
@@ -61,7 +62,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             disabled={disabled}
             className={`w-full bg-transparent text-sm text-foreground placeholder:text-muted/70 focus:outline-none ${
               leftIcon ? "py-3" : "py-3 pl-4"
-            } ${rightIcon ? "pr-1" : "pr-4"} disabled:cursor-not-allowed`}
+            } ${rightIcon ? "pr-1" : "pr-4"} disabled:cursor-not-allowed ${
+              props.type === 'number' ? '[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none' : ''
+            }`}
             {...props}
           />
 

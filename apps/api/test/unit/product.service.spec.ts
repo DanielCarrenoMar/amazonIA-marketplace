@@ -23,7 +23,7 @@ describe('ProductService — ownership checks', () => {
     uploadOptimizedImage: jest.fn(),
   } as any;
 
-  const service = new ProductService(prismaMock, storageMock);
+  const service = new ProductService(prismaMock, storageMock, { emit: jest.fn() } as any);
 
   // ── Fixtures ───────────────────────────────────────────────────────────────
   const OWNER_ID   = 'seller-owner-uuid';

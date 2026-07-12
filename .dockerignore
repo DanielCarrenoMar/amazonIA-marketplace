@@ -1,0 +1,55 @@
+# =============================================================================
+# .dockerignore — Monorepo AmazonIA Marketplace
+# Aplica a cualquier `docker build` ejecutado desde la raíz del repositorio.
+# Excluye archivos innecesarios para reducir el tamaño del build context.
+# =============================================================================
+
+# Control de versiones
+.git
+.gitignore
+.gitattributes
+
+# CI / Agentes
+.github
+.agents
+.turbo
+
+# Herramientas del IDE
+.vscode
+.idea
+
+# Dependencias locales (se reinstalan dentro del contenedor)
+**/node_modules/
+
+# Artefactos de compilación (se regeneran en la stage de build)
+**/dist/
+**/.next/
+**/*.tsbuildinfo
+
+# Archivos de entorno — NUNCA deben entrar al contexto de build (excepto examples)
+**/.env
+**/*.env
+!**/.env.example
+
+# Logs
+**/*.log
+**/npm-debug.log*
+
+# Archivos de sistema operativo
+.DS_Store
+Thumbs.db
+
+# Tests y cobertura
+**/coverage/
+**/__tests__/
+**/*.spec.ts
+**/*.test.ts
+
+# Documentación adicional que no es código
+**/README.md
+!apps/*/nest-cli.json
+
+# Postman
+.postman
+*.postman_collection.json
+*.postman_environment.json

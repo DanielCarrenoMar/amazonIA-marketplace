@@ -115,6 +115,9 @@ export class ShipmentMetadataResponseDto {
 
   @ApiProperty({ example: 'CONT-TRK001' })
   container_id: string;
+
+  @ApiPropertyOptional({ example: 'SENSOR-IOT-001' })
+  sensor_id?: string;
 }
 
 export class BusinessContextResponseDto {
@@ -126,11 +129,11 @@ export class BusinessContextResponseDto {
 }
 
 export class ShipmentTelemetryResponseDto {
-  @ApiProperty({ example: 4.2, description: 'Temperature in Celsius at time of reading' })
-  temperature_celsius: number;
+  @ApiPropertyOptional({ example: 4.2, description: 'Temperature in Celsius at time of reading' })
+  temperature_celsius?: number;
 
-  @ApiProperty({ example: 0.3, description: 'Shock force in G — values > 2.5 indicate potential damage' })
-  shock_g_force: number;
+  @ApiPropertyOptional({ example: 0.3, description: 'Shock force in G — values > 2.5 indicate potential damage' })
+  shock_g_force?: number;
 }
 
 export class ShipmentEventDto {
@@ -202,6 +205,13 @@ export class OrderDetailWithTelemetryDto {
     nullable: true,
   })
   trackingNumber: string | null;
+
+  @ApiPropertyOptional({
+    example: 'SENSOR-IOT-001',
+    description: 'ID del sensor IoT colocado en el paquete por el vendedor',
+    nullable: true,
+  })
+  sensorId: string | null;
 
   @ApiPropertyOptional({
     example: '0xabc123def456...',

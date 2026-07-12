@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { UserAccountService } from '../user-account/user-account.service';
-import { CreateUserAccountDto } from 'event-types';
+import { CreateUserAccountDto, AuthResponseDto, UserMeResponseDto } from 'event-types';
 import { LoginDto } from 'event-types';
 import { JwtPayload } from './jwt.strategy';
 
@@ -45,7 +45,7 @@ export class AuthService {
   }
 
   // Registers a new user and immediately issues a token pair — no separate login required
-  async register(createUserAccountDto: CreateUserAccountDto) {
+  async register(createUserAccountDto: CreateUserAccountDto): Promise<AuthResponseDto> {
     const user = await this.userAccountService.create(createUserAccountDto);
 
     const payload: JwtPayload = { sub: user.id, email: user.email, role: (user as any).role };
@@ -62,7 +62,7 @@ export class AuthService {
     };
   }
 
-  async login(loginDto: LoginDto) {
+  async login(loginDto: LoginDto): Promise<AuthResponseDto> {
     const { email, password } = loginDto;
 
     // 1. Find the user by email (include passwordHash for comparison)
@@ -162,12 +162,13 @@ export class AuthService {
     return { message: 'Logged out successfully' };
   }
 
-  async findme(id: string) {
+  async findme(id: string): Promise<UserMeResponseDto> {
     const user = await this.prisma.userAccount.findUnique({
       where: { id },
       omit: { passwordHash: true },
       include: { seller: { include: { tribe: true } } }
     });
-    return user;
+    if (!user) throw new UnauthorizedException('User not found');
+    return user as unknown as UserMeResponseDto;
   }
 }

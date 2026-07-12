@@ -10,6 +10,9 @@ import { Inject } from '@nestjs/common';
 const BATCH_SIZE = 50;
 const INTERVAL_MS = 5_000;
 const MAX_BACKOFF_MS = 60_000;
+const HEALTH_INTERVAL_MS = 60_000;
+const ALERT_PENDING_THRESHOLD = 100;
+const ALERT_LAG_MS = 5 * 60_000;
 
 @Injectable()
 export class OutboxRelayService {
@@ -82,6 +85,38 @@ export class OutboxRelayService {
     }
   }
 
+  @Interval(HEALTH_INTERVAL_MS)
+  async reportOutboxHealth(): Promise<void> {
+    const [pending, oldest] = await Promise.all([
+      this.prisma.outboxEvent.count({ where: { publishedAt: null } }),
+      this.prisma.outboxEvent.findFirst({
+        where: { publishedAt: null },
+        orderBy: { createdAt: 'asc' },
+        select: { createdAt: true },
+      }),
+    ]);
+
+    const lagMs = oldest ? Date.now() - oldest.createdAt.getTime() : 0;
+    const lagHuman = this.formatLag(lagMs);
+
+    this.logger.log({ pending, lagMs, lagHuman }, 'Outbox health report');
+
+    if (pending > ALERT_PENDING_THRESHOLD || lagMs > ALERT_LAG_MS) {
+      this.logger.warn(
+        {
+          pending,
+          lagMs,
+          lagHuman,
+          thresholds: {
+            pending: ALERT_PENDING_THRESHOLD,
+            lagMs: ALERT_LAG_MS,
+          },
+        },
+        'Outbox health ALERT: pending or lag exceeded thresholds',
+      );
+    }
+  }
+
   private async publishOne(event: OutboxEvent): Promise<void> {
     const payload = event.payload as Record<string, unknown>;
     const topic = this.resolveTopic(payload.topic);
@@ -97,6 +132,17 @@ export class OutboxRelayService {
       { eventId: event.id, eventType: event.eventType, topic },
       'Outbox event published',
     );
+  }
+
+  private formatLag(ms: number): string {
+    if (ms <= 0) return '0s';
+    const totalSeconds = Math.floor(ms / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    if (hours > 0) return `${hours}h ${minutes}m ${seconds}s`;
+    if (minutes > 0) return `${minutes}m ${seconds}s`;
+    return `${seconds}s`;
   }
 
   // Falls back to SHIPMENT_EVENTS if the stored topic is missing or unrecognized

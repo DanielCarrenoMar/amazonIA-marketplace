@@ -12,7 +12,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { ProductOrderService } from './product-order.service';
-import { CreateProductOrderDto, UpdateProductOrderDto, UserRole, FindOrdersDto, PaginationDto } from 'event-types';
+import { CreateProductOrderDto, UpdateProductOrderDto, UserRole, FindOrdersDto, PaginationDto, ProductOrderResponseDto, PaginatedResponseDto, OrderStatusHistoryResponseDto, OrderTimelineResponseDto } from 'event-types';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -27,14 +27,14 @@ export class ProductOrderController {
   create(
     @Request() req: any,
     @Body() createProductOrderDto: CreateProductOrderDto,
-  ) {
+  ): Promise<ProductOrderResponseDto> {
     return this.productOrderService.create(req.user.id, createProductOrderDto);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @Get()
-  findAll(@Query() query: PaginationDto) {
+  findAll(@Query() query: PaginationDto): Promise<PaginatedResponseDto<ProductOrderResponseDto>> {
     return this.productOrderService.findAll(query);
   }
 
@@ -42,39 +42,39 @@ export class ProductOrderController {
   // Returns all orders for the authenticated buyer
   @UseGuards(JwtAuthGuard)
   @Get('my-orders')
-  myOrders(@Request() req: any, @Query() query: FindOrdersDto) {
+  myOrders(@Request() req: any, @Query() query: FindOrdersDto): Promise<PaginatedResponseDto<ProductOrderResponseDto>> {
     return this.productOrderService.findByBuyer(req.user.id, query);
   }
 
   // Returns a single order owned by the authenticated buyer
   @UseGuards(JwtAuthGuard)
   @Get('my-orders/:id')
-  myOrderDetail(@Param('id', ParseUUIDPipe) id: string, @Request() req: any) {
+  myOrderDetail(@Param('id', ParseUUIDPipe) id: string, @Request() req: any): Promise<ProductOrderResponseDto> {
     return this.productOrderService.findOneForBuyer(id, req.user.id);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SELLER, UserRole.ADMIN)
   @Get('seller-orders')
-  findBySeller(@Request() req: any, @Query() query: FindOrdersDto) {
+  findBySeller(@Request() req: any, @Query() query: FindOrdersDto): Promise<PaginatedResponseDto<ProductOrderResponseDto>> {
     return this.productOrderService.findBySeller(req.user.id, query);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get(':id')
-  findOne(@Param('id', ParseUUIDPipe) id: string, @Request() req: any) {
+  findOne(@Param('id', ParseUUIDPipe) id: string, @Request() req: any): Promise<ProductOrderResponseDto> {
     return this.productOrderService.findOneWithTelemetry(id, req.user);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get(':id/history')
-  findHistory(@Param('id', ParseUUIDPipe) id: string, @Request() req: any) {
+  findHistory(@Param('id', ParseUUIDPipe) id: string, @Request() req: any): Promise<OrderStatusHistoryResponseDto[]> {
     return this.productOrderService.findHistory(id, req.user);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get(':id/timeline')
-  getTimeline(@Param('id', ParseUUIDPipe) id: string, @Request() req: any) {
+  getTimeline(@Param('id', ParseUUIDPipe) id: string, @Request() req: any): Promise<OrderTimelineResponseDto> {
     return this.productOrderService.getTimeline(id, req.user);
   }
 
@@ -85,7 +85,7 @@ export class ProductOrderController {
     @Param('id', ParseUUIDPipe) id: string,
     @Request() req: any,
     @Body() updateProductOrderDto: UpdateProductOrderDto,
-  ) {
+  ): Promise<ProductOrderResponseDto> {
     return this.productOrderService.update(
       id,
       req.user,
@@ -96,7 +96,7 @@ export class ProductOrderController {
   // Login required. Service enforces buyer/admin ownership rules.
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
-  remove(@Param('id', ParseUUIDPipe) id: string, @Request() req: any) {
+  remove(@Param('id', ParseUUIDPipe) id: string, @Request() req: any): Promise<ProductOrderResponseDto> {
     return this.productOrderService.remove(id, req.user);
   }
 }
