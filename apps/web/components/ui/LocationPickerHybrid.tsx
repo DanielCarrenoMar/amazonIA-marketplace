@@ -30,8 +30,27 @@ const PREDEFINED_ZONES = [
 // 7. Subcomponente para separar la lógica de movimiento del mapa
 function MapUpdater({ center }: { center: [number, number] }) {
   const map = useMap();
+  const isInitialMount = React.useRef(true);
+
   useEffect(() => {
-    map.flyTo(center, map.getZoom(), { animate: true, duration: 1.5 });
+    if (
+      center && 
+      typeof center[0] === 'number' && !isNaN(center[0]) && 
+      typeof center[1] === 'number' && !isNaN(center[1])
+    ) {
+      if (isInitialMount.current) {
+        isInitialMount.current = false;
+        return; // MapContainer ya maneja el center inicial
+      }
+
+      const currentZoom = map.getZoom() || 13;
+      const size = map.getSize();
+      if (size && size.x > 0 && size.y > 0) {
+        map.flyTo(center, currentZoom, { animate: true, duration: 1.5 });
+      } else {
+        map.setView(center, currentZoom);
+      }
+    }
   }, [center, map]);
   return null;
 }
