@@ -254,6 +254,22 @@ export class TribeService {
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
+        include: {
+          seller: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  username: true,
+                  fullName: true,
+                  avatarUrl: true,
+                  email: true,
+                  locationFormattedAddress: true
+                }
+              }
+            }
+          }
+        }
       }),
     ]);
 

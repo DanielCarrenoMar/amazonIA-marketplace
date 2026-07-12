@@ -55,14 +55,14 @@ export default function TribeManagementPage() {
     }
   }, [user, isLeader]);
 
-  const handleReviewRequest = async (requestId: number, status: "ACCEPTED" | "REJECTED") => {
+  const handleReviewRequest = async (requestId: number, status: "APPROVED" | "REJECTED") => {
     if (!tribe) return;
     try {
       setIsActionLoading(`req-${requestId}`);
-      // Assuming event-types enum value is mapped to strings ACCEPTED/REJECTED or similar
+      // Assuming event-types enum value is mapped to strings APPROVED/REJECTED or similar
       await reviewTribeMembership(tribe.id, requestId, { status: status as any });
       await loadTribeData(); // Reload all data
-      toast.success(status === "ACCEPTED" ? "Solicitud aprobada" : "Solicitud rechazada");
+      toast.success(status === "APPROVED" ? "Solicitud aprobada" : "Solicitud rechazada");
     } catch (error) {
       console.error("Error reviewing request:", error);
       toast.error("Hubo un error al procesar la solicitud.");
@@ -238,7 +238,7 @@ export default function TribeManagementPage() {
                   {requests.map(req => (
                     <div key={req.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-5 bg-gray-50 dark:bg-gray-700/30 rounded-2xl border border-gray-100 dark:border-gray-700 gap-4">
                       <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="flex items-center gap-2 mb-2">
                           <span className="bg-brand-primary/10 text-brand-primary text-xs font-bold px-2 py-0.5 rounded uppercase tracking-wider">
                             Nueva Solicitud
                           </span>
@@ -246,8 +246,40 @@ export default function TribeManagementPage() {
                             ID Solicitud: {req.id}
                           </span>
                         </div>
-                        <p className="text-gray-900 dark:text-white font-medium">Vendedor (ID: {req.sellerId})</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 italic mt-2 bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-gray-200 dark:bg-gray-600 rounded-full flex items-center justify-center shrink-0 overflow-hidden">
+                            {req.seller?.user?.avatarUrl ? (
+                              <img src={req.seller.user.avatarUrl} alt={req.seller.user.username || req.seller.user.fullName || 'Vendedor'} className="w-full h-full object-cover" />
+                            ) : (
+                              <Icon icon="lucide:user" className="w-5 h-5 text-gray-400" />
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-gray-900 dark:text-white font-medium">
+                              {req.seller?.user?.username || req.seller?.user?.fullName || "Vendedor"}
+                            </p>
+                            <p className="text-xs text-gray-500 font-normal mb-1">
+                              ID: {req.sellerId}
+                            </p>
+                            {(req.seller?.user?.email || req.seller?.user?.locationFormattedAddress) && (
+                              <div className="flex flex-col gap-1 text-xs text-gray-500 dark:text-gray-400 mt-1.5">
+                                {req.seller?.user?.email && (
+                                  <span className="flex items-center gap-1.5">
+                                    <Icon icon="lucide:mail" className="w-3.5 h-3.5 opacity-70" />
+                                    {req.seller.user.email}
+                                  </span>
+                                )}
+                                {req.seller?.user?.locationFormattedAddress && (
+                                  <span className="flex items-center gap-1.5">
+                                    <Icon icon="lucide:map-pin" className="w-3.5 h-3.5 opacity-70" />
+                                    {req.seller.user.locationFormattedAddress}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 italic mt-3 bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
                           "{req.message || "Quiero unirme a la tribu."}"
                         </p>
                       </div>
@@ -263,7 +295,7 @@ export default function TribeManagementPage() {
                         </Button>
                         <Button
                           variant="primary"
-                          onClick={() => handleReviewRequest(req.id, "ACCEPTED")}
+                          onClick={() => handleReviewRequest(req.id, "APPROVED")}
                           isLoading={isActionLoading === `req-${req.id}`}
                         >
                           Aceptar
