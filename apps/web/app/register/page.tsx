@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Icon } from "@iconify/react";
 import { registerUser } from "@/lib/api";
+import { useAuth } from "@/lib/useAuth";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import logo from "@/public/logo.png";
@@ -27,6 +28,7 @@ export default function RegisterPage() {
     password: "",
   });
   const router = useRouter();
+  const { login } = useAuth();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -82,9 +84,8 @@ export default function RegisterPage() {
     setIsLoading(true);
     try {
       const data = await registerUser(formData);
-      localStorage.setItem("accessToken", data.accessToken);
-      localStorage.setItem("refreshToken", data.refreshToken);
-      router.push("/dashboard");
+      await login(data);
+      router.push("/");
     } catch (err: any) {
       if (err.status === 409) {
         setApiError("Este correo o documento de identidad ya está registrado.");

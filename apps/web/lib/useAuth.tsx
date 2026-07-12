@@ -12,6 +12,7 @@ interface AuthContextType {
   isBuyer: boolean;
   isAdmin: boolean;
   isLeader: boolean;
+  login: (tokens: { accessToken: string; refreshToken: string }) => Promise<void>;
   refreshUser: () => Promise<void>;
   logout: () => void;
 }
@@ -45,6 +46,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     fetchUser();
   }, []);
 
+  const login = async (tokens: { accessToken: string; refreshToken: string }) => {
+    localStorage.setItem('accessToken', tokens.accessToken);
+    localStorage.setItem('refreshToken', tokens.refreshToken);
+    await fetchUser();
+  };
+
   const logout = () => {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
@@ -62,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, isSeller, isBuyer, isAdmin, isLeader, refreshUser: fetchUser, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, isSeller, isBuyer, isAdmin, isLeader, login, refreshUser: fetchUser, logout }}>
       {children}
     </AuthContext.Provider>
   );

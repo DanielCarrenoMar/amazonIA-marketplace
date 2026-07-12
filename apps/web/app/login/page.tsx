@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Icon } from "@iconify/react";
 import { loginUser } from "@/lib/api";
+import { useAuth } from "@/lib/useAuth";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
@@ -19,6 +20,7 @@ export default function LoginPage() {
   const [apiError, setApiError] = useState<string | null>(null);
   const [errors, setErrors] = useState({ email: "", password: "" });
   const router = useRouter();
+  const { login } = useAuth();
 
   const validate = () => {
     let isValid = true;
@@ -52,9 +54,8 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       const data = await loginUser({ email, password });
-      localStorage.setItem("accessToken", data.accessToken);
-      localStorage.setItem("refreshToken", data.refreshToken);
-      router.push("/dashboard");
+      await login(data);
+      router.push("/");
     } catch (err: any) {
       if (err.status === 401) {
         setApiError("Correo o contraseña incorrectos.");
