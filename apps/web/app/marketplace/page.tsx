@@ -39,7 +39,7 @@ function MarketplaceContent() {
   // Fetch categories on mount
   useEffect(() => {
     getCategories()
-      .then(res => setCategories(res.data || []))
+      .then(res => setCategories(Array.isArray(res) ? res : (res as any).data || []))
       .catch(console.error);
   }, []);
 

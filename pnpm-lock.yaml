@@ -15,10 +15,6 @@ importers:
       mongodb:
         specifier: ^7.4.0
         version: 7.5.0(socks@2.8.9)
-    devDependencies:
-      mongodb:
-        specifier: ^7.4.0
-        version: 7.5.0(socks@2.8.9)
 
   apps/api:
     dependencies:
@@ -445,6 +441,12 @@ importers:
 
   apps/web:
     dependencies:
+      '@iconify/react':
+        specifier: ^6.0.2
+        version: 6.0.2(react@19.2.4)
+      date-fns:
+        specifier: ^4.4.0
+        version: 4.4.0
       event-types:
         specifier: workspace:*
         version: link:../../packages/event-types
