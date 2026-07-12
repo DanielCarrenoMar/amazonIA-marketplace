@@ -59,11 +59,10 @@ async def get_spatial_risk(
         hydro_res = nearest_zone["data"]["hydro"]
         
         climate_data = ClimateData(
-            fuente=climate_res.get("fuente", "api"),
-            temperatura_max_c=climate_res.get("temperatura_max_c", []),
-            temperatura_min_c=climate_res.get("temperatura_min_c", []),
-            precipitacion_mm=climate_res.get("precipitacion_mm", []),
-            velocidad_viento_ms=climate_res.get("velocidad_viento_ms", [])
+            daily_max_temp=climate_res.get("temperatura_max_c", []),
+            daily_min_temp=climate_res.get("temperatura_min_c", []),
+            daily_precip=climate_res.get("precipitacion_mm", []),
+            daily_wind=climate_res.get("velocidad_viento_ms", [])
         )
         
         hydro_data = HydroData(
@@ -172,11 +171,10 @@ async def evaluate_risk(request: EvaluationRequest, user_payload: dict = Depends
             climate_data_list.append(None)
         else:
             climate_data_list.append(ClimateData(
-                fuente=res.get("fuente", "api"),
-                temperatura_max_c=res.get("temperatura_max_c", []),
-                temperatura_min_c=res.get("temperatura_min_c", []),
-                precipitacion_mm=res.get("precipitacion_mm", []),
-                velocidad_viento_ms=res.get("velocidad_viento_ms", [])
+                daily_max_temp=res.get("temperatura_max_c", []),
+                daily_min_temp=res.get("temperatura_min_c", []),
+                daily_precip=res.get("precipitacion_mm", []),
+                daily_wind=res.get("velocidad_viento_ms", [])
             ))
             
     is_inpa = False

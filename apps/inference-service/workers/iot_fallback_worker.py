@@ -82,32 +82,80 @@ async def process_iot_message(redis: Redis, message: dict):
     except Exception as e:
         logger.error(f"Error processing IoT message: {e}")
 
+async def process_climate_message(redis: Redis, message: dict):
+    """
+    Procesa un mensaje del stream de Clima y actualiza los stats de esa estación.
+    """
+    try:
+        if 'payload' in message:
+            payload = json.loads(message['payload'])
+            metadata = json.loads(message.get('metadata', '{}'))
+        else:
+            payload_str = message
+            if 'payload' in payload_str:
+                payload = json.loads(payload_str['payload'])
+                metadata = json.loads(payload_str.get('metadata', '{}'))
+            else:
+                return
+
+        sensor_id = metadata.get("sensor_id")
+        if not sensor_id:
+            return
+
+        current_temp = payload.get("temperature_celsius")
+        current_hum = payload.get("humidity_percent")
+        current_rain = payload.get("rainfall_mm")
+        
+        live_key = f"climate:stats:{sensor_id}"
+        now = datetime.utcnow().isoformat()
+
+        pipe = redis.pipeline()
+        if current_temp is not None:
+            pipe.hset(live_key, "temperature_celsius", float(current_temp))
+        if current_hum is not None:
+            pipe.hset(live_key, "humidity_percent", float(current_hum))
+        if current_rain is not None:
+            pipe.hset(live_key, "rainfall_mm", float(current_rain))
+            
+        pipe.hset(live_key, "timestamp", now)
+        pipe.expire(live_key, 7200) # 2 hours
+        await pipe.exec()
+        logger.debug(f"Updated Climate stats for sensor {sensor_id}")
+    except Exception as e:
+        logger.error(f"Error processing Climate message: {e}")
+
 async def run_worker():
     redis = Redis(url=settings.REDIS_URL, token=settings.REDIS_TOKEN)
+    CLIMATE_STREAM = "iot.climate.events"
     
-    try:
-        # Comando RAW para crear grupo en Upstash
-        await redis.execute(["XGROUP", "CREATE", STREAM_NAME, CONSUMER_GROUP, "0", "MKSTREAM"])
-        logger.info(f"Consumer group {CONSUMER_GROUP} created.")
-    except Exception as e:
-        if "BUSYGROUP" in str(e):
-            logger.info(f"Consumer group {CONSUMER_GROUP} already exists.")
-        else:
-            logger.error(f"Error creating consumer group: {e}")
+    # Crear grupos de consumidores para ambos streams
+    for stream in [STREAM_NAME, CLIMATE_STREAM]:
+        try:
+            await redis.execute(["XGROUP", "CREATE", stream, CONSUMER_GROUP, "0", "MKSTREAM"])
+            logger.info(f"Consumer group {CONSUMER_GROUP} created for {stream}.")
+        except Exception as e:
+            if "BUSYGROUP" in str(e):
+                logger.info(f"Consumer group {CONSUMER_GROUP} already exists for {stream}.")
+            else:
+                logger.error(f"Error creating consumer group for {stream}: {e}")
             
     logger.info("Worker started. Listening for IoT events with polling...")
     
     while True:
         try:
             # Comando RAW para xreadgroup sin block
-            result = await redis.execute(["XREADGROUP", "GROUP", CONSUMER_GROUP, CONSUMER_NAME, "COUNT", 10, "STREAMS", STREAM_NAME, ">"])
+            # Aumentamos el COUNT a 100 para leer más de golpe y reducir peticiones HTTP
+            result = await redis.execute(["XREADGROUP", "GROUP", CONSUMER_GROUP, CONSUMER_NAME, "COUNT", 100, "STREAMS", STREAM_NAME, CLIMATE_STREAM, ">", ">"])
             
             # Format expected from Upstash REST: 
             # [ ["iot.shipment.events", [ ["162...-0", {"payload": "..."}], ... ]] ]
+            has_messages = False
             if result:
                 for stream_data in result:
                     stream = stream_data[0]
                     messages = stream_data[1]
+                    if messages:
+                        has_messages = True
                     for msg in messages:
                         msg_id = msg[0]
                         message_data = msg[1]
@@ -118,10 +166,17 @@ async def run_worker():
                         else:
                             msg_dict = message_data
                             
-                        await process_iot_message(redis, msg_dict)
-                        await redis.execute(["XACK", STREAM_NAME, CONSUMER_GROUP, msg_id])
+                        # Despachar a la función correcta según el stream
+                        if stream == STREAM_NAME:
+                            await process_iot_message(redis, msg_dict)
+                            await redis.execute(["XACK", STREAM_NAME, CONSUMER_GROUP, msg_id])
+                        elif stream == CLIMATE_STREAM:
+                            await process_climate_message(redis, msg_dict)
+                            await redis.execute(["XACK", CLIMATE_STREAM, CONSUMER_GROUP, msg_id])
             
-            await asyncio.sleep(5)
+            # Polling adaptativo más relajado: si procesó mensajes duerme 5s (antes 1s), si está inactivo duerme 60s (antes 30s)
+            sleep_time = 5 if has_messages else 60
+            await asyncio.sleep(sleep_time)
         except Exception as e:
             logger.error(f"Worker loop error: {e}")
             await asyncio.sleep(5)

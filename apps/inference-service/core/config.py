@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
 
     class Config:
-        env_file = ".env"
+        env_file = "../../.env"
+        extra = "ignore"
 
 settings = Settings()
