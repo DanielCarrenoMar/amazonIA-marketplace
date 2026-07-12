@@ -83,6 +83,7 @@ model UserAccount {
   phonePrimary   String?  @map("phone_primary") @db.VarChar(50)
   phoneSecondary String?  @map("phone_secondary") @db.VarChar(50)
   walletHash     String?  @map("wallet_hash") @db.VarChar(255)
+  avatarUrl      String?  @map("avatar_url") @db.VarChar(500)
 
   // Spatial — PostGIS type not natively supported by Prisma
   locationCoords           Unsupported("geography(Point, 4326)")? @map("location_coords")

@@ -15,8 +15,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (!isLoading) {
       if (!user) {
         router.push("/login"); 
-      } else if (user.role === "BUYER") {
-        router.push("/onboarding");
       }
     }
   }, [user, isLoading, router]);
@@ -30,10 +28,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   if (!user) return null;
-
-  if (user.role !== "SELLER" && user.role !== "ADMIN") {
-    return null; // The useEffect will redirect BUYER to /onboarding
-  }
 
   return (
     <ToastProvider>

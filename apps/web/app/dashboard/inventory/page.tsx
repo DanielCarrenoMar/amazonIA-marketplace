@@ -5,11 +5,12 @@ import { DashboardHeader, InventoryTable } from "@/components/dashboard";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
-import { getMyProducts, deleteProduct, getCategories } from "@/lib/api";
+import { getMyProducts, getProducts, deleteProduct, getCategories } from "@/lib/api";
 import type { ProductResponseDto, ProductCategoryResponseDto } from "event-types";
 import { Search, LayoutGrid, List } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/components/ui/Toast";
+import { useAuth } from "@/lib/useAuth";
 
 export default function InventoryPage() {
   const [products, setProducts] = useState<ProductResponseDto[]>([]);
@@ -17,19 +18,23 @@ export default function InventoryPage() {
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
+  const { user, isAdmin } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
-    loadProducts();
-    getCategories().then(setCategories).catch(console.error);
-  }, []);
+    if (user) {
+      loadProducts();
+      getCategories().then(res => setCategories(res.data)).catch(console.error);
+    }
+  }, [user]);
 
   async function loadProducts() {
     try {
-      const res = await getMyProducts();
+      const res = isAdmin ? await getProducts() : await getMyProducts();
       setProducts(res.data);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      toast({ title: "Error al cargar productos", description: err.message, variant: "error" });
     }
   }
 

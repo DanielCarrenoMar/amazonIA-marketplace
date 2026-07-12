@@ -20,13 +20,15 @@ export function DashboardSidebar() {
   const pathname = usePathname();
   const { user, logout, isAdmin, isLeader } = useAuth();
 
+  const isBuyer = user?.role === "BUYER";
+
   const baseLinks = [
-    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Inventario", href: "/dashboard/inventory", icon: Package },
+    ...(isBuyer ? [] : [{ name: "Dashboard", href: "/dashboard", icon: LayoutDashboard }]),
+    ...(isBuyer ? [] : [{ name: "Inventario", href: "/dashboard/inventory", icon: Package }]),
     { name: "Pedidos", href: "/dashboard/orders", icon: ShoppingBag },
-    { name: "Mi Tribu", href: "/dashboard/tribe", icon: Users },
-    { name: "Billetera", href: "/dashboard/wallet", icon: Wallet },
-    { name: "Notificaciones", href: "/dashboard/notifications", icon: Bell },
+    ...(isBuyer ? [] : [{ name: "Mi Tribu", href: "/dashboard/tribe", icon: Users }]),
+    ...(isBuyer ? [] : [{ name: "Billetera", href: "/dashboard/wallet", icon: Wallet }]),
+    ...(isBuyer ? [] : [{ name: "Notificaciones", href: "/dashboard/notifications", icon: Bell }]),
     { name: "Configuración", href: "/dashboard/settings", icon: Settings },
   ];
 
@@ -86,7 +88,7 @@ export function DashboardSidebar() {
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-foreground truncate">{user?.fullName}</p>
             <p className="text-xs text-muted truncate">
-              {isAdmin ? "Administrador" : isLeader ? "Líder de Tribu" : "Artesano/a"}
+              {isAdmin ? "Administrador" : isBuyer ? "Comprador" : isLeader ? "Líder de Tribu" : "Artesano/a"}
             </p>
           </div>
         </div>

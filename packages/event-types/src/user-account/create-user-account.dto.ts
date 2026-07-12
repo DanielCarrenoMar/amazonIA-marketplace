@@ -58,6 +58,11 @@ export class CreateUserAccountDto {
   @MaxLength(255)
   walletHash?: string;
 
+  @IsString()
+  @IsOptional()
+  @MaxLength(500)
+  avatarUrl?: string;
+
   // Text-based location fields
   // Note: locationCoords (PostGIS) is omitted from this basic DTO as it requires raw queries to insert
   @IsString()
