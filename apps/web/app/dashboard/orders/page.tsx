@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { DashboardHeader, KanbanBoard, ShipmentModal } from "@/components/dashboard";
 import { Tabs } from "@/components/ui/Tabs";
 import { getSellerOrders, getMyOrders, updateOrder } from "@/lib/api";
-import { ProductOrderResponseDto } from "@/lib/types";
+import type { ProductOrderResponseDto } from "event-types";
 import { useToast } from "@/components/ui/Toast";
 import { useRouter } from "next/navigation";
 

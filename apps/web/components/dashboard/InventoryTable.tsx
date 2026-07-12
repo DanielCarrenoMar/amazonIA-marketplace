@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { ProductResponseDto } from "@/lib/types";
+import type { ProductResponseDto } from "event-types";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";

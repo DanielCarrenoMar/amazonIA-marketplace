@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { getMyProducts, deleteProduct, getCategories } from "@/lib/api";
-import { ProductResponseDto, ProductCategoryResponseDto } from "@/lib/types";
+import type { ProductResponseDto, ProductCategoryResponseDto } from "event-types";
 import { Search, LayoutGrid, List } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/components/ui/Toast";

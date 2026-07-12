@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { getShippingCarriers } from "@/lib/api";
-import { ShippingCarrierResponseDto } from "@/lib/types";
+import type { ShippingCarrierResponseDto } from "event-types";
 import { Truck } from "lucide-react";
 
 interface ShipmentModalProps {

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/useAuth";
 import { getSellerMetrics, getSellerOrders } from "@/lib/api";
-import { SellerMetricsResponseDto, ProductOrderResponseDto } from "@/lib/types";
+import type { SellerMetricsResponseDto, ProductOrderResponseDto } from "event-types";
 import { DashboardHeader, StatsCard } from "@/components/dashboard";
 import { DollarSign, Wallet, TrendingUp, AlertTriangle } from "lucide-react";
 import { Card } from "@/components/ui/Card";

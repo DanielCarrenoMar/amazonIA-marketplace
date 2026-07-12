@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { getMe } from './api';
-import { UserMeResponseDto } from './types';
+import type { UserMeResponseDto } from 'event-types';
 import { useRouter } from 'next/navigation';
 
 interface AuthContextType {

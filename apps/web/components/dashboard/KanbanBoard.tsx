@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { ProductOrderResponseDto } from "@/lib/types";
+import type { ProductOrderResponseDto } from "event-types";
 import { OrderCard } from "./OrderCard";
 
 export interface KanbanColumnDef {

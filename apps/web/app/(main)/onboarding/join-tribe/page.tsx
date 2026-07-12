@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { ArrowLeft, MapPin, Users } from "lucide-react";
 import Link from "next/link";
 import { getActiveTribes, requestTribeMembership } from "@/lib/api";
-import { TribeResponseDto } from "@/lib/types";
+import type { TribeResponseDto } from "event-types";
 
 export default function JoinTribePage() {
   const [tribes, setTribes] = useState<TribeResponseDto[]>([]);

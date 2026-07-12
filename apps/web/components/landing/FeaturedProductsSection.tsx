@@ -15,7 +15,7 @@ export function FeaturedProductsSection() {
 
   useEffect(() => {
     getProducts({ limit: 4 })
-      .then(res => setProducts(res.data || []))
+      .then((res: any) => setProducts(res.data || []))
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);

@@ -135,4 +135,4 @@ export const mockProductDtos: ProductResponseDto[] = [
     category: { id: 1, categoryName: 'Hogar' } as any,
     seller: { user: { fullName: 'Familias Pemón' }, bio: 'Nuestras manos moldean la tierra roja, preservando los mitos de nuestros ancestros.' } as any
   }
-];
+] as unknown as ProductResponseDto[];

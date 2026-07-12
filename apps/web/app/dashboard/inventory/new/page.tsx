@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/Textarea";
 import { FileDrop } from "@/components/ui/FileDrop";
 import { Card } from "@/components/ui/Card";
 import { getCategories, createProduct, uploadProductImage } from "@/lib/api";
-import { ProductCategoryResponseDto } from "@/lib/types";
+import type { ProductCategoryResponseDto } from "event-types";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/Toast";
 import { MapPin } from "lucide-react";

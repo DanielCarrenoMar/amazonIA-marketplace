@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getOrder, getOrderTimeline } from "@/lib/api";
-import { OrderTimelineResponseDto, ProductOrderResponseDto, OrderTimelineItemDto } from "@/lib/types";
+import type { OrderTimelineResponseDto, ProductOrderResponseDto, OrderTimelineItemDto } from "event-types";
 import { DashboardHeader } from "@/components/dashboard";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";

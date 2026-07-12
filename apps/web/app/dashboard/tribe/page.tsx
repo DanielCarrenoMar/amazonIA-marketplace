@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { getMyTribe, getTribeMembershipRequests, reviewTribeMembership } from "@/lib/api";
-import { TribeResponseDto, TribeMembershipRequestResponseDto, MembershipRequestStatus } from "@/lib/types";
+import type { TribeResponseDto, TribeMembershipRequestResponseDto } from "event-types";
+import { MembershipRequestStatus } from "event-types/enums";
 import { useAuth } from "@/lib/useAuth";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";

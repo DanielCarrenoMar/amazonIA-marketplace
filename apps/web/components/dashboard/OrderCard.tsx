@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { ProductOrderResponseDto } from "@/lib/types";
+import type { ProductOrderResponseDto } from "event-types";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";

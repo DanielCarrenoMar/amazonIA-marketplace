@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { getPendingTribeCreations, reviewTribeCreation } from "@/lib/api";
-import { TribeResponseDto, TribeStatus } from "@/lib/types";
+import type { TribeResponseDto } from "event-types";
+import { TribeStatus } from "event-types/enums";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { MapPin, User, Calendar } from "lucide-react";
