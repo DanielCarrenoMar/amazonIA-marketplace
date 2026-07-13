@@ -428,9 +428,11 @@ export class TribeService {
     const limit = parseInt(String(query?.limit), 10) || 10;
     const skip = (page - 1) * limit;
 
+    const where = { status: 'ACTIVE' as any };
+
     const [total, data] = await Promise.all([
-      this.prisma.tribe.count(),
-      this.prisma.tribe.findMany({ skip, take: limit }),
+      this.prisma.tribe.count({ where }),
+      this.prisma.tribe.findMany({ where, skip, take: limit }),
     ]);
 
     return {

@@ -33,7 +33,7 @@ import { APP_GUARD } from '@nestjs/core';
     ThrottlerModule.forRoot([
       {
         ttl: 60000,
-        limit: 10, // Global limit: 10 requests per minute per IP
+        limit: 100, // Global limit: 100 requests per minute per IP
       },
     ]),
     ScheduleModule.forRoot(),

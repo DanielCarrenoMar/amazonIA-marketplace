@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { DashboardHeader, KanbanBoard, ShipmentModal, RatingModal } from "@/components/dashboard";
+import { DashboardHeader, KanbanBoard, OrdersList, ShipmentModal, RatingModal } from "@/components/dashboard";
 import { Tabs } from "@/components/ui/Tabs";
 import { getSellerOrders, getMyOrders, updateOrder } from "@/lib/api";
 import type { ProductOrderResponseDto } from "event-types";
@@ -12,6 +12,7 @@ import { useAuth } from "@/lib/useAuth";
 export default function OrdersPage() {
   const { isSeller } = useAuth();
   const [activeTab, setActiveTab] = useState("purchases"); // Default to purchases, will switch in useEffect if seller
+  const [viewType, setViewType] = useState<"kanban" | "list">("kanban");
 
   const [sales, setSales] = useState<ProductOrderResponseDto[]>([]);
   const [purchases, setPurchases] = useState<ProductOrderResponseDto[]>([]);
@@ -31,12 +32,16 @@ export default function OrdersPage() {
 
   async function loadOrders() {
     try {
-      const [salesRes, purchasesRes] = await Promise.all([
-        getSellerOrders(),
-        getMyOrders()
-      ]);
-      setSales(salesRes.data);
-      setPurchases(purchasesRes.data);
+      const promises: Promise<any>[] = [getMyOrders()];
+      if (isSeller) {
+        promises.push(getSellerOrders());
+      }
+      
+      const results = await Promise.all(promises);
+      setPurchases(results[0].data);
+      if (isSeller) {
+        setSales(results[1].data);
+      }
     } catch (err) {
       console.error(err);
     }
@@ -110,7 +115,23 @@ export default function OrdersPage() {
 
   return (
     <div className="space-y-6 h-full flex flex-col">
-      <DashboardHeader title="Gestión de Pedidos" subtitle="Visualiza tus ventas y compras" />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <DashboardHeader title="Gestión de Pedidos" subtitle="Visualiza tus ventas y compras" />
+        <div className="flex bg-white rounded-lg p-1 shadow-sm border border-gray-100">
+          <button 
+            onClick={() => setViewType("kanban")}
+            className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${viewType === "kanban" ? "bg-brand-primary text-white shadow-sm" : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"}`}
+          >
+            Tablero
+          </button>
+          <button 
+            onClick={() => setViewType("list")}
+            className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${viewType === "list" ? "bg-brand-primary text-white shadow-sm" : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"}`}
+          >
+            Lista
+          </button>
+        </div>
+      </div>
 
       <Tabs 
         activeKey={activeTab} 
@@ -121,7 +142,11 @@ export default function OrdersPage() {
             label: "Mis Ventas",
             content: (
               <div className="mt-4">
-                <KanbanBoard columns={salesColumns} orders={sales} viewMode="seller" onAction={handleAction} />
+                {viewType === "kanban" ? (
+                  <KanbanBoard columns={salesColumns} orders={sales} viewMode="seller" onAction={handleAction} />
+                ) : (
+                  <OrdersList orders={sales} viewMode="seller" onAction={handleAction} />
+                )}
               </div>
             )
           }] : []),
@@ -130,7 +155,11 @@ export default function OrdersPage() {
             label: "Mis Compras",
             content: (
               <div className="mt-4">
-                <KanbanBoard columns={purchaseColumns} orders={purchases} viewMode="buyer" onAction={handleAction} />
+                {viewType === "kanban" ? (
+                  <KanbanBoard columns={purchaseColumns} orders={purchases} viewMode="buyer" onAction={handleAction} />
+                ) : (
+                  <OrdersList orders={purchases} viewMode="buyer" onAction={handleAction} />
+                )}
               </div>
             )
           }
