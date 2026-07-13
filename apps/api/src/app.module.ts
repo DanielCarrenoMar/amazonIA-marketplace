@@ -14,6 +14,7 @@ import { MongoModule } from 'database';
 import { ShipmentsModule } from './shipments/shipments.module';
 import { ShippingCarrierModule } from './shipping-carrier/shipping-carrier.module';
 import { ProductCommentModule } from './product-comment/product-comment.module';
+import { FavoriteModule } from './favorite/favorite.module';
 import { OrderChatModule } from './order-chat/order-chat.module';
 import { MessagingModule } from 'messaging';
 import { HealthModule } from './health/health.module';
@@ -51,6 +52,7 @@ import { APP_GUARD } from '@nestjs/core';
     ShipmentsModule,
     ShippingCarrierModule,
     ProductCommentModule,
+    FavoriteModule,
     OrderChatModule,
     HealthModule,
     InferenceModule,
