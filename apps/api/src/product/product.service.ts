@@ -44,7 +44,7 @@ export class ProductService {
   }
 
   async findAll(query: FindProductsDto): Promise<PaginatedResponseDto<ProductResponseDto>> {
-    const { search, categoryId, sellerId, tribeId, minPrice, maxPrice, minRating } = query;
+    const { search, categoryId, categoryName, sellerId, tribeId, minPrice, maxPrice, minRating } = query;
     const page = Number(query.page) || 1;
     const limit = Number(query.limit) || 10;
     const skip = (page - 1) * limit;
@@ -53,6 +53,7 @@ export class ProductService {
     const where: import('@prisma/client').Prisma.ProductWhereInput = {
       isActive: true, // Only show active products to buyers
       ...(categoryId ? { categoryId: Number(categoryId) } : {}),
+      ...(categoryName ? { category: { categoryName } } : {}),
       ...(sellerId ? { sellerId } : {}),
       ...(tribeId ? { seller: { tribeId: Number(tribeId) } } : {}),
       ...(search ? { name: { contains: search, mode: 'insensitive' } } : {}),

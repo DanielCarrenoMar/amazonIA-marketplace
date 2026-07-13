@@ -72,14 +72,8 @@ function MarketplaceContent() {
     async function loadProducts() {
       setLoading(true);
       try {
-        let categoryId: number | undefined;
-        if (activeCategory && categories.length > 0) {
-          const found = categories.find(c => c.categoryName === activeCategory);
-          if (found) categoryId = found.id;
-        }
-
         const params: any = {};
-        if (categoryId) params.categoryId = categoryId;
+        if (activeCategory) params.categoryName = activeCategory;
         if (qParam) params.search = qParam;
         if (debouncedMinPrice) params.minPrice = Number(debouncedMinPrice);
         if (debouncedMaxPrice) params.maxPrice = Number(debouncedMaxPrice);

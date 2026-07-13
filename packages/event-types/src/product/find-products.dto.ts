@@ -25,6 +25,10 @@ export class FindProductsDto {
   @IsOptional()
   categoryId?: number;
 
+  @IsString()
+  @IsOptional()
+  categoryName?: string;
+
   @IsUUID()
   @IsOptional()
   sellerId?: string;
