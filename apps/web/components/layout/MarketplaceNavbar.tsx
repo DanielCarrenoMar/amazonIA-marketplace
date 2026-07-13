@@ -12,7 +12,9 @@ import { useFavorites } from '@/lib/favoriteContext';
 import { useCart } from '@/lib/cartContext';
 import logo from '@/public/logo.png';
 
-export function MarketplaceNavbar() {
+import { Suspense } from 'react';
+
+function MarketplaceNavbarContent() {
   const { user, logout, isBuyer } = useAuth();
   const { favoriteIds } = useFavorites();
   const { totalItems } = useCart();
@@ -158,5 +160,13 @@ export function MarketplaceNavbar() {
       {/* Cart Drawer Instance */}
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </>
+  );
+}
+
+export function MarketplaceNavbar() {
+  return (
+    <Suspense fallback={<nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-lg border-b border-gray-100 shadow-[0_4px_30px_rgba(0,0,0,0.03)] h-20" />}>
+      <MarketplaceNavbarContent />
+    </Suspense>
   );
 }

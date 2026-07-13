@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { getOrder, getOrderTimeline, updateOrder, getSpatialRisk } from "@/lib/api";
+import { getOrder, getOrderTimeline, updateOrder, evaluateRisk } from "@/lib/api";
 import type { OrderTimelineResponseDto, ProductOrderResponseDto, OrderTimelineItemDto } from "event-types";
 import { DashboardHeader, LogisticsRiskPanel, ShipmentModal } from "@/components/dashboard";
 import { Card } from "@/components/ui/Card";
@@ -49,9 +49,22 @@ export default function OrderDetailPage() {
       
       setIsRiskLoading(true);
       setRiskError(null);
-      getSpatialRisk({ lat, lon, transportType: 'terrestre', productType })
+      
+      const payload = {
+        shipment_id: order.id,
+        route_points: [
+          { lat: /*order.originCoords?.latitude ||*/ -3.1190, lon: /*order.originCoords?.longitude ||*/ -60.0210 },
+          { lat: lat, lon: lon }
+        ],
+        departure_date: new Date().toISOString(),
+        transport_types: ['terrestre'],
+        product_types: [productType]
+      };
+      
+      evaluateRisk(payload)
         .then(setRiskData)
-        .catch(() => {
+        .catch((e) => {
+          console.error(e);
           setRiskError('El asistente de Inferencia no está disponible en este momento. Puedes procesar el pedido normalmente.');
         })
         .finally(() => setIsRiskLoading(false));
@@ -260,19 +273,30 @@ export default function OrderDetailPage() {
                 <div className="space-y-3 text-sm">
                   <div className="bg-brand-nature-bg p-3 rounded-md border border-brand-nature-content/20">
                     <p className="font-semibold text-brand-nature-content mb-1">Recomendación Logística</p>
-                    <p>{riskData.ai_recommendation || "La ruta pasa por una zona de clima estable. Un empaque estándar es suficiente."}</p>
+                    <p>{riskData.message || "La ruta pasa por una zona de clima estable. Un empaque estándar es suficiente."}</p>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-2 mt-3">
                     <div className="border border-border rounded p-2">
-                      <span className="text-muted block text-xs">Clima Promedio</span>
-                      <span className="font-semibold">{riskData.weather_risk?.average_temp_c || 22}°C</span>
+                      <span className="text-muted block text-xs">Score de Riesgo</span>
+                      <span className="font-semibold">{riskData.composite_score_pct ? `${riskData.composite_score_pct.toFixed(2)}%` : 'N/A'}</span>
                     </div>
                     <div className="border border-border rounded p-2">
-                      <span className="text-muted block text-xs">Riesgo Tráfico</span>
-                      <span className="font-semibold capitalize">{riskData.traffic_risk?.level || 'Bajo'}</span>
+                      <span className="text-muted block text-xs">Nivel de Alerta</span>
+                      <span className="font-semibold capitalize">{riskData.alert_level || 'Bajo'}</span>
                     </div>
                   </div>
+                  
+                  {riskData.main_reasons && riskData.main_reasons.length > 0 && (
+                    <div className="mt-3 text-xs text-muted">
+                      <strong>Factores de Riesgo:</strong>
+                      <ul className="list-disc pl-4 mt-1">
+                        {riskData.main_reasons.slice(0, 3).map((reason: any, idx: number) => (
+                          <li key={idx}>{reason.feature}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <p className="text-sm text-muted">No se ha podido analizar la ruta.</p>
