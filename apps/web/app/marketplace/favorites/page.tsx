@@ -1,4 +1,6 @@
-import React from 'react';
+"use client";
+
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Icon } from "@iconify/react";
 import { ProductCard } from '@/components/ui/ProductCard';
@@ -7,11 +9,46 @@ import { Input } from '@/components/ui/Input';
 import { Checkbox } from '@/components/ui/Checkbox';
 import { MarketplaceNavbar } from '@/components/layout/MarketplaceNavbar';
 import { Footer } from '@/components/layout/Footer';
-import { mockProducts, mockBrands } from '@/lib/mock-data';
+import { mockBrands } from '@/lib/mock-data';
+import { getFavorites } from '@/lib/api/favorite.api';
+import { UserFavoriteResponseDto } from 'event-types';
+import { useAuth } from '@/lib/useAuth';
 
 export default function FavoritesPage() {
-  // Simulamos que el usuario tiene 3 productos guardados en favoritos
-  const favoriteProducts = mockProducts.slice(0, 3);
+  const { user } = useAuth();
+  const [favorites, setFavorites] = useState<UserFavoriteResponseDto[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchFavs = async () => {
+      try {
+        const data = await getFavorites();
+        setFavorites(data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (user) {
+      fetchFavs();
+    } else if (user === null) {
+      setLoading(false); // If auth finished loading and user is null
+    }
+  }, [user]);
+
+  // Si no ha cargado, evitamos mostrar el empty state bruscamente
+  if (loading) {
+    return (
+      <>
+        <MarketplaceNavbar />
+        <main className="min-h-screen bg-gray-50/50 pt-32 pb-20 px-4 md:px-8 font-sans flex items-center justify-center">
+          <Icon icon="lucide:loader-2" className="w-10 h-10 text-brand-primary animate-spin" />
+        </main>
+      </>
+    );
+  }
 
   return (
     <>
@@ -70,15 +107,25 @@ export default function FavoritesPage() {
             {/* MAIN CONTENT */}
             <div className="flex-1">
               {/* GRID */}
-              {favoriteProducts.length > 0 ? (
+              {favorites.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-                  {favoriteProducts.map((product) => (
-                    <ProductCard
-                      key={product.id}
-                      {...product}
-                      href={`/marketplace/${product.id}`}
-                    />
-                  ))}
+                  {favorites.map((fav) => {
+                    const p = fav.product;
+                    if (!p) return null;
+                    return (
+                      <ProductCard
+                        key={p.id}
+                        id={p.id}
+                        title={p.name}
+                        price={`$${p.price}`}
+                        image={p.imageUrl || '/placeholder.png'}
+                        category={p.category?.categoryName || 'General'}
+                        description={p.description || ''}
+                        rating={Number(p.averageRating || 0)}
+                        href={`/marketplace/${p.id}`}
+                      />
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-gray-100 shadow-sm text-center">
