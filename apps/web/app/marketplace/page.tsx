@@ -21,12 +21,16 @@ function MarketplaceContent() {
 
   const categoryParam = searchParams.get('category');
   const qParam = searchParams.get('q');
+  const tribeIdParam = searchParams.get('tribeId');
+  
   const [activeCategory, setActiveCategory] = useState<string | null>(categoryParam || null);
 
   const [products, setProducts] = useState<ProductResponseDto[]>([]);
   const [categories, setCategories] = useState<ProductCategoryResponseDto[]>([]);
   const [tribes, setTribes] = useState<TribeResponseDto[]>([]);
-  const [activeTribeIds, setActiveTribeIds] = useState<number[]>([]);
+  const [activeTribeIds, setActiveTribeIds] = useState<number[]>(
+    tribeIdParam ? [parseInt(tribeIdParam, 10)] : []
+  );
   const [loading, setLoading] = useState(true);
 
   const [minRating, setMinRating] = useState<number>(0);

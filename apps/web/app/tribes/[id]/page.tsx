@@ -49,7 +49,7 @@ export default function TribeDetailPage() {
         const membersData = await findSellers(new URLSearchParams({ tribeId: id.toString(), limit: "100" }));
         setMembers(membersData.data || []);
 
-        // Fetch Tribe Products - IMPORTANT: the API uses tribeIds (plural)
+        // Fetch Tribe Products
         const productsData = await getProducts({ tribeIds: id.toString(), limit: 12 });
         setProducts(productsData.data || []);
 
@@ -74,7 +74,7 @@ export default function TribeDetailPage() {
       setRequestError(null);
       setRequestSuccess(null);
       await requestTribeMembership(id, { message: "Hola, me gustaría unirme a esta tribu para colaborar." });
-      setRequestSuccess("¡Solicitud enviada exitosamente! El líder de la tribu la revisará pronto.");
+      setRequestSuccess("¡Solicitud enviada exitosamente! El líder la revisará pronto.");
     } catch (err: any) {
       console.error(err);
       if (err.status === 409) {
@@ -124,51 +124,66 @@ export default function TribeDetailPage() {
   }
 
   const leader = members.find(m => m.id === tribe.primaryLeaderId);
-  const otherMembers = members.filter(m => m.id !== tribe.primaryLeaderId);
+  const secondaryLeader = members.find(m => m.id === tribe.secondaryLeaderId);
+  const otherMembers = members.filter(m => m.id !== tribe.primaryLeaderId && m.id !== tribe.secondaryLeaderId);
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'ACTIVE': return 'Comunidad Activa';
+      case 'PENDING_APPROVAL': return 'Pendiente de Aprobación';
+      case 'INACTIVE': return 'Comunidad Inactiva';
+      case 'REJECTED': return 'Comunidad Rechazada';
+      default: return status;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <MarketplaceNavbar />
 
-      <main className="flex-1 pb-16">
-        {/* Hero Section */}
-        <div className="bg-brand-primary relative overflow-hidden">
+      <main className="flex-1 pb-20">
+        {/* Premium Hero Section */}
+        <div className="bg-gradient-to-br from-brand-primary via-[#0B3D2E] to-brand-secondary relative overflow-hidden">
           {/* Decorative shapes */}
           <div className="absolute top-0 right-0 -translate-y-12 translate-x-1/3 w-96 h-96 bg-brand-secondary/30 rounded-full blur-3xl pointer-events-none"></div>
           <div className="absolute bottom-0 left-0 translate-y-1/3 -translate-x-1/4 w-72 h-72 bg-brand-light/20 rounded-full blur-2xl pointer-events-none"></div>
           
-          <div className="max-w-7xl mx-auto px-6 py-16 relative z-10">
-            <Link href="/tribes" className="inline-flex items-center text-white/80 hover:text-white mb-6 text-sm font-medium transition-colors">
+          <div className="max-w-7xl mx-auto px-6 py-16 lg:py-24 relative z-10">
+            <Link href="/tribes" className="inline-flex items-center text-white/70 hover:text-white mb-8 text-sm font-medium transition-colors">
               <Icon icon="lucide:arrow-left" className="w-4 h-4 mr-2" />
-              Volver a tribus
+              Explorar Tribus
             </Link>
             
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
-              <div className="flex-1 text-white">
-                <div className="flex items-center gap-3 mb-4">
-                  <span className="bg-white/20 text-white px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-sm border border-white/10 uppercase tracking-wider">
-                    {tribe.status === 'ACTIVE' ? 'Comunidad Activa' : tribe.status}
+            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
+              <div className="flex-1 text-white max-w-3xl">
+                <div className="flex items-center gap-3 mb-5">
+                  <span className="bg-white/10 text-white px-3 py-1 rounded-full text-xs font-bold tracking-widest uppercase backdrop-blur-md border border-white/20">
+                    {getStatusLabel(tribe.status)}
                   </span>
-                  <div className="flex items-center text-white/90 text-sm">
-                    <Icon icon="lucide:map-pin" className="w-4 h-4 mr-1" />
-                    {tribe.locationFormattedAddress || "Ubicación Regional"}
-                  </div>
+                  {tribe.locationFormattedAddress && (
+                    <div className="flex items-center text-white/80 text-sm font-medium">
+                      <Icon icon="lucide:map-pin" className="w-4 h-4 mr-1.5" />
+                      {tribe.locationFormattedAddress}
+                    </div>
+                  )}
                 </div>
                 
-                <h1 className="text-4xl md:text-5xl font-bold font-poppins mb-4">
+                <h1 className="text-4xl lg:text-6xl font-bold font-poppins mb-4 leading-tight">
                   {tribe.name}
                 </h1>
                 
-                <p className="text-lg text-white/90 max-w-3xl leading-relaxed mb-6">
-                  {tribe.description || "Esta comunidad de vendedores artesanos está trabajando en conjunto para ofrecer sus mejores productos en el ecosistema AmazonIA."}
-                </p>
+                {tribe.description && (
+                  <p className="text-lg text-white/90 max-w-3xl leading-relaxed mb-6 font-light">
+                    {tribe.description}
+                  </p>
+                )}
 
                 {/* Membership Action */}
-                <div className="flex items-center gap-4 flex-wrap">
+                <div className="flex items-center gap-4 flex-wrap mt-8">
                   <button 
                     onClick={handleRequestMembership}
                     disabled={isRequesting}
-                    className="bg-white text-brand-primary px-6 py-3 rounded-xl font-bold hover:bg-gray-50 transition-colors shadow-sm disabled:opacity-70 disabled:cursor-not-allowed flex items-center"
+                    className="bg-white text-brand-primary px-8 py-3.5 rounded-xl font-bold hover:bg-gray-50 transition-all shadow-lg hover:shadow-xl disabled:opacity-70 disabled:cursor-not-allowed flex items-center transform hover:-translate-y-0.5"
                   >
                     {isRequesting ? (
                       <Icon icon="lucide:loader-2" className="w-5 h-5 mr-2 animate-spin" />
@@ -177,21 +192,21 @@ export default function TribeDetailPage() {
                     )}
                     Solicitar Unirme
                   </button>
-                  {requestSuccess && <span className="text-sm text-green-300 bg-green-900/40 px-3 py-1 rounded-md">{requestSuccess}</span>}
-                  {requestError && <span className="text-sm text-red-300 bg-red-900/40 px-3 py-1 rounded-md">{requestError}</span>}
+                  {requestSuccess && <span className="text-sm font-medium text-emerald-100 bg-emerald-900/50 px-4 py-2 rounded-lg backdrop-blur-sm border border-emerald-500/30">{requestSuccess}</span>}
+                  {requestError && <span className="text-sm font-medium text-red-100 bg-red-900/50 px-4 py-2 rounded-lg backdrop-blur-sm border border-red-500/30">{requestError}</span>}
                 </div>
               </div>
 
-              {/* Quick stats */}
-              <div className="flex bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-4 gap-6 text-white shrink-0 mt-6 md:mt-0">
-                <div className="flex flex-col items-center px-2">
-                  <span className="text-2xl font-bold">{members.length}</span>
-                  <span className="text-xs uppercase tracking-wider text-white/80">Miembros</span>
+              {/* Quick stats floating card */}
+              <div className="flex bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 gap-8 text-white shrink-0 mt-8 lg:mt-0 shadow-2xl">
+                <div className="flex flex-col items-center">
+                  <span className="text-3xl font-bold mb-1">{members.length}</span>
+                  <span className="text-xs font-semibold uppercase tracking-widest text-white/70">Miembros</span>
                 </div>
                 <div className="w-px bg-white/20"></div>
-                <div className="flex flex-col items-center px-2">
-                  <span className="text-2xl font-bold">{products.length}</span>
-                  <span className="text-xs uppercase tracking-wider text-white/80">Productos</span>
+                <div className="flex flex-col items-center">
+                  <span className="text-3xl font-bold mb-1">{products.length}</span>
+                  <span className="text-xs font-semibold uppercase tracking-widest text-white/70">Productos</span>
                 </div>
               </div>
             </div>
@@ -199,116 +214,152 @@ export default function TribeDetailPage() {
         </div>
 
         {/* Content Wrapper */}
-        <div className="max-w-7xl mx-auto px-6 mt-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="max-w-7xl mx-auto px-6 mt-12 grid grid-cols-1 lg:grid-cols-12 gap-10">
           
-          {/* Main Content Area (Products) */}
-          <div className="lg:col-span-8 order-2 lg:order-1">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 flex items-center">
-                <Icon icon="lucide:shopping-bag" className="w-6 h-6 mr-2 text-brand-primary" />
-                Productos de la Tribu
-              </h2>
-            </div>
-
-            {products.length === 0 ? (
-              <div className="bg-white rounded-2xl shadow-sm p-12 text-center border border-gray-100 flex flex-col items-center">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                  <Icon icon="lucide:package-open" className="w-8 h-8 text-gray-400" />
+          {/* Main Content Area (About + Products) */}
+          <div className="lg:col-span-8 xl:col-span-9 order-2 lg:order-1 space-y-12">
+            
+            {/* Products Section */}
+            <section>
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 flex items-center">
+                    <Icon icon="lucide:shopping-bag" className="w-6 h-6 mr-3 text-brand-primary" />
+                    Catálogo de Productos
+                  </h2>
+                  <p className="text-gray-500 mt-1 ml-9 text-sm">Lo más destacado de esta tribu en AmazonIA</p>
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-1">Sin productos publicados</h3>
-                <p className="text-gray-500 max-w-sm">
-                  Los miembros de esta tribu aún no han publicado productos en el mercado.
-                </p>
+                {products.length > 0 && (
+                  <Link 
+                    href={`/marketplace?tribeId=${id}`}
+                    className="text-brand-primary hover:text-brand-secondary font-medium text-sm flex items-center transition-colors bg-brand-primary/5 hover:bg-brand-primary/10 px-4 py-2 rounded-full shrink-0"
+                  >
+                    Ver todos
+                    <Icon icon="lucide:arrow-right" className="w-4 h-4 ml-2" />
+                  </Link>
+                )}
               </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {products.map((product) => (
-                  <ProductCard 
-                    key={product.id} 
-                    id={product.id}
-                    image={product.imageUrl || "/placeholder.jpg"}
-                    title={product.name}
-                    rating={product.averageRating || 0}
-                    category={product.category?.name || "Otros"}
-                    description={product.description || ""}
-                    price={`$${product.price}`}
-                    href={`/marketplace/${product.id}`}
-                  />
-                ))}
-              </div>
-            )}
+
+              {products.length === 0 ? (
+                <div className="bg-gray-50 rounded-2xl shadow-sm p-12 text-center border border-dashed border-gray-200 flex flex-col items-center">
+                  <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4">
+                    <Icon icon="lucide:package-open" className="w-8 h-8 text-gray-300" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Catálogo vacío</h3>
+                  <p className="text-gray-500 max-w-sm text-sm">
+                    Los miembros de esta tribu aún no han publicado productos.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-8">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    {products.slice(0, 4).map((product) => (
+                      <ProductCard 
+                        key={product.id} 
+                        id={product.id}
+                        image={product.imageUrl || "/placeholder.jpg"}
+                        title={product.name}
+                        rating={product.averageRating || 0}
+                        category={product.category?.name || "Otros"}
+                        description={product.description || ""}
+                        price={`$${product.price}`}
+                        href={`/marketplace/${product.id}`}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </section>
           </div>
 
           {/* Sidebar Area (Members & Leader) */}
-          <div className="lg:col-span-4 order-1 lg:order-2 space-y-6">
-            
-            {/* Leader Card */}
-            <div className="bg-white rounded-2xl shadow-sm border border-brand-primary/20 overflow-hidden">
-              <div className="bg-brand-primary/5 px-6 py-4 border-b border-brand-primary/10 flex items-center justify-between">
-                <h3 className="font-semibold text-brand-primary flex items-center">
-                  <Icon icon="lucide:crown" className="w-5 h-5 mr-2" />
-                  Líder de la Tribu
-                </h3>
-              </div>
-              <div className="p-6">
-                {leader ? (
-                  <div className="flex items-center gap-4">
-                    <Avatar 
-                      src={leader.user?.avatarUrl || undefined} 
-                      alt={leader.user?.fullName || "Líder"} 
-                      size="lg" 
-                      fallback={leader.user?.fullName?.charAt(0) || "L"}
-                    />
-                    <div>
-                      <h4 className="font-bold text-gray-900">{leader.user?.fullName || "Usuario Desconocido"}</h4>
-                      <p className="text-sm text-gray-500">Vendedor Principal</p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-gray-500 text-sm flex items-center gap-2">
-                    <Icon icon="lucide:user-x" className="w-4 h-4" />
-                    No hay líder asignado
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Members List */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                <h3 className="font-semibold text-gray-900 flex items-center">
-                  <Icon icon="lucide:users" className="w-5 h-5 mr-2 text-gray-400" />
-                  Miembros ({otherMembers.length})
-                </h3>
-              </div>
-              <div className="p-2">
-                {otherMembers.length === 0 ? (
-                  <div className="p-6 text-center text-gray-500 text-sm">
-                    No hay otros miembros en esta tribu.
-                  </div>
-                ) : (
-                  <ul className="divide-y divide-gray-50 max-h-96 overflow-y-auto custom-scrollbar">
-                    {otherMembers.map((member) => (
-                      <li key={member.id} className="p-3 hover:bg-gray-50 transition-colors rounded-lg flex items-center gap-3">
-                        <Avatar 
-                          src={member.user?.avatarUrl || undefined} 
-                          alt={member.user?.fullName || "Miembro"} 
-                          size="md" 
-                          fallback={member.user?.fullName?.charAt(0) || "M"}
-                        />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">
-                            {member.user?.fullName || "Usuario"}
-                          </p>
-                          <p className="text-xs text-gray-500 truncate">Vendedor</p>
+          <div className="lg:col-span-4 xl:col-span-3 order-1 lg:order-2">
+            <div className="sticky top-24 space-y-6">
+              
+              {/* Team Card */}
+              <div className="bg-white rounded-3xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-gray-100/50 overflow-hidden">
+                <div className="px-6 py-5 border-b border-gray-50 flex items-center justify-between bg-gray-50/50">
+                  <h3 className="font-bold text-gray-900 flex items-center">
+                    <Icon icon="lucide:users-2" className="w-5 h-5 mr-2 text-brand-primary" />
+                    Miembros ({members.length})
+                  </h3>
+                </div>
+                
+                <div className="divide-y divide-gray-50">
+                  {/* Leaders Section */}
+                  <div className="p-6 space-y-5 bg-gradient-to-b from-brand-primary/[0.02] to-transparent">
+                    {leader ? (
+                      <div className="flex items-center gap-4">
+                        <div className="relative">
+                          <Avatar 
+                            src={leader.user?.avatarUrl || undefined} 
+                            alt={leader.user?.fullName || "Líder"} 
+                            size="lg" 
+                            fallback={leader.user?.fullName?.charAt(0) || "L"}
+                          />
+                          <div className="absolute -bottom-1 -right-1 bg-yellow-400 text-yellow-900 p-1 rounded-full border-2 border-white" title="Líder Principal">
+                            <Icon icon="lucide:crown" className="w-3 h-3" />
+                          </div>
                         </div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            </div>
+                        <div>
+                          <h4 className="font-bold text-gray-900">{leader.user?.fullName || "Usuario Desconocido"}</h4>
+                          <p className="text-xs font-medium text-brand-primary">Líder Principal</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-gray-400 text-sm flex items-center gap-2 p-3 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                        <Icon icon="lucide:shield-alert" className="w-4 h-4 shrink-0" />
+                        Sin líder principal
+                      </div>
+                    )}
 
+                    {secondaryLeader && (
+                      <div className="flex items-center gap-4 pt-5 border-t border-gray-100">
+                        <div className="relative">
+                          <Avatar 
+                            src={secondaryLeader.user?.avatarUrl || undefined} 
+                            alt={secondaryLeader.user?.fullName || "Sublíder"} 
+                            size="md" 
+                            fallback={secondaryLeader.user?.fullName?.charAt(0) || "S"}
+                          />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-gray-900">{secondaryLeader.user?.fullName || "Usuario Desconocido"}</h4>
+                          <p className="text-xs font-medium text-gray-500">Líder Secundario</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Members Section */}
+                  {otherMembers.length > 0 && (
+                    <div className="px-4 py-2">
+                      <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-2 pt-4 pb-2">
+                        Vendedores
+                      </div>
+                      <ul className="max-h-72 overflow-y-auto custom-scrollbar">
+                        {otherMembers.map((member) => (
+                          <li key={member.id} className="p-2 hover:bg-gray-50 transition-colors rounded-xl flex items-center gap-3">
+                            <Avatar 
+                              src={member.user?.avatarUrl || undefined} 
+                              alt={member.user?.fullName || "Miembro"} 
+                              size="sm" 
+                              fallback={member.user?.fullName?.charAt(0) || "M"}
+                            />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-800 truncate">
+                                {member.user?.fullName || "Usuario"}
+                              </p>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+            </div>
           </div>
         </div>
       </main>
