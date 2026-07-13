@@ -3,6 +3,7 @@ export * from './DashboardSidebar';
 export * from './InventoryTable';
 export * from './KanbanBoard';
 export * from './OrderCard';
+export * from './OrdersList';
 export * from './ProductWizard';
 export * from './RatingModal';
 export * from './ShipmentModal';

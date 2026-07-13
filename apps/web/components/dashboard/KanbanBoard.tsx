@@ -37,7 +37,7 @@ export function KanbanBoard({ columns, orders, viewMode, onAction }: KanbanBoard
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-full items-start">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 h-full items-start">
       {columns.map((col) => {
         const columnOrders = orders.filter(o => o.currentStatus === col.key);
         return (
