@@ -8,3 +8,4 @@ export * from './dictionary.api';
 export * from './inference.api';
 export * from './wallet.api';
 export * from './chat.api';
+export * from './user.api';

@@ -6,6 +6,11 @@ export function getSellerOrders(params?: URLSearchParams): Promise<PaginatedResp
   return authFetch<PaginatedResponseDto<ProductOrderResponseDto>>(`/product-order/seller-orders${query}`);
 }
 
+export function getAllOrders(params?: URLSearchParams): Promise<PaginatedResponseDto<ProductOrderResponseDto>> {
+  const query = params ? `?${params.toString()}` : "";
+  return authFetch<PaginatedResponseDto<ProductOrderResponseDto>>(`/product-order${query}`);
+}
+
 export function createOrder(payload: { productId: string; quantity: number; orderNotes?: string; transactionHash?: string }): Promise<ProductOrderResponseDto> {
   return authFetch<ProductOrderResponseDto>('/product-order', {
     method: 'POST',

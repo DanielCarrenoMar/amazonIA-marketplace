@@ -103,6 +103,23 @@ export class TribeController {
     return this.tribeService.reviewMembership(requestId, req.user.id, dto);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @Get('all-membership-requests')
+  findAllMembershipRequests(@Query() query: PaginationDto & { status?: string }): Promise<PaginatedResponseDto<TribeMembershipRequestResponseDto>> {
+    return this.tribeService.findAllMembershipRequests(query);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @Patch('membership/:requestId/review-admin')
+  reviewMembershipAsAdmin(
+    @Param('requestId', ParseIntPipe) requestId: number,
+    @Body() dto: ReviewTribeMembershipDto,
+  ): Promise<TribeMembershipRequestResponseDto> {
+    return this.tribeService.reviewMembershipAsAdmin(requestId, dto);
+  }
+
   // ===========================================================================
   // Tribe Management Flow
   // ===========================================================================

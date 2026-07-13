@@ -44,6 +44,15 @@ export function reviewTribeMembership(tribeId: number, requestId: number, payloa
   return authFetch<TribeMembershipRequestResponseDto>(`/tribe/${tribeId}/membership/${requestId}/review`, { method: "PATCH", body: JSON.stringify(payload) });
 }
 
+export function getAllTribeMembershipRequests(params?: URLSearchParams): Promise<PaginatedResponseDto<TribeMembershipRequestResponseDto>> {
+  const query = params ? `?${params.toString()}` : "";
+  return authFetch<PaginatedResponseDto<TribeMembershipRequestResponseDto>>(`/tribe/all-membership-requests${query}`);
+}
+
+export function reviewTribeMembershipAsAdmin(requestId: number, payload: ReviewTribeMembershipDto): Promise<TribeMembershipRequestResponseDto> {
+  return authFetch<TribeMembershipRequestResponseDto>(`/tribe/membership/${requestId}/review-admin`, { method: "PATCH", body: JSON.stringify(payload) });
+}
+
 export function getMyTribe(): Promise<TribeResponseDto> {
   return authFetch<TribeResponseDto>("/tribe/my-tribe");
 }
