@@ -23,7 +23,7 @@ export class ProductOrderService {
     private readonly prisma: PrismaService,
     private readonly outbox: OutboxService,
     private readonly telemetryIntegration: TelemetryIntegrationService,
-  ) {}
+  ) { }
 
   // buyerId comes from the JWT token (req.user.id), NOT from the client body
   async create(buyerId: string, createProductOrderDto: CreateProductOrderDto): Promise<ProductOrderResponseDto> {
@@ -59,18 +59,55 @@ export class ProductOrderService {
       // Calculate total amount using the already fetched price
       const totalAmount = Number(product.price) * createProductOrderDto.quantity;
 
-      const { destinationCoords, ...rest } = createProductOrderDto;
-
-      // 4. Create the order
-      const order = await tx.productOrder.create({
-        data: { ...rest, buyerId, totalAmount, currentStatus: OrderStatus.PENDING },
+      // 4. Fetch the buyer to get their location
+      const buyer = await tx.userAccount.findUnique({
+        where: { id: buyerId },
+        select: {
+          locationMapboxId: true,
+          locationFormattedAddress: true,
+          locationCity: true,
+          locationRegion: true,
+        },
       });
 
-      // 5. If destination coordinates are provided, perform a raw SQL update
+      if (!buyer) {
+        throw new NotFoundException(`Buyer with ID ${buyerId} not found`);
+      }
+
+      const { destinationCoords, ...rest } = createProductOrderDto;
+
+      // Use DTO values, or fallback to the buyer's location
+      const finalMapboxId = rest.destinationMapboxId ?? buyer.locationMapboxId;
+      const finalFormattedAddress = rest.destinationFormattedAddress ?? buyer.locationFormattedAddress;
+      const finalCity = rest.destinationCity ?? buyer.locationCity;
+      const finalRegion = rest.destinationRegion ?? buyer.locationRegion;
+
+      // 5. Create the order
+      const order = await tx.productOrder.create({
+        data: {
+          ...rest,
+          destinationMapboxId: finalMapboxId,
+          destinationFormattedAddress: finalFormattedAddress,
+          destinationCity: finalCity,
+          destinationRegion: finalRegion,
+          buyerId,
+          totalAmount,
+          currentStatus: OrderStatus.PENDING
+        },
+      });
+
+      // 6. Set Spatial Coordinates
+      // If client provided explicitly coords, use them. Otherwise, copy from the buyer's profile via SQL.
       if (destinationCoords && destinationCoords.latitude != null && destinationCoords.longitude != null) {
         await tx.$executeRaw`
           UPDATE product_order 
           SET destination_coords = ST_SetSRID(ST_MakePoint(${destinationCoords.longitude}, ${destinationCoords.latitude}), 4326)
+          WHERE id = ${order.id}::uuid;
+        `;
+      } else {
+        await tx.$executeRaw`
+          UPDATE product_order 
+          SET destination_coords = (SELECT location_coords FROM user_account WHERE id = ${buyerId}::uuid)
           WHERE id = ${order.id}::uuid;
         `;
       }
@@ -87,10 +124,10 @@ export class ProductOrderService {
     const [total, data] = await Promise.all([
       this.prisma.productOrder.count(),
       this.prisma.productOrder.findMany({
-        include: { 
-          product: { include: { seller: { include: { user: { omit: { passwordHash: true } } } } } }, 
-          buyer: { omit: { passwordHash: true } }, 
-          statusHistory: true 
+        include: {
+          product: { include: { seller: { include: { user: { omit: { passwordHash: true } } } } } },
+          buyer: { omit: { passwordHash: true } },
+          statusHistory: true
         },
         orderBy: { createdAt: 'desc' },
         skip,
