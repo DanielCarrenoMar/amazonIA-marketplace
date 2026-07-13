@@ -102,10 +102,15 @@ export default function CheckoutPage() {
                   {user?.locationFormattedAddress ? (
                     <>
                       <p className="font-semibold text-slate-900 mb-1">{user.fullName}</p>
-                      <p className="text-sm text-gray-600">{user.locationFormattedAddress}</p>
-                      <p className="text-sm text-gray-500 mt-2 flex items-center gap-1">
-                        <Icon icon="lucide:info" className="w-4 h-4" /> 
-                        Esta dirección fue tomada de tu perfil.
+                      <p className="text-sm text-gray-700 font-medium">
+                        {user.locationFormattedAddress}
+                      </p>
+                      <p className="text-sm text-gray-500 mb-2">
+                        {[user.locationCity, user.locationRegion].filter(Boolean).join(', ')}
+                      </p>
+                      <p className="text-xs text-brand-primary/80 flex items-center gap-1 font-semibold bg-brand-primary/5 p-2 rounded-lg border border-brand-primary/10">
+                        <Icon icon="lucide:info" className="w-3.5 h-3.5" /> 
+                        Esta dirección será enviada al vendedor automáticamente.
                       </p>
                     </>
                   ) : (
