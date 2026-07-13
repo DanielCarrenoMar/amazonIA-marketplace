@@ -102,6 +102,7 @@ model UserAccount {
   refreshTokens      RefreshToken[]
   productComments    ProductComment[]
   sentChatMessages   OrderChat[]          @relation("SentChatMessages")
+  favoriteProducts   UserFavoriteProduct[]
 
   @@index([locationCoords], type: Gist)
   @@map("user_account")
@@ -252,6 +253,7 @@ model Product {
   orders           ProductOrder[]
   comments         ProductComment[]
   elaborationSteps ProductElaborationStep[]
+  favoritedBy      UserFavoriteProduct[]
 
   @@index([sellerId])
   @@index([locationCoords], type: Gist)
@@ -471,4 +473,20 @@ model BlockchainRecord {
   @@index([status])
   @@index([transactionHash])
   @@map("blockchain_record")
+}
+
+// ---------------------------------------------------------------------------
+// UserFavoriteProduct (Wishlist)
+// ---------------------------------------------------------------------------
+
+model UserFavoriteProduct {
+  userId    String   @map("id_usuario") @db.Uuid
+  productId String   @map("id_producto") @db.Uuid
+  createdAt DateTime @default(now()) @map("fh_creacion") @db.Timestamptz
+
+  user      UserAccount @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@id([userId, productId])
+  @@map("favoritos_usuario")
 }
