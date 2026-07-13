@@ -65,3 +65,7 @@ export * from './iot';
 export * from './blockchain/blockchain.dto';
 export * from './product/create-elaboration-step.dto';
 export * from './product/update-elaboration-step.dto';
+
+// Favorites
+export * from './favorite/toggle-favorite.dto';
+export * from './favorite/favorite-response.dto';
