@@ -192,6 +192,13 @@ export default function ProductDetailPage() {
           productId: product?.id,
           content: newCommentText,
         });
+        if (newComment) {
+          newComment.user = {
+            fullName: user?.fullName,
+            email: user?.email,
+            avatarUrl: user?.avatarUrl
+          };
+        }
         setReviews(prev => [newComment, ...prev]);
       }
 
