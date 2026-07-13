@@ -165,14 +165,12 @@ function MarketplaceContent() {
             <div>
               <div className="flex justify-between items-center mb-4">
                 <h3 className="font-bold text-slate-900 text-lg">Rango de Precio</h3>
-                {(minPrice || maxPrice) && (
-                  <button 
-                    onClick={() => { setMinPrice(''); setMaxPrice(''); }}
-                    className="text-xs text-muted hover:text-brand-primary transition-colors cursor-pointer"
-                  >
-                    Limpiar
-                  </button>
-                )}
+                <button 
+                  onClick={() => { setMinPrice(''); setMaxPrice(''); }}
+                  className="text-xs text-muted hover:text-brand-primary transition-colors cursor-pointer"
+                >
+                  Limpiar
+                </button>
               </div>
               <p className="text-xs text-muted mb-4 font-medium">El precio promedio es $30.00</p>
               <div className="flex items-center gap-2">
@@ -202,14 +200,12 @@ function MarketplaceContent() {
             <div>
               <div className="flex justify-between items-center mb-4">
                 <h3 className="font-bold text-slate-900 text-lg">Calificación</h3>
-                {minRating > 0 && (
-                  <button
-                    onClick={() => setMinRating(0)}
-                    className="text-xs text-muted hover:text-brand-primary transition-colors cursor-pointer"
-                  >
-                    Limpiar
-                  </button>
-                )}
+                <button
+                  onClick={() => setMinRating(0)}
+                  className="text-xs text-muted hover:text-brand-primary transition-colors cursor-pointer"
+                >
+                  Limpiar
+                </button>
               </div>
               <div className="flex items-center justify-between group">
                 <div
