@@ -17,12 +17,15 @@ const allowedOrderStatusTransitions: Record<OrderStatus, readonly OrderStatus[]>
   [OrderStatus.REFUNDED]: [],
 };
 
+import { NotificationService } from '../notification/notification.service';
+
 @Injectable()
 export class ProductOrderService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly outbox: OutboxService,
     private readonly telemetryIntegration: TelemetryIntegrationService,
+    private readonly notificationService: NotificationService,
   ) { }
 
   // buyerId comes from the JWT token (req.user.id), NOT from the client body
@@ -454,6 +457,16 @@ export class ProductOrderService {
             topic: STREAM_TOPICS.SHIPMENT_EVENTS,
           },
         );
+
+        // 1.7 Create Notifications
+        const buyerMessage = `Tu orden ${id} ha cambiado de estado a ${nextStatus}.`;
+        const sellerMessage = `La orden ${id} de tu producto ha cambiado de estado a ${nextStatus}.`;
+        
+        await this.notificationService.createNotification(currentOrder.buyerId, 'Actualización de Pedido', buyerMessage);
+        
+        if (currentOrder.product?.sellerId) {
+          await this.notificationService.createNotification(currentOrder.product.sellerId, 'Actualización de Pedido', sellerMessage);
+        }
       }
 
       // 2. Seller Rating: If the buyer left a rating for the seller, recalculate the seller's global rating

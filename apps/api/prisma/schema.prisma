@@ -103,6 +103,7 @@ model UserAccount {
   productComments    ProductComment[]
   sentChatMessages   OrderChat[]           @relation("SentChatMessages")
   favoriteProducts   UserFavoriteProduct[]
+  notifications      Notification[]
 
   @@index([locationCoords], type: Gist)
   @@map("user_account")
@@ -503,3 +504,22 @@ model UserFavoriteProduct {
   @@id([userId, productId])
   @@map("favoritos_usuario")
 }
+
+// ---------------------------------------------------------------------------
+// Notification
+// ---------------------------------------------------------------------------
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    String   @map("id_user") @db.Uuid
+  title     String   @map("tittle") @db.VarChar(255)
+  message   String   @map("messege") @db.Text
+  isRead    Boolean  @default(false) @map("isReaded")
+  createdAt DateTime @default(now()) @map("timesspams") @db.Timestamptz
+
+  user UserAccount @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@map("Notificaciones")
+}
+
