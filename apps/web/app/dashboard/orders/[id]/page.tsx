@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { getOrder, getOrderTimeline, updateOrder } from "@/lib/api";
+import { getOrder, getOrderTimeline, updateOrder, evaluateRisk } from "@/lib/api";
 import type { OrderTimelineResponseDto, ProductOrderResponseDto, OrderTimelineItemDto } from "event-types";
-import { DashboardHeader, LogisticsRiskPanel } from "@/components/dashboard";
+import { DashboardHeader, LogisticsRiskPanel, ShipmentModal, OrderChat } from "@/components/dashboard";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { MapPin, Truck, CheckCircle2, ChevronLeft, AlertTriangle } from "lucide-react";
+import { MapPin, Truck, CheckCircle2, ChevronLeft, AlertTriangle, Cpu, User, Phone, Navigation } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useAuth } from "@/lib/useAuth";
@@ -25,6 +25,12 @@ export default function OrderDetailPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isUpdating, setIsUpdating] = useState(false);
+  const [shipModalOpen, setShipModalOpen] = useState(false);
+  
+  // Inference State
+  const [riskData, setRiskData] = useState<any>(null);
+  const [isRiskLoading, setIsRiskLoading] = useState(false);
+  const [riskError, setRiskError] = useState<string | null>(null);
 
   const fetchOrderDetails = () => {
     getOrder(id).then(setOrder).catch(console.error);
@@ -35,6 +41,38 @@ export default function OrderDetailPage() {
     fetchOrderDetails();
   }, [id]);
 
+  useEffect(() => {
+    if (order && user?.id === order.product?.seller?.user?.id && !riskData && !isRiskLoading && !riskError) {
+      // Usamos una coordenada de prueba si no hay destino guardado para demostración
+      const lat = /*order.destinationCoords?.latitude ||*/ -34.6037;
+      const lon = /*order.destinationCoords?.longitude ||*/ -58.3816;
+      const productType = order.product?.requiresColdChain ? 'perecedero_alto' : 'normal';
+      
+      setIsRiskLoading(true);
+      setRiskError(null);
+      
+      const payload = {
+        shipment_id: order.id,
+        route_id: order.id, // required by schema
+        route_points: [
+          { lat: /*order.originCoords?.latitude ||*/ -3.1190, lon: /*order.originCoords?.longitude ||*/ -60.0210 },
+          { lat: lat, lon: lon }
+        ],
+        departure_date: new Date().toISOString().split('T')[0], // format "YYYY-MM-DD" is safer
+        transport_types: ['terrestre'],
+        product_types: [productType]
+      };
+      
+      evaluateRisk(payload)
+        .then(setRiskData)
+        .catch((e) => {
+          console.error(e);
+          setRiskError('El asistente de Inferencia no está disponible en este momento. Puedes procesar el pedido normalmente.');
+        })
+        .finally(() => setIsRiskLoading(false));
+    }
+  }, [order, user?.id]);
+
   const handleStatusUpdate = async (newStatus: string, successMessage: string) => {
     try {
       setIsUpdating(true);
@@ -43,6 +81,25 @@ export default function OrderDetailPage() {
       fetchOrderDetails();
     } catch (error: any) {
       toast({ title: "Error", description: error.message || "No se pudo actualizar el estado", variant: "error" });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleShipSubmit = async (data: { trackingNumber: string; carrierId: number; sensorId?: string }) => {
+    try {
+      setIsUpdating(true);
+      await updateOrder(id, {
+        currentStatus: "SHIPPED",
+        trackingNumber: data.trackingNumber,
+        carrierId: data.carrierId,
+        sensorId: data.sensorId
+      });
+      toast({ title: "Éxito", description: "El pedido ha sido marcado como enviado", variant: "success" });
+      setShipModalOpen(false);
+      fetchOrderDetails();
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "No se pudo marcar como enviado", variant: "error" });
     } finally {
       setIsUpdating(false);
     }
@@ -99,9 +156,67 @@ export default function OrderDetailPage() {
              </div>
              {!timeline?.items?.length && <p className="text-muted text-center py-4">No hay eventos registrados aún.</p>}
           </Card>
+
+          <OrderChat 
+            orderId={order.id} 
+            currentStatus={order.currentStatus} 
+            currentUserId={user?.id}
+          />
         </div>
 
         <div className="space-y-6">
+          <Card padding="md">
+            <h3 className="font-bold mb-4 flex items-center gap-2"><Navigation className="w-4 h-4" /> Ruta e Involucrados</h3>
+            
+            <div className="space-y-4">
+              {/* Origen */}
+              <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                    <User className="w-3 h-3" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 uppercase">Vendedor</p>
+                    <p className="text-sm font-bold">{order.product?.seller?.user?.fullName || 'Artesano'}</p>
+                  </div>
+                </div>
+                {order.product?.seller?.user?.phonePrimary && (
+                  <div className="flex items-start gap-2 text-sm text-gray-600 pl-8 mb-1">
+                    <Phone className="w-4 h-4 shrink-0 mt-0.5 text-gray-400" />
+                    <p>{order.product.seller.user.phonePrimary}</p>
+                  </div>
+                )}
+                <div className="flex items-start gap-2 text-sm text-gray-600 pl-8">
+                  <MapPin className="w-4 h-4 shrink-0 mt-0.5 text-gray-400" />
+                  <p>{order.product?.locationFormattedAddress || order.product?.locationCity || 'Ubicación no especificada'}</p>
+                </div>
+              </div>
+
+              {/* Destino */}
+              <div className="bg-brand-nature-bg/30 p-3 rounded-lg border border-brand-nature-bg">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-6 h-6 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center shrink-0">
+                    <User className="w-3 h-3" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 uppercase">Comprador</p>
+                    <p className="text-sm font-bold">{order.buyer?.fullName || order.buyer?.username || 'Comprador'}</p>
+                  </div>
+                </div>
+                {order.buyer?.phonePrimary && (
+                  <div className="flex items-start gap-2 text-sm text-gray-600 pl-8 mb-1">
+                    <Phone className="w-4 h-4 shrink-0 mt-0.5 text-gray-400" />
+                    <p>{order.buyer.phonePrimary}</p>
+                  </div>
+                )}
+                <div className="flex items-start gap-2 text-sm text-gray-600 pl-8">
+                  <MapPin className="w-4 h-4 shrink-0 mt-0.5 text-brand-primary" />
+                  <p>{order.destinationFormattedAddress || order.destinationCity || 'Dirección no especificada'}</p>
+                </div>
+              </div>
+            </div>
+          </Card>
+
           <Card padding="md" className="bg-brand-nature-bg border-brand-primary-light">
              <h3 className="font-bold text-brand-nature-content mb-4 flex items-center gap-2"><AlertTriangle className="w-4 h-4"/> Alertas Recientes</h3>
              {timeline?.items?.filter((e: OrderTimelineItemDto) => e.type === 'telemetry').length === 0 ? (
@@ -186,7 +301,7 @@ export default function OrderDetailPage() {
                 <Button 
                   variant="primary" 
                   className="w-full mt-4"
-                  onClick={() => handleStatusUpdate('SHIPPED', 'Has marcado el pedido como enviado.')}
+                  onClick={() => setShipModalOpen(true)}
                   isLoading={isUpdating}
                 >
                   Marcar como Enviado
@@ -257,12 +372,73 @@ export default function OrderDetailPage() {
             </Card>
           )}
 
-          {/* Panel de Riesgo (Sólo vendedor) */}
+          {/* Panel Asistente de Embalaje IA (Sólo vendedor) */}
+          {isSeller && (
+            <Card padding="md" className="border-brand-primary/20 bg-linear-to-b from-white to-brand-primary/5">
+              <h3 className="font-bold mb-4 flex items-center gap-2">
+                <Cpu className="w-5 h-5 text-brand-primary" />
+                Asistente de Embalaje IA
+              </h3>
+              
+              {isRiskLoading ? (
+                <div className="space-y-2 animate-pulse">
+                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                  <p className="text-sm text-muted mt-2">Analizando ruta y clima con IA...</p>
+                </div>
+              ) : riskError ? (
+                <div className="bg-brand-urgency/10 text-brand-urgency p-3 rounded-md text-sm border border-brand-urgency/20">
+                  <p className="font-semibold flex items-center gap-1"><AlertTriangle className="w-4 h-4"/> No Disponible</p>
+                  <p className="mt-1">{riskError}</p>
+                </div>
+              ) : riskData ? (
+                <div className="space-y-3 text-sm">
+                  <div className="bg-brand-nature-bg p-3 rounded-md border border-brand-nature-content/20">
+                    <p className="font-semibold text-brand-nature-content mb-1">Recomendación Logística</p>
+                    <p>{riskData.message || "La ruta pasa por una zona de clima estable. Un empaque estándar es suficiente."}</p>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2 mt-3">
+                    <div className="border border-border rounded p-2">
+                      <span className="text-muted block text-xs">Score de Riesgo</span>
+                      <span className="font-semibold">{riskData.composite_score_pct ? `${riskData.composite_score_pct.toFixed(2)}%` : 'N/A'}</span>
+                    </div>
+                    <div className="border border-border rounded p-2">
+                      <span className="text-muted block text-xs">Nivel de Alerta</span>
+                      <span className="font-semibold capitalize">{riskData.alert_level || 'Bajo'}</span>
+                    </div>
+                  </div>
+                  
+                  {riskData.main_reasons && riskData.main_reasons.length > 0 && (
+                    <div className="mt-3 text-xs text-muted">
+                      <strong>Factores de Riesgo:</strong>
+                      <ul className="list-disc pl-4 mt-1">
+                        {riskData.main_reasons.slice(0, 3).map((reason: any, idx: number) => (
+                          <li key={idx}>{reason.feature}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p className="text-sm text-muted">No se ha podido analizar la ruta.</p>
+              )}
+            </Card>
+          )}
+
+          {/* Panel de Riesgo IoT (Sólo vendedor) */}
           {isSeller && (
              <LogisticsRiskPanel />
           )}
         </div>
       </div>
+      
+      <ShipmentModal 
+        isOpen={shipModalOpen} 
+        onClose={() => setShipModalOpen(false)} 
+        onSubmit={handleShipSubmit} 
+        isLoading={isUpdating}
+      />
     </div>
   );
 }

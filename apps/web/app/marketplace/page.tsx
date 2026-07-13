@@ -11,9 +11,9 @@ import { MarketplaceNavbar } from '@/components/layout/MarketplaceNavbar';
 import { BannerCarousel } from '@/components/ui/BannerCarousel';
 import { Footer } from '@/components/layout/Footer';
 
-import { getProducts, getCategories } from '@/lib/api';
+import { getProducts, getCategories, getActiveTribes } from '@/lib/api';
 import { mockProductDtos } from '@/lib/mock-data';
-import type { ProductResponseDto, ProductCategoryResponseDto } from 'event-types';
+import type { ProductResponseDto, ProductCategoryResponseDto, TribeResponseDto } from 'event-types';
 
 function MarketplaceContent() {
   const searchParams = useSearchParams();
@@ -21,10 +21,16 @@ function MarketplaceContent() {
 
   const categoryParam = searchParams.get('category');
   const qParam = searchParams.get('q');
+  const tribeIdParam = searchParams.get('tribeId');
+  
   const [activeCategory, setActiveCategory] = useState<string | null>(categoryParam || null);
 
   const [products, setProducts] = useState<ProductResponseDto[]>([]);
   const [categories, setCategories] = useState<ProductCategoryResponseDto[]>([]);
+  const [tribes, setTribes] = useState<TribeResponseDto[]>([]);
+  const [activeTribeIds, setActiveTribeIds] = useState<number[]>(
+    tribeIdParam ? [parseInt(tribeIdParam, 10)] : []
+  );
   const [loading, setLoading] = useState(true);
 
   const [minRating, setMinRating] = useState<number>(0);
@@ -51,7 +57,7 @@ function MarketplaceContent() {
     }
   }, [categoryParam]);
 
-  // Fetch categories on mount
+  // Fetch categories and tribes on mount
   useEffect(() => {
     getCategories()
       .then(res => {
@@ -64,6 +70,10 @@ function MarketplaceContent() {
         );
         setCategories(flatCategories);
       })
+      .catch(console.error);
+
+    getActiveTribes()
+      .then(res => setTribes(res.data || []))
       .catch(console.error);
   }, []);
 
@@ -78,6 +88,7 @@ function MarketplaceContent() {
         if (debouncedMinPrice) params.minPrice = Number(debouncedMinPrice);
         if (debouncedMaxPrice) params.maxPrice = Number(debouncedMaxPrice);
         if (minRating > 0) params.minRating = minRating;
+        if (activeTribeIds.length > 0) params.tribeIds = activeTribeIds.join(',');
 
         const res = await getProducts(params);
         setProducts(res.data || []);
@@ -92,7 +103,7 @@ function MarketplaceContent() {
     if (!activeCategory || categories.length > 0) {
       loadProducts();
     }
-  }, [activeCategory, categories, qParam, debouncedMinPrice, debouncedMaxPrice, minRating]);
+  }, [activeCategory, categories, qParam, debouncedMinPrice, debouncedMaxPrice, minRating, activeTribeIds]);
 
   const handleCategoryClick = (cat: string) => {
     if (activeCategory === cat) {
@@ -165,14 +176,12 @@ function MarketplaceContent() {
             <div>
               <div className="flex justify-between items-center mb-4">
                 <h3 className="font-bold text-slate-900 text-lg">Rango de Precio</h3>
-                {(minPrice || maxPrice) && (
-                  <button 
-                    onClick={() => { setMinPrice(''); setMaxPrice(''); }}
-                    className="text-xs text-muted hover:text-brand-primary transition-colors cursor-pointer"
-                  >
-                    Limpiar
-                  </button>
-                )}
+                <button 
+                  onClick={() => { setMinPrice(''); setMaxPrice(''); }}
+                  className="text-xs text-muted hover:text-brand-primary transition-colors cursor-pointer"
+                >
+                  Limpiar
+                </button>
               </div>
               <p className="text-xs text-muted mb-4 font-medium">El precio promedio es $30.00</p>
               <div className="flex items-center gap-2">
@@ -202,14 +211,12 @@ function MarketplaceContent() {
             <div>
               <div className="flex justify-between items-center mb-4">
                 <h3 className="font-bold text-slate-900 text-lg">Calificación</h3>
-                {minRating > 0 && (
-                  <button
-                    onClick={() => setMinRating(0)}
-                    className="text-xs text-muted hover:text-brand-primary transition-colors cursor-pointer"
-                  >
-                    Limpiar
-                  </button>
-                )}
+                <button
+                  onClick={() => setMinRating(0)}
+                  className="text-xs text-muted hover:text-brand-primary transition-colors cursor-pointer"
+                >
+                  Limpiar
+                </button>
               </div>
               <div className="flex items-center justify-between group">
                 <div
@@ -236,7 +243,44 @@ function MarketplaceContent() {
               </div>
             </div>
 
-
+            {/* Comunidad de Origen */}
+            <div>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-bold text-slate-900 text-lg">Comunidad de Origen</h3>
+                {activeTribeIds.length > 0 && (
+                  <button
+                    onClick={() => setActiveTribeIds([])}
+                    className="text-xs text-muted hover:text-brand-primary transition-colors cursor-pointer"
+                  >
+                    Limpiar
+                  </button>
+                )}
+              </div>
+              <div className="flex flex-col gap-3 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
+                {tribes.length === 0 ? (
+                  <p className="text-sm text-gray-500">No hay comunidades disponibles</p>
+                ) : (
+                  tribes.map(tribe => (
+                    <label key={tribe.id} className="flex items-center gap-3 cursor-pointer group">
+                      <Checkbox
+                        checked={activeTribeIds.includes(tribe.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setActiveTribeIds(prev => [...prev, tribe.id]);
+                          } else {
+                            setActiveTribeIds(prev => prev.filter(id => id !== tribe.id));
+                          }
+                        }}
+                        className="border-gray-200 peer-checked:bg-brand-primary peer-checked:border-brand-primary"
+                      />
+                      <span className="text-sm font-medium text-slate-700 group-hover:text-brand-primary transition-colors">
+                        {tribe.name}
+                      </span>
+                    </label>
+                  ))
+                )}
+              </div>
+            </div>
 
           </aside>
 

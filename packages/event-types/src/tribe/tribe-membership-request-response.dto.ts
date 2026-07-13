@@ -12,4 +12,8 @@ export class TribeMembershipRequestResponseDto {
   reviewedAt: Date | null;
   createdAt: Date;
   seller?: SellerResponseDto;
+  tribe?: {
+    id: number;
+    name: string;
+  };
 }

@@ -37,9 +37,9 @@ export class BlockchainExplorerController {
   // missing proposals by rendering a not-found state in the route.
   @Get('proposals/:id')
   async findProposal(
-    @Param() params: FindProposalParamsDto,
+    @Param('id') id: string,
   ): Promise<ProposalDetailDto | null> {
-    return this.service.findProposal(params.id);
+    return this.service.findProposal(id);
   }
 
   @Get('members')

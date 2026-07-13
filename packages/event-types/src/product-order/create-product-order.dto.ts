@@ -24,4 +24,29 @@ export class CreateProductOrderDto {
   @MaxLength(255)
   transactionHash?: string;
 
+  // Destination fields
+  @IsString()
+  @IsOptional()
+  @MaxLength(100)
+  destinationMapboxId?: string;
+
+  @IsString()
+  @IsOptional()
+  destinationFormattedAddress?: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(100)
+  destinationCity?: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(100)
+  destinationRegion?: string;
+
+  @IsOptional()
+  destinationCoords?: {
+    latitude: number;
+    longitude: number;
+  };
 }

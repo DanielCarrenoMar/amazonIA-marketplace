@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { ProposalSummary, ProposalStatus } from '@/lib/explorer-mock';
 import { VoteProgressBar } from './VoteProgressBar';
 
-export function ExplorerTable({ proposals }: { proposals: ProposalSummary[] }) {
+export function ExplorerTable({ proposals, mode = 'explorer' }: { proposals: ProposalSummary[], mode?: 'explorer' | 'governance' }) {
   const [filter, setFilter] = useState<ProposalStatus | 'ALL'>('ALL');
 
   const filteredProposals = filter === 'ALL' ? proposals : proposals.filter(p => p.status === filter);
@@ -47,7 +47,7 @@ export function ExplorerTable({ proposals }: { proposals: ProposalSummary[] }) {
             {filteredProposals.map(p => (
               <tr key={p.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
                 <td className="py-4 px-4 text-sm font-mono text-brand-primary">
-                  <Link href={`/marketplace/explorer/${p.id}`} className="hover:underline font-bold">{p.id}</Link>
+                  <Link href={mode === 'governance' ? `/marketplace/governance/${p.id}` : `/marketplace/explorer/${p.id}`} className="hover:underline font-bold">{p.id}</Link>
                 </td>
                 <td className="py-4 px-4 text-sm font-medium text-slate-900">{p.title}</td>
                 <td className="py-4 px-4 text-sm text-slate-600">{p.proposerName}</td>

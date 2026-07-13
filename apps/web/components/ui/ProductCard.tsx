@@ -1,3 +1,5 @@
+"use client";
+
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -5,6 +7,9 @@ import { Icon } from "@iconify/react";
 import { Badge } from './Badge';
 import { Button } from './Button';
 import { Card } from './Card';
+import { useFavorites } from '@/lib/favoriteContext';
+import { useAuth } from '@/lib/useAuth';
+import { toast } from 'sonner';
 
 export interface ProductCardProps {
   id?: string;
@@ -30,6 +35,25 @@ export function ProductCard({
   originalPrice,
   href,
 }: ProductCardProps) {
+  const { favoriteIds, toggleFavorite } = useFavorites();
+  const { user } = useAuth();
+  
+  // Si tenemos el id real del producto (pasado en ProductCardProps como id)
+  // lo chequeamos. Algunos lugares pasan id, otros no.
+  const productId = arguments[0].id;
+  const isFavorite = productId ? favoriteIds.has(productId) : false;
+
+  const handleFavoriteClick = async (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevenir que el click se vaya al link del producto
+    if (!user) {
+      toast.error('Inicia sesión para guardar favoritos');
+      return;
+    }
+    if (productId) {
+      await toggleFavorite(productId);
+    }
+  };
+
   const ImageWrapper = href ? Link : 'div';
   const TitleWrapper = href ? Link : 'div';
 
@@ -57,9 +81,13 @@ export function ProductCard({
         <Button
           variant="ghost"
           size="icon"
+          onClick={handleFavoriteClick}
           className="absolute top-3 right-3 bg-white/80! backdrop-blur-md hover:bg-white! hover:scale-110 z-10 shadow-sm"
         >
-          <Icon icon="lucide:heart" className="w-5 h-5 text-red-500 fill-red-500" />
+          <Icon 
+            icon="lucide:heart" 
+            className={`w-5 h-5 ${isFavorite ? 'text-red-500 fill-red-500' : 'text-gray-500'}`} 
+          />
         </Button>
       </ImageWrapper>
 

@@ -45,7 +45,7 @@ function ExplorerDetailContent() {
             <p>El identificador '{id}' no existe en la red actual.</p>
           </div>
         ) : (
-          <ProposalDetailView proposal={proposal} />
+          <ProposalDetailView proposal={proposal} readOnly={true} />
         )}
       </main>
       <Footer />

@@ -1,5 +1,5 @@
 import type { SpatialRiskQuery } from 'event-types';
-import { apiFetch } from './client';
+import { apiFetch, authFetch } from './client';
 
 export function getSpatialRisk(query: SpatialRiskQuery): Promise<any> {
   const params = new URLSearchParams();
@@ -9,4 +9,11 @@ export function getSpatialRisk(query: SpatialRiskQuery): Promise<any> {
   if (query.productType) params.append('productType', query.productType);
 
   return apiFetch<any>(`/inference/spatial-risk?${params.toString()}`);
+}
+
+export function evaluateRisk(payload: any): Promise<any> {
+  return authFetch<any>('/inference/evaluate', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
 }

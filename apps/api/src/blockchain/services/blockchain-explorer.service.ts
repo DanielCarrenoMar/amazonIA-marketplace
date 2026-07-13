@@ -43,7 +43,7 @@ export class BlockchainExplorerService {
     const userMap = new Map(users.map((u) => [u.id, u.fullName]));
 
     return proposals.map((p) => ({
-      id: p.id,
+      id: p.proposalId,
       title: MISSING_METADATA,
       proposerName: userMap.get(p.proposerUserId) ?? null,
       status: p.status as ProposalStatus,
@@ -55,7 +55,7 @@ export class BlockchainExplorerService {
 
   async findProposal(id: string): Promise<ProposalDetailDto | null> {
     const proposal = await this.prisma.proposal.findUnique({
-      where: { id },
+      where: { proposalId: id },
       include: { votes: { include: { voter: true } } },
     });
 
@@ -79,7 +79,7 @@ export class BlockchainExplorerService {
     }));
 
     return {
-      id: proposal.id,
+      id: proposal.proposalId,
       title: MISSING_METADATA,
       proposerName: userMap.get(proposal.proposerUserId) ?? null,
       status: proposal.status as ProposalStatus,

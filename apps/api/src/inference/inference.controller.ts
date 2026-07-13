@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, Headers } from '@nestjs/common';
 import { InferenceService } from './inference.service';
 
 @Controller('inference')
@@ -13,5 +13,14 @@ export class InferenceController {
     @Query('productType') productType?: string,
   ) {
     return this.inferenceService.getSpatialRisk(lat, lon, transportType, productType);
+  }
+
+  @Post('evaluate')
+  async evaluateRisk(
+    @Body() payload: any,
+    @Headers('authorization') authHeader: string
+  ) {
+    const token = authHeader?.split(' ')[1] || '';
+    return this.inferenceService.evaluateRisk(payload, token);
   }
 }

@@ -44,7 +44,7 @@ export class ProductService {
   }
 
   async findAll(query: FindProductsDto): Promise<PaginatedResponseDto<ProductResponseDto>> {
-    const { search, categoryId, categoryName, sellerId, tribeId, minPrice, maxPrice, minRating } = query;
+    const { search, categoryId, categoryName, sellerId, tribeIds, minPrice, maxPrice, minRating } = query;
     const page = Number(query.page) || 1;
     const limit = Number(query.limit) || 10;
     const skip = (page - 1) * limit;
@@ -55,7 +55,7 @@ export class ProductService {
       ...(categoryId ? { categoryId: Number(categoryId) } : {}),
       ...(categoryName ? { category: { categoryName } } : {}),
       ...(sellerId ? { sellerId } : {}),
-      ...(tribeId ? { seller: { tribeId: Number(tribeId) } } : {}),
+      ...(tribeIds ? { seller: { tribeId: { in: tribeIds.split(',').map(Number) } } } : {}),
       ...(search ? { name: { contains: search, mode: 'insensitive' } } : {}),
       ...((minPrice !== undefined || maxPrice !== undefined) ? {
         price: {

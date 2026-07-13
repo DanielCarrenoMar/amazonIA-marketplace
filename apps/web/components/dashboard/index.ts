@@ -6,6 +6,7 @@ export * from './LogisticsRiskPanel';
 export * from './OrderCard';
 export * from './OrdersList';
 export * from './ProductWizard';
+export * from './OrderChat';
 export * from './RatingModal';
 export * from './ShipmentModal';
 export * from './StatsCard';

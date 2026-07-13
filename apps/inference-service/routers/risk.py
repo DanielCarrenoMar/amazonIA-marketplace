@@ -23,6 +23,38 @@ def calculate_distance(lat1, lon1, lat2, lon2):
     """Calcula distancia euclidiana simple para ponderar"""
     return math.sqrt((lat1 - lat2)**2 + (lon1 - lon2)**2)
 
+def aggregate_route_climate(climate_list: list[ClimateData]) -> ClimateData:
+    """Consolida el clima de toda la ruta calculando el 'peor caso' (máximos y mínimos críticos) por día."""
+    if not climate_list:
+        return None
+    valid_climates = [c for c in climate_list if c is not None]
+    if not valid_climates:
+        return None
+        
+    days = max((len(c.daily_precip) for c in valid_climates), default=0)
+    
+    aggregated = ClimateData(
+        daily_precip=[], daily_max_temp=[], daily_min_temp=[],
+        daily_humidity=[], daily_wind=[], daily_radiation=[]
+    )
+    
+    for i in range(days):
+        precip = [c.daily_precip[i] for c in valid_climates if i < len(c.daily_precip) and c.daily_precip[i] is not None]
+        max_t = [c.daily_max_temp[i] for c in valid_climates if i < len(c.daily_max_temp) and c.daily_max_temp[i] is not None]
+        min_t = [c.daily_min_temp[i] for c in valid_climates if i < len(c.daily_min_temp) and c.daily_min_temp[i] is not None]
+        hum = [c.daily_humidity[i] for c in valid_climates if i < len(c.daily_humidity) and c.daily_humidity[i] is not None]
+        wind = [c.daily_wind[i] for c in valid_climates if i < len(c.daily_wind) and c.daily_wind[i] is not None]
+        rad = [c.daily_radiation[i] for c in valid_climates if i < len(c.daily_radiation) and c.daily_radiation[i] is not None]
+        
+        aggregated.daily_precip.append(max(precip) if precip else None)
+        aggregated.daily_max_temp.append(max(max_t) if max_t else None)
+        aggregated.daily_min_temp.append(min(min_t) if min_t else None)
+        aggregated.daily_humidity.append(max(hum) if hum else None)
+        aggregated.daily_wind.append(max(wind) if wind else None)
+        aggregated.daily_radiation.append(max(rad) if rad else None)
+        
+    return aggregated
+
 @router.get("/spatial")
 async def get_spatial_risk(
     lat: float = Query(..., description="Latitude"),
@@ -217,8 +249,9 @@ async def evaluate_risk(request: EvaluationRequest, user_payload: dict = Depends
     )
     
     # 5. Feature Pipeline
+    aggregated_climate = aggregate_route_climate(climate_data_list)
     xgboost_features = construir_features_globales(
-        climate=climate_data_list[0], # Using the first or aggregated climate in production
+        climate=aggregated_climate, # Using the worst-case aggregated climate for the entire route
         telemetry=telemetry,
         shipment=shipment,
         hydro=hydro_data,

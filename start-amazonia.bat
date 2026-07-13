@@ -5,7 +5,7 @@ echo ==========================================================
 
 :: 1. Start Hardhat local node in a new window
 echo [1/4] Starting Hardhat Local Node...
-start "1. Hardhat Node (Blockchain)" cmd /k "pnpm --filter blockchain-notary hardhat node"
+start "1. Hardhat Node (Blockchain)" cmd /k "pnpm --filter blockchain-notary run hardhat node"
 
 :: Wait for Hardhat to fully boot up before deploying
 echo Waiting 4 seconds for the blockchain node to initialize...
@@ -13,7 +13,7 @@ timeout /t 4 >nul
 
 :: 2. Deploy Governance Contract
 echo [2/4] Deploying Governance Smart Contract...
-call pnpm --filter blockchain-notary hardhat run scripts/deploy-governance.ts --network localhost
+call pnpm --filter blockchain-notary run hardhat run scripts/deploy-all.ts --network localhost
 
 :: 3. Start Blockchain Notary microservice in a new window
 echo [3/4] Starting Blockchain Notary (Port 3002)...

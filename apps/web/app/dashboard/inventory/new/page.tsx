@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { FileDrop } from "@/components/ui/FileDrop";
+import { Switch } from "@/components/ui/Switch";
 import { Card } from "@/components/ui/Card";
 import { getCategories, createProduct, uploadProductImage } from "@/lib/api";
 import type { ProductCategoryResponseDto, GroupedCategoryResponseDto } from "event-types";
@@ -29,6 +30,12 @@ export default function NewProductPage() {
   const [description, setDescription] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
 
+  // Logistics State
+  const [isFragile, setIsFragile] = useState(false);
+  const [requiresColdChain, setRequiresColdChain] = useState(false);
+  const [maxTemperatureCelsius, setMaxTemperatureCelsius] = useState("");
+  const [maxHumidity, setMaxHumidity] = useState("");
+
   useEffect(() => {
     getCategories().then(setCategories).catch(console.error);
   }, []);
@@ -40,13 +47,24 @@ export default function NewProductPage() {
     }
     setLoading(true);
     try {
-      const prod = await createProduct({
+      const payload: any = {
         name,
         description,
         price: parseFloat(price),
         stockAvailable: parseInt(stock),
-        categoryId: parseInt(categoryId)
-      });
+        categoryId: parseInt(categoryId),
+        isFragile,
+        requiresColdChain,
+      };
+
+      if (requiresColdChain && maxTemperatureCelsius) {
+        payload.maxTemperatureCelsius = parseFloat(maxTemperatureCelsius);
+      }
+      if (requiresColdChain && maxHumidity) {
+        payload.maxHumidity = parseFloat(maxHumidity);
+      }
+
+      const prod = await createProduct(payload);
       
       if (imageFile) {
         await uploadProductImage(prod.id, imageFile);
@@ -66,7 +84,7 @@ export default function NewProductPage() {
       <DashboardHeader title="Nueva Artesanía" subtitle="Publica tu obra en el mundo" />
       
       <ProductWizard 
-        steps={['Identidad', 'Territorio', 'Historia', 'Verificar']}
+        steps={['Identidad', 'Territorio', 'Historia', 'Logística', 'Verificar']}
         currentStep={step}
       />
 
@@ -129,11 +147,56 @@ export default function NewProductPage() {
 
         {step === 3 && (
           <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
+            <h3 className="text-xl font-outfit font-bold">Logística y Cuidados</h3>
+            <div className="space-y-4">
+              <Switch 
+                label="Producto Frágil" 
+                description="Requiere embalaje y manejo especial durante el transporte."
+                checked={isFragile} 
+                onChange={(e) => setIsFragile(e.target.checked)} 
+              />
+              <Switch 
+                label="Requiere Cadena de Frío" 
+                description="El producto debe mantenerse a temperatura controlada."
+                checked={requiresColdChain} 
+                onChange={(e) => setRequiresColdChain(e.target.checked)} 
+              />
+              
+              {requiresColdChain && (
+                <div className="grid grid-cols-2 gap-4 mt-4 p-4 bg-gray-50 border border-gray-100 rounded-xl">
+                  <Input 
+                    label="Temp. Máxima (°C)" 
+                    type="number" 
+                    step="0.1" 
+                    value={maxTemperatureCelsius} 
+                    onChange={e => setMaxTemperatureCelsius(e.target.value)} 
+                    placeholder="Ej. 8"
+                  />
+                  <Input 
+                    label="Humedad Máx. (%)" 
+                    type="number" 
+                    step="1" 
+                    min="0"
+                    max="100"
+                    value={maxHumidity} 
+                    onChange={e => setMaxHumidity(e.target.value)} 
+                    placeholder="Ej. 60"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {step === 4 && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
             <h3 className="text-xl font-outfit font-bold">Verificar y Publicar</h3>
             <div className="bg-gray-50 p-6 rounded-xl space-y-3">
               <p><strong>Nombre:</strong> {name}</p>
               <p><strong>Precio:</strong> ${price}</p>
               <p><strong>Stock:</strong> {stock}</p>
+              <p><strong>Frágil:</strong> {isFragile ? 'Sí' : 'No'}</p>
+              <p><strong>Cadena de Frío:</strong> {requiresColdChain ? 'Sí' : 'No'} {requiresColdChain && maxTemperatureCelsius ? `(Máx. ${maxTemperatureCelsius}°C)` : ''}</p>
               <p><strong>Foto:</strong> {imageFile ? imageFile.name : 'No hay foto'}</p>
             </div>
           </div>
@@ -144,8 +207,8 @@ export default function NewProductPage() {
             Anterior
           </Button>
           
-          {step < 3 ? (
-            <Button variant="primary" onClick={() => setStep(s => Math.min(3, s + 1))}>
+          {step < 4 ? (
+            <Button variant="primary" onClick={() => setStep(s => Math.min(4, s + 1))}>
               Siguiente
             </Button>
           ) : (

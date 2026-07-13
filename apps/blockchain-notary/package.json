@@ -12,7 +12,8 @@
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "db:generate": "prisma generate",
-    "db:push": "prisma db push"
+    "db:push": "prisma db push",
+    "hardhat": "hardhat"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",

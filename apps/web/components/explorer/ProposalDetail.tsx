@@ -5,7 +5,7 @@ import { useAuth } from '@/lib/useAuth';
 import { getExplorerMembers, getExplorerProposalById, voteProposal, finalizeProposal, vetoProposal } from '@/lib/explorer-api';
 import { toast } from 'sonner';
 
-export function ProposalDetail({ proposal }: { proposal: IProposalDetail }) {
+export function ProposalDetail({ proposal, readOnly = false }: { proposal: IProposalDetail, readOnly?: boolean }) {
   const { user } = useAuth();
   const [localProposal, setLocalProposal] = useState<IProposalDetail>(proposal);
   const [memberRole, setMemberRole] = useState<'NONE' | 'MEMBER' | 'ELDER'>('NONE');
@@ -18,7 +18,7 @@ export function ProposalDetail({ proposal }: { proposal: IProposalDetail }) {
   }, [proposal]);
 
   useEffect(() => {
-    if (user) {
+    if (user && !readOnly) {
       getExplorerMembers().then(members => {
         const found = members.find(m => m.userId === user.id);
         if (found) {
@@ -26,7 +26,7 @@ export function ProposalDetail({ proposal }: { proposal: IProposalDetail }) {
         }
       });
     }
-  }, [user]);
+  }, [user, readOnly]);
 
   const handleVote = async (inFavor: boolean) => {
     setSubmitting(true);
@@ -121,7 +121,7 @@ export function ProposalDetail({ proposal }: { proposal: IProposalDetail }) {
         </div>
       </div>
 
-      {memberRole !== 'NONE' && localProposal.status === 'PENDING' && (
+      {!readOnly && memberRole !== 'NONE' && localProposal.status === 'PENDING' && (
         <div className="border-t border-gray-100 pt-8">
           <div className="bg-brand-nature-bg/30 p-6 rounded-3xl border border-brand-primary-light flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
