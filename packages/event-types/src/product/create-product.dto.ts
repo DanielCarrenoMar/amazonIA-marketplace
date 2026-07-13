@@ -70,4 +70,21 @@ export class CreateProductDto {
   @IsString({ each: true })
   @IsOptional()
   elaborationMediaUrls?: string[];
+
+  // Logistics Criteria
+  @IsOptional()
+  @Type(() => Boolean)
+  isFragile?: boolean;
+
+  @IsOptional()
+  @Type(() => Boolean)
+  requiresColdChain?: boolean;
+
+  @IsOptional()
+  @IsNumber()
+  maxTemperatureCelsius?: number;
+
+  @IsOptional()
+  @IsNumber()
+  maxHumidity?: number;
 }
