@@ -175,10 +175,16 @@ export default function OrderDetailPage() {
                     <User className="w-3 h-3" />
                   </div>
                   <div>
-                    <p className="text-xs font-semibold text-gray-500 uppercase">Origen (Vendedor)</p>
+                    <p className="text-xs font-semibold text-gray-500 uppercase">Vendedor</p>
                     <p className="text-sm font-bold">{order.product?.seller?.user?.fullName || 'Artesano'}</p>
                   </div>
                 </div>
+                {order.product?.seller?.user?.phonePrimary && (
+                  <div className="flex items-start gap-2 text-sm text-gray-600 pl-8 mb-1">
+                    <Phone className="w-4 h-4 shrink-0 mt-0.5 text-gray-400" />
+                    <p>{order.product.seller.user.phonePrimary}</p>
+                  </div>
+                )}
                 <div className="flex items-start gap-2 text-sm text-gray-600 pl-8">
                   <MapPin className="w-4 h-4 shrink-0 mt-0.5 text-gray-400" />
                   <p>{order.product?.locationFormattedAddress || order.product?.locationCity || 'Ubicación no especificada'}</p>
@@ -192,7 +198,7 @@ export default function OrderDetailPage() {
                     <User className="w-3 h-3" />
                   </div>
                   <div>
-                    <p className="text-xs font-semibold text-gray-500 uppercase">Destino (Comprador)</p>
+                    <p className="text-xs font-semibold text-gray-500 uppercase">Comprador</p>
                     <p className="text-sm font-bold">{order.buyer?.fullName || order.buyer?.username || 'Comprador'}</p>
                   </div>
                 </div>
