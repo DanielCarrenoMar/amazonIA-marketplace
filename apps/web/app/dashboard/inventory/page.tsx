@@ -107,7 +107,7 @@ export default function InventoryPage() {
           </div>
           <Select
             value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
+            onChange={setCategoryFilter}
             options={catOptions}
             className="w-full sm:w-40 rounded-full! bg-white border-gray-200 shadow-sm"
           />
