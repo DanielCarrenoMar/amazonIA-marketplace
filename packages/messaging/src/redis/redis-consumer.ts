@@ -1,14 +1,14 @@
 import { Redis } from '@upstash/redis';
 import { ConsumedMessage, IMessageConsumer } from '../interfaces';
 import { StreamTopic } from '../streams';
-import { createRedisClient } from './redis.config';
+
 
 export class RedisConsumerService implements IMessageConsumer {
   private redis: Redis;
   private initialized: Set<string> = new Set();
 
-  constructor(redis?: Redis) {
-    this.redis = redis ?? createRedisClient();
+  constructor(redis: Redis) {
+    this.redis = redis;
   }
 
   private async ensureGroup(

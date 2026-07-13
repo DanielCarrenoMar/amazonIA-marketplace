@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import sharp from 'sharp';
@@ -7,22 +7,28 @@ import { StorageService } from './storage.service';
 
 @Injectable()
 export class SupabaseStorageService implements StorageService {
-  private readonly supabase: SupabaseClient;
+  private readonly supabase: SupabaseClient | null = null;
   private readonly bucketName = 'amazonia-marketplace';
+  private readonly logger = new Logger(SupabaseStorageService.name);
 
   constructor(private readonly configService: ConfigService) {
     const supabaseUrl = this.configService.get<string>('SUPABASE_URL') || process.env.SUPABASE_URL;
     const supabaseKey = this.configService.get<string>('SUPABASE_SERVICE_KEY') || process.env.SUPABASE_SERVICE_KEY;
 
     if (!supabaseUrl || !supabaseKey) {
-      console.error('Missing Supabase Config:', { supabaseUrl: !!supabaseUrl, supabaseKey: !!supabaseKey });
-      throw new Error('Supabase credentials are not configured in the .env');
+      this.logger.warn(
+        'SUPABASE_URL/SUPABASE_SERVICE_KEY not set — image upload/delete disabled.',
+      );
+      return; // no crash, just no-op
     }
 
     this.supabase = createClient(supabaseUrl, supabaseKey);
   }
 
   async uploadOptimizedImage(file: Express.Multer.File): Promise<string> {
+    if (!this.supabase) {
+      throw new InternalServerErrorException('Image upload not available: Supabase not configured.');
+    }
     try {
       // 1. Image compression and conversion to WebP
       const optimizedBuffer = await sharp(file.buffer)
@@ -56,6 +62,7 @@ export class SupabaseStorageService implements StorageService {
   }
 
   async deleteImage(url: string): Promise<void> {
+    if (!this.supabase) return; // silently skip if not configured
     try {
       if (!url) return;
 

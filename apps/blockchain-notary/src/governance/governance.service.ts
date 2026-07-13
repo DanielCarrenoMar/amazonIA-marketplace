@@ -333,6 +333,58 @@ export class GovernanceService {
       },
     });
 
+    // Acuñar el NFT de autenticidad si la propuesta fue aprobada
+    let nftTokenId: string | null = null;
+    let nftTxHash: string | null = null;
+
+    if (passed) {
+      this.logger.log(`Proposal passed. Initiating NFT Minting for order ${proposalId}`);
+      try {
+        const orderInfo = await this.prisma.$queryRaw<any[]>`
+          SELECT 
+            o.product_id AS "productId",
+            o.buyer_id AS "buyerId",
+            p.seller_id AS "sellerId",
+            buyer.wallet_hash AS "buyerWallet",
+            seller.wallet_hash AS "sellerWallet"
+          FROM product_order o
+          JOIN product p ON o.product_id = p.id
+          LEFT JOIN user_account buyer ON o.buyer_id = buyer.id
+          LEFT JOIN user_account seller ON p.seller_id = seller.id
+          WHERE o.id = ${proposalId}::uuid
+          LIMIT 1
+        `;
+
+        if (orderInfo && orderInfo.length > 0) {
+          const { productId, buyerId, sellerId, buyerWallet, sellerWallet } = orderInfo[0];
+          
+          // Fallbacks para desarrollo local si no están configuradas las wallets en DB
+          const recipientAddress = buyerWallet || '0x70997970C51812dc3A010C7d01b50e0d17dc79C8'; // Account #1
+          const artisanAddress = sellerWallet || '0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC'; // Account #2
+          
+          const apiBaseUrl = process.env.API_BASE_URL || 'http://localhost:3001/api/v1';
+          const tokenURI = `${apiBaseUrl}/products/${productId}/nft-metadata`;
+          
+          const mintResult = await this.blockchainService.mintNFT(
+            artisanAddress,
+            recipientAddress,
+            proposalId,
+            tokenURI,
+          );
+          
+          nftTokenId = mintResult.tokenId;
+          nftTxHash = mintResult.transactionHash;
+          
+          this.logger.log(`NFT successfully minted. Token ID: ${nftTokenId}, Tx Hash: ${nftTxHash}`);
+        } else {
+          this.logger.warn(`Could not find order details for orderId ${proposalId}. Skipping NFT Mint.`);
+        }
+      } catch (nftError: any) {
+        this.logger.error(`Error minting NFT for order ${proposalId}: ${nftError.message}`);
+        // No lanzamos error para que la transacción de gobernanza continúe su confirmación
+      }
+    }
+
     // Actualizar BlockchainRecord si existe (para conectar con la notarización)
     const record = await this.prisma.blockchainRecord.findUnique({
       where: { orderId: proposalId },
@@ -348,6 +400,9 @@ export class GovernanceService {
           gasUsed: txResult.gasUsed,
           errorMessage: passed ? null : 'Proposal rejected by community vote',
           confirmedAt: new Date(),
+          nftTokenId: nftTokenId,
+          nftTxHash: nftTxHash,
+          nftMintedAt: nftTokenId ? new Date() : null,
         },
       });
 
@@ -360,6 +415,8 @@ export class GovernanceService {
             txResult.transactionHash,
             txResult.blockNumber,
             txResult.gasUsed,
+            nftTokenId,
+            nftTxHash,
           );
         } else {
           payload = this.webhookService.buildFailurePayload(

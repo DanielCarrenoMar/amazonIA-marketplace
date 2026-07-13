@@ -1,13 +1,13 @@
 import { Redis } from '@upstash/redis';
 import { IMessageProducer } from '../interfaces';
 import { StreamTopic } from '../streams';
-import { createRedisClient } from './redis.config';
+
 
 export class RedisProducerService implements IMessageProducer {
   private redis: Redis;
 
-  constructor(redis?: Redis) {
-    this.redis = redis ?? createRedisClient();
+  constructor(redis: Redis) {
+    this.redis = redis;
   }
 
   async produce<T extends Record<string, unknown>>(

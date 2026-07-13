@@ -37,6 +37,8 @@ export class BlockchainWebhookController {
         status: prismaStatus,
         gasUsed: payload.gasUsed,
         errorMessage: payload.errorMessage,
+        nftTokenId: (payload as any).nftTokenId,
+        nftTxHash: (payload as any).nftTxHash,
       });
 
       // 3. Si fue exitoso, actualizar el transactionHash en la ProductOrder

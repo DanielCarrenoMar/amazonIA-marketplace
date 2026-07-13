@@ -8,6 +8,7 @@ import { ConfigService } from '@nestjs/config';
 import { ethers } from 'ethers';
 import { NOTARY_REGISTRY_ABI } from './contracts/notary-registry.abi';
 import { GOVERNANCE_REGISTRY_ABI } from './contracts/governance-registry.abi';
+import { ARTISAN_NFT_FACTORY_ABI } from './contracts/artisan-nft-factory.abi';
 import { BlockchainConfig, BLOCKCHAIN_CONFIG_KEY } from '../config/blockchain.config';
 
 export interface RegisterTransactionParams {
@@ -32,6 +33,7 @@ export class BlockchainService implements OnModuleInit {
   private wallet: ethers.Wallet;
   private contract: ethers.Contract;
   private governanceContract: ethers.Contract;
+  private nftFactoryContract: ethers.Contract;
   private config: BlockchainConfig;
 
   constructor(private readonly configService: ConfigService) {
@@ -51,11 +53,17 @@ export class BlockchainService implements OnModuleInit {
       GOVERNANCE_REGISTRY_ABI,
       this.wallet,
     );
+    this.nftFactoryContract = new ethers.Contract(
+      this.config.nftFactoryAddress,
+      ARTISAN_NFT_FACTORY_ABI,
+      this.wallet,
+    );
 
     this.logger.log(`Blockchain service initialized`);
     this.logger.log(`Network: ${this.config.networkName}`);
     this.logger.log(`Contract: ${this.config.contractAddress}`);
     this.logger.log(`Governance Contract: ${this.config.governanceContractAddress}`);
+    this.logger.log(`NFT Factory Contract: ${this.config.nftFactoryAddress}`);
     this.logger.log(`Wallet: ${this.wallet.address}`);
   }
 
@@ -210,6 +218,40 @@ export class BlockchainService implements OnModuleInit {
   async getRole(member: string): Promise<number> {
     const role = await this.governanceContract.getRole(member);
     return Number(role);
+  }
+
+  /**
+   * Acuña un NFT en la colección del artesano para un producto/pedido específico.
+   * Si el artesano no tiene colección, el contrato fábrica creará una automáticamente.
+   */
+  async mintNFT(
+    artisanAddress: string,
+    recipientAddress: string,
+    orderId: string,
+    tokenURI: string,
+  ): Promise<TransactionResult & { tokenId: string }> {
+    this.logger.log(`Minting NFT for artisan ${artisanAddress} to recipient ${recipientAddress} for order: ${orderId}`);
+    
+    // Convertir el orderId (UUID string) en un uint256 único usando keccak256
+    const tokenId = BigInt(ethers.keccak256(ethers.toUtf8Bytes(orderId)));
+    
+    const tx = await this.nftFactoryContract.mintNFTForProduct(
+      artisanAddress,
+      recipientAddress,
+      tokenId,
+      tokenURI,
+    );
+    
+    this.logger.log(`NFT Minting transaction sent, waiting for confirmation. Hash: ${tx.hash}`);
+    const receipt = await tx.wait(1);
+    this.logger.log(`NFT Minting transaction confirmed in block ${receipt.blockNumber}`);
+    
+    return {
+      transactionHash: receipt.hash,
+      blockNumber: receipt.blockNumber,
+      gasUsed: receipt.gasUsed.toString(),
+      tokenId: tokenId.toString(),
+    };
   }
 
   /**

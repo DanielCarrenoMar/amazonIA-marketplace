@@ -277,6 +277,7 @@ export class ProductOrderService {
         product: { include: { seller: { include: { user: { omit: { passwordHash: true } } } } } },
         buyer: { omit: { passwordHash: true } },
         statusHistory: true,
+        blockchainRecord: true,
       },
     });
 

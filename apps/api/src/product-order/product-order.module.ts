@@ -6,7 +6,7 @@ import { BlockchainModule } from '../blockchain/blockchain.module';
 import { ProductOrderService } from './product-order.service';
 
 @Module({
-  imports: [OutboxModule, TelemetryIntegrationModule, BlockchainModule],
+  imports: [OutboxModule, TelemetryIntegrationModule.forRoot(), BlockchainModule],
   controllers: [ProductOrderController],
   providers: [ProductOrderService],
 })

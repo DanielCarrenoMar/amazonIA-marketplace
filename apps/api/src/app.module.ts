@@ -39,7 +39,7 @@ import { APP_GUARD } from '@nestjs/core';
       },
     ]),
     ScheduleModule.forRoot(),
-    MongoModule,
+    MongoModule.forRoot(),
     MessagingModule.forRoot(),
     PrismaModule,
     AuthModule,
