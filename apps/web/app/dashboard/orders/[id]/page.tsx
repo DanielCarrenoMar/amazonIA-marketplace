@@ -69,24 +69,6 @@ export default function OrderDetailPage() {
               ● Seguimiento IoT Activo
             </Badge>
           )}
-          {isSeller && order.currentStatus === 'PENDING' && (
-            <Button 
-              variant="primary" 
-              onClick={() => handleStatusUpdate('PAID', 'El pago ha sido validado exitosamente.')}
-              isLoading={isUpdating}
-            >
-              Validar Pago
-            </Button>
-          )}
-          {isBuyer && order.currentStatus === 'SHIPPED' && (
-            <Button 
-              variant="primary" 
-              onClick={() => handleStatusUpdate('DELIVERED', 'Has confirmado la recepción del paquete.')}
-              isLoading={isUpdating}
-            >
-              Confirmar Recepción
-            </Button>
-          )}
         </div>
       </div>
 
@@ -129,8 +111,52 @@ export default function OrderDetailPage() {
           </Card>
 
           <Card padding="md">
+            <h3 className="font-bold mb-4">Estado del Pago</h3>
+            <div className="space-y-4 text-sm">
+              <div className="flex justify-between items-center">
+                <span className="text-muted">Estado Actual:</span>
+                <Badge variant={order.currentStatus === 'PENDING' ? 'accent' : order.currentStatus === 'PAID' ? 'nature' : 'outline'}>
+                  {order.currentStatus === 'PENDING' ? 'Pendiente' : 
+                   order.currentStatus === 'PAID' ? 'Pagado' : order.currentStatus}
+                </Badge>
+              </div>
+              
+              {isSeller && order.currentStatus === 'PENDING' && (
+                <Button 
+                  variant="primary" 
+                  className="w-full mt-2"
+                  onClick={() => handleStatusUpdate('PAID', 'El pago ha sido validado exitosamente.')}
+                  isLoading={isUpdating}
+                >
+                  Confirmar Recepción de Pago
+                </Button>
+              )}
+
+              {isBuyer && order.currentStatus === 'PENDING' && (
+                <Button 
+                  variant="primary" 
+                  className="w-full mt-2"
+                  onClick={() => handleStatusUpdate('PAID', 'El pago ha sido simulado exitosamente.')}
+                  isLoading={isUpdating}
+                >
+                  Pagar Pedido
+                </Button>
+              )}
+            </div>
+          </Card>
+
+          <Card padding="md">
             <h3 className="font-bold mb-4">Detalles del Envío</h3>
             <div className="space-y-3 text-sm">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-muted">Estado de Envío:</span>
+                <Badge variant={
+                  order.currentStatus === 'DELIVERED' ? 'nature' : 
+                  order.currentStatus === 'SHIPPED' ? 'primary' : 'outline'
+                }>
+                  {order.currentStatus === 'DELIVERED' ? 'Entregado' : order.currentStatus === 'SHIPPED' ? 'Enviado' : 'Pendiente de Envío'}
+                </Badge>
+              </div>
               <div className="flex justify-between">
                 <span className="text-muted">Transportista:</span>
                 <span className="font-semibold">{order.carrierId ? `ID ${order.carrierId}` : 'No asignado'}</span>
@@ -143,6 +169,28 @@ export default function OrderDetailPage() {
                 <span className="text-muted">Sensor IoT:</span>
                 <span className="font-semibold">{order.sensorId || 'No asignado'}</span>
               </div>
+
+              {isBuyer && order.currentStatus === 'SHIPPED' && (
+                <Button 
+                  variant="primary" 
+                  className="w-full mt-4"
+                  onClick={() => handleStatusUpdate('DELIVERED', 'Has confirmado la recepción del paquete.')}
+                  isLoading={isUpdating}
+                >
+                  Confirmar Recepción del Envío
+                </Button>
+              )}
+
+              {isSeller && order.currentStatus === 'PAID' && (
+                <Button 
+                  variant="primary" 
+                  className="w-full mt-4"
+                  onClick={() => handleStatusUpdate('SHIPPED', 'Has marcado el pedido como enviado.')}
+                  isLoading={isUpdating}
+                >
+                  Marcar como Enviado
+                </Button>
+              )}
             </div>
           </Card>
 
