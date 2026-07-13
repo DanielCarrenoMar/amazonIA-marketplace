@@ -30,6 +30,20 @@ function MarketplaceContent() {
   const [minRating, setMinRating] = useState<number>(0);
   const [hoverRating, setHoverRating] = useState<number>(0);
 
+  const [minPrice, setMinPrice] = useState<string>('');
+  const [maxPrice, setMaxPrice] = useState<string>('');
+  const [debouncedMinPrice, setDebouncedMinPrice] = useState<string>('');
+  const [debouncedMaxPrice, setDebouncedMaxPrice] = useState<string>('');
+
+  // Debounce price inputs
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedMinPrice(minPrice);
+      setDebouncedMaxPrice(maxPrice);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [minPrice, maxPrice]);
+
   // Sync state with URL
   useEffect(() => {
     if (categoryParam) {
@@ -67,6 +81,9 @@ function MarketplaceContent() {
         const params: any = {};
         if (categoryId) params.categoryId = categoryId;
         if (qParam) params.search = qParam;
+        if (debouncedMinPrice) params.minPrice = Number(debouncedMinPrice);
+        if (debouncedMaxPrice) params.maxPrice = Number(debouncedMaxPrice);
+        if (minRating > 0) params.minRating = minRating;
 
         const res = await getProducts(params);
         setProducts(res.data || []);
@@ -81,7 +98,7 @@ function MarketplaceContent() {
     if (!activeCategory || categories.length > 0) {
       loadProducts();
     }
-  }, [activeCategory, categories, qParam]);
+  }, [activeCategory, categories, qParam, debouncedMinPrice, debouncedMaxPrice, minRating]);
 
   const handleCategoryClick = (cat: string) => {
     if (activeCategory === cat) {
@@ -154,13 +171,22 @@ function MarketplaceContent() {
             <div>
               <div className="flex justify-between items-center mb-4">
                 <h3 className="font-bold text-slate-900 text-lg">Rango de Precio</h3>
-                <button className="text-xs text-muted hover:text-brand-primary transition-colors cursor-pointer">Limpiar</button>
+                {(minPrice || maxPrice) && (
+                  <button 
+                    onClick={() => { setMinPrice(''); setMaxPrice(''); }}
+                    className="text-xs text-muted hover:text-brand-primary transition-colors cursor-pointer"
+                  >
+                    Limpiar
+                  </button>
+                )}
               </div>
               <p className="text-xs text-muted mb-4 font-medium">El precio promedio es $30.00</p>
               <div className="flex items-center gap-2">
                 <Input
                   placeholder="Min"
                   type="number"
+                  value={minPrice}
+                  onChange={(e) => setMinPrice(e.target.value)}
                   leftIcon={<span className="text-gray-400 font-medium font-sans">$</span>}
                   wrapperClassName="h-10 rounded-2xl bg-gray-50/50 border-gray-200"
                   className="text-sm"
@@ -169,6 +195,8 @@ function MarketplaceContent() {
                 <Input
                   placeholder="Max"
                   type="number"
+                  value={maxPrice}
+                  onChange={(e) => setMaxPrice(e.target.value)}
                   leftIcon={<span className="text-gray-400 font-medium font-sans">$</span>}
                   wrapperClassName="h-10 rounded-2xl bg-gray-50/50 border-gray-200"
                   className="text-sm"
