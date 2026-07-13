@@ -2,14 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { getOrder, getOrderTimeline } from "@/lib/api";
+import { getOrder, getOrderTimeline, updateOrder } from "@/lib/api";
 import type { OrderTimelineResponseDto, ProductOrderResponseDto, OrderTimelineItemDto } from "event-types";
-import { DashboardHeader } from "@/components/dashboard";
+import { DashboardHeader, LogisticsRiskPanel } from "@/components/dashboard";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { MapPin, Truck, CheckCircle2, ChevronLeft, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { useAuth } from "@/lib/useAuth";
+import { useToast } from "@/components/ui/Toast";
+import { Button } from "@/components/ui/Button";
 
 export default function OrderDetailPage() {
   const params = useParams();
@@ -18,13 +21,36 @@ export default function OrderDetailPage() {
 
   const [order, setOrder] = useState<ProductOrderResponseDto | null>(null);
   const [timeline, setTimeline] = useState<OrderTimelineResponseDto | null>(null);
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [isUpdating, setIsUpdating] = useState(false);
 
-  useEffect(() => {
+  const fetchOrderDetails = () => {
     getOrder(id).then(setOrder).catch(console.error);
     getOrderTimeline(id).then(setTimeline).catch(console.error);
+  };
+
+  useEffect(() => {
+    fetchOrderDetails();
   }, [id]);
 
+  const handleStatusUpdate = async (newStatus: string, successMessage: string) => {
+    try {
+      setIsUpdating(true);
+      await updateOrder(id, { currentStatus: newStatus });
+      toast({ title: "Éxito", description: successMessage, variant: "success" });
+      fetchOrderDetails();
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "No se pudo actualizar el estado", variant: "error" });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   if (!order) return <div className="p-8 text-center text-muted">Cargando...</div>;
+
+  const isSeller = user?.id === order.product.seller?.user?.id;
+  const isBuyer = user?.id === order.buyer?.id;
 
   return (
     <div className="space-y-6">
@@ -35,13 +61,15 @@ export default function OrderDetailPage() {
       <div className="flex justify-between items-start">
          <DashboardHeader 
           title={`Pedido #${order.id.slice(0,8)}`}
-          subtitle={`Producto: ${order.product.name}`}
+          subtitle={`Producto: ${order.product.name} • Estado: ${order.currentStatus}`}
         />
-        {order.sensorId && (
-          <Badge variant="nature" className="animate-pulse">
-            ● Seguimiento IoT Activo
-          </Badge>
-        )}
+        <div className="flex flex-col items-end gap-2">
+          {order.sensorId && (
+            <Badge variant="nature" className="animate-pulse">
+              ● Seguimiento IoT Activo
+            </Badge>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -83,8 +111,52 @@ export default function OrderDetailPage() {
           </Card>
 
           <Card padding="md">
+            <h3 className="font-bold mb-4">Estado del Pago</h3>
+            <div className="space-y-4 text-sm">
+              <div className="flex justify-between items-center">
+                <span className="text-muted">Estado Actual:</span>
+                <Badge variant={order.currentStatus === 'PENDING' ? 'accent' : order.currentStatus === 'PAID' ? 'nature' : 'outline'}>
+                  {order.currentStatus === 'PENDING' ? 'Pendiente' : 
+                   order.currentStatus === 'PAID' ? 'Pagado' : order.currentStatus}
+                </Badge>
+              </div>
+              
+              {isSeller && order.currentStatus === 'PENDING' && (
+                <Button 
+                  variant="primary" 
+                  className="w-full mt-2"
+                  onClick={() => handleStatusUpdate('PAID', 'El pago ha sido validado exitosamente.')}
+                  isLoading={isUpdating}
+                >
+                  Confirmar Recepción de Pago
+                </Button>
+              )}
+
+              {isBuyer && order.currentStatus === 'PENDING' && (
+                <Button 
+                  variant="primary" 
+                  className="w-full mt-2"
+                  onClick={() => handleStatusUpdate('PAID', 'El pago ha sido simulado exitosamente.')}
+                  isLoading={isUpdating}
+                >
+                  Pagar Pedido
+                </Button>
+              )}
+            </div>
+          </Card>
+
+          <Card padding="md">
             <h3 className="font-bold mb-4">Detalles del Envío</h3>
             <div className="space-y-3 text-sm">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-muted">Estado de Envío:</span>
+                <Badge variant={
+                  order.currentStatus === 'DELIVERED' ? 'nature' : 
+                  order.currentStatus === 'SHIPPED' ? 'primary' : 'outline'
+                }>
+                  {order.currentStatus === 'DELIVERED' ? 'Entregado' : order.currentStatus === 'SHIPPED' ? 'Enviado' : 'Pendiente de Envío'}
+                </Badge>
+              </div>
               <div className="flex justify-between">
                 <span className="text-muted">Transportista:</span>
                 <span className="font-semibold">{order.carrierId ? `ID ${order.carrierId}` : 'No asignado'}</span>
@@ -97,8 +169,35 @@ export default function OrderDetailPage() {
                 <span className="text-muted">Sensor IoT:</span>
                 <span className="font-semibold">{order.sensorId || 'No asignado'}</span>
               </div>
+
+              {isBuyer && order.currentStatus === 'SHIPPED' && (
+                <Button 
+                  variant="primary" 
+                  className="w-full mt-4"
+                  onClick={() => handleStatusUpdate('DELIVERED', 'Has confirmado la recepción del paquete.')}
+                  isLoading={isUpdating}
+                >
+                  Confirmar Recepción del Envío
+                </Button>
+              )}
+
+              {isSeller && order.currentStatus === 'PAID' && (
+                <Button 
+                  variant="primary" 
+                  className="w-full mt-4"
+                  onClick={() => handleStatusUpdate('SHIPPED', 'Has marcado el pedido como enviado.')}
+                  isLoading={isUpdating}
+                >
+                  Marcar como Enviado
+                </Button>
+              )}
             </div>
           </Card>
+
+          {/* Panel de Riesgo (Sólo vendedor) */}
+          {isSeller && (
+             <LogisticsRiskPanel />
+          )}
         </div>
       </div>
     </div>

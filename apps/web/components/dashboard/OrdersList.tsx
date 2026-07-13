@@ -6,6 +6,7 @@ import { es } from "date-fns/locale";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Truck, Check, XCircle, Eye } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface OrdersListProps {
   orders: ProductOrderResponseDto[];
@@ -14,6 +15,7 @@ interface OrdersListProps {
 }
 
 export function OrdersList({ orders, viewMode, onAction }: OrdersListProps) {
+  const router = useRouter();
   if (orders.length === 0) {
     return (
       <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center shadow-sm">
@@ -43,21 +45,21 @@ export function OrdersList({ orders, viewMode, onAction }: OrdersListProps) {
     if (viewMode === "seller") {
       if (order.currentStatus === 'PAID') {
         return (
-          <Button size="sm" leftIcon={<Truck className="w-3.5 h-3.5"/>} onClick={() => onAction?.('ship', order.id)}>
+          <Button size="sm" leftIcon={<Truck className="w-3.5 h-3.5"/>} onClick={(e) => { e.stopPropagation(); onAction?.('ship', order.id); }}>
             Enviar
           </Button>
         );
       }
       if (order.currentStatus === 'SHIPPED') {
         return (
-          <Button size="sm" variant="outline" leftIcon={<Eye className="w-3.5 h-3.5"/>} onClick={() => onAction?.('track', order.id)}>
+          <Button size="sm" variant="outline" leftIcon={<Eye className="w-3.5 h-3.5"/>} onClick={(e) => { e.stopPropagation(); onAction?.('track', order.id); }}>
             Seguimiento
           </Button>
         );
       }
       if (order.currentStatus === 'DELIVERED') {
         return (
-          <Button size="sm" variant="secondary" leftIcon={<Check className="w-3.5 h-3.5"/>} onClick={() => onAction?.('confirm', order.id)}>
+          <Button size="sm" variant="secondary" leftIcon={<Check className="w-3.5 h-3.5"/>} onClick={(e) => { e.stopPropagation(); onAction?.('confirm', order.id); }}>
             Ver detalle
           </Button>
         );
@@ -65,21 +67,21 @@ export function OrdersList({ orders, viewMode, onAction }: OrdersListProps) {
     } else {
       if (order.currentStatus === 'PENDING') {
         return (
-          <Button size="sm" variant="outline" className="border-red-200 text-red-600 hover:bg-red-50" leftIcon={<XCircle className="w-3.5 h-3.5"/>} onClick={() => onAction?.('cancel', order.id)}>
+          <Button size="sm" variant="outline" className="border-red-200 text-red-600 hover:bg-red-50" leftIcon={<XCircle className="w-3.5 h-3.5"/>} onClick={(e) => { e.stopPropagation(); onAction?.('cancel', order.id); }}>
             Cancelar
           </Button>
         );
       }
       if (order.currentStatus === 'SHIPPED') {
         return (
-          <Button size="sm" variant="outline" leftIcon={<Eye className="w-3.5 h-3.5"/>} onClick={() => onAction?.('track', order.id)}>
+          <Button size="sm" variant="outline" leftIcon={<Eye className="w-3.5 h-3.5"/>} onClick={(e) => { e.stopPropagation(); onAction?.('track', order.id); }}>
             Seguimiento
           </Button>
         );
       }
       if (order.currentStatus === 'DELIVERED') {
         return (
-          <Button size="sm" onClick={() => onAction?.('rate', order.id)}>
+          <Button size="sm" onClick={(e) => { e.stopPropagation(); onAction?.('rate', order.id); }}>
             Calificar
           </Button>
         );
@@ -109,7 +111,11 @@ export function OrdersList({ orders, viewMode, onAction }: OrdersListProps) {
             {orders.map((order) => {
               const otherPartyName = viewMode === "seller" ? order.buyer?.fullName : order.product?.seller?.user?.fullName;
               return (
-                <tr key={order.id} className="hover:bg-gray-50/50 transition-colors">
+                <tr 
+                  key={order.id} 
+                  className="hover:bg-gray-50/50 transition-colors cursor-pointer"
+                  onClick={() => router.push(`/dashboard/orders/${order.id}`)}
+                >
                   <td className="px-6 py-4 text-sm font-mono text-gray-500">#{order.id.slice(0, 8)}</td>
                   <td className="px-6 py-4 text-sm font-medium text-gray-900 line-clamp-1">{order.product?.name || "Desconocido"}</td>
                   <td className="px-6 py-4 text-sm text-gray-600">{otherPartyName || "Desconocido"}</td>
