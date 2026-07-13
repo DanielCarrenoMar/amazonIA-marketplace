@@ -8,10 +8,14 @@ import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
 import { CartDrawer } from '../ui/CartDrawer';
 import { useAuth } from '@/lib/useAuth';
+import { useFavorites } from '@/lib/favoriteContext';
+import { useCart } from '@/lib/cartContext';
 import logo from '@/public/logo.png';
 
 export function MarketplaceNavbar() {
   const { user, logout, isBuyer } = useAuth();
+  const { favoriteIds } = useFavorites();
+  const { totalItems } = useCart();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -113,9 +117,11 @@ export function MarketplaceNavbar() {
             {/* Favorites */}
             <Link href="/marketplace/favorites" className="relative p-2.5 text-slate-600 hover:text-red-500 transition-colors cursor-pointer flex items-center justify-center">
               <Icon icon="lucide:heart" className="w-[22px] h-[22px]" />
-              <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm">
-                3
-              </span>
+              {favoriteIds.size > 0 && (
+                <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm">
+                  {favoriteIds.size}
+                </span>
+              )}
             </Link>
 
             {/* Cart */}
@@ -124,9 +130,11 @@ export function MarketplaceNavbar() {
               className="relative p-2.5 text-slate-600 hover:text-brand-primary transition-colors cursor-pointer"
             >
               <Icon icon="lucide:shopping-cart" className="w-[22px] h-[22px]" />
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-brand-primary text-white text-[11px] font-bold rounded-full flex items-center justify-center border-2 border-white shadow-sm">
-                3
-              </span>
+              {totalItems > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 bg-brand-primary text-white text-[11px] font-bold rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+                  {totalItems}
+                </span>
+              )}
             </button>
           </div>
         </div>
