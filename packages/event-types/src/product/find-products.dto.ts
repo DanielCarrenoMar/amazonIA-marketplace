@@ -33,11 +33,10 @@ export class FindProductsDto {
   @IsOptional()
   sellerId?: string;
 
-  // Filter by tribe ID to get all products from members of a tribe
-  @Type(() => Number)
-  @IsInt()
+  // Filter by multiple tribe IDs (comma separated string, e.g. "1,2,3")
+  @IsString()
   @IsOptional()
-  tribeId?: number;
+  tribeIds?: string;
 
   @Type(() => Number)
   @IsNumber()
