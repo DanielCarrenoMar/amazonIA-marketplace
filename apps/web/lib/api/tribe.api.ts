@@ -57,6 +57,10 @@ export function getMyTribe(): Promise<TribeResponseDto> {
   return authFetch<TribeResponseDto>("/tribe/my-tribe");
 }
 
+export function getMyMembershipRequests(): Promise<TribeMembershipRequestResponseDto[]> {
+  return authFetch<TribeMembershipRequestResponseDto[]>("/tribe/my-membership-requests");
+}
+
 export function getTribe(id: number): Promise<TribeResponseDto> {
   return apiFetch<TribeResponseDto>(`/tribe/${id}`);
 }
