@@ -110,7 +110,7 @@ export default function TribeDetailPage() {
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">Comunidad no encontrada</h3>
             <p className="text-gray-500 mb-6">{error || "La tribu no existe."}</p>
-            <button 
+            <button
               onClick={() => router.push('/tribes')}
               className="bg-brand-primary text-white px-6 py-2 rounded-lg font-medium hover:bg-brand-secondary transition-colors"
             >
@@ -143,17 +143,17 @@ export default function TribeDetailPage() {
 
       <main className="flex-1 pb-20">
         {/* Premium Hero Section */}
-        <div className="bg-gradient-to-br from-brand-primary via-[#0B3D2E] to-brand-secondary relative overflow-hidden">
+        <div className="bg-linear-to-br from-brand-primary via-[#0B3D2E] to-brand-secondary relative overflow-hidden">
           {/* Decorative shapes */}
           <div className="absolute top-0 right-0 -translate-y-12 translate-x-1/3 w-96 h-96 bg-brand-secondary/30 rounded-full blur-3xl pointer-events-none"></div>
           <div className="absolute bottom-0 left-0 translate-y-1/3 -translate-x-1/4 w-72 h-72 bg-brand-light/20 rounded-full blur-2xl pointer-events-none"></div>
-          
+
           <div className="max-w-7xl mx-auto px-6 py-16 lg:py-24 relative z-10">
             <Link href="/tribes" className="inline-flex items-center text-white/70 hover:text-white mb-8 text-sm font-medium transition-colors">
               <Icon icon="lucide:arrow-left" className="w-4 h-4 mr-2" />
               Explorar Tribus
             </Link>
-            
+
             <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
               <div className="flex-1 text-white max-w-3xl">
                 <div className="flex items-center gap-3 mb-5">
@@ -167,11 +167,11 @@ export default function TribeDetailPage() {
                     </div>
                   )}
                 </div>
-                
+
                 <h1 className="text-4xl lg:text-6xl font-bold font-poppins mb-4 leading-tight">
                   {tribe.name}
                 </h1>
-                
+
                 {tribe.description && (
                   <p className="text-lg text-white/90 max-w-3xl leading-relaxed mb-6 font-light">
                     {tribe.description}
@@ -180,7 +180,7 @@ export default function TribeDetailPage() {
 
                 {/* Membership Action */}
                 <div className="flex items-center gap-4 flex-wrap mt-8">
-                  <button 
+                  <button
                     onClick={handleRequestMembership}
                     disabled={isRequesting}
                     className="bg-white text-brand-primary px-8 py-3.5 rounded-xl font-bold hover:bg-gray-50 transition-all shadow-lg hover:shadow-xl disabled:opacity-70 disabled:cursor-not-allowed flex items-center transform hover:-translate-y-0.5"
@@ -215,10 +215,10 @@ export default function TribeDetailPage() {
 
         {/* Content Wrapper */}
         <div className="max-w-7xl mx-auto px-6 mt-12 grid grid-cols-1 lg:grid-cols-12 gap-10">
-          
+
           {/* Main Content Area (About + Products) */}
           <div className="lg:col-span-8 xl:col-span-9 order-2 lg:order-1 space-y-12">
-            
+
             {/* Products Section */}
             <section>
               <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
@@ -230,7 +230,7 @@ export default function TribeDetailPage() {
                   <p className="text-gray-500 mt-1 ml-9 text-sm">Lo más destacado de esta tribu en AmazonIA</p>
                 </div>
                 {products.length > 0 && (
-                  <Link 
+                  <Link
                     href={`/marketplace?tribeId=${id}`}
                     className="text-brand-primary hover:text-brand-secondary font-medium text-sm flex items-center transition-colors bg-brand-primary/5 hover:bg-brand-primary/10 px-4 py-2 rounded-full shrink-0"
                   >
@@ -254,8 +254,8 @@ export default function TribeDetailPage() {
                 <div className="space-y-8">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     {products.slice(0, 4).map((product) => (
-                      <ProductCard 
-                        key={product.id} 
+                      <ProductCard
+                        key={product.id}
                         id={product.id}
                         image={product.imageUrl || "/placeholder.jpg"}
                         title={product.name}
@@ -275,7 +275,7 @@ export default function TribeDetailPage() {
           {/* Sidebar Area (Members & Leader) */}
           <div className="lg:col-span-4 xl:col-span-3 order-1 lg:order-2">
             <div className="sticky top-24 space-y-6">
-              
+
               {/* Team Card */}
               <div className="bg-white rounded-3xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-gray-100/50 overflow-hidden">
                 <div className="px-6 py-5 border-b border-gray-50 flex items-center justify-between bg-gray-50/50">
@@ -284,17 +284,17 @@ export default function TribeDetailPage() {
                     Miembros ({members.length})
                   </h3>
                 </div>
-                
+
                 <div className="divide-y divide-gray-50">
                   {/* Leaders Section */}
-                  <div className="p-6 space-y-5 bg-gradient-to-b from-brand-primary/[0.02] to-transparent">
+                  <div className="p-6 space-y-5 bg-linear-to-b from-brand-primary/2 to-transparent">
                     {leader ? (
                       <div className="flex items-center gap-4">
                         <div className="relative">
-                          <Avatar 
-                            src={leader.user?.avatarUrl || undefined} 
-                            alt={leader.user?.fullName || "Líder"} 
-                            size="lg" 
+                          <Avatar
+                            src={leader.user?.avatarUrl || undefined}
+                            alt={leader.user?.fullName || "Líder"}
+                            size="lg"
                             fallback={leader.user?.fullName?.charAt(0) || "L"}
                           />
                           <div className="absolute -bottom-1 -right-1 bg-yellow-400 text-yellow-900 p-1 rounded-full border-2 border-white" title="Líder Principal">
@@ -316,10 +316,10 @@ export default function TribeDetailPage() {
                     {secondaryLeader && (
                       <div className="flex items-center gap-4 pt-5 border-t border-gray-100">
                         <div className="relative">
-                          <Avatar 
-                            src={secondaryLeader.user?.avatarUrl || undefined} 
-                            alt={secondaryLeader.user?.fullName || "Sublíder"} 
-                            size="md" 
+                          <Avatar
+                            src={secondaryLeader.user?.avatarUrl || undefined}
+                            alt={secondaryLeader.user?.fullName || "Sublíder"}
+                            size="md"
                             fallback={secondaryLeader.user?.fullName?.charAt(0) || "S"}
                           />
                         </div>
@@ -340,10 +340,10 @@ export default function TribeDetailPage() {
                       <ul className="max-h-72 overflow-y-auto custom-scrollbar">
                         {otherMembers.map((member) => (
                           <li key={member.id} className="p-2 hover:bg-gray-50 transition-colors rounded-xl flex items-center gap-3">
-                            <Avatar 
-                              src={member.user?.avatarUrl || undefined} 
-                              alt={member.user?.fullName || "Miembro"} 
-                              size="sm" 
+                            <Avatar
+                              src={member.user?.avatarUrl || undefined}
+                              alt={member.user?.fullName || "Miembro"}
+                              size="sm"
                               fallback={member.user?.fullName?.charAt(0) || "M"}
                             />
                             <div className="flex-1 min-w-0">

@@ -61,7 +61,7 @@ export default function InventoryPage() {
   };
 
   const handleEdit = (product: ProductResponseDto) => {
-    router.push(`/dashboard/inventory/${product.id}`);
+    router.push(`/dashboard/inventory/${product.id}/edit`);
   };
 
   const filteredProducts = products.filter(p => {
@@ -85,41 +85,46 @@ export default function InventoryPage() {
         subtitle={`${products.length} productos registrados`}
         action={
           <Link href="/dashboard/inventory/new">
-            <Button variant="primary">+ Añadir Nueva Artesanía</Button>
+            <button className="bg-[#FFB700] hover:bg-[#F2AE00] text-white font-bold text-[15px] px-6 py-3 rounded-xl shadow-[0_4px_20px_rgba(255,183,0,0.4)] transition-all flex items-center gap-2 border-none">
+              <span className="text-[22px] leading-none font-bold">+</span> Añadir Nueva Artesanía
+            </button>
           </Link>
         }
       />
 
       {/* Toolbar */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-between items-center bg-white p-4 rounded-2xl border border-border">
-        <div className="flex gap-4 w-full sm:w-auto">
-          <Input 
-            placeholder="Buscar artesanía..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            leftIcon={<Search className="w-4 h-4" />}
-            wrapperClassName="rounded-lg w-full sm:w-64"
-          />
+      <div className="flex flex-col sm:flex-row gap-4 justify-between items-center mb-6">
+        <div className="flex gap-3 w-full sm:w-auto">
+          <div className="relative">
+            <input 
+              type="text"
+              placeholder="Buscar"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full sm:w-72 pl-5 pr-10 py-2.5 bg-white border border-gray-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-shadow"
+            />
+            <Search className="w-4 h-4 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2" />
+          </div>
           <Select
-            options={catOptions}
             value={categoryFilter}
-            onChange={setCategoryFilter}
-            className="w-full sm:w-48"
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            options={catOptions}
+            className="w-full sm:w-40 !rounded-full bg-white border-gray-200 shadow-sm"
           />
         </div>
-
-        <div className="flex bg-gray-100 p-1 rounded-lg">
-          <button 
-            onClick={() => setViewMode('list')}
-            className={`p-2 rounded-md transition-colors ${viewMode === 'list' ? 'bg-white shadow-sm text-brand-primary' : 'text-gray-500'}`}
+        
+        <div className="flex bg-white border border-gray-200 p-1 rounded-xl shadow-sm">
+          <button
+            onClick={() => setViewMode("list")}
+            className={`p-2 rounded-lg transition-colors ${viewMode === "list" ? "bg-brand-primary text-white shadow-sm" : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"}`}
           >
-            <List className="w-4 h-4" />
+            <List className="w-5 h-5" />
           </button>
-          <button 
-            onClick={() => setViewMode('grid')}
-            className={`p-2 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-white shadow-sm text-brand-primary' : 'text-gray-500'}`}
+          <button
+            onClick={() => setViewMode("grid")}
+            className={`p-2 rounded-lg transition-colors ${viewMode === "grid" ? "bg-brand-primary text-white shadow-sm" : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"}`}
           >
-            <LayoutGrid className="w-4 h-4" />
+            <LayoutGrid className="w-5 h-5" />
           </button>
         </div>
       </div>
