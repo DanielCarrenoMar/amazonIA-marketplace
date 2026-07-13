@@ -7,7 +7,7 @@ import type { OrderTimelineResponseDto, ProductOrderResponseDto, OrderTimelineIt
 import { DashboardHeader, LogisticsRiskPanel, ShipmentModal, OrderChat } from "@/components/dashboard";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { MapPin, Truck, CheckCircle2, ChevronLeft, AlertTriangle, Cpu } from "lucide-react";
+import { MapPin, Truck, CheckCircle2, ChevronLeft, AlertTriangle, Cpu, User, Phone, Navigation } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useAuth } from "@/lib/useAuth";
@@ -164,6 +164,52 @@ export default function OrderDetailPage() {
         </div>
 
         <div className="space-y-6">
+          <Card padding="md">
+            <h3 className="font-bold mb-4 flex items-center gap-2"><Navigation className="w-4 h-4" /> Ruta e Involucrados</h3>
+            
+            <div className="space-y-4">
+              {/* Origen */}
+              <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                    <User className="w-3 h-3" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 uppercase">Origen (Vendedor)</p>
+                    <p className="text-sm font-bold">{order.product?.seller?.user?.fullName || 'Artesano'}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2 text-sm text-gray-600 pl-8">
+                  <MapPin className="w-4 h-4 shrink-0 mt-0.5 text-gray-400" />
+                  <p>{order.product?.locationFormattedAddress || order.product?.locationCity || 'Ubicación no especificada'}</p>
+                </div>
+              </div>
+
+              {/* Destino */}
+              <div className="bg-brand-nature-bg/30 p-3 rounded-lg border border-brand-nature-bg">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-6 h-6 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center shrink-0">
+                    <User className="w-3 h-3" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 uppercase">Destino (Comprador)</p>
+                    <p className="text-sm font-bold">{order.buyer?.fullName || order.buyer?.username || 'Comprador'}</p>
+                  </div>
+                </div>
+                {order.buyer?.phonePrimary && (
+                  <div className="flex items-start gap-2 text-sm text-gray-600 pl-8 mb-1">
+                    <Phone className="w-4 h-4 shrink-0 mt-0.5 text-gray-400" />
+                    <p>{order.buyer.phonePrimary}</p>
+                  </div>
+                )}
+                <div className="flex items-start gap-2 text-sm text-gray-600 pl-8">
+                  <MapPin className="w-4 h-4 shrink-0 mt-0.5 text-brand-primary" />
+                  <p>{order.destinationFormattedAddress || order.destinationCity || 'Dirección no especificada'}</p>
+                </div>
+              </div>
+            </div>
+          </Card>
+
           <Card padding="md" className="bg-brand-nature-bg border-brand-primary-light">
              <h3 className="font-bold text-brand-nature-content mb-4 flex items-center gap-2"><AlertTriangle className="w-4 h-4"/> Alertas Recientes</h3>
              {timeline?.items?.filter((e: OrderTimelineItemDto) => e.type === 'telemetry').length === 0 ? (
