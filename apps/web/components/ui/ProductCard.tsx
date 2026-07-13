@@ -1,7 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Heart, Star, ShoppingCart } from 'lucide-react';
+import { Icon } from "@iconify/react";
 import { Badge } from './Badge';
 import { Button } from './Button';
 import { Card } from './Card';
@@ -59,7 +59,7 @@ export function ProductCard({
           size="icon"
           className="absolute top-3 right-3 bg-white/80! backdrop-blur-md hover:bg-white! hover:scale-110 z-10 shadow-sm"
         >
-          <Heart className="w-5 h-5 text-red-500 fill-red-500" />
+          <Icon icon="lucide:heart" className="w-5 h-5 text-red-500 fill-red-500" />
         </Button>
       </ImageWrapper>
 
@@ -74,11 +74,11 @@ export function ProductCard({
           )}
           <div className="flex gap-0.5 shrink-0 pt-1">
             {[...Array(5)].map((_, i) => (
-              <Star
+              <Icon icon="lucide:star"
                 key={i}
                 className={`w-4 h-4 ${i < rating
                   ? 'text-amber-400 fill-amber-400'
-                  : 'text-gray-300 stroke-2'
+                  : 'text-gray-300 fill-gray-300'
                   }`}
               />
             ))}
@@ -113,7 +113,7 @@ export function ProductCard({
             variant="primary"
             size="sm"
             className="font-medium!"
-            rightIcon={<ShoppingCart className="w-4 h-4" />}
+            rightIcon={<Icon icon="lucide:shopping-cart" className="w-4 h-4" />}
           >
             Agregar
           </Button>

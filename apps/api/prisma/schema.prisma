@@ -83,6 +83,7 @@ model UserAccount {
   phonePrimary   String?  @map("phone_primary") @db.VarChar(50)
   phoneSecondary String?  @map("phone_secondary") @db.VarChar(50)
   walletHash     String?  @map("wallet_hash") @db.VarChar(255)
+  avatarUrl      String?  @map("avatar_url") @db.VarChar(500)
 
   // Spatial — PostGIS type not natively supported by Prisma
   locationCoords           Unsupported("geography(Point, 4326)")? @map("location_coords")
@@ -101,6 +102,7 @@ model UserAccount {
   refreshTokens      RefreshToken[]
   productComments    ProductComment[]
   sentChatMessages   OrderChat[]          @relation("SentChatMessages")
+  favoriteProducts   UserFavoriteProduct[]
 
   @@index([locationCoords], type: Gist)
   @@map("user_account")
@@ -237,20 +239,48 @@ model Product {
   locationCity             String?                                @map("location_city") @db.VarChar(100)
   locationRegion           String?                                @map("location_region") @db.VarChar(100)
 
+  // General elaboration description (if not using step-by-step)
+  elaborationText      String?                                @map("elaboration_text") @db.Text
+  elaborationMediaUrls String[]                               @map("elaboration_media_urls")
+
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  seller   Seller           @relation(fields: [sellerId], references: [id], onDelete: Cascade)
-  category ProductCategory  @relation(fields: [categoryId], references: [id])
-  ratings  ProductRating[]
-  orders   ProductOrder[]
-  comments ProductComment[]
+  seller           Seller                   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  category         ProductCategory          @relation(fields: [categoryId], references: [id])
+  ratings          ProductRating[]
+  orders           ProductOrder[]
+  comments         ProductComment[]
+  elaborationSteps ProductElaborationStep[]
+  favoritedBy      UserFavoriteProduct[]
 
   @@index([sellerId])
   @@index([locationCoords], type: Gist)
   @@index([isActive])
   @@map("product")
+}
+
+// ---------------------------------------------------------------------------
+// ProductElaborationStep
+// ---------------------------------------------------------------------------
+
+model ProductElaborationStep {
+  id          Int      @id @default(autoincrement())
+  productId   String   @map("product_id") @db.Uuid
+  stepNumber  Int      @map("step_number")
+  title       String?  @db.VarChar(255)
+  description String   @db.Text
+  mediaUrls   String[] @map("media_urls")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, stepNumber])
+  @@index([productId])
+  @@map("product_elaboration_step")
 }
 
 // ---------------------------------------------------------------------------
@@ -385,7 +415,7 @@ model OrderChat {
 }
 
 // ---------------------------------------------------------------------------
-// OutboxEvent  (transactional outbox — reliable Kafka publishing)
+// OutboxEvent  (transactional outbox — reliable Redis Streams publishing)
 // ---------------------------------------------------------------------------
 
 model OutboxEvent {
@@ -525,4 +555,20 @@ model Vote {
 
   @@unique([proposalId, voterId])
   @@map("vote")
+}
+
+// ---------------------------------------------------------------------------
+// UserFavoriteProduct (Wishlist)
+// ---------------------------------------------------------------------------
+
+model UserFavoriteProduct {
+  userId    String   @map("id_usuario") @db.Uuid
+  productId String   @map("id_producto") @db.Uuid
+  createdAt DateTime @default(now()) @map("fh_creacion") @db.Timestamptz
+
+  user      UserAccount @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@id([userId, productId])
+  @@map("favoritos_usuario")
 }

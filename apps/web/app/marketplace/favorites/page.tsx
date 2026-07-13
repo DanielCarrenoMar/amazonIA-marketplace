@@ -1,6 +1,8 @@
-import React from 'react';
+"use client";
+
+import React, { Suspense } from 'react';
 import Link from 'next/link';
-import { Heart, Star } from 'lucide-react';
+import { Icon } from "@iconify/react";
 import { ProductCard } from '@/components/ui/ProductCard';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -9,7 +11,7 @@ import { MarketplaceNavbar } from '@/components/layout/MarketplaceNavbar';
 import { Footer } from '@/components/layout/Footer';
 import { mockProducts, mockBrands } from '@/lib/mock-data';
 
-export default function FavoritesPage() {
+function FavoritesContent() {
   // Simulamos que el usuario tiene 3 productos guardados en favoritos
   const favoriteProducts = mockProducts.slice(0, 3);
 
@@ -46,8 +48,8 @@ export default function FavoritesPage() {
                 <h3 className="font-bold text-slate-900 text-lg mb-4">Calificación</h3>
                 <div className="flex items-center justify-between cursor-pointer group">
                   <div className="flex gap-1 text-amber-400 group-hover:scale-105 transition-transform">
-                    {[1,2,3,4].map(s => <Star key={s} className="w-5 h-5 fill-amber-400" />)}
-                    <Star className="w-5 h-5 text-gray-300 stroke-2" />
+                    {[1,2,3,4].map(s => <Icon icon="lucide:star" key={s} className="w-5 h-5 fill-amber-400" />)}
+                    <Icon icon="lucide:star" className="w-5 h-5 text-gray-300 stroke-2" />
                   </div>
                   <span className="text-sm font-semibold text-muted group-hover:text-amber-500 transition-colors">4+ Estrellas</span>
                 </div>
@@ -83,7 +85,7 @@ export default function FavoritesPage() {
               ) : (
                 <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-gray-100 shadow-sm text-center">
                   {/* EMPTY STATE */}
-                  <Heart className="w-16 h-16 text-gray-200 mb-6" />
+                  <Icon icon="lucide:heart" className="w-16 h-16 text-gray-200 mb-6" />
                   <h2 className="text-2xl font-bold text-slate-800 mb-2">Aún no tienes favoritos</h2>
                   <p className="text-gray-500 mb-8 max-w-md">Explora nuestro catálogo y guarda los productos que más te gusten haciendo clic en el corazón.</p>
                   <Link href="/marketplace">
@@ -100,5 +102,13 @@ export default function FavoritesPage() {
       </main>
       <Footer />
     </>
+  );
+}
+
+export default function FavoritesPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center">Cargando favoritos...</div>}>
+      <FavoritesContent />
+    </Suspense>
   );
 }

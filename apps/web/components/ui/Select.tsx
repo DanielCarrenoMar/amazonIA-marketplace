@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { ChevronDown } from "lucide-react";
+import { Icon } from "@iconify/react";
 import { DropdownMenu, MenuItem as SelectOption } from "./DropdownMenu";
 
 export type { SelectOption };
@@ -107,7 +107,7 @@ export const Select = React.forwardRef<HTMLDivElement, SelectProps>(
               </span>
 
               <div className="absolute right-3.5 flex items-center text-muted pointer-events-none">
-                <ChevronDown className={`w-5 h-5 text-muted transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+                <Icon icon="lucide:chevron-down" className={`w-5 h-5 text-muted transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
               </div>
             </button>
 

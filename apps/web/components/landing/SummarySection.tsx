@@ -1,5 +1,5 @@
 import React from 'react';
-import { TrendingDown, BookOpen, Globe, ArrowRight } from 'lucide-react';
+import { Icon } from "@iconify/react";
 import { StatCard } from './StatCard';
 
 export function SummarySection() {
@@ -9,21 +9,21 @@ export function SummarySection() {
       label: "Pérdida Crítica",
       title: "Acceso a Mercados",
       description: "Las comunidades enfrentan comercio injusto e intermediarios que reducen sus ganancias hasta un 70%.",
-      icon: TrendingDown
+      icon: "lucide:trending-down"
     },
     {
       number: "2,000+",
       label: "lenguas en peligro",
       title: "Preservación Cultural",
       description: "Miles de lenguas indígenas están en riesgo de extinción, junto con conocimientos ancestrales únicos.",
-      icon: BookOpen
+      icon: "lucide:book-open"
     },
     {
       number: "<20%",
       label: "conectividad rural",
       title: "Brecha Digital",
       description: "Menos del 20% de comunidades rurales amazónicas tienen acceso a herramientas tecnológicas adaptadas.",
-      icon: Globe
+      icon: "lucide:globe"
     }
   ];
 
@@ -40,7 +40,7 @@ export function SummarySection() {
           </p>
           <a href="#soluciones" className="text-brand-primary font-medium flex items-center gap-2 hover:text-brand-primary-dark transition-colors mt-2 w-max group text-lg">
             Ver soluciones
-            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" strokeWidth={2.5} />
+            <Icon icon="lucide:arrow-right" className="w-5 h-5 group-hover:translate-x-1 transition-transform" strokeWidth={2.5} />
           </a>
         </div>
 

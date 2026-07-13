@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { MarketplaceNavbar } from '@/components/layout/MarketplaceNavbar';
 import { Footer } from '@/components/layout/Footer';
 import { ExplorerTable } from '@/components/explorer/ExplorerTable';
@@ -8,7 +8,7 @@ import { MembersList } from '@/components/explorer/MembersList';
 import { getExplorerProposals, getExplorerMembers } from '@/lib/explorer-api';
 import { ProposalSummary, GovernanceMember } from '@/lib/explorer-mock';
 
-export default function ExplorerIndexPage() {
+function ExplorerContent() {
   const [proposals, setProposals] = useState<ProposalSummary[]>([]);
   const [members, setMembers] = useState<GovernanceMember[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,5 +45,13 @@ export default function ExplorerIndexPage() {
       </main>
       <Footer />
     </>
+  );
+}
+
+export default function ExplorerIndexPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center">Cargando explorer...</div>}>
+      <ExplorerContent />
+    </Suspense>
   );
 }

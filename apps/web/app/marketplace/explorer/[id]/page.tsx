@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
@@ -10,7 +10,7 @@ import { ProposalDetail as ProposalDetailView } from '@/components/explorer/Prop
 import { getExplorerProposalById } from '@/lib/explorer-api';
 import { ProposalDetail } from '@/lib/explorer-mock';
 
-export default function ExplorerDetailPage() {
+function ExplorerDetailContent() {
   const params = useParams();
   const id = params.id as string;
   const [proposal, setProposal] = useState<ProposalDetail | null>(null);
@@ -50,5 +50,13 @@ export default function ExplorerDetailPage() {
       </main>
       <Footer />
     </>
+  );
+}
+
+export default function ExplorerDetailPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center">Cargando propuesta...</div>}>
+      <ExplorerDetailContent />
+    </Suspense>
   );
 }

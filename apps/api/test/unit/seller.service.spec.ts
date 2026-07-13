@@ -38,7 +38,7 @@ describe('SellerService', () => {
       mockPrismaService.seller.findUnique.mockResolvedValue({ id: 'seller-1' });
 
       await expect(
-        service.update('seller-1', { description: 'test' }, { id: 'other-user', role: UserRole.SELLER })
+        service.update('seller-1', { id: 'other-user', role: UserRole.SELLER }, { description: 'test' })
       ).rejects.toThrow(ForbiddenException);
     });
 
@@ -46,7 +46,7 @@ describe('SellerService', () => {
       mockPrismaService.seller.findUnique.mockResolvedValue({ id: 'seller-1' });
       mockPrismaService.seller.update.mockResolvedValue({ id: 'seller-1', description: 'test' });
 
-      const res = await service.update('seller-1', { description: 'test' }, { id: 'admin-1', role: UserRole.ADMIN });
+      const res = await service.update('seller-1', { id: 'admin-1', role: UserRole.ADMIN }, { description: 'test' });
       expect(res.description).toBe('test');
     });
 
@@ -54,7 +54,7 @@ describe('SellerService', () => {
       mockPrismaService.seller.findUnique.mockResolvedValue({ id: 'seller-1' });
       mockPrismaService.seller.update.mockResolvedValue({ id: 'seller-1', description: 'test' });
 
-      const res = await service.update('seller-1', { description: 'test' }, { id: 'seller-1', role: UserRole.SELLER });
+      const res = await service.update('seller-1', { id: 'seller-1', role: UserRole.SELLER }, { description: 'test' });
       expect(res.description).toBe('test');
     });
   });

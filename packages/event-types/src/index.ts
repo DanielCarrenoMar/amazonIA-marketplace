@@ -10,9 +10,11 @@ export * from './product/find-products.dto';
 export * from './product/location-coords.dto';
 export * from './product/update-product.dto';
 export * from './product/product-response.dto';
+export * from './product/product-metrics.dto';
 export * from './product-category/create-product-category.dto';
 export * from './product-category/update-product-category.dto';
 export * from './product-category/product-category-response.dto';
+export * from './product-category/grouped-category-response.dto';
 export * from './product-order/create-product-order.dto';
 export * from './product-order/update-product-order.dto';
 export * from './product-order/find-orders.dto';
@@ -25,6 +27,7 @@ export * from './seller/create-seller.dto';
 export * from './seller/update-seller.dto';
 export * from './seller/find-sellers.dto';
 export * from './seller/seller-response.dto';
+export * from './seller/seller-metrics-response.dto';
 
 // Product Comments
 export * from './product-comment/create-product-comment.dto';
@@ -52,6 +55,9 @@ export * from './user-account/user-account-response.dto';
 // Shipping Carrier
 export * from './shipping-carrier/shipping-carrier-response.dto';
 
+// Inference
+export * from './inference/spatial-risk-query.dto';
+
 // IoT / Telemetry event contracts
 export * from './iot';
 
@@ -63,3 +69,10 @@ export * from './blockchain/explorer/list-proposals.dto';
 export * from './blockchain/explorer/find-proposal-params.dto';
 export * from './blockchain/explorer/proposal-detail.dto';
 export * from './blockchain/explorer/member.dto';
+
+export * from './product/create-elaboration-step.dto';
+export * from './product/update-elaboration-step.dto';
+
+// Favorites
+export * from './favorite/toggle-favorite.dto';
+export * from './favorite/favorite-response.dto';

@@ -1,42 +1,108 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { ProductCard } from '@/components/ui/ProductCard';
 import { Button } from '@/components/ui/Button';
 import { Checkbox } from '@/components/ui/Checkbox';
 import { Input } from '@/components/ui/Input';
-import { Star } from 'lucide-react';
+import { Icon } from "@iconify/react";
 import { MarketplaceNavbar } from '@/components/layout/MarketplaceNavbar';
 import { BannerCarousel } from '@/components/ui/BannerCarousel';
 import { Footer } from '@/components/layout/Footer';
 
-import { mockCategories, mockBrands, mockProducts } from '@/lib/mock-data';
+import { getProducts, getCategories } from '@/lib/api';
+import { mockProductDtos } from '@/lib/mock-data';
+import type { ProductResponseDto, ProductCategoryResponseDto } from 'event-types';
 
-export default function MarketplacePage() {
+function MarketplaceContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  
-  const categoryParam = searchParams.get('category');
-  const [activeCategory, setActiveCategory] = useState(categoryParam || "Todas");
 
+  const categoryParam = searchParams.get('category');
+  const qParam = searchParams.get('q');
+  const [activeCategory, setActiveCategory] = useState<string | null>(categoryParam || null);
+
+  const [products, setProducts] = useState<ProductResponseDto[]>([]);
+  const [categories, setCategories] = useState<ProductCategoryResponseDto[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const [minRating, setMinRating] = useState<number>(0);
+  const [hoverRating, setHoverRating] = useState<number>(0);
+
+  const [minPrice, setMinPrice] = useState<string>('');
+  const [maxPrice, setMaxPrice] = useState<string>('');
+  const [debouncedMinPrice, setDebouncedMinPrice] = useState<string>('');
+  const [debouncedMaxPrice, setDebouncedMaxPrice] = useState<string>('');
+
+  // Debounce price inputs
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedMinPrice(minPrice);
+      setDebouncedMaxPrice(maxPrice);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [minPrice, maxPrice]);
+
+  // Sync state with URL
   useEffect(() => {
     if (categoryParam) {
       setActiveCategory(categoryParam);
     }
   }, [categoryParam]);
 
-  const handleCategoryClick = (cat: string) => {
-    setActiveCategory(cat);
-    router.push(
-      cat === "Todas" ? "/marketplace" : `/marketplace?category=${encodeURIComponent(cat)}`,
-      { scroll: false }
-    );
-  };
+  // Fetch categories on mount
+  useEffect(() => {
+    getCategories()
+      .then(res => {
+        const flatCategories = res.flatMap(cat =>
+          cat.subcategories.map(sub => ({
+            id: sub.id,
+            categoryName: cat.categoryName,
+            subcategoryName: sub.subcategoryName
+          }))
+        );
+        setCategories(flatCategories);
+      })
+      .catch(console.error);
+  }, []);
 
-  const filteredProducts = activeCategory === "Todas" 
-    ? mockProducts 
-    : mockProducts.filter(p => p.category === activeCategory);
+  // Fetch products when activeCategory or categories change
+  useEffect(() => {
+    async function loadProducts() {
+      setLoading(true);
+      try {
+        const params: any = {};
+        if (activeCategory) params.categoryName = activeCategory;
+        if (qParam) params.search = qParam;
+        if (debouncedMinPrice) params.minPrice = Number(debouncedMinPrice);
+        if (debouncedMaxPrice) params.maxPrice = Number(debouncedMaxPrice);
+        if (minRating > 0) params.minRating = minRating;
+
+        const res = await getProducts(params);
+        setProducts(res.data || []);
+      } catch (err) {
+        console.error("Error loading products", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    // Load if no active category, or if we have categories loaded to map the name to ID
+    if (!activeCategory || categories.length > 0) {
+      loadProducts();
+    }
+  }, [activeCategory, categories, qParam, debouncedMinPrice, debouncedMaxPrice, minRating]);
+
+  const handleCategoryClick = (cat: string) => {
+    if (activeCategory === cat) {
+      setActiveCategory(null);
+      router.push("/marketplace", { scroll: false });
+    } else {
+      setActiveCategory(cat);
+      router.push(`/marketplace?category=${encodeURIComponent(cat)}`, { scroll: false });
+    }
+  };
 
   const heroBanners = [
     {
@@ -62,25 +128,27 @@ export default function MarketplacePage() {
     }
   ];
 
+  // Dynamic categories list (mapped categories only)
+  const categoryNames = Array.from(new Set(categories.map(c => c.categoryName)));
+
   return (
     <>
       <MarketplaceNavbar />
       <main className="min-h-screen bg-background pt-28 md:pt-32 pb-12 px-4 md:px-8 max-w-[1400px] mx-auto font-sans">
-        
+
         {/* HERO BANNER CAROUSEL */}
         <BannerCarousel banners={heroBanners} />
 
         {/* CATEGORIES PILLS */}
         <div className="flex gap-3 overflow-x-auto pb-4 mb-8 scrollbar-hide">
-          {mockCategories.map(cat => (
+          {categoryNames.map(cat => (
             <button
               key={cat}
               onClick={() => handleCategoryClick(cat)}
-              className={`px-5 py-2 rounded-full font-medium whitespace-nowrap transition-colors border shadow-sm ${
-                activeCategory === cat 
-                  ? 'bg-brand-primary text-white border-brand-primary' 
+              className={`px-5 py-2 rounded-full font-medium whitespace-nowrap transition-colors border shadow-sm cursor-pointer ${activeCategory === cat
+                  ? 'bg-brand-primary text-white border-brand-primary'
                   : 'bg-white text-foreground border-gray-200 hover:border-brand-primary/50 hover:bg-brand-primary/5'
-              }`}
+                }`}
             >
               {cat}
             </button>
@@ -89,81 +157,128 @@ export default function MarketplacePage() {
 
         {/* MAIN LAYOUT (SIDEBAR + GRID) */}
         <div className="flex flex-col lg:flex-row gap-8">
-          
+
           {/* SIDEBAR FILTERS */}
           <aside className="w-full lg:w-[280px] shrink-0 flex flex-col gap-8 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm h-fit">
-            
+
             {/* Price Range */}
             <div>
               <div className="flex justify-between items-center mb-4">
                 <h3 className="font-bold text-slate-900 text-lg">Rango de Precio</h3>
-                <button className="text-xs text-muted hover:text-brand-primary transition-colors">Limpiar</button>
+                {(minPrice || maxPrice) && (
+                  <button 
+                    onClick={() => { setMinPrice(''); setMaxPrice(''); }}
+                    className="text-xs text-muted hover:text-brand-primary transition-colors cursor-pointer"
+                  >
+                    Limpiar
+                  </button>
+                )}
               </div>
               <p className="text-xs text-muted mb-4 font-medium">El precio promedio es $30.00</p>
-              <div className="flex items-center gap-3">
-                <Input placeholder="Min" type="number" wrapperClassName="h-10" className="text-sm" />
-                <span className="text-muted font-medium">-</span>
-                <Input placeholder="Max" type="number" wrapperClassName="h-10" className="text-sm" />
+              <div className="flex items-center gap-2">
+                <Input
+                  placeholder="Min"
+                  type="number"
+                  value={minPrice}
+                  onChange={(e) => setMinPrice(e.target.value)}
+                  leftIcon={<span className="text-gray-400 font-medium font-sans">$</span>}
+                  wrapperClassName="h-10 rounded-2xl bg-gray-50/50 border-gray-200"
+                  className="text-sm"
+                />
+                <span className="text-gray-300 font-medium">-</span>
+                <Input
+                  placeholder="Max"
+                  type="number"
+                  value={maxPrice}
+                  onChange={(e) => setMaxPrice(e.target.value)}
+                  leftIcon={<span className="text-gray-400 font-medium font-sans">$</span>}
+                  wrapperClassName="h-10 rounded-2xl bg-gray-50/50 border-gray-200"
+                  className="text-sm"
+                />
               </div>
             </div>
 
             {/* Star Rating */}
             <div>
-              <h3 className="font-bold text-slate-900 text-lg mb-4">Calificación</h3>
-              <div className="flex items-center justify-between cursor-pointer group">
-                <div className="flex gap-1 text-amber-400 group-hover:scale-105 transition-transform">
-                  {[1,2,3,4].map(s => <Star key={s} className="w-5 h-5 fill-amber-400" />)}
-                  <Star className="w-5 h-5 text-gray-300 stroke-2" />
-                </div>
-                <span className="text-sm font-semibold text-muted group-hover:text-amber-500 transition-colors">4+ Estrellas</span>
-              </div>
-            </div>
-
-            {/* Brands / Origen */}
-            <div>
               <div className="flex justify-between items-center mb-4">
-                <h3 className="font-bold text-slate-900 text-lg">Origen / Marca</h3>
-                <button className="text-xs text-muted hover:text-brand-primary transition-colors">Limpiar</button>
+                <h3 className="font-bold text-slate-900 text-lg">Calificación</h3>
+                {minRating > 0 && (
+                  <button
+                    onClick={() => setMinRating(0)}
+                    className="text-xs text-muted hover:text-brand-primary transition-colors cursor-pointer"
+                  >
+                    Limpiar
+                  </button>
+                )}
               </div>
-              <div className="flex flex-col gap-3.5">
-                {mockBrands.map(brand => (
-                  <Checkbox key={brand} label={brand} />
-                ))}
+              <div className="flex items-center justify-between group">
+                <div
+                  className="flex gap-1 transition-transform"
+                  onMouseLeave={() => setHoverRating(0)}
+                >
+                  {[1, 2, 3, 4, 5].map(star => {
+                    const isFilled = star <= (hoverRating || minRating);
+                    return (
+                      <Icon
+                        key={star}
+                        icon="lucide:star"
+                        onMouseEnter={() => setHoverRating(star)}
+                        onClick={() => setMinRating(star)}
+                        className={`w-6 h-6 cursor-pointer transition-colors ${isFilled ? "fill-amber-400 text-amber-400 hover:scale-110" : "fill-gray-300 text-gray-300 hover:scale-110 hover:fill-amber-200 hover:text-amber-200"
+                          }`}
+                      />
+                    );
+                  })}
+                </div>
+                <span className="text-sm font-semibold text-muted">
+                  {minRating > 0 ? `${minRating} Estrella${minRating !== 1 ? 's' : ''}` : 'Todas'}
+                </span>
               </div>
-              <button className="text-sm text-brand-primary font-bold mt-5 hover:underline decoration-2 underline-offset-4">
-                Ver más opciones
-              </button>
             </div>
 
-            {/* Delivery Options */}
-            <div>
-              <h3 className="font-bold text-slate-900 text-lg mb-4">Opciones de Envío</h3>
-              <div className="flex gap-2 bg-gray-50 p-1 rounded-xl border border-gray-100">
-                <Button variant="primary" size="sm" className="flex-1 rounded-lg py-2 shadow-sm">Estándar</Button>
-                <Button variant="ghost" size="sm" className="flex-1 rounded-lg py-2 text-muted hover:text-foreground">Recoger</Button>
-              </div>
-            </div>
+
 
           </aside>
 
           {/* PRODUCT GRID */}
           <div className="flex-1">
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filteredProducts.length > 0 ? (
-                filteredProducts.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    {...product}
-                    href={`/marketplace/${product.id}`}
-                  />
-                ))
-              ) : (
-                <div className="col-span-full py-12 text-center text-gray-500">
-                  <p>No se encontraron productos en la categoría "{activeCategory}".</p>
-                  <Button variant="outline" className="mt-4" onClick={() => handleCategoryClick("Todas")}>Ver todos los productos</Button>
-                </div>
-              )}
-            </div>
+            {loading ? (
+              <div className="flex justify-center items-center py-20">
+                <Icon icon="lucide:loader-2" className="w-8 h-8 animate-spin text-brand-primary" />
+                <span className="ml-2 text-muted">Cargando productos...</span>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                {products.length > 0 ? (
+                  products.map((product) => {
+                    const mappedCategory = product.category?.categoryName
+                      || categories.find(c => c.id === product.categoryId)?.categoryName
+                      || "Categoría";
+
+                    return (
+                      <ProductCard
+                        key={product.id}
+                        id={product.id}
+                        title={product.name}
+                        description={product.description || ""}
+                        price={`$${Number(product.price).toFixed(2)}`}
+                        image={product.imageUrl || "/bolso-de-moriche.webp"} // Default placeholder
+                        rating={product.averageRating ? Math.round(Number(product.averageRating)) : 0}
+                        category={mappedCategory}
+                        href={`/marketplace/${product.id}`}
+                      />
+                    );
+                  })
+                ) : (
+                  <div className="col-span-full py-12 text-center text-gray-500">
+                    <p>No se encontraron productos {activeCategory ? `en la categoría "${activeCategory}"` : "disponibles"}.</p>
+                    {activeCategory && (
+                      <Button variant="outline" className="mt-4" onClick={() => handleCategoryClick(activeCategory)}>Limpiar filtro</Button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
         </div>
@@ -171,5 +286,13 @@ export default function MarketplacePage() {
       </main>
       <Footer />
     </>
+  );
+}
+
+export default function MarketplacePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-background pt-32 pb-12 px-4 md:px-8 max-w-[1400px] mx-auto text-center">Cargando marketplace...</div>}>
+      <MarketplaceContent />
+    </Suspense>
   );
 }

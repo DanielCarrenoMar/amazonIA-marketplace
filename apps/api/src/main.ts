@@ -1,5 +1,12 @@
-import 'dotenv/config';
+try {
+  const dotenv = require('dotenv');
+  const path = require('path');
+  // In local dev: load root_dir/.env
+  dotenv.config({ path: path.resolve(process.cwd(), '../../.env') });
+  dotenv.config(); // Fallback to load .env in apps/api/ if it exists
+} catch {}
 import { NestFactory } from '@nestjs/core';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
@@ -10,7 +17,7 @@ async function bootstrap() {
   const required = ['DATABASE_URL', 'JWT_SECRET', 'JWT_REFRESH_SECRET'];
   for (const key of required) {
     if (!process.env[key]) {
-      console.error(`Falta variable de entorno requerida: ${key}`);
+      console.error(`Missing required environment variable: ${key}`);
       process.exit(1);
     }
   }
@@ -20,6 +27,16 @@ async function bootstrap() {
   // - SUPABASE_URL / SUPABASE_SERVICE_KEY: required only for image uploads
 
   const app = await NestFactory.create(AppModule);
+
+  // Setup Swagger API Documentation
+  const config = new DocumentBuilder()
+    .setTitle('AmazonIA Marketplace API')
+    .setDescription('Interactive documentation for AmazonIA 4.0 system endpoints')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api/docs', app, document);
 
   // Activate all class-validator decorators globally
   app.useGlobalPipes(
@@ -53,6 +70,8 @@ async function bootstrap() {
   // { statusCode, message, timestamp, path }
   app.useGlobalFilters(new HttpExceptionFilter());
 
-  await app.listen(process.env.PORT ?? 3001);
+  const port = process.env.PORT ?? 3001;
+  await app.listen(port);
+  console.log(`[NestApplication] Server is listening on port: ${port}`);
 }
 bootstrap();

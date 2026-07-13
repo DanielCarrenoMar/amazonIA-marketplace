@@ -10,7 +10,7 @@ export class ProductCommentController {
   @UseGuards(JwtAuthGuard)
   @Post()
   create(@Req() req: any, @Body() createDto: CreateProductCommentDto) {
-    return this.productCommentService.create(req.user.sub, createDto);
+    return this.productCommentService.create(req.user.id, createDto);
   }
 
   @Get('product/:productId')
@@ -25,12 +25,12 @@ export class ProductCommentController {
     @Req() req: any,
     @Body() updateDto: UpdateProductCommentDto
   ) {
-    return this.productCommentService.update(id, req.user.sub, updateDto);
+    return this.productCommentService.update(id, req.user.id, updateDto);
   }
 
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number, @Req() req: any) {
-    return this.productCommentService.remove(id, req.user.sub);
+    return this.productCommentService.remove(id, req.user.id);
   }
 }

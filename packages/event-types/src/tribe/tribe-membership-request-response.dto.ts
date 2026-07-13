@@ -1,4 +1,5 @@
 import { MembershipRequestStatus } from '../enums';
+import { SellerResponseDto } from '../seller/seller-response.dto';
 
 export class TribeMembershipRequestResponseDto {
   id: number;
@@ -10,4 +11,5 @@ export class TribeMembershipRequestResponseDto {
   reviewedById: string | null;
   reviewedAt: Date | null;
   createdAt: Date;
+  seller?: SellerResponseDto;
 }

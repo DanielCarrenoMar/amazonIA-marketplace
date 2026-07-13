@@ -10,7 +10,10 @@ import {
   UseGuards,
   Request,
   Query,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { UserAccountService } from './user-account.service';
 import { CreateUserAccountDto, UpdateUserAccountDto, ChangePasswordDto, UserRole, PaginationDto, UserAccountResponseDto, PaginatedResponseDto } from 'event-types';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -65,5 +68,16 @@ export class UserAccountController {
     @Request() req: any,
   ): Promise<UserAccountResponseDto> {
     return this.userAccountService.remove(id, req.user);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/avatar')
+  @UseInterceptors(FileInterceptor('file'))
+  uploadAvatar(
+    @Param('id', ParseUUIDPipe) id: string,
+    @UploadedFile() file: Express.Multer.File,
+    @Request() req: any,
+  ): Promise<UserAccountResponseDto> {
+    return this.userAccountService.uploadAvatar(id, file, req.user);
   }
 }

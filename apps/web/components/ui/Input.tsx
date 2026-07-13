@@ -62,7 +62,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             disabled={disabled}
             className={`w-full bg-transparent text-sm text-foreground placeholder:text-muted/70 focus:outline-none ${
               leftIcon ? "py-3" : "py-3 pl-4"
-            } ${rightIcon ? "pr-1" : "pr-4"} disabled:cursor-not-allowed`}
+            } ${rightIcon ? "pr-1" : "pr-4"} disabled:cursor-not-allowed ${
+              props.type === 'number' ? '[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none' : ''
+            }`}
             {...props}
           />
 

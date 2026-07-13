@@ -2,7 +2,7 @@ import React from "react";
 import Image from "next/image";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
-import { ArrowRight } from "lucide-react";
+import { Icon } from "@iconify/react";
 
 export function HeroSection() {
   return (
@@ -37,7 +37,7 @@ export function HeroSection() {
           <Button
             variant="primary"
             className="mb-5 group rounded-full!"
-            rightIcon={<ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" strokeWidth={2.5} />}
+            rightIcon={<Icon icon="lucide:arrow-right" className="w-4 h-4 group-hover:translate-x-1 transition-transform" strokeWidth={2.5} />}
           >
             Explorar herramientas
           </Button>

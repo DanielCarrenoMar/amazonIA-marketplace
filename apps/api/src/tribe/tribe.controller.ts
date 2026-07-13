@@ -42,7 +42,7 @@ export class TribeController {
   // ===========================================================================
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.SELLER)
+  @Roles(UserRole.BUYER, UserRole.SELLER)
   @Post('request-creation')
   requestCreation(@Request() req: any, @Body() dto: RequestTribeCreationDto): Promise<TribeResponseDto> {
     return this.tribeService.requestCreation(req.user.id, dto);
@@ -71,7 +71,7 @@ export class TribeController {
   // ===========================================================================
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.SELLER)
+  @Roles(UserRole.BUYER, UserRole.SELLER)
   @Post(':id/request-membership')
   requestMembership(
     @Param('id', ParseIntPipe) id: number,
@@ -144,6 +144,20 @@ export class TribeController {
   // ===========================================================================
   // Standard CRUD Flow
   // ===========================================================================
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.BUYER, UserRole.SELLER)
+  @Get('my-creation-requests')
+  getMyCreationRequests(@Request() req: any): Promise<TribeResponseDto[]> {
+    return this.tribeService.getMyCreationRequests(req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SELLER)
+  @Get('my-tribe')
+  getMyTribe(@Request() req: any): Promise<TribeResponseDto> {
+    return this.tribeService.getMyTribe(req.user.id);
+  }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)

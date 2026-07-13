@@ -5,6 +5,10 @@ export class SellerUserDto {
   email: string;
   age: number | null;
   nationality: string | null;
+  avatarUrl: string | null;
+  locationFormattedAddress: string | null;
+  locationCity: string | null;
+  locationRegion: string | null;
 }
 
 export class SellerResponseDto {

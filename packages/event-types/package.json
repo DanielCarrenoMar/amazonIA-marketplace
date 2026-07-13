@@ -8,8 +8,15 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./enums": {
+      "types": "./dist/enums.d.ts",
+      "default": "./dist/enums.js"
     }
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
@@ -24,6 +31,7 @@
   },
   "dependencies": {
     "@nestjs/mapped-types": "^2.1.1",
+    "@nestjs/swagger": "^11.4.4",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1"
   }

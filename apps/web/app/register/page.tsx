@@ -3,53 +3,59 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { Icon } from "@iconify/react";
 import { registerUser } from "@/lib/api";
+import { useAuth } from "@/lib/useAuth";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import dynamic from "next/dynamic";
 import logo from "@/public/logo.png";
 import amazoniaBg from "@/public/amazonia-register-1.jpg";
 
+// Map needs to be loaded dynamically to avoid SSR issues with Leaflet
+const LocationPickerHybrid = dynamic(() => import("@/components/ui/LocationPickerHybrid"), {
+  ssr: false,
+  loading: () => <div className="h-[400px] bg-gray-100 animate-pulse rounded-2xl flex items-center justify-center">Cargando mapa...</div>
+});
+
 export default function RegisterPage() {
+  const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
-    fullName: "",
-    nationalId: "",
     email: "",
     password: "",
+    nationalId: "",
+    username: "",
+    fullName: "",
+    age: "",
+    nationality: "",
+    phonePrimary: "",
+    phoneSecondary: "",
+    locationFormattedAddress: "",
+    locationCity: "",
+    locationRegion: "",
+    locationLat: null as number | null,
+    locationLng: null as number | null,
   });
+  
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
-  const [errors, setErrors] = useState({
-    fullName: "",
-    nationalId: "",
-    email: "",
-    password: "",
-  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  
   const router = useRouter();
+  const { login } = useAuth();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    // Clear error on type
-    if (errors[name as keyof typeof errors]) {
+    if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
-  const validate = () => {
+  const validateStep1 = () => {
     let isValid = true;
-    const newErrors = { fullName: "", nationalId: "", email: "", password: "" };
-
-    if (!formData.fullName.trim()) {
-      newErrors.fullName = "El nombre completo es obligatorio";
-      isValid = false;
-    }
-
-    if (!formData.nationalId.trim()) {
-      newErrors.nationalId = "El documento de identidad es obligatorio";
-      isValid = false;
-    }
+    const newErrors: Record<string, string> = {};
 
     if (!formData.email) {
       newErrors.email = "El correo electrónico es obligatorio";
@@ -63,10 +69,15 @@ export default function RegisterPage() {
       newErrors.password = "La contraseña es obligatoria";
       isValid = false;
     } else if (formData.password.length < 8) {
-      newErrors.password = "La contraseña debe tener al menos 8 caracteres";
+      newErrors.password = "Mínimo 8 caracteres";
       isValid = false;
     } else if (!/^(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
-      newErrors.password = "La contraseña debe tener al menos una letra mayúscula y un número";
+      newErrors.password = "Debe tener mayúscula y número";
+      isValid = false;
+    }
+
+    if (!formData.nationalId.trim()) {
+      newErrors.nationalId = "El documento es obligatorio";
       isValid = false;
     }
 
@@ -74,22 +85,66 @@ export default function RegisterPage() {
     return isValid;
   };
 
+  const validateStep2 = () => {
+    let isValid = true;
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.fullName.trim()) {
+      newErrors.fullName = "El nombre completo es obligatorio";
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  const handleNext = () => {
+    setApiError(null);
+    if (step === 1 && validateStep1()) {
+      setStep(2);
+    } else if (step === 2 && validateStep2()) {
+      setStep(3);
+    }
+  };
+
+  const handlePrev = () => {
+    setApiError(null);
+    setStep((s) => Math.max(1, s - 1));
+  };
+
+  const handleLocationSelect = (lat: number, lng: number, address?: string, city?: string, region?: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      locationLat: lat,
+      locationLng: lng,
+      locationFormattedAddress: address || prev.locationFormattedAddress,
+      locationCity: city || prev.locationCity,
+      locationRegion: region || prev.locationRegion,
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setApiError(null);
-    if (!validate()) return;
+    
+    // Convert age to number if provided
+    const payload = {
+      ...formData,
+      age: formData.age ? parseInt(formData.age, 10) : undefined,
+      locationLat: formData.locationLat === null ? undefined : formData.locationLat,
+      locationLng: formData.locationLng === null ? undefined : formData.locationLng,
+    };
 
     setIsLoading(true);
     try {
-      const data = await registerUser(formData);
-      localStorage.setItem("accessToken", data.accessToken);
-      localStorage.setItem("refreshToken", data.refreshToken);
-      router.push("/dashboard");
+      const data = await registerUser(payload);
+      await login(data);
+      router.push("/");
     } catch (err: any) {
       if (err.status === 409) {
-        setApiError("Este correo o documento de identidad ya está registrado.");
+        setApiError("Este correo, nombre de usuario o documento ya está registrado.");
       } else if (err.status === 429) {
-        setApiError("Demasiados intentos. Por favor espera un momento e inténtalo de nuevo.");
+        setApiError("Demasiados intentos. Por favor espera e inténtalo de nuevo.");
       } else {
         setApiError(err.message ?? "Ocurrió un error al registrarse. Inténtalo de nuevo.");
       }
@@ -104,7 +159,7 @@ export default function RegisterPage() {
         href="/"
         className="absolute top-6 left-6 md:top-8 md:left-8 inline-flex items-center gap-1.5 text-foreground/80 hover:text-brand-primary-dark md:text-white/90 md:hover:text-white text-sm sm:text-base font-semibold transition-colors duration-200 group z-50 md:drop-shadow-md"
       >
-        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+        <Icon icon="lucide:arrow-left" className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
         Volver al inicio
       </Link>
 
@@ -123,84 +178,213 @@ export default function RegisterPage() {
         </div>
       </div>
 
-      <div className="w-full md:w-[450px] lg:w-[550px] flex flex-col justify-center px-8 sm:px-12 py-6 md:py-8 relative overflow-y-auto">
-        <div className="w-full max-w-[400px] mx-auto pt-8 md:pt-0">
-          <div className="flex items-center justify-center gap-2 mb-4 md:mb-6">
+      <div className="w-full md:w-[500px] lg:w-[600px] flex flex-col justify-center px-8 sm:px-12 py-6 md:py-8 relative overflow-y-auto">
+        <div className="w-full max-w-[450px] mx-auto pt-8 md:pt-0">
+          <div className="flex items-center justify-center gap-2 mb-4">
             <img src={logo.src} alt="Amazonia IA Logo" className="h-16 w-16 rounded-full shadow-sm" />
           </div>
 
           <h2 className="text-xl sm:text-2xl font-semibold font-poppins text-center text-foreground tracking-tight mb-1">
             Crear una cuenta
           </h2>
-          <p className="text-foreground/70 text-center text-sm mb-5 md:mb-6">
-            Por favor ingrese sus datos para registrarse.
-          </p>
+          
+          <div className="flex justify-center items-center gap-2 mb-6">
+            {[1, 2, 3].map((s) => (
+              <React.Fragment key={s}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${s === step ? 'bg-brand-primary text-white' : s < step ? 'bg-brand-primary/20 text-brand-primary' : 'bg-gray-100 text-gray-400'}`}>
+                  {s < step ? <Icon icon="lucide:check" className="w-4 h-4" /> : s}
+                </div>
+                {s < 3 && <div className={`w-8 h-1 rounded-full ${s < step ? 'bg-brand-primary/50' : 'bg-gray-100'}`} />}
+              </React.Fragment>
+            ))}
+          </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <Input
-              label="Nombre completo"
-              type="text"
-              name="fullName"
-              placeholder="Ingrese su nombre completo"
-              value={formData.fullName}
-              onChange={handleChange}
-              error={errors.fullName}
-            />
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            
+            {/* STEP 1: CUENTA */}
+            <div className={step === 1 ? 'block' : 'hidden'}>
+              <div className="space-y-4">
+                <Input
+                  label="Correo electrónico *"
+                  type="email"
+                  name="email"
+                  placeholder="ejemplo@correo.com"
+                  value={formData.email}
+                  onChange={handleChange}
+                  error={errors.email}
+                />
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Input
+                    label="Nombre de usuario"
+                    type="text"
+                    name="username"
+                    placeholder="Opcional"
+                    value={formData.username}
+                    onChange={handleChange}
+                  />
+                  <Input
+                    label="Doc. Identidad *"
+                    type="text"
+                    name="nationalId"
+                    placeholder="V-12345678"
+                    value={formData.nationalId}
+                    onChange={handleChange}
+                    error={errors.nationalId}
+                  />
+                </div>
 
-            <Input
-              label="Documento de identidad"
-              type="text"
-              name="nationalId"
-              placeholder="Ingrese su documento de identidad"
-              value={formData.nationalId}
-              onChange={handleChange}
-              error={errors.nationalId}
-            />
+                <Input
+                  label="Contraseña *"
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  placeholder="Ingrese su contraseña"
+                  value={formData.password}
+                  onChange={handleChange}
+                  error={errors.password}
+                  rightIcon={
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="text-foreground/60 hover:text-brand-primary transition-colors focus:outline-none p-1 rounded-md cursor-pointer"
+                    >
+                      {showPassword ? <Icon icon="lucide:eye-off" className="w-4 h-4" /> : <Icon icon="lucide:eye" className="w-4 h-4" />}
+                    </button>
+                  }
+                />
+              </div>
+            </div>
 
-            <Input
-              label="Correo electrónico"
-              type="email"
-              name="email"
-              placeholder="Ingrese su correo electrónico"
-              value={formData.email}
-              onChange={handleChange}
-              error={errors.email}
-            />
+            {/* STEP 2: PERSONAL */}
+            <div className={step === 2 ? 'block' : 'hidden'}>
+              <div className="space-y-4">
+                <Input
+                  label="Nombre completo *"
+                  type="text"
+                  name="fullName"
+                  placeholder="Juan Pérez"
+                  value={formData.fullName}
+                  onChange={handleChange}
+                  error={errors.fullName}
+                />
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Input
+                    label="Nacionalidad"
+                    type="text"
+                    name="nationality"
+                    placeholder="Venezolana"
+                    value={formData.nationality}
+                    onChange={handleChange}
+                  />
+                  <Input
+                    label="Edad"
+                    type="number"
+                    name="age"
+                    placeholder="ej. 30"
+                    value={formData.age}
+                    onChange={handleChange}
+                  />
+                </div>
 
-            <Input
-              label="Contraseña"
-              type={showPassword ? "text" : "password"}
-              name="password"
-              placeholder="Ingrese su contraseña"
-              value={formData.password}
-              onChange={handleChange}
-              error={errors.password}
-              rightIcon={
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="text-foreground/60 hover:text-brand-primary transition-colors focus:outline-none p-1 rounded-md cursor-pointer"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              }
-            />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Input
+                    label="Teléfono Principal"
+                    type="tel"
+                    name="phonePrimary"
+                    placeholder="+58 412..."
+                    value={formData.phonePrimary}
+                    onChange={handleChange}
+                  />
+                  <Input
+                    label="Teléfono Secundario"
+                    type="tel"
+                    name="phoneSecondary"
+                    placeholder="Opcional"
+                    value={formData.phoneSecondary}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
+            </div>
 
+            {/* STEP 3: UBICACIÓN */}
+            <div className={step === 3 ? 'block' : 'hidden'}>
+              <div className="space-y-4">
+                <Input
+                  label="Dirección Completa"
+                  type="text"
+                  name="locationFormattedAddress"
+                  placeholder="Calle, Sector, Edificio..."
+                  value={formData.locationFormattedAddress}
+                  onChange={handleChange}
+                />
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Input
+                    label="Ciudad"
+                    type="text"
+                    name="locationCity"
+                    placeholder="Ciudad"
+                    value={formData.locationCity}
+                    onChange={handleChange}
+                  />
+                  <Input
+                    label="Región / Estado"
+                    type="text"
+                    name="locationRegion"
+                    placeholder="Estado"
+                    value={formData.locationRegion}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-semibold text-foreground mb-1.5 block">Fijar Ubicación Exacta (Opcional)</label>
+                  <p className="text-xs text-gray-500 mb-3">Busca tu zona o usa tu ubicación actual en el mapa para autocompletar la dirección.</p>
+                  <LocationPickerHybrid onLocationSelect={handleLocationSelect} />
+                </div>
+              </div>
+            </div>
+
+            {/* ACTIONS */}
             {apiError && (
-              <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+              <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 mt-2">
                 {apiError}
               </div>
             )}
 
-            <Button
-              type="submit"
-              variant="primary"
-              size="md"
-              isLoading={isLoading}
-              className="w-full mt-4 font-semibold text-white bg-brand-primary hover:bg-brand-primary-dark transition-all duration-200 rounded-xl"
-            >
-              Registrarse
-            </Button>
+            <div className="flex gap-3 mt-4">
+              {step > 1 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handlePrev}
+                  className="flex-1"
+                >
+                  Atrás
+                </Button>
+              )}
+              {step < 3 ? (
+                <Button
+                  type="button"
+                  variant="primary"
+                  onClick={handleNext}
+                  className="flex-1"
+                >
+                  Siguiente
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  variant="primary"
+                  isLoading={isLoading}
+                  className="flex-1"
+                >
+                  Registrarse
+                </Button>
+              )}
+            </div>
           </form>
 
           <div className="mt-5 text-center text-sm text-foreground/80">

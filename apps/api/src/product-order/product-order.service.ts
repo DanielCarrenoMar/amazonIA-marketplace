@@ -66,10 +66,92 @@ export class ProductOrderService {
       const totalAmount = Number(product.price) * createProductOrderDto.quantity;
 
       // 4. Create the order
-      return tx.productOrder.create({
-        data: { ...createProductOrderDto, buyerId, totalAmount, currentStatus: OrderStatus.PENDING },
+      const initialStatus = createProductOrderDto.transactionHash ? OrderStatus.PAID : OrderStatus.PENDING;
+      const paymentMethod = createProductOrderDto.transactionHash ? 'CRYPTO' : undefined;
+
+      const order = await tx.productOrder.create({
+        data: { 
+          ...createProductOrderDto, 
+          buyerId, 
+          totalAmount, 
+          currentStatus: initialStatus,
+          paymentMethod,
+        },
       });
+
+      // Audit Log for initial creation
+      await tx.orderStatusHistory.create({
+        data: {
+          orderId: order.id,
+          changedByUserId: buyerId,
+          previousStatus: null,
+          newStatus: OrderStatus.PENDING,
+          statusNote: 'Pedido creado',
+        },
+      });
+
+      if (initialStatus === OrderStatus.PAID) {
+        await tx.orderStatusHistory.create({
+          data: {
+            orderId: order.id,
+            changedByUserId: buyerId,
+            previousStatus: OrderStatus.PENDING,
+            newStatus: OrderStatus.PAID,
+            statusNote: 'Pago registrado con Hash de Transacción',
+          },
+        });
+
+        // Append outbox event for paid order
+        await this.outbox.append(
+          tx,
+          'ProductOrder',
+          order.id,
+          `order.paid`,
+          {
+            orderId: order.id,
+            productId: order.productId,
+            buyerId: order.buyerId,
+            sellerId: product.sellerId,
+            quantity: order.quantity,
+            totalAmount: order.totalAmount.toString(),
+            previousStatus: OrderStatus.PENDING,
+            newStatus: OrderStatus.PAID,
+            changedByUserId: buyerId,
+            trackingNumber: null,
+            topic: STREAM_TOPICS.SHIPMENT_EVENTS,
+          },
+        );
+      }
+
+      return order;
     });
+
+    // Disparar notarización si se creó directamente como PAID
+    if (result.currentStatus === OrderStatus.PAID && result.transactionHash) {
+      this.prisma.product.findUnique({
+        where: { id: result.productId },
+        select: { id: true, sellerId: true },
+      }).then(async (product) => {
+        if (product) {
+          const productHash = crypto
+            .createHash('sha256')
+            .update(`${result.productId}-${product.sellerId}-${result.createdAt.getTime()}`)
+            .digest('hex');
+
+          this.logger.log(`Firing asynchronous notarization proposal creation for order ${result.id} from creation`);
+          await this.notaryClient.notarizeOrder({
+            orderId: result.id,
+            amount: Number(result.totalAmount),
+            paymentMethod: result.paymentMethod ?? 'CRYPTO',
+            productHash,
+            buyerId: result.buyerId,
+            sellerId: product.sellerId,
+            webhookUrl: '',
+          });
+        }
+      }).catch(err => this.logger.error(`Notarization trigger failed for order ${result.id}: ${err.message}`));
+    }
+
     return result as unknown as ProductOrderResponseDto;
   }
 
@@ -81,7 +163,7 @@ export class ProductOrderService {
       this.prisma.productOrder.count(),
       this.prisma.productOrder.findMany({
         include: { 
-          product: true, 
+          product: { include: { seller: { include: { user: { omit: { passwordHash: true } } } } } }, 
           buyer: { omit: { passwordHash: true } }, 
           statusHistory: true 
         },
@@ -125,7 +207,7 @@ export class ProductOrderService {
       this.prisma.productOrder.findMany({
         where,
         include: {
-          product: true,
+          product: { include: { seller: { include: { user: { omit: { passwordHash: true } } } } } },
           statusHistory: { orderBy: { createdAt: 'desc' } },
         },
         orderBy: { createdAt: 'desc' },
@@ -192,7 +274,7 @@ export class ProductOrderService {
     const order = await this.prisma.productOrder.findUnique({
       where: { id },
       include: {
-        product: true,
+        product: { include: { seller: { include: { user: { omit: { passwordHash: true } } } } } },
         buyer: { omit: { passwordHash: true } },
         statusHistory: true,
       },

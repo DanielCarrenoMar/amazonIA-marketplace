@@ -1,29 +1,28 @@
 import React from 'react';
 import { ImpactCard } from './ImpactCards';
-import { Target, Leaf, UsersRound, Sparkles } from 'lucide-react';
 
 export function ImpactSection() {
   const mockData = [
     {
       title: "Integración Económica",
       description: "Conectamos a las comunidades con mercados globales de comercio justo.",
-      icon: Target
+      icon: "lucide:target"
     },
     {
       title: "Sostenibilidad",
       description: "Promovemos prácticas que protegen el medio ambiente amazónico.",
-      icon: Leaf
+      icon: "lucide:leaf"
     },
     {
       title: "Preservación Cultural",
       description: "Documentamos y difundimos el conocimiento ancestral.",
-      icon: UsersRound
+      icon: "lucide:users-round"
 
     },
     {
       title: "Impacto medible",
       description: "Cada transacción contribuye directamente al bienestar de las comunidades.",
-      icon: Sparkles
+      icon: "lucide:sparkles"
     }
   ]
 
