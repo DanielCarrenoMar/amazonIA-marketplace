@@ -165,6 +165,10 @@ export default function ProductDetailPage() {
   };
 
   const handleSubmitReview = async () => {
+    if (!user) {
+      setIsModalOpen(true);
+      return;
+    }
     if (!newCommentText.trim() && newRating === 0) return;
     try {
       setIsSubmittingReview(true);
@@ -590,6 +594,10 @@ export default function ProductDetailPage() {
                       icon={star <= newRating ? "mdi:star" : "mdi:star-outline"}
                       className={`interactive-star w-8 h-8 transition-colors ${star <= newRating ? 'text-amber-400' : 'text-gray-300'}`}
                       onClick={() => {
+                        if (!user) {
+                          setIsModalOpen(true);
+                          return;
+                        }
                         setNewRating(star);
                         document.getElementById('review-form')?.focus();
                       }}
