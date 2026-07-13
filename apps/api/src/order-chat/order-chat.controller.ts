@@ -10,11 +10,11 @@ export class OrderChatController {
 
   @Post()
   create(@Req() req: any, @Body() createDto: CreateOrderChatDto): Promise<OrderChatResponseDto> {
-    return this.orderChatService.create(req.user.sub, createDto);
+    return this.orderChatService.create(req.user.id, createDto);
   }
 
   @Get(':orderId')
   findByOrder(@Param('orderId') orderId: string, @Req() req: any): Promise<OrderChatResponseDto[]> {
-    return this.orderChatService.findByOrder(orderId, req.user.sub);
+    return this.orderChatService.findByOrder(orderId, req.user.id);
   }
 }

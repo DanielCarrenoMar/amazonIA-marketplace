@@ -7,3 +7,4 @@ export * from './order.api';
 export * from './dictionary.api';
 export * from './inference.api';
 export * from './wallet.api';
+export * from './chat.api';
