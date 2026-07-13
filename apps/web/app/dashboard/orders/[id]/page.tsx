@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getOrder, getOrderTimeline, updateOrder, getSpatialRisk } from "@/lib/api";
 import type { OrderTimelineResponseDto, ProductOrderResponseDto, OrderTimelineItemDto } from "event-types";
-import { DashboardHeader, LogisticsRiskPanel, ShipmentModal } from "@/components/dashboard";
+import { DashboardHeader, LogisticsRiskPanel, ShipmentModal, OrderChat } from "@/components/dashboard";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { MapPin, Truck, CheckCircle2, ChevronLeft, AlertTriangle, Cpu } from "lucide-react";
@@ -141,6 +141,12 @@ export default function OrderDetailPage() {
              </div>
              {!timeline?.items?.length && <p className="text-muted text-center py-4">No hay eventos registrados aún.</p>}
           </Card>
+
+          <OrderChat 
+            orderId={order.id} 
+            currentStatus={order.currentStatus} 
+            currentUserId={user?.id}
+          />
         </div>
 
         <div className="space-y-6">
