@@ -34,11 +34,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
+    <html suppressHydrationWarning
       lang="en"
       className={`${poppins.variable} ${outfit.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col font-sans">
+      <body className="min-h-full flex flex-col font-sans" suppressHydrationWarning>
         <ToastProvider>
           <AuthProvider>
             <FavoriteProvider>
