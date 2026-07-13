@@ -80,7 +80,7 @@ export default function InventoryPage() {
 
   return (
     <div className="space-y-6">
-      <DashboardHeader 
+      <DashboardHeader
         title="Gestión de Inventario"
         subtitle={`${products.length} productos registrados`}
         action={
@@ -96,7 +96,7 @@ export default function InventoryPage() {
       <div className="flex flex-col sm:flex-row gap-4 justify-between items-center mb-6">
         <div className="flex gap-3 w-full sm:w-auto">
           <div className="relative">
-            <input 
+            <input
               type="text"
               placeholder="Buscar"
               value={search}
@@ -109,10 +109,10 @@ export default function InventoryPage() {
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
             options={catOptions}
-            className="w-full sm:w-40 !rounded-full bg-white border-gray-200 shadow-sm"
+            className="w-full sm:w-40 rounded-full! bg-white border-gray-200 shadow-sm"
           />
         </div>
-        
+
         <div className="flex bg-white border border-gray-200 p-1 rounded-xl shadow-sm">
           <button
             onClick={() => setViewMode("list")}
@@ -130,8 +130,8 @@ export default function InventoryPage() {
       </div>
 
       {/* Table / Grid */}
-      <InventoryTable 
-        products={filteredProducts} 
+      <InventoryTable
+        products={filteredProducts}
         viewMode={viewMode}
         onEdit={handleEdit}
         onDelete={handleDelete}

@@ -171,6 +171,13 @@ export class TribeController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SELLER)
+  @Get('my-membership-requests')
+  getMyMembershipRequests(@Request() req: any): Promise<TribeMembershipRequestResponseDto[]> {
+    return this.tribeService.getMyMembershipRequests(req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SELLER)
   @Get('my-tribe')
   getMyTribe(@Request() req: any): Promise<TribeResponseDto> {
     return this.tribeService.getMyTribe(req.user.id);
