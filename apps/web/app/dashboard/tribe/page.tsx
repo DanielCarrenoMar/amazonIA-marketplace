@@ -34,7 +34,12 @@ export default function TribeManagementPage() {
   const loadTribeData = async () => {
     try {
       setIsLoading(true);
-      const myTribe = await getMyTribe();
+      let myTribe = null;
+      try {
+        myTribe = await getMyTribe();
+      } catch (err) {
+        console.warn("User has no active tribe", err);
+      }
       setTribe(myTribe);
       
       if (myTribe) {
@@ -43,13 +48,23 @@ export default function TribeManagementPage() {
         setMembers(sellersRes.data);
         
         // Fetch Tribe Products
-        const productsRes = await getProducts({ tribeId: myTribe.id });
+        const productsRes = await getProducts({ tribeIds: myTribe.id.toString() });
         setProducts(productsRes.data);
         
-        // Fetch pending requests (only if leader)
-        if (isLeader) {
-          const requestsRes = await getTribeMembershipRequests(myTribe.id, new URLSearchParams({ status: "PENDING" }));
-          setRequests(requestsRes.data);
+        // Fetch pending requests — compute leadership from fresh tribe data
+        // instead of relying on `isLeader` from useAuth (which may be stale)
+        const amILeader = user && (
+          myTribe.primaryLeaderId === user.id || 
+          myTribe.secondaryLeaderId === user.id
+        );
+        
+        if (amILeader) {
+          try {
+            const requestsRes = await getTribeMembershipRequests(myTribe.id, new URLSearchParams({ status: "PENDING" }));
+            setRequests(requestsRes.data);
+          } catch (err) {
+            console.error("Error loading membership requests:", err);
+          }
         }
       } else {
         // Fetch if the seller has a pending request to join a tribe
