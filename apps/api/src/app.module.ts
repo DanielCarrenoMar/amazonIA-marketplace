@@ -14,11 +14,13 @@ import { MongoModule } from 'database';
 import { ShipmentsModule } from './shipments/shipments.module';
 import { ShippingCarrierModule } from './shipping-carrier/shipping-carrier.module';
 import { ProductCommentModule } from './product-comment/product-comment.module';
+import { FavoriteModule } from './favorite/favorite.module';
 import { OrderChatModule } from './order-chat/order-chat.module';
 import { MessagingModule } from 'messaging';
 import { HealthModule } from './health/health.module';
 import { InferenceModule } from './inference/inference.module';
 import { SpatialModule } from './spatial/spatial.module';
+import { NotificationModule } from './notification/notification.module';
 
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
@@ -33,7 +35,7 @@ import { APP_GUARD } from '@nestjs/core';
     ThrottlerModule.forRoot([
       {
         ttl: 60000,
-        limit: 10, // Global limit: 10 requests per minute per IP
+        limit: 100, // Global limit: 100 requests per minute per IP
       },
     ]),
     ScheduleModule.forRoot(),
@@ -51,10 +53,12 @@ import { APP_GUARD } from '@nestjs/core';
     ShipmentsModule,
     ShippingCarrierModule,
     ProductCommentModule,
+    FavoriteModule,
     OrderChatModule,
     HealthModule,
     InferenceModule,
     SpatialModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [

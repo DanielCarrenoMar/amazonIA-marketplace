@@ -129,7 +129,8 @@ export class TribeService {
   }
 
   async findPendingCreations(query?: PaginationDto): Promise<PaginatedResponseDto<TribeResponseDto>> {
-    const { page = 1, limit = 10 } = query || {};
+    const page = parseInt(String(query?.page), 10) || 1;
+    const limit = parseInt(String(query?.limit), 10) || 10;
     const skip = (page - 1) * limit;
 
     const [total, data] = await Promise.all([
@@ -153,9 +154,14 @@ export class TribeService {
   // ===========================================================================
 
   async requestMembership(tribeId: number, userId: string, dto: RequestTribeMembershipDto): Promise<TribeMembershipRequestResponseDto> {
-    const seller = await this.prisma.seller.findUnique({ where: { id: userId } });
+    let seller = await this.prisma.seller.findUnique({ where: { id: userId } });
     if (seller?.tribeId) {
       throw new ConflictException('Ya perteneces a una tribu');
+    }
+
+    // Ensure the Seller record exists to satisfy the foreign key constraint
+    if (!seller) {
+      seller = await this.prisma.seller.create({ data: { id: userId } });
     }
 
     const tribe = await this.prisma.tribe.findUnique({ where: { id: tribeId } });
@@ -233,8 +239,21 @@ export class TribeService {
     }) as unknown as TribeMembershipRequestResponseDto;
   }
 
+  async getMyMembershipRequests(sellerId: string): Promise<TribeMembershipRequestResponseDto[]> {
+    const requests = await this.prisma.tribeMembershipRequest.findMany({
+      where: { sellerId },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        tribe: true,
+      }
+    });
+    return requests as unknown as TribeMembershipRequestResponseDto[];
+  }
+
   async findMembershipRequests(tribeId: number, query?: PaginationDto & { status?: string }): Promise<PaginatedResponseDto<TribeMembershipRequestResponseDto>> {
-    const { page = 1, limit = 10, status } = query || {};
+    const page = parseInt(String(query?.page), 10) || 1;
+    const limit = parseInt(String(query?.limit), 10) || 10;
+    const status = query?.status;
     const skip = (page - 1) * limit;
 
     const where: any = { tribeId };
@@ -249,6 +268,22 @@ export class TribeService {
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
+        include: {
+          seller: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  username: true,
+                  fullName: true,
+                  avatarUrl: true,
+                  email: true,
+                  locationFormattedAddress: true
+                }
+              }
+            }
+          }
+        }
       }),
     ]);
 
@@ -256,6 +291,91 @@ export class TribeService {
       data: data as unknown as TribeMembershipRequestResponseDto[],
       meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
     };
+  }
+
+  async findAllMembershipRequests(query?: PaginationDto & { status?: string }): Promise<PaginatedResponseDto<TribeMembershipRequestResponseDto>> {
+    const page = parseInt(String(query?.page), 10) || 1;
+    const limit = parseInt(String(query?.limit), 10) || 10;
+    const status = query?.status;
+    const skip = (page - 1) * limit;
+
+    const where: any = {};
+    if (status) {
+      where.status = status;
+    }
+
+    const [total, data] = await Promise.all([
+      this.prisma.tribeMembershipRequest.count({ where }),
+      this.prisma.tribeMembershipRequest.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          seller: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  username: true,
+                  fullName: true,
+                  avatarUrl: true,
+                  email: true,
+                  locationFormattedAddress: true
+                }
+              }
+            }
+          },
+          tribe: {
+            select: {
+              id: true,
+              name: true
+            }
+          }
+        }
+      }),
+    ]);
+
+    return {
+      data: data as unknown as TribeMembershipRequestResponseDto[],
+      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+    };
+  }
+
+  async reviewMembershipAsAdmin(requestId: number, dto: ReviewTribeMembershipDto): Promise<TribeMembershipRequestResponseDto> {
+    const request = await this.prisma.tribeMembershipRequest.findUnique({ where: { id: requestId } });
+    if (!request) throw new NotFoundException('Solicitud no encontrada');
+    if ((request as any).status !== 'PENDING') throw new BadRequestException('Esta solicitud ya fue revisada');
+
+    return this.prisma.$transaction(async (tx) => {
+      const updateData: any = {
+        status: dto.status,
+        reviewedAt: new Date(),
+        reviewNote: dto.reviewNote ? `[Aprobación Forzada por Administrador]: ${dto.reviewNote}` : '[Aprobación Forzada por Administrador]',
+      };
+
+      const updatedRequest = await tx.tribeMembershipRequest.update({
+        where: { id: requestId },
+        data: updateData,
+      });
+
+      if (dto.status === MembershipRequestStatus.APPROVED) {
+        // Validate if the seller isn't already in a tribe (might have joined another while pending)
+        const seller = await tx.seller.findUnique({ where: { id: request.sellerId } });
+        if (!seller) {
+           await tx.seller.create({ data: { id: request.sellerId, tribeId: request.tribeId } });
+           await tx.userAccount.update({ where: { id: request.sellerId }, data: { role: UserRole.SELLER } });
+        } else if (!seller.tribeId) {
+          await tx.seller.update({
+            where: { id: request.sellerId },
+            data: { tribeId: request.tribeId },
+          });
+          await tx.userAccount.update({ where: { id: request.sellerId }, data: { role: UserRole.SELLER } });
+        }
+      }
+
+      return updatedRequest;
+    }) as unknown as TribeMembershipRequestResponseDto;
   }
 
   // ===========================================================================
@@ -400,12 +520,15 @@ export class TribeService {
   }
 
   async findAll(query?: PaginationDto): Promise<PaginatedResponseDto<TribeResponseDto>> {
-    const { page = 1, limit = 10 } = query || {};
+    const page = parseInt(String(query?.page), 10) || 1;
+    const limit = parseInt(String(query?.limit), 10) || 10;
     const skip = (page - 1) * limit;
 
+    const where = { status: 'ACTIVE' as any };
+
     const [total, data] = await Promise.all([
-      this.prisma.tribe.count(),
-      this.prisma.tribe.findMany({ skip, take: limit }),
+      this.prisma.tribe.count({ where }),
+      this.prisma.tribe.findMany({ where, skip, take: limit }),
     ]);
 
     return {

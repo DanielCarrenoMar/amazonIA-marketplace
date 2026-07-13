@@ -27,4 +27,27 @@ export class InferenceService {
       return null;
     }
   }
+
+  async evaluateRisk(payload: any, token: string) {
+    try {
+      const url = `${this.inferenceUrl}/api/v1/risk/evaluate`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Inference service returned status ${response.status}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      this.logger.error(`Failed to evaluate risk: ${error.message}`);
+      throw error;
+    }
+  }
 }

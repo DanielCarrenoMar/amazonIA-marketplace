@@ -11,12 +11,14 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
 import { useCart } from '@/lib/cartContext';
+import { useAuth } from '@/lib/useAuth';
 import { createOrder } from '@/lib/api';
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { toast } = useToast();
   const { items: cartItems, subtotal, clearCart } = useCart();
+  const { user } = useAuth();
   
   const shippingCost = cartItems.length > 0 ? 5.00 : 0;
   const total = subtotal + shippingCost;
@@ -90,8 +92,37 @@ export default function CheckoutPage() {
           <div className="flex flex-col lg:flex-row gap-8">
             {/* LEFT COLUMN: STEPS */}
             <div className="flex-1 flex flex-col gap-8">
-              
-              {/* Step 1: Notas del Pedido */}
+              {/* Step 1: Dirección de Envío */}
+              <section className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-sm">
+                <div className="flex items-center gap-3 mb-6">
+                  <Icon icon="lucide:map-pin" className="w-6 h-6 text-brand-primary shrink-0" />
+                  <h2 className="text-xl font-bold text-slate-900">Dirección de Envío</h2>
+                </div>
+                <div className="p-4 bg-gray-50 border border-gray-100 rounded-xl">
+                  {user?.locationFormattedAddress ? (
+                    <>
+                      <p className="font-semibold text-slate-900 mb-1">{user.fullName}</p>
+                      <p className="text-sm text-gray-700 font-medium">
+                        {user.locationFormattedAddress}
+                      </p>
+                      <p className="text-sm text-gray-500 mb-2">
+                        {[user.locationCity, user.locationRegion].filter(Boolean).join(', ')}
+                      </p>
+                      <p className="text-xs text-brand-primary/80 flex items-center gap-1 font-semibold bg-brand-primary/5 p-2 rounded-lg border border-brand-primary/10">
+                        <Icon icon="lucide:info" className="w-3.5 h-3.5" /> 
+                        Esta dirección será enviada al vendedor automáticamente.
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-sm text-amber-600 flex items-center gap-1 font-medium">
+                      <Icon icon="lucide:alert-triangle" className="w-4 h-4" />
+                      No tienes una dirección configurada en tu perfil. El envío podría no procesarse.
+                    </p>
+                  )}
+                </div>
+              </section>
+
+              {/* Step 2: Notas del Pedido */}
               <section className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-sm">
                 <div className="flex items-center gap-3 mb-6">
                   <Icon icon="lucide:user" className="w-6 h-6 text-brand-primary shrink-0" />
@@ -117,9 +148,9 @@ export default function CheckoutPage() {
                 <div className="flex flex-col gap-4 mb-6">
                   {/* Billetera destino */}
                   <div className="p-5 border border-brand-primary/30 bg-brand-primary/5 rounded-2xl">
-                    <p className="text-sm text-slate-900 font-semibold mb-2">Billetera de Destino / Cuenta de Pago</p>
+                    <p className="text-sm text-slate-900 font-semibold mb-2">Billetera de Destino (Escrow AmazonIA)</p>
                     <div className="flex items-center justify-between bg-white border border-gray-200 p-3 rounded-xl">
-                      <span className="font-mono text-xs text-slate-600">0x71C...976F (Simulado)</span>
+                      <span className="font-mono text-xs text-slate-600">0xAmazonIAEscrowWallet123456789...</span>
                       <Button variant="ghost" size="sm" className="h-8 px-3 text-brand-primary text-xs font-bold">Copiar</Button>
                     </div>
                     <p className="text-xs text-muted mt-3">

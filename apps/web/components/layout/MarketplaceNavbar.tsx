@@ -2,21 +2,43 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Icon } from "@iconify/react";
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
 import { CartDrawer } from '../ui/CartDrawer';
 import { useAuth } from '@/lib/useAuth';
+import { useFavorites } from '@/lib/favoriteContext';
+import { useCart } from '@/lib/cartContext';
 import logo from '@/public/logo.png';
 
-export function MarketplaceNavbar() {
+import { Suspense } from 'react';
+
+function MarketplaceNavbarContent() {
   const { user, logout, isBuyer } = useAuth();
+  const { favoriteIds } = useFavorites();
+  const { totalItems } = useCart();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const userMenuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Initialize search query from URL if present
+  useEffect(() => {
+    const q = searchParams.get('q');
+    if (q) setSearchQuery(q);
+  }, [searchParams]);
+
+  const handleSearch = (e?: React.KeyboardEvent) => {
+    if (e && e.key !== 'Enter') return;
+    if (searchQuery.trim()) {
+      router.push(`/marketplace?q=${encodeURIComponent(searchQuery.trim())}`);
+    } else {
+      router.push(`/marketplace`);
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -46,6 +68,7 @@ export function MarketplaceNavbar() {
               placeholder="Buscar artesanías, ropa, hogar..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleSearch}
               className="focus-within:z-10"
               wrapperClassName="rounded-full bg-gray-50/80 shadow-inner border-gray-200 focus-within:bg-white focus-within:border-brand-primary/30 focus-within:ring-2 focus-within:ring-brand-primary/20 transition-all"
             />
@@ -88,12 +111,19 @@ export function MarketplaceNavbar() {
               <Icon icon="lucide:home" className="w-[22px] h-[22px]" />
             </Link>
 
+            {/* Tribes */}
+            <Link href="/tribes" title="Explorar Tribus" className="relative p-2.5 text-slate-600 hover:text-brand-primary transition-colors cursor-pointer flex items-center justify-center">
+              <Icon icon="lucide:tent" className="w-[22px] h-[22px]" />
+            </Link>
+
             {/* Favorites */}
             <Link href="/marketplace/favorites" className="relative p-2.5 text-slate-600 hover:text-red-500 transition-colors cursor-pointer flex items-center justify-center">
               <Icon icon="lucide:heart" className="w-[22px] h-[22px]" />
-              <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm">
-                3
-              </span>
+              {favoriteIds.size > 0 && (
+                <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm">
+                  {favoriteIds.size}
+                </span>
+              )}
             </Link>
 
             {/* Cart */}
@@ -102,9 +132,11 @@ export function MarketplaceNavbar() {
               className="relative p-2.5 text-slate-600 hover:text-brand-primary transition-colors cursor-pointer"
             >
               <Icon icon="lucide:shopping-cart" className="w-[22px] h-[22px]" />
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-brand-primary text-white text-[11px] font-bold rounded-full flex items-center justify-center border-2 border-white shadow-sm">
-                3
-              </span>
+              {totalItems > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 bg-brand-primary text-white text-[11px] font-bold rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+                  {totalItems}
+                </span>
+              )}
             </button>
           </div>
         </div>
@@ -117,6 +149,7 @@ export function MarketplaceNavbar() {
               placeholder="Buscar productos..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleSearch}
               wrapperClassName="rounded-full bg-gray-50/80"
               className="h-[42px]"
             />
@@ -127,5 +160,13 @@ export function MarketplaceNavbar() {
       {/* Cart Drawer Instance */}
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </>
+  );
+}
+
+export function MarketplaceNavbar() {
+  return (
+    <Suspense fallback={<nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-lg border-b border-gray-100 shadow-[0_4px_30px_rgba(0,0,0,0.03)] h-20" />}>
+      <MarketplaceNavbarContent />
+    </Suspense>
   );
 }

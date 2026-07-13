@@ -51,7 +51,16 @@ export async function apiFetch<T>(
     throw err;
   }
 
-  return res.json() as Promise<T>;
+  const text = await res.text();
+  if (!text) {
+    return {} as T;
+  }
+  try {
+    return JSON.parse(text) as T;
+  } catch (err) {
+    console.error(`Error parsing JSON from ${path}:`, text);
+    throw new Error("Invalid JSON response from server");
+  }
 }
 
 export async function authFetch<T>(path: string, options: RequestInit = {}): Promise<T> {

@@ -17,13 +17,16 @@ const allowedOrderStatusTransitions: Record<OrderStatus, readonly OrderStatus[]>
   [OrderStatus.REFUNDED]: [],
 };
 
+import { NotificationService } from '../notification/notification.service';
+
 @Injectable()
 export class ProductOrderService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly outbox: OutboxService,
     private readonly telemetryIntegration: TelemetryIntegrationService,
-  ) {}
+    private readonly notificationService: NotificationService,
+  ) { }
 
   // buyerId comes from the JWT token (req.user.id), NOT from the client body
   async create(buyerId: string, createProductOrderDto: CreateProductOrderDto): Promise<ProductOrderResponseDto> {
@@ -59,10 +62,60 @@ export class ProductOrderService {
       // Calculate total amount using the already fetched price
       const totalAmount = Number(product.price) * createProductOrderDto.quantity;
 
-      // 4. Create the order
-      return tx.productOrder.create({
-        data: { ...createProductOrderDto, buyerId, totalAmount, currentStatus: OrderStatus.PENDING },
+      // 4. Fetch the buyer to get their location
+      const buyer = await tx.userAccount.findUnique({
+        where: { id: buyerId },
+        select: {
+          locationMapboxId: true,
+          locationFormattedAddress: true,
+          locationCity: true,
+          locationRegion: true,
+        },
       });
+
+      if (!buyer) {
+        throw new NotFoundException(`Buyer with ID ${buyerId} not found`);
+      }
+
+      const { destinationCoords, ...rest } = createProductOrderDto;
+
+      // Use DTO values, or fallback to the buyer's location
+      const finalMapboxId = rest.destinationMapboxId ?? buyer.locationMapboxId;
+      const finalFormattedAddress = rest.destinationFormattedAddress ?? buyer.locationFormattedAddress;
+      const finalCity = rest.destinationCity ?? buyer.locationCity;
+      const finalRegion = rest.destinationRegion ?? buyer.locationRegion;
+
+      // 5. Create the order
+      const order = await tx.productOrder.create({
+        data: {
+          ...rest,
+          destinationMapboxId: finalMapboxId,
+          destinationFormattedAddress: finalFormattedAddress,
+          destinationCity: finalCity,
+          destinationRegion: finalRegion,
+          buyerId,
+          totalAmount,
+          currentStatus: OrderStatus.PENDING
+        },
+      });
+
+      // 6. Set Spatial Coordinates
+      // If client provided explicitly coords, use them. Otherwise, copy from the buyer's profile via SQL.
+      if (destinationCoords && destinationCoords.latitude != null && destinationCoords.longitude != null) {
+        await tx.$executeRaw`
+          UPDATE product_order 
+          SET destination_coords = ST_SetSRID(ST_MakePoint(${destinationCoords.longitude}, ${destinationCoords.latitude}), 4326)
+          WHERE id = ${order.id}::uuid;
+        `;
+      } else {
+        await tx.$executeRaw`
+          UPDATE product_order 
+          SET destination_coords = (SELECT location_coords FROM user_account WHERE id = ${buyerId}::uuid)
+          WHERE id = ${order.id}::uuid;
+        `;
+      }
+
+      return order;
     });
     return result as unknown as ProductOrderResponseDto;
   }
@@ -74,10 +127,10 @@ export class ProductOrderService {
     const [total, data] = await Promise.all([
       this.prisma.productOrder.count(),
       this.prisma.productOrder.findMany({
-        include: { 
-          product: { include: { seller: { include: { user: { omit: { passwordHash: true } } } } } }, 
-          buyer: { omit: { passwordHash: true } }, 
-          statusHistory: true 
+        include: {
+          product: { include: { seller: { include: { user: { omit: { passwordHash: true } } } } } },
+          buyer: { omit: { passwordHash: true } },
+          statusHistory: true
         },
         orderBy: { createdAt: 'desc' },
         skip,
@@ -404,6 +457,16 @@ export class ProductOrderService {
             topic: STREAM_TOPICS.SHIPMENT_EVENTS,
           },
         );
+
+        // 1.7 Create Notifications
+        const buyerMessage = `Tu orden ${id} ha cambiado de estado a ${nextStatus}.`;
+        const sellerMessage = `La orden ${id} de tu producto ha cambiado de estado a ${nextStatus}.`;
+        
+        await this.notificationService.createNotification(currentOrder.buyerId, 'Actualización de Pedido', buyerMessage);
+        
+        if (currentOrder.product?.sellerId) {
+          await this.notificationService.createNotification(currentOrder.product.sellerId, 'Actualización de Pedido', sellerMessage);
+        }
       }
 
       // 2. Seller Rating: If the buyer left a rating for the seller, recalculate the seller's global rating

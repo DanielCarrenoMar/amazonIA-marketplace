@@ -46,7 +46,9 @@ export default function DashboardPage() {
         subtitle="Aquí está el resumen de tu actividad en AmazonIA."
         action={
           <Link href="/dashboard/inventory/new">
-            <Button variant="primary">+ Añadir Nueva Artesanía</Button>
+            <button className="bg-[#FFB700] hover:bg-[#F2AE00] text-white font-bold text-[15px] px-6 py-3 rounded-xl shadow-[0_4px_20px_rgba(255,183,0,0.4)] transition-all flex items-center gap-2 border-none">
+              <span className="text-[22px] leading-none font-bold">+</span> Añadir Nueva Artesanía
+            </button>
           </Link>
         }
       />

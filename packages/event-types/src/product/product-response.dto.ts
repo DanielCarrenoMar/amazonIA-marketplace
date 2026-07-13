@@ -27,6 +27,10 @@ export class ProductResponseDto {
   locationRegion: string | null;
   elaborationText: string | null;
   elaborationMediaUrls: string[];
+  isFragile: boolean;
+  requiresColdChain: boolean;
+  maxTemperatureCelsius: any | null; // Decimal
+  maxHumidity: any | null; // Decimal
   createdAt: Date;
   updatedAt: Date;
   

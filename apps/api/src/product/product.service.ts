@@ -44,7 +44,7 @@ export class ProductService {
   }
 
   async findAll(query: FindProductsDto): Promise<PaginatedResponseDto<ProductResponseDto>> {
-    const { search, categoryId, sellerId } = query;
+    const { search, categoryId, categoryName, sellerId, tribeIds, minPrice, maxPrice, minRating } = query;
     const page = Number(query.page) || 1;
     const limit = Number(query.limit) || 10;
     const skip = (page - 1) * limit;
@@ -53,8 +53,17 @@ export class ProductService {
     const where: import('@prisma/client').Prisma.ProductWhereInput = {
       isActive: true, // Only show active products to buyers
       ...(categoryId ? { categoryId: Number(categoryId) } : {}),
+      ...(categoryName ? { category: { categoryName } } : {}),
       ...(sellerId ? { sellerId } : {}),
+      ...(tribeIds ? { seller: { tribeId: { in: tribeIds.split(',').map(Number) } } } : {}),
       ...(search ? { name: { contains: search, mode: 'insensitive' } } : {}),
+      ...((minPrice !== undefined || maxPrice !== undefined) ? {
+        price: {
+          ...(minPrice !== undefined ? { gte: minPrice } : {}),
+          ...(maxPrice !== undefined ? { lte: maxPrice } : {}),
+        }
+      } : {}),
+      ...(minRating !== undefined ? { averageRating: { gte: minRating } } : {}),
     };
 
     // Run count and findMany in parallel (no transaction needed for reads)
@@ -153,7 +162,13 @@ export class ProductService {
   async findOne(id: string): Promise<ProductResponseDto> {
     const product = await this.prisma.product.findUnique({
       where: { id },
-      include: { seller: true, category: true, elaborationSteps: { orderBy: { stepNumber: 'asc' } } },
+      include: { 
+        seller: {
+          include: { user: true }
+        }, 
+        category: true, 
+        elaborationSteps: { orderBy: { stepNumber: 'asc' } } 
+      },
     });
 
     if (!product) throw new NotFoundException(`Product with ID ${id} not found`);
