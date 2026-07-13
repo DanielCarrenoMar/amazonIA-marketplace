@@ -223,7 +223,17 @@ export default function TribeDetailPage() {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {products.map((product) => (
-                  <ProductCard key={product.id} product={product} />
+                  <ProductCard 
+                    key={product.id} 
+                    id={product.id}
+                    image={product.imageUrl || "/placeholder.jpg"}
+                    title={product.name}
+                    rating={product.averageRating || 0}
+                    category={product.category?.name || "Otros"}
+                    description={product.description || ""}
+                    price={`$${product.price}`}
+                    href={`/marketplace/${product.id}`}
+                  />
                 ))}
               </div>
             )}
@@ -244,7 +254,7 @@ export default function TribeDetailPage() {
                 {leader ? (
                   <div className="flex items-center gap-4">
                     <Avatar 
-                      src={leader.user?.avatarUrl} 
+                      src={leader.user?.avatarUrl || undefined} 
                       alt={leader.user?.fullName || "Líder"} 
                       size="lg" 
                       fallback={leader.user?.fullName?.charAt(0) || "L"}
@@ -281,7 +291,7 @@ export default function TribeDetailPage() {
                     {otherMembers.map((member) => (
                       <li key={member.id} className="p-3 hover:bg-gray-50 transition-colors rounded-lg flex items-center gap-3">
                         <Avatar 
-                          src={member.user?.avatarUrl} 
+                          src={member.user?.avatarUrl || undefined} 
                           alt={member.user?.fullName || "Miembro"} 
                           size="md" 
                           fallback={member.user?.fullName?.charAt(0) || "M"}
