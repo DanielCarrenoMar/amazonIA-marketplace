@@ -133,7 +133,7 @@ export default function TribesExplorerPage() {
                     </p>
                     
                     <div className="pt-4 border-t border-gray-100 flex flex-col gap-3 mt-auto">
-                      {isSeller && !user?.tribeId && (
+                      {isSeller && !user?.seller?.tribeId && (
                         isPending ? (
                           <div className="w-full bg-yellow-50 text-yellow-700 py-2 rounded-lg text-sm font-bold flex justify-center items-center border border-yellow-200">
                             <Icon icon="lucide:clock" className="w-4 h-4 mr-2" />
