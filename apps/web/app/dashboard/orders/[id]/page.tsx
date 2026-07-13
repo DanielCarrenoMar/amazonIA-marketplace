@@ -52,11 +52,12 @@ export default function OrderDetailPage() {
       
       const payload = {
         shipment_id: order.id,
+        route_id: order.id, // required by schema
         route_points: [
           { lat: /*order.originCoords?.latitude ||*/ -3.1190, lon: /*order.originCoords?.longitude ||*/ -60.0210 },
           { lat: lat, lon: lon }
         ],
-        departure_date: new Date().toISOString(),
+        departure_date: new Date().toISOString().split('T')[0], // format "YYYY-MM-DD" is safer
         transport_types: ['terrestre'],
         product_types: [productType]
       };

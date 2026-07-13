@@ -147,6 +147,9 @@ services:
       - MONGODB_URL=${MONGODB_URI}
       - DATABASE_URL=${DATABASE_URL}
       - JWT_SECRET_KEY=${JWT_SECRET}
+    volumes:
+      - ./apps/inference-service:/app
+    command: sh -c "mkdir -p /app/vendor && pip install --target=/app/vendor upstash-redis && PYTHONPATH=/app/vendor python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
     ports:
       - "8000:8000"
     networks:
@@ -251,6 +254,4 @@ networks:
   amazonia-internal:
     driver: bridge
     name: amazonia-network
-
-volumes:
 
