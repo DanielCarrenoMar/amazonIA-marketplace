@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { getOrder, getOrderTimeline, updateOrder } from "@/lib/api";
+import { getOrder, getOrderTimeline, updateOrder, getSpatialRisk } from "@/lib/api";
 import type { OrderTimelineResponseDto, ProductOrderResponseDto, OrderTimelineItemDto } from "event-types";
-import { DashboardHeader, LogisticsRiskPanel } from "@/components/dashboard";
+import { DashboardHeader, LogisticsRiskPanel, ShipmentModal } from "@/components/dashboard";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { MapPin, Truck, CheckCircle2, ChevronLeft, AlertTriangle } from "lucide-react";
+import { MapPin, Truck, CheckCircle2, ChevronLeft, AlertTriangle, Cpu } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useAuth } from "@/lib/useAuth";
@@ -24,6 +24,12 @@ export default function OrderDetailPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isUpdating, setIsUpdating] = useState(false);
+  const [shipModalOpen, setShipModalOpen] = useState(false);
+  
+  // Inference State
+  const [riskData, setRiskData] = useState<any>(null);
+  const [isRiskLoading, setIsRiskLoading] = useState(false);
+  const [riskError, setRiskError] = useState<string | null>(null);
 
   const fetchOrderDetails = () => {
     getOrder(id).then(setOrder).catch(console.error);
@@ -34,6 +40,24 @@ export default function OrderDetailPage() {
     fetchOrderDetails();
   }, [id]);
 
+  useEffect(() => {
+    if (order && user?.id === order.product?.seller?.user?.id && !riskData && !isRiskLoading && !riskError) {
+      // Usamos una coordenada de prueba si no hay destino guardado para demostración
+      const lat = /*order.destinationCoords?.latitude ||*/ -34.6037;
+      const lon = /*order.destinationCoords?.longitude ||*/ -58.3816;
+      const productType = order.product?.requiresColdChain ? 'perecedero_alto' : 'normal';
+      
+      setIsRiskLoading(true);
+      setRiskError(null);
+      getSpatialRisk({ lat, lon, transportType: 'terrestre', productType })
+        .then(setRiskData)
+        .catch(() => {
+          setRiskError('El asistente de Inferencia no está disponible en este momento. Puedes procesar el pedido normalmente.');
+        })
+        .finally(() => setIsRiskLoading(false));
+    }
+  }, [order, user?.id]);
+
   const handleStatusUpdate = async (newStatus: string, successMessage: string) => {
     try {
       setIsUpdating(true);
@@ -42,6 +66,25 @@ export default function OrderDetailPage() {
       fetchOrderDetails();
     } catch (error: any) {
       toast({ title: "Error", description: error.message || "No se pudo actualizar el estado", variant: "error" });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleShipSubmit = async (data: { trackingNumber: string; carrierId: number; sensorId?: string }) => {
+    try {
+      setIsUpdating(true);
+      await updateOrder(id, {
+        currentStatus: "SHIPPED",
+        trackingNumber: data.trackingNumber,
+        carrierId: data.carrierId,
+        sensorId: data.sensorId
+      });
+      toast({ title: "Éxito", description: "El pedido ha sido marcado como enviado", variant: "success" });
+      setShipModalOpen(false);
+      fetchOrderDetails();
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "No se pudo marcar como enviado", variant: "error" });
     } finally {
       setIsUpdating(false);
     }
@@ -185,7 +228,7 @@ export default function OrderDetailPage() {
                 <Button 
                   variant="primary" 
                   className="w-full mt-4"
-                  onClick={() => handleStatusUpdate('SHIPPED', 'Has marcado el pedido como enviado.')}
+                  onClick={() => setShipModalOpen(true)}
                   isLoading={isUpdating}
                 >
                   Marcar como Enviado
@@ -194,12 +237,62 @@ export default function OrderDetailPage() {
             </div>
           </Card>
 
-          {/* Panel de Riesgo (Sólo vendedor) */}
+          {/* Panel Asistente de Embalaje IA (Sólo vendedor) */}
+          {isSeller && (
+            <Card padding="md" className="border-brand-primary/20 bg-linear-to-b from-white to-brand-primary/5">
+              <h3 className="font-bold mb-4 flex items-center gap-2">
+                <Cpu className="w-5 h-5 text-brand-primary" />
+                Asistente de Embalaje IA
+              </h3>
+              
+              {isRiskLoading ? (
+                <div className="space-y-2 animate-pulse">
+                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                  <p className="text-sm text-muted mt-2">Analizando ruta y clima con IA...</p>
+                </div>
+              ) : riskError ? (
+                <div className="bg-brand-urgency/10 text-brand-urgency p-3 rounded-md text-sm border border-brand-urgency/20">
+                  <p className="font-semibold flex items-center gap-1"><AlertTriangle className="w-4 h-4"/> No Disponible</p>
+                  <p className="mt-1">{riskError}</p>
+                </div>
+              ) : riskData ? (
+                <div className="space-y-3 text-sm">
+                  <div className="bg-brand-nature-bg p-3 rounded-md border border-brand-nature-content/20">
+                    <p className="font-semibold text-brand-nature-content mb-1">Recomendación Logística</p>
+                    <p>{riskData.ai_recommendation || "La ruta pasa por una zona de clima estable. Un empaque estándar es suficiente."}</p>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2 mt-3">
+                    <div className="border border-border rounded p-2">
+                      <span className="text-muted block text-xs">Clima Promedio</span>
+                      <span className="font-semibold">{riskData.weather_risk?.average_temp_c || 22}°C</span>
+                    </div>
+                    <div className="border border-border rounded p-2">
+                      <span className="text-muted block text-xs">Riesgo Tráfico</span>
+                      <span className="font-semibold capitalize">{riskData.traffic_risk?.level || 'Bajo'}</span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-muted">No se ha podido analizar la ruta.</p>
+              )}
+            </Card>
+          )}
+
+          {/* Panel de Riesgo IoT (Sólo vendedor) */}
           {isSeller && (
              <LogisticsRiskPanel />
           )}
         </div>
       </div>
+      
+      <ShipmentModal 
+        isOpen={shipModalOpen} 
+        onClose={() => setShipModalOpen(false)} 
+        onSubmit={handleShipSubmit} 
+        isLoading={isUpdating}
+      />
     </div>
   );
 }

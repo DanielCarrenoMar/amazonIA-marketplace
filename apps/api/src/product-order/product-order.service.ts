@@ -59,10 +59,23 @@ export class ProductOrderService {
       // Calculate total amount using the already fetched price
       const totalAmount = Number(product.price) * createProductOrderDto.quantity;
 
+      const { destinationCoords, ...rest } = createProductOrderDto;
+
       // 4. Create the order
-      return tx.productOrder.create({
-        data: { ...createProductOrderDto, buyerId, totalAmount, currentStatus: OrderStatus.PENDING },
+      const order = await tx.productOrder.create({
+        data: { ...rest, buyerId, totalAmount, currentStatus: OrderStatus.PENDING },
       });
+
+      // 5. If destination coordinates are provided, perform a raw SQL update
+      if (destinationCoords && destinationCoords.latitude != null && destinationCoords.longitude != null) {
+        await tx.$executeRaw`
+          UPDATE product_order 
+          SET destination_coords = ST_SetSRID(ST_MakePoint(${destinationCoords.longitude}, ${destinationCoords.latitude}), 4326)
+          WHERE id = ${order.id}::uuid;
+        `;
+      }
+
+      return order;
     });
     return result as unknown as ProductOrderResponseDto;
   }
