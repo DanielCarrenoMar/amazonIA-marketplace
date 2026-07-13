@@ -41,7 +41,11 @@ describe('ProductOrderService', () => {
     circuitState: 'CLOSED',
   } as any;
 
-  const service = new ProductOrderService(prismaMock, outboxMock, telemetryMock);
+  const notificationMock = {
+    createNotification: jest.fn().mockResolvedValue(undefined),
+  } as any;
+
+  const service = new ProductOrderService(prismaMock, outboxMock, telemetryMock, notificationMock);
   const allStatuses = [
     OrderStatus.PENDING,
     OrderStatus.PAID,

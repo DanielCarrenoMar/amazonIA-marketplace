@@ -69,3 +69,6 @@ export * from './product/update-elaboration-step.dto';
 // Favorites
 export * from './favorite/toggle-favorite.dto';
 export * from './favorite/favorite-response.dto';
+
+// Notifications
+export * from './notification';
