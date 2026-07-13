@@ -2,14 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { getOrder, getOrderTimeline } from "@/lib/api";
+import { getOrder, getOrderTimeline, updateOrder } from "@/lib/api";
 import type { OrderTimelineResponseDto, ProductOrderResponseDto, OrderTimelineItemDto } from "event-types";
-import { DashboardHeader } from "@/components/dashboard";
+import { DashboardHeader, LogisticsRiskPanel } from "@/components/dashboard";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { MapPin, Truck, CheckCircle2, ChevronLeft, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { useAuth } from "@/lib/useAuth";
+import { useToast } from "@/components/ui/Toast";
+import { Button } from "@/components/ui/Button";
 
 export default function OrderDetailPage() {
   const params = useParams();
@@ -18,13 +21,36 @@ export default function OrderDetailPage() {
 
   const [order, setOrder] = useState<ProductOrderResponseDto | null>(null);
   const [timeline, setTimeline] = useState<OrderTimelineResponseDto | null>(null);
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [isUpdating, setIsUpdating] = useState(false);
 
-  useEffect(() => {
+  const fetchOrderDetails = () => {
     getOrder(id).then(setOrder).catch(console.error);
     getOrderTimeline(id).then(setTimeline).catch(console.error);
+  };
+
+  useEffect(() => {
+    fetchOrderDetails();
   }, [id]);
 
+  const handleStatusUpdate = async (newStatus: string, successMessage: string) => {
+    try {
+      setIsUpdating(true);
+      await updateOrder(id, { currentStatus: newStatus });
+      toast({ title: "Éxito", description: successMessage, variant: "success" });
+      fetchOrderDetails();
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "No se pudo actualizar el estado", variant: "error" });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   if (!order) return <div className="p-8 text-center text-muted">Cargando...</div>;
+
+  const isSeller = user?.id === order.product.seller?.user?.id;
+  const isBuyer = user?.id === order.buyer?.id;
 
   return (
     <div className="space-y-6">
@@ -35,13 +61,33 @@ export default function OrderDetailPage() {
       <div className="flex justify-between items-start">
          <DashboardHeader 
           title={`Pedido #${order.id.slice(0,8)}`}
-          subtitle={`Producto: ${order.product.name}`}
+          subtitle={`Producto: ${order.product.name} • Estado: ${order.currentStatus}`}
         />
-        {order.sensorId && (
-          <Badge variant="nature" className="animate-pulse">
-            ● Seguimiento IoT Activo
-          </Badge>
-        )}
+        <div className="flex flex-col items-end gap-2">
+          {order.sensorId && (
+            <Badge variant="nature" className="animate-pulse">
+              ● Seguimiento IoT Activo
+            </Badge>
+          )}
+          {isSeller && order.currentStatus === 'PENDING' && (
+            <Button 
+              variant="primary" 
+              onClick={() => handleStatusUpdate('PAID', 'El pago ha sido validado exitosamente.')}
+              isLoading={isUpdating}
+            >
+              Validar Pago
+            </Button>
+          )}
+          {isBuyer && order.currentStatus === 'SHIPPED' && (
+            <Button 
+              variant="primary" 
+              onClick={() => handleStatusUpdate('DELIVERED', 'Has confirmado la recepción del paquete.')}
+              isLoading={isUpdating}
+            >
+              Confirmar Recepción
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -99,6 +145,11 @@ export default function OrderDetailPage() {
               </div>
             </div>
           </Card>
+
+          {/* Panel de Riesgo (Sólo vendedor) */}
+          {isSeller && (
+             <LogisticsRiskPanel />
+          )}
         </div>
       </div>
     </div>

@@ -2,6 +2,7 @@ export * from './DashboardHeader';
 export * from './DashboardSidebar';
 export * from './InventoryTable';
 export * from './KanbanBoard';
+export * from './LogisticsRiskPanel';
 export * from './OrderCard';
 export * from './OrdersList';
 export * from './ProductWizard';

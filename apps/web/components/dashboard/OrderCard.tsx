@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/Badge";
 import { MoreVertical, Calendar, Check, Truck } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { useRouter } from "next/navigation";
 
 interface OrderCardProps {
   order: ProductOrderResponseDto;
@@ -15,6 +16,7 @@ interface OrderCardProps {
 }
 
 export function OrderCard({ order, viewMode, onAction }: OrderCardProps) {
+  const router = useRouter();
   const shortId = order.id.slice(0, 8);
   const otherPartyName = viewMode === "seller" ? order.buyer?.fullName : order.product?.seller?.user?.fullName;
   const initial = otherPartyName ? otherPartyName.charAt(0) : "?";
@@ -27,7 +29,7 @@ export function OrderCard({ order, viewMode, onAction }: OrderCardProps) {
             size="sm" 
             className="w-full"
             leftIcon={<Truck className="w-4 h-4"/>}
-            onClick={() => onAction?.('ship', order.id)}
+            onClick={(e) => { e.stopPropagation(); onAction?.('ship', order.id); }}
           >
             Marcar como enviado
           </Button>
@@ -39,7 +41,7 @@ export function OrderCard({ order, viewMode, onAction }: OrderCardProps) {
             size="sm" 
             variant="outline"
             className="w-full"
-            onClick={() => onAction?.('track', order.id)}
+            onClick={(e) => { e.stopPropagation(); onAction?.('track', order.id); }}
           >
             Ver Seguimiento
           </Button>
@@ -52,7 +54,7 @@ export function OrderCard({ order, viewMode, onAction }: OrderCardProps) {
             variant="secondary"
             className="w-full"
             leftIcon={<Check className="w-4 h-4"/>}
-            onClick={() => onAction?.('confirm', order.id)}
+            onClick={(e) => { e.stopPropagation(); onAction?.('confirm', order.id); }}
           >
             Ver Confirmación
           </Button>
@@ -65,7 +67,7 @@ export function OrderCard({ order, viewMode, onAction }: OrderCardProps) {
             size="sm" 
             variant="outline"
             className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
-            onClick={() => onAction?.('cancel', order.id)}
+            onClick={(e) => { e.stopPropagation(); onAction?.('cancel', order.id); }}
           >
             Cancelar Pedido
           </Button>
@@ -77,7 +79,7 @@ export function OrderCard({ order, viewMode, onAction }: OrderCardProps) {
             size="sm" 
             variant="outline"
             className="w-full"
-            onClick={() => onAction?.('track', order.id)}
+            onClick={(e) => { e.stopPropagation(); onAction?.('track', order.id); }}
           >
             Ver Seguimiento
           </Button>
@@ -88,7 +90,7 @@ export function OrderCard({ order, viewMode, onAction }: OrderCardProps) {
           <Button 
             size="sm" 
             className="w-full"
-            onClick={() => onAction?.('rate', order.id)}
+            onClick={(e) => { e.stopPropagation(); onAction?.('rate', order.id); }}
           >
             Calificar Pedido
           </Button>
@@ -99,7 +101,8 @@ export function OrderCard({ order, viewMode, onAction }: OrderCardProps) {
   };
 
   return (
-    <Card padding="md" className="group border border-border shadow-sm hover:shadow-md transition-shadow">
+    <div onClick={() => router.push(`/dashboard/orders/${order.id}`)} className="cursor-pointer h-full">
+      <Card padding="md" className="group border border-border shadow-sm hover:shadow-md transition-shadow h-full flex flex-col">
       <div className="flex justify-between items-start mb-3">
         <div>
           <span className="text-xs font-mono font-semibold text-muted bg-gray-100 px-2 py-0.5 rounded-md">
@@ -145,5 +148,6 @@ export function OrderCard({ order, viewMode, onAction }: OrderCardProps) {
         {renderStatusButton()}
       </div>
     </Card>
+    </div>
   );
 }
