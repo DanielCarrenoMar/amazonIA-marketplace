@@ -359,4 +359,32 @@ export class ProductService {
     // Emit event for seller update
     this.eventEmitter.emit('product-rating.product-updated', { sellerId: updatedProduct.sellerId });
   }
+
+  async getNftMetadata(id: string) {
+    const product = await this.prisma.product.findUnique({
+      where: { id },
+      include: {
+        seller: {
+          include: { user: true }
+        },
+        category: true,
+      },
+    });
+
+    if (!product) {
+      throw new NotFoundException(`Product with ID ${id} not found`);
+    }
+
+    return {
+      name: product.name,
+      description: product.description,
+      image: product.imageUrl,
+      attributes: [
+        { trait_type: "Precio", value: `${product.price} USD` },
+        { trait_type: "Categoría", value: product.category?.categoryName || "Sin Categoría" },
+        { trait_type: "Vendedor", value: product.seller?.user?.fullName || "AmazonIA" },
+        { trait_type: "Origen", value: product.seller?.user?.locationCity || "Amazonas" }
+      ],
+    };
+  }
 }

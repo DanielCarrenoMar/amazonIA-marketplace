@@ -3,6 +3,7 @@ import { ConsumedMessage, IMessageConsumer } from '../interfaces';
 import { StreamTopic } from '../streams';
 import { createRedisClient } from './redis.config';
 
+
 export class RedisConsumerService implements IMessageConsumer {
   private redis: Redis | null;
   private initialized: Set<string> = new Set();

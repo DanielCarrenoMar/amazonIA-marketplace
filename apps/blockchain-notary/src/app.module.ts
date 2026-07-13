@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './prisma/prisma.module';
 import { TransactionsModule } from './transactions/transactions.module';
+import { GovernanceModule } from './governance/governance.module';
 import { HealthModule } from './health/health.module';
 import { blockchainConfig } from './config/blockchain.config';
 
@@ -16,7 +17,9 @@ import { blockchainConfig } from './config/blockchain.config';
     // Módulos del microservicio
     PrismaModule,
     TransactionsModule,
+    GovernanceModule,
     HealthModule,
   ],
 })
 export class AppModule {}
+
