@@ -82,9 +82,9 @@ export function DashboardSidebar() {
     <aside className="fixed inset-y-0 left-0 w-72 flex flex-col z-20 bg-[#091d13] border-r border-white/5 text-white shadow-2xl">
       {/* Logo */}
       <div className="px-6 py-8 flex items-center gap-4">
-        <img src={logo.src} alt="Amazonia IA" className="w-12 h-12 rounded-full shadow-md" />
+        <img src={logo.src} alt="AmazonIA" className="w-12 h-12 rounded-full shadow-md" />
         <div className="flex flex-col justify-center">
-          <span className="font-outfit font-extrabold text-[22px] tracking-tight text-white leading-none mb-1">Amazonia IA</span>
+          <span className="font-outfit font-extrabold text-[22px] tracking-tight text-white leading-none mb-1">AmazonIA 4.0</span>
           <p className="text-white/60 text-[9px] font-semibold tracking-wide uppercase leading-tight">Marketplace & Herramientas Amazónicas</p>
         </div>
       </div>
