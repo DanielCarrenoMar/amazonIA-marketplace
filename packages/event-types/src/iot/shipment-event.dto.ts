@@ -105,9 +105,12 @@ export class CreateShipmentEventDto {
   metadata: ShipmentMetadataDto;
 
   @IsOptional()
-  @ValidateNested()
-  @Type(() => GeoPointDto)
-  location?: GeoPointDto;
+  @IsNumber()
+  latitude?: number;
+
+  @IsOptional()
+  @IsNumber()
+  longitude?: number;
 
   @ValidateNested()
   @Type(() => BusinessContextDto)

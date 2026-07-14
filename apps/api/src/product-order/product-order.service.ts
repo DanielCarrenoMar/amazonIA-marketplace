@@ -4,6 +4,8 @@ import { CreateProductOrderDto, FindOrdersDto, PaginationDto, ProductOrderRespon
 import { UpdateProductOrderDto } from 'event-types';
 import { OrderStatus, UserRole } from 'event-types';
 import { STREAM_TOPICS } from 'messaging';
+import { ConfigService } from '@nestjs/config';
+import * as mqtt from 'mqtt';
 import { PrismaService } from '../prisma/prisma.service';
 import { OutboxService } from '../outbox/outbox.service';
 import { TelemetryIntegrationService } from '../telemetry-integration/telemetry-integration.service';
@@ -23,6 +25,7 @@ export class ProductOrderService {
     private readonly prisma: PrismaService,
     private readonly outbox: OutboxService,
     private readonly telemetryIntegration: TelemetryIntegrationService,
+    private readonly configService: ConfigService,
   ) {}
 
   // buyerId comes from the JWT token (req.user.id), NOT from the client body
@@ -433,6 +436,18 @@ export class ProductOrderService {
 
       return updatedOrder;
     });
+
+    if (result.sensorId && result.currentStatus === OrderStatus.SHIPPED) {
+      this.publishSensorStartSignal(
+        result.sensorId,
+        result.trackingNumber,
+        result.productId,
+        result.buyerId,
+      ).catch((err) => {
+        console.error('Failed to trigger sensor activation MQTT message', err);
+      });
+    }
+
     return result as unknown as ProductOrderResponseDto;
   }
 
@@ -476,6 +491,75 @@ export class ProductOrderService {
       });
     });
     return result as unknown as ProductOrderResponseDto;
+  }
+
+  private async publishSensorStartSignal(
+    sensorId: string,
+    trackingNumber: string | null,
+    productId: string,
+    buyerId: string,
+  ): Promise<void> {
+    const host = this.configService.get<string>('HIVEMQ_HOST');
+    const port = Number(this.configService.get<string>('HIVEMQ_PORT', '8883'));
+    const username = this.configService.get<string>('HIVEMQ_USERNAME');
+    const password = this.configService.get<string>('HIVEMQ_PASSWORD');
+
+    if (!host || !username || !password) {
+      console.warn('HiveMQ configuration missing in API service. Cannot send START_TRANSIT signal.');
+      return;
+    }
+
+    try {
+      // 1. Fetch origin coordinates (Product/Seller)
+      const sellerLocation = await this.prisma.$queryRaw<Array<{ lat: number | null; lng: number | null }>>`
+        SELECT ST_Y("location_coords"::geometry) as lat, ST_X("location_coords"::geometry) as lng
+        FROM product WHERE id = ${productId}::uuid
+      `;
+
+      // 2. Fetch destination coordinates (Buyer)
+      const buyerLocation = await this.prisma.$queryRaw<Array<{ lat: number | null; lng: number | null }>>`
+        SELECT ST_Y("location_coords"::geometry) as lat, ST_X("location_coords"::geometry) as lng
+        FROM user_account WHERE id = ${buyerId}::uuid
+      `;
+
+      const origin = sellerLocation?.[0] || null;
+      const destination = buyerLocation?.[0] || null;
+
+      const client = mqtt.connect({
+        host,
+        port,
+        protocol: 'mqtts',
+        username,
+        password,
+      });
+
+      client.on('connect', () => {
+        const payload = JSON.stringify({
+          action: 'START_TRANSIT',
+          trackingNumber,
+          sensorId,
+          origin: origin && origin.lat !== null && origin.lng !== null ? { lat: origin.lat, lng: origin.lng } : null,
+          destination: destination && destination.lat !== null && destination.lng !== null ? { lat: destination.lat, lng: destination.lng } : null,
+          timestamp: new Date().toISOString(),
+        });
+
+        client.publish(`amazonia/iot/control/${sensorId}`, payload, { qos: 1, retain: true }, (err) => {
+          if (err) {
+            console.error(`Error publishing START_TRANSIT to MQTT for sensor ${sensorId}`, err);
+          } else {
+            console.log(`Sent START_TRANSIT signal to MQTT topic amazonia/iot/control/${sensorId}`);
+          }
+          client.end();
+        });
+      });
+
+      client.on('error', (err) => {
+        console.error(`MQTT connection error in product-order service: ${err.message}`);
+        client.end();
+      });
+    } catch (err) {
+      console.error(`Failed to connect or publish to MQTT: ${err.message}`);
+    }
   }
 }
 

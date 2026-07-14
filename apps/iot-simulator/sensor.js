@@ -52,22 +52,23 @@ console.log(`🔗 Conectando a HiveMQ Cloud en ${hivemqHost}:${hivemqPort}...`);
 // Determinar tipo de sensor basado en el usuario de HiveMQ
 const username = process.env.HIVEMQ_USERNAME || "";
 let prefix = "ORD";
-let sensorNumber = "001";
+let sensorNumber = "1";
 
 if (username.toLowerCase().includes("clima")) {
   prefix = "CLM";
-  sensorNumber = username.replace(/\D/g, "") || "001";
+  const digits = username.replace(/\D/g, "");
+  sensorNumber = digits ? parseInt(digits, 10).toString() : "1";
 } else if (username.toLowerCase().includes("sensor")) {
   prefix = "ORD";
-  sensorNumber = username.replace(/\D/g, "") || "001";
+  const digits = username.replace(/\D/g, "");
+  sensorNumber = digits ? parseInt(digits, 10).toString() : "1";
 }
 
-const formattedNumber = sensorNumber.padStart(3, "0");
-const ORDER_ID = `${prefix}-${formattedNumber}`;
+const ORDER_ID = `${prefix}-${sensorNumber}`;
 const CONTAINER_ID =
   prefix === "CLM"
-    ? `DEV-CLIMA-${formattedNumber}`
-    : `DEV-AMAZONIA-${formattedNumber}`;
+    ? `DEV-CLIMA-${sensorNumber.padStart(3, "0")}`
+    : `DEV-AMAZONIA-${sensorNumber.padStart(3, "0")}`;
 
 // Ruta simulada: puntos GPS del Amazonas
 const ROUTE_CHECKPOINTS = [
@@ -109,6 +110,8 @@ const WEATHER_STATIONS = [
 ];
 
 let currentCheckpoint = 0;
+let isAssigned = false;
+let routeCheckpoints = [...ROUTE_CHECKPOINTS];
 
 // Seleccionar estación fija para sensores de clima (basado en número de sensor)
 const weatherStationIndex =
@@ -117,6 +120,30 @@ const weatherStationIndex =
     : 0;
 
 // ── Helpers ──
+function generateRoute(origin, destination) {
+  const steps = 5;
+  const checkpoints = [];
+  for (let i = 0; i <= steps; i++) {
+    const ratio = i / steps;
+    const lat = origin.lat + (destination.lat - origin.lat) * ratio;
+    const lng = origin.lng + (destination.lng - origin.lng) * ratio;
+
+    let status = "IN_TRANSIT";
+    if (i === 0) status = "ORIGIN";
+    else if (i === steps) status = "DELIVERED";
+    else if (i === steps - 1) status = "NEAR_DESTINATION";
+    else if (i === Math.floor(steps / 2)) status = "CHECKPOINT";
+
+    checkpoints.push({
+      lat,
+      lng,
+      name: i === 0 ? "Origen" : i === steps ? "Destino Final" : `Punto de Control ${i}`,
+      status
+    });
+  }
+  return checkpoints;
+}
+
 function randomBetween(min, max) {
   return parseFloat((Math.random() * (max - min) + min).toFixed(2));
 }
@@ -160,7 +187,7 @@ function publishTelemetry() {
     locationName = station.name;
   } else {
     // Sensor de paquete: avanza por la ruta
-    const checkpoint = ROUTE_CHECKPOINTS[currentCheckpoint];
+    const checkpoint = routeCheckpoints[currentCheckpoint];
     lat = checkpoint.lat + randomBetween(-0.005, 0.005);
     lng = checkpoint.lng + randomBetween(-0.005, 0.005);
     locationName = checkpoint.name;
@@ -169,10 +196,8 @@ function publishTelemetry() {
   const payload = {
     event_type: prefix === "CLM" ? "environment_reading" : "shipment_telemetry",
     recorded_at: getTimestamp(),
-    location: {
-      type: "Point",
-      coordinates: [parseFloat(lng.toFixed(6)), parseFloat(lat.toFixed(6))], // [longitude, latitude] GeoJSON
-    },
+    latitude: parseFloat(lat.toFixed(6)),
+    longitude: parseFloat(lng.toFixed(6)),
   };
 
   if (prefix === "CLM") {
@@ -195,8 +220,9 @@ function publishTelemetry() {
     payload.metadata = {
       tracking_number: ORDER_ID,
       container_id: CONTAINER_ID,
+      sensor_id: ORDER_ID,
     };
-    const checkpoint = ROUTE_CHECKPOINTS[currentCheckpoint];
+    const checkpoint = routeCheckpoints[currentCheckpoint];
     payload.business_context = {
       status: mapStatus(checkpoint.status),
       scan_type: "gps",
@@ -215,7 +241,7 @@ function publishTelemetry() {
   console.log(
     `   Lugar: ${locationName} | Tipo: ${prefix === "CLM" ? "Clima" : "Paquete"}`,
   );
-  console.log(`   GPS: [${payload.location.coordinates.join(", ")}]`);
+  console.log(`   GPS: [${payload.latitude}, ${payload.longitude}]`);
 
   if (prefix === "CLM") {
     console.log(
@@ -229,11 +255,13 @@ function publishTelemetry() {
 
   // Avanzar checkpoint solo para sensores de paquete
   if (prefix !== "CLM") {
-    if (currentCheckpoint < ROUTE_CHECKPOINTS.length - 1) {
-      currentCheckpoint++;
-    } else {
-      console.log("🔄 Ruta completada. Reiniciando simulación del trayecto...");
-      currentCheckpoint = 0;
+    if (isAssigned) {
+      if (currentCheckpoint < routeCheckpoints.length - 1) {
+        currentCheckpoint++;
+      } else {
+        console.log("🔄 Ruta completada. Reiniciando simulación del trayecto...");
+        currentCheckpoint = 0;
+      }
     }
   }
 }
@@ -244,6 +272,18 @@ client.on("connect", () => {
   console.log(
     `📦 Simulando dispositivo: ${ORDER_ID} (Tipo: ${prefix === "CLM" ? "Clima" : "Paquete"})`,
   );
+
+  if (prefix !== "CLM") {
+    const controlTopic = `amazonia/iot/control/${ORDER_ID}`;
+    client.subscribe(controlTopic, { qos: 1 }, (err) => {
+      if (err) {
+        console.error(`❌ Error al suscribirse al tópico de control: ${err.message}`);
+      } else {
+        console.log(`📥 Suscrito a tópico de control: ${controlTopic}`);
+      }
+    });
+  }
+
   console.log("─".repeat(55));
 
   // Publicar datos cada 5 segundos de forma consolidada y compatible
@@ -251,6 +291,24 @@ client.on("connect", () => {
 
   // Publicar el primer dato inmediatamente
   publishTelemetry();
+});
+
+client.on("message", (topic, message) => {
+  if (topic === `amazonia/iot/control/${ORDER_ID}`) {
+    try {
+      const data = JSON.parse(message.toString());
+      if (data.action === "START_TRANSIT") {
+        isAssigned = true;
+        if (data.origin && data.destination) {
+          routeCheckpoints = generateRoute(data.origin, data.destination);
+          currentCheckpoint = 0; // Reset index for the new route
+        }
+        console.log(`\n🚀 [SENSOR] Activado! Asignado al envío: ${data.trackingNumber}`);
+      }
+    } catch (err) {
+      console.error("❌ Error decodificando mensaje de control:", err.message);
+    }
+  }
 });
 
 client.on("error", (error) => {

@@ -41,7 +41,16 @@ describe('ProductOrderService', () => {
     circuitState: 'CLOSED',
   } as any;
 
-  const service = new ProductOrderService(prismaMock, outboxMock, telemetryMock);
+  const configMock = {
+    get: jest.fn().mockImplementation((key: string) => {
+      if (key === 'HIVEMQ_HOST') return 'localhost';
+      if (key === 'HIVEMQ_USERNAME') return 'user';
+      if (key === 'HIVEMQ_PASSWORD') return 'pass';
+      return undefined;
+    }),
+  } as any;
+
+  const service = new ProductOrderService(prismaMock, outboxMock, telemetryMock, configMock);
   const allStatuses = [
     OrderStatus.PENDING,
     OrderStatus.PAID,
@@ -245,7 +254,7 @@ describe('ProductOrderService', () => {
 
     expect(prismaMock.orderStatusHistory.findMany).toHaveBeenCalledWith({
       where: { orderId: 'order-1' },
-      orderBy: { createdAt: 'asc' },
+      orderBy: { createdAt: 'desc' },
       include: { changedByUser: { omit: { passwordHash: true } } },
     });
   });

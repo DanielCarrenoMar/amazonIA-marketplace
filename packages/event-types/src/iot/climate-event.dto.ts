@@ -126,9 +126,12 @@ export class CreateClimateEventDto {
   metadata: ClimateMetadataDto;
 
   @IsOptional()
-  @ValidateNested()
-  @Type(() => GeoPointDto)
-  location?: GeoPointDto;
+  @IsNumber()
+  latitude?: number;
+
+  @IsOptional()
+  @IsNumber()
+  longitude?: number;
 
   @ValidateNested()
   @Type(() => ClimateTelemetryDto)

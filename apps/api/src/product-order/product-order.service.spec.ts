@@ -4,6 +4,7 @@ import { OrderStatus, UserRole } from 'event-types';
 import { OutboxService } from '../outbox/outbox.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { TelemetryIntegrationService } from '../telemetry-integration/telemetry-integration.service';
+import { ConfigService } from '@nestjs/config';
 import { ProductOrderService } from './product-order.service';
 
 const makeOrder = (overrides: Partial<Record<string, unknown>> = {}) => ({
@@ -48,12 +49,22 @@ describe('ProductOrderService', () => {
       circuitState: 'CLOSED',
     };
 
+    const config = {
+      get: jest.fn().mockImplementation((key: string) => {
+        if (key === 'HIVEMQ_HOST') return 'localhost';
+        if (key === 'HIVEMQ_USERNAME') return 'user';
+        if (key === 'HIVEMQ_PASSWORD') return 'pass';
+        return undefined;
+      }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ProductOrderService,
         { provide: PrismaService, useValue: prisma },
         { provide: OutboxService, useValue: outbox },
         { provide: TelemetryIntegrationService, useValue: telemetry },
+        { provide: ConfigService, useValue: config },
       ],
     }).compile();
 
