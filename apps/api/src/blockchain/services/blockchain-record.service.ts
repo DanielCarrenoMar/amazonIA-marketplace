@@ -40,6 +40,8 @@ export class BlockchainRecordService {
       status: BlockchainStatus;
       gasUsed?: string | null;
       errorMessage?: string | null;
+      nftTokenId?: string | null;
+      nftTxHash?: string | null;
     },
   ) {
     const updateData: any = {
@@ -58,6 +60,13 @@ export class BlockchainRecordService {
     }
     if (data.status === BlockchainStatus.CONFIRMED) {
       updateData.confirmedAt = new Date();
+    }
+    if (data.nftTokenId) {
+      updateData.nftTokenId = data.nftTokenId;
+      updateData.nftMintedAt = new Date();
+    }
+    if (data.nftTxHash) {
+      updateData.nftTxHash = data.nftTxHash;
     }
 
     return this.prisma.blockchainRecord.update({

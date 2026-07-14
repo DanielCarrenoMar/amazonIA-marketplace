@@ -4,7 +4,7 @@ import { ShipmentsController } from './shipments.controller';
 import { ShipmentsService } from './shipments.service';
 
 @Module({
-  imports: [TelemetryIntegrationModule],
+  imports: [TelemetryIntegrationModule.forRoot()],
   controllers: [ShipmentsController],
   providers: [ShipmentsService],
 })

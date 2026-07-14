@@ -7,7 +7,7 @@ import { NotificationModule } from '../notification/notification.module';
 import { ProductOrderService } from './product-order.service';
 
 @Module({
-  imports: [OutboxModule, TelemetryIntegrationModule, BlockchainModule, NotificationModule],
+  imports: [OutboxModule, TelemetryIntegrationModule.forRoot(), BlockchainModule, NotificationModule],
   controllers: [ProductOrderController],
   providers: [ProductOrderService],
 })

@@ -112,4 +112,10 @@ export class ProductController {
   ): Promise<ProductResponseDto> {
     return this.productService.removeImage(id, req.user);
   }
+
+  // Public — anyone can view metadata of a product NFT (e.g. OpenSea)
+  @Get(':id/nft-metadata')
+  getNftMetadata(@Param('id', ParseUUIDPipe) id: string) {
+    return this.productService.getNftMetadata(id);
+  }
 }

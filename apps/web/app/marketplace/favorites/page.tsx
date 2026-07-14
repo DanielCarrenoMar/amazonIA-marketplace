@@ -1,12 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { Icon } from "@iconify/react";
 import { ProductCard } from '@/components/ui/ProductCard';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Checkbox } from '@/components/ui/Checkbox';
 import { MarketplaceNavbar } from '@/components/layout/MarketplaceNavbar';
 import { Footer } from '@/components/layout/Footer';
 import { getFavorites } from '@/lib/api/favorite.api';
@@ -14,7 +13,7 @@ import { UserFavoriteResponseDto } from 'event-types';
 import { useAuth } from '@/lib/useAuth';
 import { useFavorites } from '@/lib/favoriteContext';
 
-export default function FavoritesPage() {
+function FavoritesContent() {
   const { user } = useAuth();
   const { favoriteIds } = useFavorites();
   const [favorites, setFavorites] = useState<UserFavoriteResponseDto[]>([]);
@@ -206,5 +205,13 @@ export default function FavoritesPage() {
       </main>
       <Footer />
     </>
+  );
+}
+
+export default function FavoritesPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center">Cargando favoritos...</div>}>
+      <FavoritesContent />
+    </Suspense>
   );
 }

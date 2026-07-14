@@ -63,12 +63,18 @@ export * from './iot';
 
 // Blockchain notary contracts
 export * from './blockchain/blockchain.dto';
+
+// Blockchain explorer
+export * from './blockchain/explorer/list-proposals.dto';
+export * from './blockchain/explorer/find-proposal-params.dto';
+export * from './blockchain/explorer/proposal-detail.dto';
+export * from './blockchain/explorer/member.dto';
+
 export * from './product/create-elaboration-step.dto';
 export * from './product/update-elaboration-step.dto';
 
 // Favorites
 export * from './favorite/toggle-favorite.dto';
 export * from './favorite/favorite-response.dto';
-
 // Notifications
 export * from './notification';

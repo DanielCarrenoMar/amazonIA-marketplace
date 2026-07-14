@@ -127,7 +127,7 @@ export function DashboardSidebar() {
           {isProfileMenuOpen && (
             <div className="absolute bottom-full left-0 w-full mb-2 bg-[#0d281a] border border-white/10 rounded-2xl shadow-xl overflow-hidden py-1 z-50 animate-in slide-in-from-bottom-2 fade-in duration-200">
               <Link
-                href="/dashboard/profile"
+                href="/dashboard/settings"
                 onClick={() => setIsProfileMenuOpen(false)}
                 className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-white hover:bg-white/10 transition-colors"
               >
