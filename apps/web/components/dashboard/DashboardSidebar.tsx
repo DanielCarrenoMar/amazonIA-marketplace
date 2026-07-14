@@ -90,7 +90,7 @@ export function DashboardSidebar() {
       </div>
 
       {/* Navigation Top */}
-      <nav className="flex-1 px-4 py-2 flex flex-col gap-2 overflow-y-auto custom-scrollbar">
+      <nav className="flex-1 px-4 py-2 flex flex-col gap-2 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {topLinks.map(renderLink)}
       </nav>
 

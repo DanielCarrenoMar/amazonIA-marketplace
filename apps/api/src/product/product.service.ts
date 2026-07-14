@@ -49,21 +49,22 @@ export class ProductService {
     const limit = Number(query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    // Prisma Where conditions
+    const parsedCategoryId = categoryId ? Number(categoryId) : undefined;
+    
     const where: import('@prisma/client').Prisma.ProductWhereInput = {
       isActive: true, // Only show active products to buyers
-      ...(categoryId ? { categoryId: Number(categoryId) } : {}),
+      ...(parsedCategoryId !== undefined && !isNaN(parsedCategoryId) ? { categoryId: parsedCategoryId } : {}),
       ...(categoryName ? { category: { categoryName } } : {}),
       ...(sellerId ? { sellerId } : {}),
-      ...(tribeIds ? { seller: { tribeId: { in: tribeIds.split(',').map(Number) } } } : {}),
+      ...(tribeIds ? { seller: { tribeId: { in: tribeIds.split(',').map(Number).filter(n => !isNaN(n)) } } } : {}),
       ...(search ? { name: { contains: search, mode: 'insensitive' } } : {}),
       ...((minPrice !== undefined || maxPrice !== undefined) ? {
         price: {
-          ...(minPrice !== undefined ? { gte: minPrice } : {}),
-          ...(maxPrice !== undefined ? { lte: maxPrice } : {}),
+          ...(minPrice !== undefined && !isNaN(minPrice) ? { gte: minPrice } : {}),
+          ...(maxPrice !== undefined && !isNaN(maxPrice) ? { lte: maxPrice } : {}),
         }
       } : {}),
-      ...(minRating !== undefined ? { averageRating: { gte: minRating } } : {}),
+      ...(minRating !== undefined && !isNaN(minRating) ? { averageRating: { gte: minRating } } : {}),
     };
 
     // Run count and findMany in parallel (no transaction needed for reads)
