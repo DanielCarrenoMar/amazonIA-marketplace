@@ -61,8 +61,12 @@ async function bootstrap() {
 
   // Allow requests from the frontend.
   // In production set FRONTEND_URL in the environment to restrict origins.
+  const frontendUrls = process.env.FRONTEND_URL
+    ? process.env.FRONTEND_URL.split(',').map(url => url.trim())
+    : ['http://localhost:3000'];
+
   app.enableCors({
-    origin: process.env.FRONTEND_URL ?? 'http://localhost:3000',
+    origin: frontendUrls,
     credentials: true,
   });
 

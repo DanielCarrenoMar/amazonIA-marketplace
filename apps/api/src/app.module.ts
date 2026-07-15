@@ -22,6 +22,7 @@ import { HealthModule } from './health/health.module';
 import { InferenceModule } from './inference/inference.module';
 import { SpatialModule } from './spatial/spatial.module';
 import { NotificationModule } from './notification/notification.module';
+import { StatsModule } from './stats/stats.module';
 
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
@@ -61,6 +62,7 @@ import { APP_GUARD } from '@nestjs/core';
     InferenceModule,
     SpatialModule,
     NotificationModule,
+    StatsModule,
   ],
   controllers: [AppController],
   providers: [
