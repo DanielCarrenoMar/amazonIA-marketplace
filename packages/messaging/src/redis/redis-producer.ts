@@ -3,6 +3,7 @@ import { IMessageProducer } from '../interfaces';
 import { StreamTopic } from '../streams';
 import { createRedisClient } from './redis.config';
 
+
 export class RedisProducerService implements IMessageProducer {
   private redis: Redis | null;
 

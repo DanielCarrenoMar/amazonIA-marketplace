@@ -49,21 +49,22 @@ export class ProductService {
     const limit = Number(query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    // Prisma Where conditions
+    const parsedCategoryId = categoryId ? Number(categoryId) : undefined;
+    
     const where: import('@prisma/client').Prisma.ProductWhereInput = {
       isActive: true, // Only show active products to buyers
-      ...(categoryId ? { categoryId: Number(categoryId) } : {}),
+      ...(parsedCategoryId !== undefined && !isNaN(parsedCategoryId) ? { categoryId: parsedCategoryId } : {}),
       ...(categoryName ? { category: { categoryName } } : {}),
       ...(sellerId ? { sellerId } : {}),
-      ...(tribeIds ? { seller: { tribeId: { in: tribeIds.split(',').map(Number) } } } : {}),
+      ...(tribeIds ? { seller: { tribeId: { in: tribeIds.split(',').map(Number).filter(n => !isNaN(n)) } } } : {}),
       ...(search ? { name: { contains: search, mode: 'insensitive' } } : {}),
       ...((minPrice !== undefined || maxPrice !== undefined) ? {
         price: {
-          ...(minPrice !== undefined ? { gte: minPrice } : {}),
-          ...(maxPrice !== undefined ? { lte: maxPrice } : {}),
+          ...(minPrice !== undefined && !isNaN(minPrice) ? { gte: minPrice } : {}),
+          ...(maxPrice !== undefined && !isNaN(maxPrice) ? { lte: maxPrice } : {}),
         }
       } : {}),
-      ...(minRating !== undefined ? { averageRating: { gte: minRating } } : {}),
+      ...(minRating !== undefined && !isNaN(minRating) ? { averageRating: { gte: minRating } } : {}),
     };
 
     // Run count and findMany in parallel (no transaction needed for reads)
@@ -358,5 +359,33 @@ export class ProductService {
 
     // Emit event for seller update
     this.eventEmitter.emit('product-rating.product-updated', { sellerId: updatedProduct.sellerId });
+  }
+
+  async getNftMetadata(id: string) {
+    const product = await this.prisma.product.findUnique({
+      where: { id },
+      include: {
+        seller: {
+          include: { user: true }
+        },
+        category: true,
+      },
+    });
+
+    if (!product) {
+      throw new NotFoundException(`Product with ID ${id} not found`);
+    }
+
+    return {
+      name: product.name,
+      description: product.description,
+      image: product.imageUrl,
+      attributes: [
+        { trait_type: "Precio", value: `${product.price} USD` },
+        { trait_type: "Categoría", value: product.category?.categoryName || "Sin Categoría" },
+        { trait_type: "Vendedor", value: product.seller?.user?.fullName || "AmazonIA" },
+        { trait_type: "Origen", value: product.seller?.user?.locationCity || "Amazonas" }
+      ],
+    };
   }
 }

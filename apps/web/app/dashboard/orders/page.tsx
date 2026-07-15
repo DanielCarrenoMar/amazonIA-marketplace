@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   DashboardHeader,
   KanbanBoard,
@@ -27,6 +27,9 @@ import {
   PackageX,
   Search,
   Filter,
+  ChevronUp,
+  ChevronDown,
+  SlidersHorizontal,
 } from "lucide-react";
 
 // ─── Skeleton Loader ────────────────────────────────────────────────────────
@@ -119,6 +122,19 @@ export default function OrdersPage() {
   const [viewType, setViewType] = useState<"kanban" | "list">("kanban");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [showFilters, setShowFilters] = useState(false);
+  const [expandedFilter, setExpandedFilter] = useState<string>("Estado");
+  const filterMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (filterMenuRef.current && !filterMenuRef.current.contains(event.target as Node)) {
+        setShowFilters(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const [sales, setSales] = useState<ProductOrderResponseDto[]>([]);
   const [purchases, setPurchases] = useState<ProductOrderResponseDto[]>([]);
@@ -322,31 +338,6 @@ export default function OrdersPage() {
           >
             <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
           </button>
-          {/* View toggle */}
-          <div className="flex bg-white rounded-xl p-1 shadow-sm border border-gray-100">
-            <button
-              onClick={() => setViewType("kanban")}
-              title="Vista Tablero"
-              className={`p-2 rounded-lg transition-colors ${
-                viewType === "kanban"
-                  ? "bg-brand-primary text-white shadow-sm"
-                  : "text-gray-400 hover:text-gray-600"
-              }`}
-            >
-              <LayoutGrid className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setViewType("list")}
-              title="Vista Lista"
-              className={`p-2 rounded-lg transition-colors ${
-                viewType === "list"
-                  ? "bg-brand-primary text-white shadow-sm"
-                  : "text-gray-400 hover:text-gray-600"
-              }`}
-            >
-              <List className="w-4 h-4" />
-            </button>
-          </div>
         </div>
       </div>
 
@@ -357,62 +348,102 @@ export default function OrdersPage() {
         <ErrorState onRetry={loadOrders} />
       ) : (
         <>
-          {/* ── Stats Row ──────────────────────────────────────────────── */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatsCard
-              icon={<ShoppingBag className="w-5 h-5" />}
-              label="Total pedidos"
-              value={stats.total.toString()}
-              subtitle={activeTab === "sales" ? "Ventas realizadas" : "Compras realizadas"}
-            />
-            <StatsCard
-              icon={<Clock className="w-5 h-5" />}
-              label="Esperando"
-              value={stats.pending.toString()}
-              subtitle="Pendientes de pago"
-              variant="warning"
-            />
-            <StatsCard
-              icon={<TrendingUp className="w-5 h-5" />}
-              label="En tránsito"
-              value={stats.inTransit.toString()}
-              subtitle="Pedidos enviados"
-              variant="highlight"
-            />
-            <StatsCard
-              icon={<CheckCircle2 className="w-5 h-5" />}
-              label="Completados"
-              value={stats.delivered.toString()}
-              subtitle={`$${stats.totalRevenue.toFixed(2)} total`}
-              variant="highlight"
-            />
-          </div>
+          {/* Toolbar */}
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
+            <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto flex-1">
+              <div className="relative w-full sm:w-72">
+                <input
+                  type="text"
+                  placeholder="Buscar por producto o ID..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full pl-5 pr-10 py-2.5 bg-white border border-gray-200 rounded-full text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-all shadow-sm"
+                />
+                <Search className="w-4 h-4 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2" />
+              </div>
+              
+              <div className="relative">
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-full border text-sm font-medium transition-all ${
+                    showFilters || statusFilter !== "ALL"
+                      ? "border-brand-primary bg-brand-primary/5 text-brand-primary"
+                      : "border-gray-200 bg-white text-slate-700 hover:bg-gray-50"
+                  }`}
+                >
+                  <SlidersHorizontal className="w-4 h-4" />
+                  Filtros
+                  {(statusFilter !== "ALL") && (
+                    <span className="w-2 h-2 rounded-full bg-brand-primary absolute top-2 right-3"></span>
+                  )}
+                </button>
 
-          {/* ── Filters Bar ────────────────────────────────────────────── */}
-          <div className="flex flex-col sm:flex-row gap-3">
-            {/* Search */}
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-              <input
-                type="text"
-                placeholder="Buscar por producto o ID..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary transition-all"
-              />
+                {/* Filter Dropdown (Popover) */}
+                {showFilters && (
+                  <div ref={filterMenuRef} className="absolute top-full left-0 mt-2 w-80 bg-white rounded-3xl border border-gray-100 shadow-xl z-50 p-6 flex flex-col gap-6 max-h-[80vh] overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95">
+                    
+                    {/* Status */}
+                    <div className="border-b border-gray-100 pb-4">
+                      <div 
+                        className="flex justify-between items-center cursor-pointer"
+                        onClick={() => setExpandedFilter(expandedFilter === "Estado" ? "" : "Estado")}
+                      >
+                        <h3 className="font-bold text-slate-900 text-base">Estado</h3>
+                        <div className="flex items-center gap-2">
+                          {statusFilter !== "ALL" && (
+                            <button onClick={(e) => { e.stopPropagation(); setStatusFilter("ALL"); }} className="text-xs text-brand-primary hover:text-brand-primary/80 transition-colors">
+                              Limpiar
+                            </button>
+                          )}
+                          {expandedFilter === "Estado" ? <ChevronUp className="w-4 h-4 text-gray-500" /> : <ChevronDown className="w-4 h-4 text-gray-500" />}
+                        </div>
+                      </div>
+                      {expandedFilter === "Estado" && (
+                        <div className="mt-4 flex flex-col gap-3 animate-in slide-in-from-top-2 fade-in duration-200">
+                          {STATUS_OPTIONS.map((o) => (
+                            <label key={o.value} className="flex items-center gap-3 cursor-pointer group">
+                              <input
+                                type="radio"
+                                name="statusFilter"
+                                checked={statusFilter === o.value}
+                                onChange={() => setStatusFilter(o.value)}
+                                className="accent-brand-primary w-4 h-4"
+                              />
+                              <span className="text-sm font-medium text-slate-700 group-hover:text-brand-primary transition-colors">{o.label}</span>
+                            </label>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
-            {/* Status filter */}
-            <div className="relative">
-              <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="pl-10 pr-8 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary transition-all appearance-none cursor-pointer"
+
+            {/* Switch Vista */}
+            <div className="flex bg-white border border-gray-200 rounded-full shadow-sm overflow-hidden p-0.5 shrink-0 mt-4 sm:mt-0">
+              <button
+                onClick={() => setViewType("list")}
+                title="Vista Lista"
+                className={`px-4 py-2 transition-colors rounded-full flex items-center justify-center ${
+                  viewType === "list" 
+                    ? "bg-brand-primary text-white" 
+                    : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                }`}
               >
-                {STATUS_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </select>
+                <List className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => setViewType("kanban")}
+                title="Vista Tablero"
+                className={`px-4 py-2 transition-colors rounded-full flex items-center justify-center ${
+                  viewType === "kanban" 
+                    ? "bg-brand-primary text-white" 
+                    : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                <LayoutGrid className="w-5 h-5" />
+              </button>
             </div>
           </div>
 
@@ -427,16 +458,16 @@ export default function OrdersPage() {
             items={[
               ...(isSeller
                 ? [
-                    {
-                      key: "sales",
-                      label: `Mis Ventas (${sales.length})`,
-                      content: (
-                        <div className="mt-4">
-                          {renderContent("sales", salesColumns, filteredSales)}
-                        </div>
-                      ),
-                    },
-                  ]
+                  {
+                    key: "sales",
+                    label: `Mis Ventas (${sales.length})`,
+                    content: (
+                      <div className="mt-4">
+                        {renderContent("sales", salesColumns, filteredSales)}
+                      </div>
+                    ),
+                  },
+                ]
                 : []),
               {
                 key: "purchases",

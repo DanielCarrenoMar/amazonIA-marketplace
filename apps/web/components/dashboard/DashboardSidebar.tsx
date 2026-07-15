@@ -82,15 +82,15 @@ export function DashboardSidebar() {
     <aside className="fixed inset-y-0 left-0 w-72 flex flex-col z-20 bg-[#091d13] border-r border-white/5 text-white shadow-2xl">
       {/* Logo */}
       <div className="px-6 py-8 flex items-center gap-4">
-        <img src={logo.src} alt="Amazonia IA" className="w-12 h-12 rounded-full shadow-md" />
+        <img src={logo.src} alt="AmazonIA" className="w-12 h-12 rounded-full shadow-md" />
         <div className="flex flex-col justify-center">
-          <span className="font-outfit font-extrabold text-[22px] tracking-tight text-white leading-none mb-1">Amazonia IA</span>
+          <span className="font-outfit font-extrabold text-[22px] tracking-tight text-white leading-none mb-1">AmazonIA 4.0</span>
           <p className="text-white/60 text-[9px] font-semibold tracking-wide uppercase leading-tight">Marketplace & Herramientas Amazónicas</p>
         </div>
       </div>
 
       {/* Navigation Top */}
-      <nav className="flex-1 px-4 py-2 flex flex-col gap-2 overflow-y-auto custom-scrollbar">
+      <nav className="flex-1 px-4 py-2 flex flex-col gap-2 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {topLinks.map(renderLink)}
       </nav>
 
@@ -127,7 +127,7 @@ export function DashboardSidebar() {
           {isProfileMenuOpen && (
             <div className="absolute bottom-full left-0 w-full mb-2 bg-[#0d281a] border border-white/10 rounded-2xl shadow-xl overflow-hidden py-1 z-50 animate-in slide-in-from-bottom-2 fade-in duration-200">
               <Link
-                href="/dashboard/profile"
+                href="/dashboard/settings"
                 onClick={() => setIsProfileMenuOpen(false)}
                 className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-white hover:bg-white/10 transition-colors"
               >

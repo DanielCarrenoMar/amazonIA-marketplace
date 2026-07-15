@@ -5,6 +5,7 @@ import { ProductCard } from "@/components/ui/ProductCard";
 import { Edit, Trash2, Eye, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface InventoryTableProps {
   products: ProductResponseDto[];
@@ -14,6 +15,8 @@ interface InventoryTableProps {
 }
 
 export function InventoryTable({ products, viewMode, onEdit, onDelete }: InventoryTableProps) {
+  const router = useRouter();
+  
   if (products.length === 0) {
     return (
       <div className="text-center py-12 text-muted bg-white rounded-2xl border border-dashed border-gray-200">
@@ -26,7 +29,7 @@ export function InventoryTable({ products, viewMode, onEdit, onDelete }: Invento
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {products.map(product => (
-          <div key={product.id} className="relative group">
+          <div key={product.id} className="relative group cursor-pointer" onClick={() => router.push(`/dashboard/inventory/${product.id}`)}>
              <ProductCard
                 id={product.id}
                 title={product.name}
@@ -35,12 +38,14 @@ export function InventoryTable({ products, viewMode, onEdit, onDelete }: Invento
                 category={product.category?.categoryName || "Otros"}
                 rating={product.averageRating || 0}
                 image={product.imageUrl || "/placeholder.jpg"}
+                hideFavorite={true}
+                href={`/dashboard/inventory/${product.id}`}
              />
-             <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+             <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-20" onClick={e => e.stopPropagation()}>
                <Link href={`/marketplace/${product.id}`}>
-                 <Button size="icon" variant="secondary" className="shadow-lg bg-white hover:bg-gray-100 text-gray-700">
+                 <button className="flex items-center justify-center p-3 rounded-full shadow-lg bg-white text-gray-700 hover:text-brand-primary hover:bg-gray-50 transition-colors">
                    <Eye className="w-4 h-4"/>
-                 </Button>
+                 </button>
                </Link>
                <Button size="icon" variant="primary" className="shadow-lg" onClick={() => onEdit(product)}>
                  <Edit className="w-4 h-4"/>
@@ -74,9 +79,13 @@ export function InventoryTable({ products, viewMode, onEdit, onDelete }: Invento
           </thead>
           <tbody className="divide-y divide-gray-100">
             {products.map((product) => (
-              <tr key={product.id} className="hover:bg-gray-50/50 transition-colors group">
+              <tr 
+                key={product.id} 
+                className="hover:bg-gray-50/50 transition-colors group cursor-pointer"
+                onClick={() => router.push(`/dashboard/inventory/${product.id}`)}
+              >
                 <td className="px-6 py-4">
-                  <div className="flex items-center justify-center gap-4 text-left">
+                  <div className="flex items-center gap-4 text-left">
                     <img src={product.imageUrl || "/placeholder.jpg"} className="w-12 h-12 rounded-xl object-cover border border-gray-100 shadow-sm shrink-0" alt="" />
                     <span className="font-semibold text-gray-900 text-sm max-w-[150px] truncate">{product.name}</span>
                   </div>

@@ -65,7 +65,9 @@ export class WebhookService {
     transactionHash: string,
     blockNumber: number,
     gasUsed: string,
-  ): WebhookCallbackPayload {
+    nftTokenId?: string | null,
+    nftTxHash?: string | null,
+  ): any {
     return {
       orderId,
       transactionHash,
@@ -74,6 +76,8 @@ export class WebhookService {
       gasUsed,
       errorMessage: null,
       timestamp: new Date().toISOString(),
+      nftTokenId,
+      nftTxHash,
     };
   }
 
