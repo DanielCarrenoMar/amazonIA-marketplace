@@ -126,7 +126,7 @@ export default function ProductDetailPage() {
       return;
     }
     addItem(product, quantity);
-    toast({ title: "¡Añadido al carrito!", description: `${quantity}x ${product.name} añadido a tu carrito.`, variant: "success" });
+    toast({ title: "¡Añadido a la cesta!", description: `${quantity}x ${product.name} añadido a tu cesta.`, variant: "success" });
   };
 
   const handleBuyNow = async () => {
@@ -232,7 +232,7 @@ export default function ProductDetailPage() {
     return (
       <>
         <MarketplaceNavbar />
-        <main className="min-h-screen bg-background pt-32 pb-16 px-4 md:px-8 max-w-[1400px] mx-auto font-sans flex justify-center items-center">
+        <main className="min-h-screen w-full bg-background pt-32 pb-16 px-4 md:px-8 max-w-6xl mx-auto font-sans flex justify-center items-center">
           <p className="text-gray-500">Cargando producto...</p>
         </main>
         <Footer />
@@ -244,7 +244,7 @@ export default function ProductDetailPage() {
     return (
       <>
         <MarketplaceNavbar />
-        <main className="min-h-screen bg-background pt-32 pb-16 px-4 md:px-8 max-w-[1400px] mx-auto font-sans flex justify-center items-center">
+        <main className="min-h-screen w-full bg-background pt-32 pb-16 px-4 md:px-8 max-w-6xl mx-auto font-sans flex justify-center items-center">
           <p className="text-red-500">{error || 'Producto no encontrado'}</p>
         </main>
         <Footer />
@@ -255,7 +255,7 @@ export default function ProductDetailPage() {
   return (
     <>
       <MarketplaceNavbar />
-      <main className="min-h-screen bg-background pt-28 md:pt-32 pb-16 px-4 md:px-8 max-w-[1400px] mx-auto font-sans">
+      <main className="min-h-screen w-full bg-background pt-28 md:pt-32 pb-16 px-4 md:px-8 max-w-6xl mx-auto font-sans">
 
         {/* BREADCRUMBS */}
         <nav className="text-sm text-gray-500 mb-8 flex items-center gap-2">
@@ -282,7 +282,7 @@ export default function ProductDetailPage() {
                 size="icon"
                 className="absolute top-4 right-4 bg-white/80 backdrop-blur-md shadow-sm hover:scale-110 text-red-500"
               >
-                <Icon icon="lucide:heart" className="w-6 h-6 fill-red-500" />
+                <Icon icon="mdi:heart" className="w-6 h-6" />
               </Button>
             </div>
 
@@ -316,11 +316,11 @@ export default function ProductDetailPage() {
             <div className="flex items-center gap-4 mb-6">
               <div className="flex gap-1 text-amber-400">
                 {[1, 2, 3, 4, 5].map((star) => (
-                  <Icon icon="lucide:star" key={star} className={`w-5 h-5 ${star <= Math.round(Number(product.averageRating || 0)) ? 'fill-amber-400' : 'text-gray-300 stroke-2'}`} />
+                  <Icon icon="mdi:star" key={star} className={`w-5 h-5 ${star <= Math.round(Number(product.averageRating || 0)) ? 'text-amber-400' : 'text-gray-300'}`} />
                 ))}
               </div>
               <span className="text-gray-600 font-medium">{Number(product.averageRating || 0).toFixed(1).replace('.0', '')}/5</span>
-              <a href="#reviews" className="text-brand-primary hover:underline text-sm font-medium">
+              <a href="#comments" className="text-brand-primary hover:underline text-sm font-medium">
                 {product.totalReviews > 0 ? `Ver ${product.totalReviews} Reseñas` : 'Aún no hay reseñas'}
               </a>
             </div>
@@ -355,11 +355,11 @@ export default function ProductDetailPage() {
                 variant="primary"
                 size="lg"
                 className="w-full text-lg h-14"
-                leftIcon={<Icon icon="lucide:shopping-cart" className="w-5 h-5" />}
+                leftIcon={<Icon icon="lucide:shopping-basket" className="w-5 h-5" />}
                 onClick={handleAddToCart}
                 disabled={product?.stockAvailable === 0}
               >
-                Añadir al carrito
+                Añadir a la cesta
               </Button>
               <Button
                 variant="outline"
@@ -493,7 +493,7 @@ export default function ProductDetailPage() {
                     <tr className="border-b border-gray-100 hover:bg-gray-50">
                       <td className="py-4 px-6 font-medium text-slate-900">Ubicación del Vendedor</td>
                       <td className="py-4 px-6">
-                        {product.locationFormattedAddress || `${product.locationCity || 'No especificada'}, ${product.locationRegion || ''}`}
+                        {product.locationFormattedAddress || [product.locationCity, product.locationRegion].filter(Boolean).join(', ') || 'No especificada'}
                       </td>
                     </tr>
                     <tr className="border-b border-gray-100 hover:bg-gray-50">
@@ -570,7 +570,7 @@ export default function ProductDetailPage() {
                           return (
                             <div key={stars} className="flex items-center gap-2 text-sm">
                               <span className="flex items-center gap-1 font-semibold text-gray-700 w-8">
-                                <Icon icon="lucide:star" className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                                <Icon icon="mdi:star" className="w-3.5 h-3.5 text-amber-400" />
                                 {stars}
                               </span>
                               <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
@@ -598,7 +598,7 @@ export default function ProductDetailPage() {
                   {[1, 2, 3, 4, 5].map((star) => (
                     <Icon
                       key={star}
-                      icon={star <= newRating ? "mdi:star" : "mdi:star-outline"}
+                      icon="mdi:star"
                       className={`interactive-star w-8 h-8 transition-colors ${star <= newRating ? 'text-amber-400' : 'text-gray-300'}`}
                       onClick={() => {
                         if (!user) {

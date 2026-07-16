@@ -26,7 +26,7 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
         }`}
       >
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
-          <h2 className="text-xl font-bold text-slate-900">Mi Carrito ({totalItems})</h2>
+          <h2 className="text-xl font-bold text-slate-900">Mi Cesta ({totalItems})</h2>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
             <Icon icon="lucide:x" className="w-5 h-5 text-gray-500" />
           </button>
@@ -35,8 +35,8 @@ export function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () =
         <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6">
           {items.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-gray-500">
-              <Icon icon="lucide:shopping-cart" className="w-12 h-12 mb-4 text-gray-300" />
-              <p>Tu carrito está vacío</p>
+              <Icon icon="lucide:shopping-basket" className="w-12 h-12 mb-4 text-gray-300" />
+              <p>Tu cesta está vacía</p>
             </div>
           ) : (
             items.map((item) => (

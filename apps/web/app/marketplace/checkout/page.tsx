@@ -113,7 +113,7 @@ function CheckoutContent() {
         <MarketplaceNavbar />
         <main className="min-h-screen bg-gray-50/50 pt-32 pb-20 px-4 md:px-8 font-sans flex items-center justify-center">
           <div className="text-center">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">Tu carrito está vacío</h2>
+            <h2 className="text-2xl font-bold text-slate-900 mb-4">Tu cesta está vacía</h2>
             <Link href="/marketplace">
               <Button variant="primary">Volver al catálogo</Button>
             </Link>

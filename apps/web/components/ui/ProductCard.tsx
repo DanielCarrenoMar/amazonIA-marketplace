@@ -88,8 +88,8 @@ export function ProductCard({
             className="absolute top-3 right-3 bg-white/80! backdrop-blur-md hover:bg-white! hover:scale-110 z-10 shadow-sm"
           >
             <Icon 
-              icon="lucide:heart" 
-              className={`w-5 h-5 ${isFavorite ? 'text-red-500 fill-red-500' : 'text-gray-500'}`} 
+              icon={isFavorite ? "mdi:heart" : "mdi:heart-outline"} 
+              className={`w-5 h-5 ${isFavorite ? 'text-red-500' : 'text-gray-500'}`} 
             />
           </Button>
         )}
@@ -106,11 +106,11 @@ export function ProductCard({
           )}
           <div className="flex gap-0.5 shrink-0 pt-1">
             {[...Array(5)].map((_, i) => (
-              <Icon icon="lucide:star"
+              <Icon icon="mdi:star"
                 key={i}
                 className={`w-4 h-4 ${i < rating
-                  ? 'text-amber-400 fill-amber-400'
-                  : 'text-gray-300 fill-gray-300'
+                  ? 'text-amber-400'
+                  : 'text-gray-300'
                   }`}
               />
             ))}
@@ -145,7 +145,7 @@ export function ProductCard({
             variant="primary"
             size="sm"
             className="font-medium!"
-            rightIcon={<Icon icon="lucide:shopping-cart" className="w-4 h-4" />}
+            rightIcon={<Icon icon="lucide:shopping-basket" className="w-4 h-4" />}
           >
             Agregar
           </Button>
