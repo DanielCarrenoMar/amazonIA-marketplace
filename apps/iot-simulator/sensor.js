@@ -64,41 +64,13 @@ if (username.toLowerCase().includes("clima")) {
   sensorNumber = digits ? parseInt(digits, 10).toString() : "1";
 }
 
-const ORDER_ID = `${prefix}-${sensorNumber}`;
+let trackingNumber = prefix === "CLM" ? `CLM-${sensorNumber}` : null;
 const CONTAINER_ID =
   prefix === "CLM"
     ? `DEV-CLIMA-${sensorNumber.padStart(3, "0")}`
     : `DEV-AMAZONIA-${sensorNumber.padStart(3, "0")}`;
 
-// Ruta simulada: puntos GPS del Amazonas
-const ROUTE_CHECKPOINTS = [
-  { lat: -3.119, lng: -60.0217, name: "Manaos - Origen", status: "ORIGIN" },
-  {
-    lat: -3.2741,
-    lng: -60.4522,
-    name: "Puerto Fluvial Iranduba",
-    status: "IN_TRANSIT",
-  },
-  { lat: -3.4653, lng: -62.2159, name: "Alenquer", status: "IN_TRANSIT" },
-  {
-    lat: -2.4384,
-    lng: -54.7308,
-    name: "Santarém - Checkpoint",
-    status: "CHECKPOINT",
-  },
-  {
-    lat: -1.4558,
-    lng: -48.5044,
-    name: "Belém - Zona Urbana",
-    status: "NEAR_DESTINATION",
-  },
-  {
-    lat: -1.3567,
-    lng: -48.4682,
-    name: "Belém - Destino Final",
-    status: "DELIVERED",
-  },
-];
+
 
 // Estaciones meteorológicas fijas en la cuenca del Amazonas
 const WEATHER_STATIONS = [
@@ -111,7 +83,7 @@ const WEATHER_STATIONS = [
 
 let currentCheckpoint = 0;
 let isAssigned = false;
-let routeCheckpoints = [...ROUTE_CHECKPOINTS];
+let routeCheckpoints = [];
 
 // Seleccionar estación fija para sensores de clima (basado en número de sensor)
 const weatherStationIndex =
@@ -177,6 +149,11 @@ function mapStatus(status) {
 
 // ── Publicar evento consolidado compatible ─────────────────────────
 function publishTelemetry() {
+  if (prefix !== "CLM" && !isAssigned) {
+    console.log(`⏳ [SENSOR] ${CONTAINER_ID} en espera de asignación de paquete y ruta...`);
+    return;
+  }
+
   let lat, lng, locationName;
 
   if (prefix === "CLM") {
@@ -203,7 +180,7 @@ function publishTelemetry() {
   if (prefix === "CLM") {
     // Contexto de estación meteorológica (metadata DTO compatible)
     payload.metadata = {
-      sensor_id: ORDER_ID,
+      sensor_id: trackingNumber,
       facility_id: "FAC-AMAZONAS-01",
       sensor_type: "fixed_hvac"
     };
@@ -218,9 +195,9 @@ function publishTelemetry() {
   } else {
     // Contexto logístico (metadata y business_context)
     payload.metadata = {
-      tracking_number: ORDER_ID,
+      tracking_number: trackingNumber,
       container_id: CONTAINER_ID,
-      sensor_id: ORDER_ID,
+      sensor_id: CONTAINER_ID,
     };
     const checkpoint = routeCheckpoints[currentCheckpoint];
     payload.business_context = {
@@ -270,11 +247,11 @@ function publishTelemetry() {
 client.on("connect", () => {
   console.log(`✅ Sensor conectado exitosamente a HiveMQ Cloud`);
   console.log(
-    `📦 Simulando dispositivo: ${ORDER_ID} (Tipo: ${prefix === "CLM" ? "Clima" : "Paquete"})`,
+    `📦 Simulando dispositivo: ${CONTAINER_ID} (Tipo: ${prefix === "CLM" ? "Clima" : "Paquete"})`,
   );
 
   if (prefix !== "CLM") {
-    const controlTopic = `amazonia/iot/control/${ORDER_ID}`;
+    const controlTopic = `amazonia/iot/control/${CONTAINER_ID}`;
     client.subscribe(controlTopic, { qos: 1 }, (err) => {
       if (err) {
         console.error(`❌ Error al suscribirse al tópico de control: ${err.message}`);
@@ -294,16 +271,24 @@ client.on("connect", () => {
 });
 
 client.on("message", (topic, message) => {
-  if (topic === `amazonia/iot/control/${ORDER_ID}`) {
+  if (topic === `amazonia/iot/control/${CONTAINER_ID}`) {
     try {
       const data = JSON.parse(message.toString());
       if (data.action === "START_TRANSIT") {
-        isAssigned = true;
-        if (data.origin && data.destination) {
+        if (data.trackingNumber && data.origin && data.destination) {
+          trackingNumber = data.trackingNumber;
           routeCheckpoints = generateRoute(data.origin, data.destination);
-          currentCheckpoint = 0; // Reset index for the new route
+          currentCheckpoint = 0;
+          isAssigned = true;
+          
+          console.log(`\n🚀 [SENSOR] ${CONTAINER_ID} Activado!`);
+          console.log(`📦 Asignado al paquete: ${trackingNumber}`);
+          console.log(`📍 Ruta generada con ${routeCheckpoints.length} puntos de control desde origen a destino.`);
+          
+          publishTelemetry();
+        } else {
+          console.warn("⚠️  Mensaje START_TRANSIT incompleto. Faltan datos de tracking, origin o destination.");
         }
-        console.log(`\n🚀 [SENSOR] Activado! Asignado al envío: ${data.trackingNumber}`);
       }
     } catch (err) {
       console.error("❌ Error decodificando mensaje de control:", err.message);
