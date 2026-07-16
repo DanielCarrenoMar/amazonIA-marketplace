@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { User } from "lucide-react";
+import { Icon } from "@iconify/react";
 
 export interface AvatarProps extends React.HTMLAttributes<HTMLDivElement> {
   src?: string;
@@ -52,7 +52,7 @@ export const Avatar: React.FC<AvatarProps> = ({
     if (fallback) {
       return fallback;
     }
-    return <User className="w-1/2 h-1/2 opacity-60" />;
+    return <Icon icon="lucide:user" className="w-1/2 h-1/2 opacity-60" />;
   };
 
   return (

@@ -71,4 +71,4 @@ ENV NODE_ENV=production \
 EXPOSE 3001
 
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["node", "dist/src/main"]
+CMD ["node", "dist/main.js"]

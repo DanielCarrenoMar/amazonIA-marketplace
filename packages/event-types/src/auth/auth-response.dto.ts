@@ -29,6 +29,7 @@ export class UserMeResponseDto {
   locationFormattedAddress: string | null;
   locationCity: string | null;
   locationRegion: string | null;
+  avatarUrl: string | null;
   createdAt: Date;
   seller?: any | null; // We can type this later or leave as any/object for now if we don't have SellerDto here yet
 }

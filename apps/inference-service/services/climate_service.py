@@ -27,6 +27,13 @@ class ClimateService:
                 response.raise_for_status()
                 data = response.json()
                 
+                if "daily" not in data:
+                    raise ValueError(f"Open-Meteo returned invalid historical data: {data}")
+                
+                precip = data.get("daily", {}).get("precipitation_sum", [])
+                if not precip or all(p is None for p in precip):
+                    raise ValueError("Open-Meteo returned null arrays for historical precipitation")
+                
                 return {
                     "fuente": "open-meteo-archive",
                     "temperatura_max_c": interpolate_small_gaps(data.get("daily", {}).get("temperature_2m_max", []), max_gap=2),
@@ -55,6 +62,13 @@ class ClimateService:
                 response = await client.get(self.forecast_url, params=params, timeout=10.0)
                 response.raise_for_status()
                 data = response.json()
+                
+                if "daily" not in data:
+                    raise ValueError(f"Open-Meteo returned invalid forecast data: {data}")
+                
+                precip = data.get("daily", {}).get("precipitation_sum", [])
+                if not precip or all(p is None for p in precip):
+                    raise ValueError("Open-Meteo returned null arrays for forecast precipitation")
                 
                 return {
                     "fuente": "open-meteo-forecast",

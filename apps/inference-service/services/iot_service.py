@@ -1,11 +1,11 @@
-from redis.asyncio import Redis
+from upstash_redis.asyncio import Redis
 from typing import Dict, Any, Optional
 from core.config import settings
 
 class IoTService:
     def __init__(self):
-        # Initialize connection pool to avoid creating a new connection per request
-        self.redis = Redis.from_url(settings.get_redis_tcp_url, decode_responses=True)
+        # Usar SDK HTTP de Upstash Redis
+        self.redis = Redis(url=settings.REDIS_URL, token=settings.REDIS_TOKEN)
 
     async def get_iot_telemetry(self, shipment_id: str) -> Dict[str, Any]:
         """
@@ -58,6 +58,6 @@ class IoTService:
             }
             
     async def close(self):
-        await self.redis.close()
+        pass
 
 iot_service = IoTService()

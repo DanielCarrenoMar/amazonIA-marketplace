@@ -1,7 +1,7 @@
 "use client";
 
 import React, { forwardRef } from "react";
-import { Check } from "lucide-react";
+import { Icon } from "@iconify/react";
 
 export interface CheckboxProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type'> {
   label?: React.ReactNode;
@@ -39,7 +39,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
           />
           
           {/* Check Icon */}
-          <Check 
+          <Icon icon="lucide:check" 
             className="w-3.5 h-3.5 text-white opacity-0 scale-50 transition-all duration-200 peer-checked:opacity-100 peer-checked:scale-100 z-10 pointer-events-none" 
             strokeWidth={3.5}
           />

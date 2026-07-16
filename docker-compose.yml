@@ -38,6 +38,24 @@ services:
         max-size: "10m"
         max-file: "3"
 
+
+  # ══════════════════════════════════════════════════════════════════════════
+  # Redis Local
+  # ══════════════════════════════════════════════════════════════════════════
+  redis:
+    image: redis:7-alpine
+    container_name: amazonia-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - amazonia-internal
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   # ══════════════════════════════════════════════════════════════════════════
   # Ingestor Service — Gateway MQTT → Redis Streams
   # ══════════════════════════════════════════════════════════════════════════
@@ -129,6 +147,9 @@ services:
       - MONGODB_URL=${MONGODB_URI}
       - DATABASE_URL=${DATABASE_URL}
       - JWT_SECRET_KEY=${JWT_SECRET}
+    volumes:
+      - ./apps/inference-service:/app
+    command: sh -c "mkdir -p /app/vendor && pip install --target=/app/vendor upstash-redis && PYTHONPATH=/app/vendor python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
     ports:
       - "8000:8000"
     networks:
@@ -168,6 +189,7 @@ services:
       - REDIS_URL=${REDIS_URL}
       - REDIS_TOKEN=${REDIS_TOKEN}
       - NOTARY_API_KEY=${NOTARY_API_KEY}
+      - INFERENCE_SERVICE_URL=http://inference-service:8000
       - NOTARY_SERVICE_URL=http://blockchain-notary:3004/api/v1
       - WEBHOOK_BASE_URL=http://api:3001/api
       - CB_FAILURE_THRESHOLD=${CB_FAILURE_THRESHOLD:-3}
@@ -226,9 +248,10 @@ services:
         max-file: "5"
 
 # ══════════════════════════════════════════════════════════════════════════════
-# Redes
+# Redes y Volúmenes
 # ══════════════════════════════════════════════════════════════════════════════
 networks:
   amazonia-internal:
     driver: bridge
     name: amazonia-network
+

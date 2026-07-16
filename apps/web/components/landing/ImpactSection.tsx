@@ -1,31 +1,40 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { ImpactCard } from './ImpactCards';
-import { Target, Leaf, UsersRound, Sparkles } from 'lucide-react';
+import { getImpactStats, ImpactStats } from '../../lib/api/stats';
 
 export function ImpactSection() {
+  const [stats, setStats] = useState<ImpactStats | null>(null);
+
+  useEffect(() => {
+    getImpactStats().then(data => {
+      if (data) {
+        setStats(data);
+      }
+    });
+  }, []);
+
   const mockData = [
     {
-      title: "Integración Económica",
+      title: stats ? `${stats.artisansCount} Artesanos apoyados` : "Integración Económica",
       description: "Conectamos a las comunidades con mercados globales de comercio justo.",
-      icon: Target
+      icon: "lucide:users"
     },
     {
-      title: "Sostenibilidad",
+      title: stats ? `${stats.transactionsCount} Transacciones exitosas` : "Sostenibilidad",
       description: "Promovemos prácticas que protegen el medio ambiente amazónico.",
-      icon: Leaf
+      icon: "lucide:shopping-bag"
     },
     {
-      title: "Preservación Cultural",
+      title: stats ? `$${stats.totalVolume.toLocaleString()} Valor generado` : "Preservación Cultural",
       description: "Documentamos y difundimos el conocimiento ancestral.",
-      icon: UsersRound
-
+      icon: "lucide:trending-up"
     },
     {
-      title: "Impacto medible",
+      title: stats ? `${stats.activeProducts} Productos activos` : "Impacto medible",
       description: "Cada transacción contribuye directamente al bienestar de las comunidades.",
-      icon: Sparkles
+      icon: "lucide:package"
     }
-  ]
+  ];
 
   return (
     <section id="impacto" className="w-full bg-linear-to-b from-brand-primary to-[#064e3b] min-h-[90vh] flex items-center py-24 px-6 md:px-12">

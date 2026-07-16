@@ -14,8 +14,10 @@ async function runTest() {
   
   console.log('REDIS_URL is configured properly.');
 
-  const producer = new RedisProducerService();
-  const consumer = new RedisConsumerService();
+  const { Redis } = await import('@upstash/redis');
+  const redisClient = new Redis({ url: process.env.REDIS_URL!, token: process.env.REDIS_TOKEN! });
+  const producer = new RedisProducerService(redisClient);
+  const consumer = new RedisConsumerService(redisClient);
 
   const testTopic = STREAM_TOPICS.CLIMATE_EVENTS;
   const testMessage = {

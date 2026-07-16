@@ -4,7 +4,9 @@ import { HealthController } from './health.controller';
 import { HealthService } from './health.service';
 
 @Module({
-  imports: [MongooseModule],
+  // Only import MongooseModule when MongoDB is actually configured;
+  // otherwise @Optional() @InjectConnection() resolves to undefined.
+  imports: process.env.MONGODB_URI ? [MongooseModule] : [],
   controllers: [HealthController],
   providers: [HealthService],
 })

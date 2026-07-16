@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback, ReactNode } from "react";
-import { X, Check, Info } from "lucide-react";
+import { Icon } from "@iconify/react";
 
 // TIPO DEL TOAST
 export type ToastVariant = "default" | "success" | "error" | "warning" | "info";
@@ -34,12 +34,12 @@ const getIcon = (variant: ToastVariant) => {
   switch (variant) {
     case "success": return (
       <div className="w-8 h-8 rounded-full bg-emerald-400 flex items-center justify-center shrink-0">
-        <Check className="w-5 h-5 text-white stroke-[3px]" />
+        <Icon icon="lucide:check" className="w-5 h-5 text-white stroke-[3px]" />
       </div>
     );
     case "error": return (
       <div className="w-8 h-8 rounded-full bg-red-400 flex items-center justify-center shrink-0">
-        <X className="w-5 h-5 text-white stroke-[3px]" />
+        <Icon icon="lucide:x" className="w-5 h-5 text-white stroke-[3px]" />
       </div>
     );
     case "warning": return (
@@ -54,7 +54,7 @@ const getIcon = (variant: ToastVariant) => {
     );
     default: return (
       <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center shrink-0">
-        <Info className="w-5 h-5 text-gray-500" />
+        <Icon icon="lucide:info" className="w-5 h-5 text-gray-500" />
       </div>
     );
   }
@@ -111,7 +111,7 @@ export const ToastProvider = ({ children }: { children: ReactNode }) => {
               onClick={() => dismiss(t.id)}
               className="shrink-0 text-gray-400 hover:text-gray-600 transition-colors self-center p-2 rounded-full hover:bg-black/5"
             >
-              <X className="w-5 h-5 cursor-pointer" />
+              <Icon icon="lucide:x" className="w-5 h-5 cursor-pointer" />
             </button>
           </div>
         ))}

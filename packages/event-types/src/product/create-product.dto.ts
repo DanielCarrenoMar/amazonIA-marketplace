@@ -1,6 +1,7 @@
-import { IsString, IsNotEmpty, IsOptional, MaxLength, IsNumber, Min, IsUUID, IsInt, ValidateNested } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, MaxLength, IsNumber, Min, IsUUID, IsInt, ValidateNested, IsArray } from 'class-validator';
 import { Type } from 'class-transformer';
 import { LocationCoordsDto } from './location-coords.dto';
+import { CreateElaborationStepDto } from './create-elaboration-step.dto';
 
 export class CreateProductDto {
 
@@ -54,4 +55,36 @@ export class CreateProductDto {
   @Type(() => LocationCoordsDto)
   @IsOptional()
   coords?: LocationCoordsDto;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateElaborationStepDto)
+  @IsOptional()
+  elaborationSteps?: CreateElaborationStepDto[];
+
+  @IsString()
+  @IsOptional()
+  elaborationText?: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  elaborationMediaUrls?: string[];
+
+  // Logistics Criteria
+  @IsOptional()
+  @Type(() => Boolean)
+  isFragile?: boolean;
+
+  @IsOptional()
+  @Type(() => Boolean)
+  requiresColdChain?: boolean;
+
+  @IsOptional()
+  @IsNumber()
+  maxTemperatureCelsius?: number;
+
+  @IsOptional()
+  @IsNumber()
+  maxHumidity?: number;
 }

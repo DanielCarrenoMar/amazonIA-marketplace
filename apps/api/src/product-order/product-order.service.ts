@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { CreateProductOrderDto, FindOrdersDto, PaginationDto, ProductOrderResponseDto, PaginatedResponseDto, OrderStatusHistoryResponseDto, OrderTimelineResponseDto } from 'event-types';
 import { UpdateProductOrderDto } from 'event-types';
@@ -9,6 +9,8 @@ import * as mqtt from 'mqtt';
 import { PrismaService } from '../prisma/prisma.service';
 import { OutboxService } from '../outbox/outbox.service';
 import { TelemetryIntegrationService } from '../telemetry-integration/telemetry-integration.service';
+import { NotaryClientService } from '../blockchain/services/notary-client.service';
+import * as crypto from 'crypto';
 
 const allowedOrderStatusTransitions: Record<OrderStatus, readonly OrderStatus[]> = {
   [OrderStatus.PENDING]: [OrderStatus.PAID, OrderStatus.CANCELED],
@@ -19,8 +21,12 @@ const allowedOrderStatusTransitions: Record<OrderStatus, readonly OrderStatus[]>
   [OrderStatus.REFUNDED]: [],
 };
 
+import { NotificationService } from '../notification/notification.service';
+
 @Injectable()
 export class ProductOrderService {
+  private readonly logger = new Logger(ProductOrderService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly outbox: OutboxService,
@@ -28,13 +34,34 @@ export class ProductOrderService {
     private readonly configService: ConfigService,
   ) {}
 
+
   // buyerId comes from the JWT token (req.user.id), NOT from the client body
   async create(buyerId: string, createProductOrderDto: CreateProductOrderDto): Promise<ProductOrderResponseDto> {
     const result = await this.prisma.$transaction(async (tx) => {
       // 1. Get the current stock and price
       const product = await tx.product.findUnique({
         where: { id: createProductOrderDto.productId },
-        select: { stockAvailable: true, price: true, sellerId: true },
+        select: { 
+          stockAvailable: true, 
+          price: true, 
+          sellerId: true,
+          locationMapboxId: true,
+          locationFormattedAddress: true,
+          locationCity: true,
+          locationRegion: true,
+          seller: {
+            select: {
+              user: {
+                select: {
+                  locationMapboxId: true,
+                  locationFormattedAddress: true,
+                  locationCity: true,
+                  locationRegion: true,
+                }
+              }
+            }
+          }
+        },
       });
 
       if (!product) {
@@ -62,11 +89,156 @@ export class ProductOrderService {
       // Calculate total amount using the already fetched price
       const totalAmount = Number(product.price) * createProductOrderDto.quantity;
 
-      // 4. Create the order
-      return tx.productOrder.create({
-        data: { ...createProductOrderDto, buyerId, totalAmount, currentStatus: OrderStatus.PENDING },
+      // 4. Fetch the buyer to get their location
+      const buyer = await tx.userAccount.findUnique({
+        where: { id: buyerId },
+        select: {
+          locationMapboxId: true,
+          locationFormattedAddress: true,
+          locationCity: true,
+          locationRegion: true,
+        },
       });
+
+      if (!buyer) {
+        throw new NotFoundException(`Buyer with ID ${buyerId} not found`);
+      }
+
+      const { destinationCoords, ...rest } = createProductOrderDto;
+
+      // Use DTO values, or fallback to the buyer's location
+      const finalMapboxId = rest.destinationMapboxId ?? buyer.locationMapboxId;
+      const finalFormattedAddress = rest.destinationFormattedAddress ?? buyer.locationFormattedAddress;
+      const finalCity = rest.destinationCity ?? buyer.locationCity;
+      const finalRegion = rest.destinationRegion ?? buyer.locationRegion;
+      // Use product location, or fallback to seller's user profile location
+      const originMapboxId = product.locationMapboxId ?? product.seller.user.locationMapboxId;
+      const originFormattedAddress = product.locationFormattedAddress ?? product.seller.user.locationFormattedAddress;
+      const originCity = product.locationCity ?? product.seller.user.locationCity;
+      const originRegion = product.locationRegion ?? product.seller.user.locationRegion;
+
+      const initialStatus = createProductOrderDto.transactionHash ? OrderStatus.PAID : OrderStatus.PENDING;
+      const paymentMethod = createProductOrderDto.transactionHash ? 'CRYPTO' : undefined;
+
+      // 5. Create the order
+      const order = await tx.productOrder.create({
+        data: {
+          ...rest,
+          destinationMapboxId: finalMapboxId,
+          destinationFormattedAddress: finalFormattedAddress,
+          destinationCity: finalCity,
+          destinationRegion: finalRegion,
+          originMapboxId,
+          originFormattedAddress,
+          originCity,
+          originRegion,
+          buyerId,
+          totalAmount,
+          currentStatus: initialStatus,
+          paymentMethod,
+        },
+      });
+
+      // 6. Set Spatial Coordinates
+      // If client provided explicitly coords, use them. Otherwise, copy from the buyer's profile via SQL.
+      // Additionally, always set origin_coords from product or seller location.
+      if (destinationCoords && destinationCoords.latitude != null && destinationCoords.longitude != null) {
+        await tx.$executeRaw`
+          UPDATE product_order 
+          SET 
+            destination_coords = ST_SetSRID(ST_MakePoint(${destinationCoords.longitude}, ${destinationCoords.latitude}), 4326),
+            origin_coords = COALESCE(
+              (SELECT location_coords FROM product WHERE id = ${createProductOrderDto.productId}::uuid),
+              (SELECT location_coords FROM user_account WHERE id = ${product.sellerId}::uuid)
+            )
+          WHERE id = ${order.id}::uuid;
+        `;
+      } else {
+        await tx.$executeRaw`
+          UPDATE product_order 
+          SET 
+            destination_coords = (SELECT location_coords FROM user_account WHERE id = ${buyerId}::uuid),
+            origin_coords = COALESCE(
+              (SELECT location_coords FROM product WHERE id = ${createProductOrderDto.productId}::uuid),
+              (SELECT location_coords FROM user_account WHERE id = ${product.sellerId}::uuid)
+            )
+          WHERE id = ${order.id}::uuid;
+        `;
+      }
+
+      // Audit Log for initial creation
+      await tx.orderStatusHistory.create({
+        data: {
+          orderId: order.id,
+          changedByUserId: buyerId,
+          previousStatus: null,
+          newStatus: OrderStatus.PENDING,
+          statusNote: 'Pedido creado',
+        },
+      });
+
+      if (initialStatus === OrderStatus.PAID) {
+        await tx.orderStatusHistory.create({
+          data: {
+            orderId: order.id,
+            changedByUserId: buyerId,
+            previousStatus: OrderStatus.PENDING,
+            newStatus: OrderStatus.PAID,
+            statusNote: 'Pago registrado con Hash de Transacción',
+          },
+        });
+
+        // Append outbox event for paid order
+        await this.outbox.append(
+          tx,
+          'ProductOrder',
+          order.id,
+          `order.paid`,
+          {
+            orderId: order.id,
+            productId: order.productId,
+            buyerId: order.buyerId,
+            sellerId: product.sellerId,
+            quantity: order.quantity,
+            totalAmount: order.totalAmount.toString(),
+            previousStatus: OrderStatus.PENDING,
+            newStatus: OrderStatus.PAID,
+            changedByUserId: buyerId,
+            trackingNumber: null,
+            topic: STREAM_TOPICS.SHIPMENT_EVENTS,
+          },
+        );
+      }
+
+      return order;
     });
+
+    // Disparar notarización si se creó directamente como PAID
+    if (result.currentStatus === OrderStatus.PAID && result.transactionHash) {
+      this.prisma.product.findUnique({
+        where: { id: result.productId },
+        select: { id: true, sellerId: true },
+      }).then(async (product) => {
+        if (product) {
+          const productHash = crypto
+            .createHash('sha256')
+            .update(`${result.productId}-${product.sellerId}-${result.createdAt.getTime()}`)
+            .digest('hex');
+
+          this.logger.log(`Firing asynchronous notarization proposal creation for order ${result.id} from creation`);
+          await this.notaryClient.notarizeOrder({
+            orderId: result.id,
+            amount: Number(result.totalAmount),
+            paymentMethod: result.paymentMethod ?? 'CRYPTO',
+            productHash,
+            buyerId: result.buyerId,
+            sellerId: product.sellerId,
+            webhookUrl: '',
+          });
+        }
+      }).catch(err => this.logger.error(`Notarization trigger failed for order ${result.id}: ${err.message}`));
+    }
+
     return result as unknown as ProductOrderResponseDto;
   }
 
@@ -77,10 +249,10 @@ export class ProductOrderService {
     const [total, data] = await Promise.all([
       this.prisma.productOrder.count(),
       this.prisma.productOrder.findMany({
-        include: { 
-          product: true, 
-          buyer: { omit: { passwordHash: true } }, 
-          statusHistory: true 
+        include: {
+          product: { include: { seller: { include: { user: { omit: { passwordHash: true } } } } } },
+          buyer: { omit: { passwordHash: true } },
+          statusHistory: true
         },
         orderBy: { createdAt: 'desc' },
         skip,
@@ -122,7 +294,7 @@ export class ProductOrderService {
       this.prisma.productOrder.findMany({
         where,
         include: {
-          product: true,
+          product: { include: { seller: { include: { user: { omit: { passwordHash: true } } } } } },
           statusHistory: { orderBy: { createdAt: 'desc' } },
         },
         orderBy: { createdAt: 'desc' },
@@ -189,9 +361,10 @@ export class ProductOrderService {
     const order = await this.prisma.productOrder.findUnique({
       where: { id },
       include: {
-        product: true,
+        product: { include: { seller: { include: { user: { omit: { passwordHash: true } } } } } },
         buyer: { omit: { passwordHash: true } },
         statusHistory: true,
+        blockchainRecord: true,
       },
     });
 
@@ -407,6 +580,16 @@ export class ProductOrderService {
             topic: STREAM_TOPICS.SHIPMENT_EVENTS,
           },
         );
+
+        // 1.7 Create Notifications
+        const buyerMessage = `Tu orden ${id} ha cambiado de estado a ${nextStatus}.`;
+        const sellerMessage = `La orden ${id} de tu producto ha cambiado de estado a ${nextStatus}.`;
+        
+        await this.notificationService.createNotification(currentOrder.buyerId, 'Actualización de Pedido', buyerMessage);
+        
+        if (currentOrder.product?.sellerId) {
+          await this.notificationService.createNotification(currentOrder.product.sellerId, 'Actualización de Pedido', sellerMessage);
+        }
       }
 
       // 2. Seller Rating: If the buyer left a rating for the seller, recalculate the seller's global rating

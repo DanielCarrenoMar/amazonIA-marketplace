@@ -1,18 +1,18 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
 import { PrismaService } from '../prisma/prisma.service';
 
 export interface HealthStatus {
   postgres: 'up' | 'down';
-  mongodb: 'up' | 'down';
+  mongodb: 'up' | 'down' | 'disabled';
 }
 
 @Injectable()
 export class HealthService {
   constructor(
     private readonly prisma: PrismaService,
-    @InjectConnection() private readonly mongoConnection: Connection,
+    @Optional() @InjectConnection() private readonly mongoConnection: Connection | undefined,
   ) {}
 
   async check(): Promise<HealthStatus> {
@@ -32,7 +32,8 @@ export class HealthService {
     }
   }
 
-  private checkMongo(): 'up' | 'down' {
+  private checkMongo(): 'up' | 'down' | 'disabled' {
+    if (!this.mongoConnection) return 'disabled';
     // readyState 1 = connected
     return this.mongoConnection.readyState === 1 ? 'up' : 'down';
   }

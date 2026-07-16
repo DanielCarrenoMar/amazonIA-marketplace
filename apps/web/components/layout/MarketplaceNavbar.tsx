@@ -1,32 +1,59 @@
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Search, ShoppingCart, Heart, Home } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Icon } from "@iconify/react";
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
 import { CartDrawer } from '../ui/CartDrawer';
-import { getMe, type AuthUser } from '@/lib/api';
+import { useAuth } from '@/lib/useAuth';
+import { useFavorites } from '@/lib/favoriteContext';
+import { useCart } from '@/lib/cartContext';
 import logo from '@/public/logo.png';
+import { getExplorerMembers } from '@/lib/explorer-api';
 
-export function MarketplaceNavbar() {
-  const [user, setUser] = useState<AuthUser | null>(null);
+
+function MarketplaceNavbarContent() {
+  const { user, logout, isBuyer } = useAuth();
+  const { favoriteIds } = useFavorites();
+  const { totalItems } = useCart();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const userMenuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const [isGovMember, setIsGovMember] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    if (!token) return;
-    getMe(token).then(setUser).catch(() => {});
-  }, []);
+    if (user) {
+      getExplorerMembers().then(members => {
+        const found = members.some(m => m.userId === user.id);
+        setIsGovMember(found);
+      }).catch(() => setIsGovMember(false));
+    } else {
+      setIsGovMember(false);
+    }
+  }, [user]);
+
+  // Initialize search query from URL if present
+  useEffect(() => {
+    const q = searchParams.get('q');
+    if (q) setSearchQuery(q);
+  }, [searchParams]);
+
+  const handleSearch = (e?: React.KeyboardEvent) => {
+    if (e && e.key !== 'Enter') return;
+    if (searchQuery.trim()) {
+      router.push(`/marketplace?q=${encodeURIComponent(searchQuery.trim())}`);
+    } else {
+      router.push(`/marketplace`);
+    }
+  };
 
   const handleLogout = () => {
-    localStorage.removeItem('accessToken');
-    setUser(null);
+    logout();
     setUserMenuOpen(false);
     router.push('/');
   };
@@ -49,19 +76,14 @@ export function MarketplaceNavbar() {
           {/* Search Bar (Center) */}
           <div className="flex-1 max-w-2xl hidden md:flex items-center">
             <Input 
-              leftIcon={<Search className="w-5 h-5 text-gray-400" />}
+              leftIcon={<Icon icon="lucide:search" className="w-5 h-5 text-gray-400" />}
               placeholder="Buscar artesanías, ropa, hogar..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleSearch}
               className="focus-within:z-10"
-              wrapperClassName="rounded-l-full rounded-r-none border-r-0 bg-gray-50/80 shadow-inner border-gray-200 focus-within:bg-white focus-within:border-brand-primary/30 focus-within:ring-2 focus-within:ring-brand-primary/20 transition-all"
+              wrapperClassName="rounded-full bg-gray-50/80 shadow-inner border-gray-200 focus-within:bg-white focus-within:border-brand-primary/30 focus-within:ring-2 focus-within:ring-brand-primary/20 transition-all"
             />
-            <Button 
-              className="rounded-l-none rounded-r-full px-8 h-[46px] shadow-sm font-bold tracking-wide"
-              variant="primary"
-            >
-              Buscar
-            </Button>
           </div>
 
           {/* Right Actions */}
@@ -75,7 +97,7 @@ export function MarketplaceNavbar() {
                   className="flex items-center gap-2.5 hover:bg-gray-50 rounded-full py-1.5 px-2 md:px-3 transition-colors border border-transparent hover:border-gray-200"
                 >
                   <div className="w-9 h-9 rounded-full bg-brand-secondary flex items-center justify-center text-sm font-bold text-white shrink-0 shadow-sm">
-                    {getInitials(user.fullName || user.username)}
+                    {getInitials(user.fullName || user.username || 'U')}
                   </div>
                   <span className="text-sm font-bold text-slate-700 hidden lg:block">
                     {user.fullName?.split(' ')[0] || user.username}
@@ -84,6 +106,7 @@ export function MarketplaceNavbar() {
                 {userMenuOpen && (
                   <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-gray-100 rounded-2xl shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2">
                     <Link href="/dashboard" className="block px-4 py-2 text-sm font-medium text-slate-700 hover:bg-brand-nature-bg hover:text-brand-primary transition-colors">Mi Cuenta</Link>
+                    <Link href="/dashboard/orders" className="block px-4 py-2 text-sm font-medium text-slate-700 hover:bg-brand-nature-bg hover:text-brand-primary transition-colors">Mis Compras</Link>
                     <div className="border-t border-gray-100 my-1" />
                     <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm font-medium text-red-500 hover:bg-red-50 transition-colors">Cerrar sesión</button>
                   </div>
@@ -98,26 +121,43 @@ export function MarketplaceNavbar() {
 
             {/* Home */}
             <Link href="/" title="Volver a Inicio" className="relative p-2.5 text-slate-600 hover:text-brand-primary transition-colors cursor-pointer flex items-center justify-center">
-              <Home className="w-[22px] h-[22px]" />
+              <Icon icon="lucide:home" className="w-[22px] h-[22px]" />
+            </Link>
+
+            {/* Tribes */}
+            <Link href="/tribes" title="Explorar Tribus" className="relative p-2.5 text-slate-600 hover:text-brand-primary transition-colors cursor-pointer flex items-center justify-center">
+              <Icon icon="lucide:tent" className="w-[22px] h-[22px]" />
             </Link>
 
             {/* Favorites */}
             <Link href="/marketplace/favorites" className="relative p-2.5 text-slate-600 hover:text-red-500 transition-colors cursor-pointer flex items-center justify-center">
-              <Heart className="w-[22px] h-[22px]" />
-              <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm">
-                3
-              </span>
+              <Icon icon="lucide:heart" className="w-[22px] h-[22px]" />
+              {favoriteIds.size > 0 && (
+                <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm">
+                  {favoriteIds.size}
+                </span>
+              )}
             </Link>
+
+            {/* Gobernanza (Solo para miembros del Consejo o Elder) */}
+            {isGovMember && (
+              <Link href="/marketplace/governance" title="Gobernanza del Consejo" className="relative p-2.5 text-slate-600 hover:text-brand-primary transition-colors cursor-pointer flex items-center justify-center">
+                <Icon icon="lucide:gavel" className="w-[22px] h-[22px]" />
+                <span className="absolute -top-1 -right-1 bg-brand-primary text-white text-[8px] font-bold px-1 rounded-full border border-white">Votar</span>
+              </Link>
+            )}
 
             {/* Cart */}
             <button 
               onClick={() => setIsCartOpen(true)} 
               className="relative p-2.5 text-slate-600 hover:text-brand-primary transition-colors cursor-pointer"
             >
-              <ShoppingCart className="w-[22px] h-[22px]" />
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-brand-primary text-white text-[11px] font-bold rounded-full flex items-center justify-center border-2 border-white shadow-sm">
-                3
-              </span>
+              <Icon icon="lucide:shopping-basket" className="w-[22px] h-[22px]" />
+              {totalItems > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 bg-brand-primary text-white text-[11px] font-bold rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+                  {totalItems}
+                </span>
+              )}
             </button>
           </div>
         </div>
@@ -126,16 +166,14 @@ export function MarketplaceNavbar() {
         <div className="md:hidden px-4 pb-4">
           <div className="flex w-full items-center">
             <Input 
-              leftIcon={<Search className="w-4 h-4 text-gray-400" />}
+              leftIcon={<Icon icon="lucide:search" className="w-4 h-4 text-gray-400" />}
               placeholder="Buscar productos..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              wrapperClassName="rounded-l-full rounded-r-none border-r-0 bg-gray-50/80"
+              onKeyDown={handleSearch}
+              wrapperClassName="rounded-full bg-gray-50/80"
               className="h-[42px]"
             />
-            <Button className="rounded-l-none rounded-r-full px-5 h-[42px] shadow-sm" variant="primary">
-              <Search className="w-4 h-4" />
-            </Button>
           </div>
         </div>
       </nav>
@@ -143,5 +181,13 @@ export function MarketplaceNavbar() {
       {/* Cart Drawer Instance */}
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </>
+  );
+}
+
+export function MarketplaceNavbar() {
+  return (
+    <Suspense fallback={<nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-lg border-b border-gray-100 shadow-[0_4px_30px_rgba(0,0,0,0.03)] h-20" />}>
+      <MarketplaceNavbarContent />
+    </Suspense>
   );
 }

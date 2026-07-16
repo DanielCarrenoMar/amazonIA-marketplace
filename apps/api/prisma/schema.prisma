@@ -83,6 +83,7 @@ model UserAccount {
   phonePrimary   String?  @map("phone_primary") @db.VarChar(50)
   phoneSecondary String?  @map("phone_secondary") @db.VarChar(50)
   walletHash     String?  @map("wallet_hash") @db.VarChar(255)
+  avatarUrl      String?  @map("avatar_url") @db.VarChar(500)
 
   // Spatial — PostGIS type not natively supported by Prisma
   locationCoords           Unsupported("geography(Point, 4326)")? @map("location_coords")
@@ -96,11 +97,13 @@ model UserAccount {
   // Relations
   seller             Seller?
   productRatings     ProductRating[]
-  buyerOrders        ProductOrder[]       @relation("BuyerOrders")
-  orderStatusChanges OrderStatusHistory[] @relation("ChangedByUser")
+  buyerOrders        ProductOrder[]        @relation("BuyerOrders")
+  orderStatusChanges OrderStatusHistory[]  @relation("ChangedByUser")
   refreshTokens      RefreshToken[]
   productComments    ProductComment[]
-  sentChatMessages   OrderChat[]          @relation("SentChatMessages")
+  sentChatMessages   OrderChat[]           @relation("SentChatMessages")
+  favoriteProducts   UserFavoriteProduct[]
+  notifications      Notification[]
 
   @@index([locationCoords], type: Gist)
   @@map("user_account")
@@ -124,9 +127,9 @@ model Tribe {
   requestedById String? @map("requested_by_id") @db.Uuid
 
   // Admin que aprobó/rechazó
-  reviewedById  String?   @map("reviewed_by_id") @db.Uuid
-  reviewedAt    DateTime? @map("reviewed_at") @db.Timestamptz
-  reviewNote    String?   @map("review_note")
+  reviewedById String?   @map("reviewed_by_id") @db.Uuid
+  reviewedAt   DateTime? @map("reviewed_at") @db.Timestamptz
+  reviewNote   String?   @map("review_note")
 
   // Spatial
   locationCoords           Unsupported("geography(Point, 4326)")? @map("location_coords")
@@ -160,13 +163,13 @@ model Seller {
   totalReviews     Int    @default(0) @map("total_reviews")
 
   // Relations
-  user                       UserAccount                @relation(fields: [id], references: [id], onDelete: Cascade)
-  tribe                      Tribe?                     @relation("TribeMembers", fields: [tribeId], references: [id], onDelete: SetNull)
+  user                       UserAccount              @relation(fields: [id], references: [id], onDelete: Cascade)
+  tribe                      Tribe?                   @relation("TribeMembers", fields: [tribeId], references: [id], onDelete: SetNull)
   products                   Product[]
-  ledTribeAsPrimary          Tribe?                     @relation("TribePrimaryLeader")
-  ledTribeAsSecondary        Tribe?                     @relation("TribeSecondaryLeader")
-  sentMembershipRequests     TribeMembershipRequest[]   @relation("MembershipRequestedBy")
-  reviewedMembershipRequests TribeMembershipRequest[]   @relation("MembershipReviewedBy")
+  ledTribeAsPrimary          Tribe?                   @relation("TribePrimaryLeader")
+  ledTribeAsSecondary        Tribe?                   @relation("TribeSecondaryLeader")
+  sentMembershipRequests     TribeMembershipRequest[] @relation("MembershipRequestedBy")
+  reviewedMembershipRequests TribeMembershipRequest[] @relation("MembershipReviewedBy")
 
   @@map("seller")
 }
@@ -176,12 +179,12 @@ model Seller {
 // ---------------------------------------------------------------------------
 
 model TribeMembershipRequest {
-  id         Int                      @id @default(autoincrement())
-  tribeId    Int                      @map("tribe_id")
-  sellerId   String                   @map("seller_id") @db.Uuid
-  status     MembershipRequestStatus  @default(PENDING)
+  id         Int                     @id @default(autoincrement())
+  tribeId    Int                     @map("tribe_id")
+  sellerId   String                  @map("seller_id") @db.Uuid
+  status     MembershipRequestStatus @default(PENDING)
   message    String?
-  reviewNote String?                  @map("review_note")
+  reviewNote String?                 @map("review_note")
 
   // Líder que revisó la solicitud
   reviewedById String?   @map("reviewed_by_id") @db.Uuid
@@ -237,20 +240,54 @@ model Product {
   locationCity             String?                                @map("location_city") @db.VarChar(100)
   locationRegion           String?                                @map("location_region") @db.VarChar(100)
 
+  // Logistics Criteria
+  isFragile             Boolean  @default(false) @map("is_fragile")
+  requiresColdChain     Boolean  @default(false) @map("requires_cold_chain")
+  maxTemperatureCelsius Decimal? @map("max_temperature_celsius") @db.Decimal(5, 2)
+  maxHumidity           Decimal? @map("max_humidity") @db.Decimal(5, 2)
+
+  // General elaboration description (if not using step-by-step)
+  elaborationText      String?  @map("elaboration_text") @db.Text
+  elaborationMediaUrls String[] @map("elaboration_media_urls")
+
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  seller   Seller          @relation(fields: [sellerId], references: [id], onDelete: Cascade)
-  category ProductCategory @relation(fields: [categoryId], references: [id])
-  ratings  ProductRating[]
-  orders   ProductOrder[]
-  comments ProductComment[]
+  seller           Seller                   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  category         ProductCategory          @relation(fields: [categoryId], references: [id])
+  ratings          ProductRating[]
+  orders           ProductOrder[]
+  comments         ProductComment[]
+  elaborationSteps ProductElaborationStep[]
+  favoritedBy      UserFavoriteProduct[]
 
   @@index([sellerId])
   @@index([locationCoords], type: Gist)
   @@index([isActive])
   @@map("product")
+}
+
+// ---------------------------------------------------------------------------
+// ProductElaborationStep
+// ---------------------------------------------------------------------------
+
+model ProductElaborationStep {
+  id          Int      @id @default(autoincrement())
+  productId   String   @map("product_id") @db.Uuid
+  stepNumber  Int      @map("step_number")
+  title       String?  @db.VarChar(255)
+  description String   @db.Text
+  mediaUrls   String[] @map("media_urls")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, stepNumber])
+  @@index([productId])
+  @@map("product_elaboration_step")
 }
 
 // ---------------------------------------------------------------------------
@@ -276,12 +313,12 @@ model ProductRating {
 // ---------------------------------------------------------------------------
 
 model ProductComment {
-  id              Int       @id @default(autoincrement()) @map("id_comentario")
-  productId       String    @map("id_producto") @db.Uuid
-  userId          String    @map("id_usuario") @db.Uuid
-  content         String    @map("comentario") @db.Text
-  parentCommentId Int?      @map("id_respuesta")
-  publishedAt     DateTime  @default(now()) @map("fh_publicacion") @db.Timestamptz
+  id              Int      @id @default(autoincrement()) @map("id_comentario")
+  productId       String   @map("id_producto") @db.Uuid
+  userId          String   @map("id_usuario") @db.Uuid
+  content         String   @map("comentario") @db.Text
+  parentCommentId Int?     @map("id_respuesta")
+  publishedAt     DateTime @default(now()) @map("fh_publicacion") @db.Timestamptz
 
   // Relaciones
   product       Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
@@ -324,18 +361,33 @@ model ProductOrder {
   sellerRatingValue Int?        @map("seller_rating_value")
   buyerRatingValue  Int?        @map("buyer_rating_value")
   transactionHash   String?     @map("transaction_hash") @db.VarChar(255)
+  paymentMethod     String?     @map("payment_method") @db.VarChar(50)
   currentStatus     OrderStatus @default(PENDING) @map("current_status")
+
+  // Origin
+  originCoords           Unsupported("geography(Point, 4326)")? @map("origin_coords")
+  originMapboxId         String?                                @map("origin_mapbox_id") @db.VarChar(100)
+  originFormattedAddress String?                                @map("origin_formatted_address")
+  originCity             String?                                @map("origin_city") @db.VarChar(100)
+  originRegion           String?                                @map("origin_region") @db.VarChar(100)
+
+  // Destination
+  destinationCoords           Unsupported("geography(Point, 4326)")? @map("destination_coords")
+  destinationMapboxId         String?                                @map("destination_mapbox_id") @db.VarChar(100)
+  destinationFormattedAddress String?                                @map("destination_formatted_address")
+  destinationCity             String?                                @map("destination_city") @db.VarChar(100)
+  destinationRegion           String?                                @map("destination_region") @db.VarChar(100)
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  product       Product              @relation(fields: [productId], references: [id])
-  buyer         UserAccount          @relation("BuyerOrders", fields: [buyerId], references: [id])
-  carrier       ShippingCarrier?     @relation(fields: [carrierId], references: [id])
-  statusHistory OrderStatusHistory[]
-  chatMessages  OrderChat[]          @relation("OrderChatMessages")
-  blockchainRecord  BlockchainRecord?
+  product          Product              @relation(fields: [productId], references: [id])
+  buyer            UserAccount          @relation("BuyerOrders", fields: [buyerId], references: [id])
+  carrier          ShippingCarrier?     @relation(fields: [carrierId], references: [id])
+  statusHistory    OrderStatusHistory[]
+  chatMessages     OrderChat[]          @relation("OrderChatMessages")
+  blockchainRecord BlockchainRecord?
 
   @@index([buyerId])
   @@index([currentStatus])
@@ -369,11 +421,11 @@ model OrderStatusHistory {
 // ---------------------------------------------------------------------------
 
 model OrderChat {
-  id         Int      @id @default(autoincrement()) @map("id_mensaje")
-  orderId    String   @map("id_pedido") @db.Uuid
-  senderId   String   @map("id_remitente") @db.Uuid
-  message    String   @map("mensaje") @db.Text
-  sentAt     DateTime @default(now()) @map("fh_envio") @db.Timestamptz
+  id       Int      @id @default(autoincrement()) @map("id_mensaje")
+  orderId  String   @map("id_pedido") @db.Uuid
+  senderId String   @map("id_remitente") @db.Uuid
+  message  String   @map("mensaje") @db.Text
+  sentAt   DateTime @default(now()) @map("fh_envio") @db.Timestamptz
 
   // Relaciones
   order  ProductOrder @relation("OrderChatMessages", fields: [orderId], references: [id], onDelete: Cascade)
@@ -424,23 +476,140 @@ model RefreshToken {
 // ---------------------------------------------------------------------------
 
 model BlockchainRecord {
-  id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  orderId          String           @unique @map("order_id") @db.Uuid
-  transactionHash  String?          @map("transaction_hash") @db.VarChar(255)
-  blockNumber      Int?             @map("block_number")
-  networkName      String           @default("arbitrum") @map("network_name") @db.VarChar(50)
-  status           BlockchainStatus @default(PENDING)
-  retryCount       Int              @default(0) @map("retry_count")
-  errorMessage     String?          @map("error_message")
-  gasUsed          String?          @map("gas_used") @db.VarChar(50)
-  submittedAt      DateTime?        @map("submitted_at") @db.Timestamptz
-  confirmedAt      DateTime?        @map("confirmed_at") @db.Timestamptz
-  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz
+  id              String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId         String           @unique @map("order_id") @db.Uuid
+  transactionHash String?          @map("transaction_hash") @db.VarChar(255)
+  blockNumber     Int?             @map("block_number")
+  networkName     String           @default("arbitrum") @map("network_name") @db.VarChar(50)
+  status          BlockchainStatus @default(PENDING)
+  retryCount      Int              @default(0) @map("retry_count")
+  errorMessage    String?          @map("error_message")
+  gasUsed         String?          @map("gas_used") @db.VarChar(50)
+  submittedAt     DateTime?        @map("submitted_at") @db.Timestamptz
+  confirmedAt     DateTime?        @map("confirmed_at") @db.Timestamptz
+  webhookUrl      String?          @map("webhook_url") @db.VarChar(512)
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz
+
+  // Campos de NFT (infraestructura para feature futuro)
+  nftTokenId      String?          @map("nft_token_id") @db.VarChar(100)
+  nftTxHash       String?          @map("nft_tx_hash") @db.VarChar(255)
+  nftMintedAt     DateTime?        @map("nft_minted_at") @db.Timestamptz
 
   // Relations
-  order            ProductOrder     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order ProductOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([status])
   @@index([transactionHash])
+  @@index([nftTokenId])
   @@map("blockchain_record")
 }
+
+// ── Gobernanza ───────────────────────────────────────────────────────────
+
+enum GovernanceRole {
+  NONE
+  MEMBER
+  ELDER
+
+  @@map("governance_role_enum")
+}
+
+enum ProposalStatus {
+  PENDING
+  APPROVED
+  VETOED
+  CONFIRMED
+  FAILED
+
+  @@map("proposal_status_enum")
+}
+
+model GovernanceMember {
+  id            String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String         @unique @map("user_id")
+  walletAddress String         @unique @map("wallet_address") @db.VarChar(42)
+  role          GovernanceRole @default(NONE)
+  assignedAt    DateTime       @default(now()) @map("assigned_at") @db.Timestamptz
+  assignedBy    String?        @map("assigned_by")
+
+  votes Vote[]
+
+  @@index([role])
+  @@map("governance_member")
+}
+
+model Proposal {
+  id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  proposalId      String         @unique @map("proposal_id")
+  contentHash     String         @map("content_hash")
+  proposerUserId  String         @map("proposer_user_id")
+  status          ProposalStatus @default(PENDING)
+  votesFor        Int            @default(0) @map("votes_for")
+  votesAgainst    Int            @default(0) @map("votes_against")
+  vetoReason      String?        @map("veto_reason")
+  vetoedBy        String?        @map("vetoed_by")
+  transactionHash String?        @map("transaction_hash") @db.VarChar(255)
+  blockNumber     Int?           @map("block_number")
+  gasUsed         String?        @map("gas_used") @db.VarChar(50)
+  deadline        DateTime       @map("deadline") @db.Timestamptz
+  createdAt       DateTime       @default(now()) @map("created_at") @db.Timestamptz
+  confirmedAt     DateTime?      @map("confirmed_at") @db.Timestamptz
+
+  votes Vote[]
+
+  @@index([status])
+  @@index([status, createdAt])
+  @@index([proposerUserId])
+  @@map("proposal")
+}
+
+model Vote {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  proposalId String   @map("proposal_id") @db.Uuid
+  voterId    String   @map("voter_id") @db.Uuid
+  inFavor    Boolean  @map("in_favor")
+  weight     Int      @default(1)
+  txHash     String?  @map("tx_hash") @db.VarChar(255)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  proposal Proposal         @relation(fields: [proposalId], references: [id])
+  voter    GovernanceMember @relation(fields: [voterId], references: [id])
+
+  @@unique([proposalId, voterId])
+  @@map("vote")
+}
+
+// ---------------------------------------------------------------------------
+// UserFavoriteProduct (Wishlist)
+// ---------------------------------------------------------------------------
+
+model UserFavoriteProduct {
+  userId    String   @map("id_usuario") @db.Uuid
+  productId String   @map("id_producto") @db.Uuid
+  createdAt DateTime @default(now()) @map("fh_creacion") @db.Timestamptz
+
+  user    UserAccount @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@id([userId, productId])
+  @@map("favoritos_usuario")
+}
+
+// ---------------------------------------------------------------------------
+// Notification
+// ---------------------------------------------------------------------------
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    String   @map("id_user") @db.Uuid
+  title     String   @map("tittle") @db.VarChar(255)
+  message   String   @map("messege") @db.Text
+  isRead    Boolean  @default(false) @map("isReaded")
+  createdAt DateTime @default(now()) @map("timesspams") @db.Timestamptz
+
+  user UserAccount @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@map("Notificaciones")
+}
+

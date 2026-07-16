@@ -2,7 +2,7 @@ import React from "react";
 import Image from "next/image";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
-import { ArrowRight } from "lucide-react";
+import { Icon } from "@iconify/react";
 
 export function HeroSection() {
   return (
@@ -34,13 +34,15 @@ export function HeroSection() {
           </p>
 
           {/* CTA Button */}
-          <Button
-            variant="primary"
-            className="mb-5 group rounded-full!"
-            rightIcon={<ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" strokeWidth={2.5} />}
+          <a
+            href="#soluciones"
+            className="inline-flex items-center px-6 py-3 text-base justify-center font-semibold transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer bg-brand-primary text-white hover:bg-brand-primary-dark shadow-lg shadow-brand-primary/20 mb-5 group rounded-full"
           >
-            Explorar herramientas
-          </Button>
+            <span>
+              Explorar soluciones
+            </span>
+            <Icon icon="lucide:arrow-right" className="w-4 h-4 group-hover:translate-x-1 transition-transform" strokeWidth={2.5} />
+          </a>
 
           {/* Bottom text */}
           <p className="text-xs text-white/80 drop-shadow-sm">

@@ -25,6 +25,18 @@ export class ProductOrderResponseDto {
   buyerRatingValue: number | null;
   transactionHash: string | null;
   currentStatus: OrderStatus;
+
+  // Origin fields
+  originMapboxId: string | null;
+  originFormattedAddress: string | null;
+  originCity: string | null;
+  originRegion: string | null;
+  // Destination fields
+  destinationMapboxId: string | null;
+  destinationFormattedAddress: string | null;
+  destinationCity: string | null;
+  destinationRegion: string | null;
+
   createdAt: Date;
   updatedAt: Date;
   product?: any; // ProductResponseDto

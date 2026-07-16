@@ -12,7 +12,11 @@ export class OrderChatService {
       where: { id: createDto.orderId },
       include: {
         product: {
-          select: { sellerId: true }
+          select: {
+            seller: {
+              select: { user: { select: { id: true } } }
+            }
+          }
         }
       }
     });
@@ -21,7 +25,8 @@ export class OrderChatService {
       throw new NotFoundException('El pedido no existe');
     }
 
-    if (order.buyerId !== userId && order.product.sellerId !== userId) {
+    if (order.buyerId !== userId && order.product.seller.user.id !== userId) {
+      console.error(`AUTH FAIL CREATE: buyerId=${order.buyerId}, sellerUserId=${order.product.seller.user.id}, requestUserId=${userId}`);
       throw new ForbiddenException('No tienes permiso para comentar en este pedido');
     }
 
@@ -67,7 +72,11 @@ export class OrderChatService {
       where: { id: orderId },
       include: {
         product: {
-          select: { sellerId: true }
+          select: {
+            seller: {
+              select: { user: { select: { id: true } } }
+            }
+          }
         }
       }
     });
@@ -76,7 +85,8 @@ export class OrderChatService {
       throw new NotFoundException('El pedido no existe');
     }
 
-    if (order.buyerId !== userId && order.product.sellerId !== userId) {
+    if (order.buyerId !== userId && order.product.seller.user.id !== userId) {
+      console.error(`AUTH FAIL GET: buyerId=${order.buyerId}, sellerUserId=${order.product.seller.user.id}, requestUserId=${userId}`);
       throw new ForbiddenException('No tienes permiso para ver este chat');
     }
 

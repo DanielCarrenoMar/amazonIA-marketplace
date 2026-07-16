@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { Icon } from "@iconify/react";
 
 export interface AccordionItemData {
   id: string;
@@ -56,7 +56,7 @@ export const Accordion: React.FC<AccordionProps> = ({
               className="flex w-full flex-1 items-center cursor-pointer justify-between py-4 text-sm font-semibold transition-all hover:text-brand-primary disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
             >
               {item.title}
-              <ChevronDown
+              <Icon icon="lucide:chevron-down"
                 className={`h-4 w-4 shrink-0 text-muted transition-transform duration-300 ${
                   isOpen ? "rotate-180 text-brand-primary" : ""
                 }`}

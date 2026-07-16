@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import {  CreateProductCategoryDto, ProductCategoryResponseDto, PaginatedResponseDto  } from 'event-types';
+import {  CreateProductCategoryDto, ProductCategoryResponseDto, PaginatedResponseDto, GroupedCategoryResponseDto  } from 'event-types';
 import {  UpdateProductCategoryDto, PaginationDto  } from 'event-types';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -13,19 +13,24 @@ export class ProductCategoryService {
     });
   }
 
-  async findAll(query?: PaginationDto): Promise<PaginatedResponseDto<ProductCategoryResponseDto>> {
-    const { page = 1, limit = 10 } = query || {};
-    const skip = (page - 1) * limit;
+  async findAll(): Promise<GroupedCategoryResponseDto[]> {
+    const categories = await this.prisma.productCategory.findMany();
 
-    const [total, data] = await Promise.all([
-      this.prisma.productCategory.count(),
-      this.prisma.productCategory.findMany({ skip, take: limit }),
-    ]);
+    const groupedMap = new Map<string, { id: number; subcategoryName: string | null }[]>();
+    for (const cat of categories) {
+      if (!groupedMap.has(cat.categoryName)) {
+        groupedMap.set(cat.categoryName, []);
+      }
+      groupedMap.get(cat.categoryName)!.push({
+        id: cat.id,
+        subcategoryName: cat.subcategoryName,
+      });
+    }
 
-    return {
-      data,
-      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
-    };
+    return Array.from(groupedMap.entries()).map(([categoryName, subcategories]) => ({
+      categoryName,
+      subcategories,
+    }));
   }
 
   async findOne(id: number): Promise<ProductCategoryResponseDto> {

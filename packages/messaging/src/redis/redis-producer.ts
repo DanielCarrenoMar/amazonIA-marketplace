@@ -3,11 +3,12 @@ import { IMessageProducer } from '../interfaces';
 import { StreamTopic } from '../streams';
 import { createRedisClient } from './redis.config';
 
-export class RedisProducerService implements IMessageProducer {
-  private redis: Redis;
 
-  constructor(redis?: Redis) {
-    this.redis = redis ?? createRedisClient();
+export class RedisProducerService implements IMessageProducer {
+  private redis: Redis | null;
+
+  constructor(redis?: Redis | null) {
+    this.redis = redis !== undefined ? redis : createRedisClient();
   }
 
   async produce<T extends Record<string, unknown>>(
@@ -22,6 +23,10 @@ export class RedisProducerService implements IMessageProducer {
       fields.key = key;
     }
 
+    if (!this.redis) {
+      throw new Error('Redis client is not configured. Falling back to outbox if applicable.');
+    }
+
     await this.redis.xadd(topic, '*', fields);
     // Limit stream to approximately the last 1000 entries
     await this.redis.xtrim(topic, { strategy: 'MAXLEN', threshold: 1000, exactness: '~' });
@@ -34,8 +39,11 @@ export class RedisProducerService implements IMessageProducer {
   ): Promise<void> {
     if (messages.length === 0) return;
 
-    const pipeline = this.redis.pipeline();
+    if (!this.redis) {
+      throw new Error('Redis client is not configured. Falling back to outbox if applicable.');
+    }
 
+    const pipeline = this.redis.pipeline();
     for (const msg of messages) {
       const key = keyExtractor ? keyExtractor(msg) : undefined;
       const fields: Record<string, unknown> = {
