@@ -218,6 +218,18 @@ CREATE TABLE IF NOT EXISTS product_order (
     transaction_hash            VARCHAR(255),
     -- Current lifecycle state
     current_status              order_status_enum        NOT NULL DEFAULT 'PENDING',
+    -- Destination spatial location
+    destination_coords            GEOGRAPHY(Point, 4326),
+    destination_mapbox_id         VARCHAR(100),
+    destination_formatted_address TEXT,
+    destination_city              VARCHAR(100),
+    destination_region            VARCHAR(100),
+    -- Origin spatial location
+    origin_coords                 GEOGRAPHY(Point, 4326),
+    origin_mapbox_id              VARCHAR(100),
+    origin_formatted_address      TEXT,
+    origin_city                   VARCHAR(100),
+    origin_region                 VARCHAR(100),
     -- Audit
     created_at                  TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at                  TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,

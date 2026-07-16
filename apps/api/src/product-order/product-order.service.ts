@@ -34,7 +34,27 @@ export class ProductOrderService {
       // 1. Get the current stock and price
       const product = await tx.product.findUnique({
         where: { id: createProductOrderDto.productId },
-        select: { stockAvailable: true, price: true, sellerId: true },
+        select: { 
+          stockAvailable: true, 
+          price: true, 
+          sellerId: true,
+          locationMapboxId: true,
+          locationFormattedAddress: true,
+          locationCity: true,
+          locationRegion: true,
+          seller: {
+            select: {
+              user: {
+                select: {
+                  locationMapboxId: true,
+                  locationFormattedAddress: true,
+                  locationCity: true,
+                  locationRegion: true,
+                }
+              }
+            }
+          }
+        },
       });
 
       if (!product) {
@@ -85,6 +105,12 @@ export class ProductOrderService {
       const finalCity = rest.destinationCity ?? buyer.locationCity;
       const finalRegion = rest.destinationRegion ?? buyer.locationRegion;
 
+      // Use product location, or fallback to seller's user profile location
+      const originMapboxId = product.locationMapboxId ?? product.seller.user.locationMapboxId;
+      const originFormattedAddress = product.locationFormattedAddress ?? product.seller.user.locationFormattedAddress;
+      const originCity = product.locationCity ?? product.seller.user.locationCity;
+      const originRegion = product.locationRegion ?? product.seller.user.locationRegion;
+
       // 5. Create the order
       const order = await tx.productOrder.create({
         data: {
@@ -93,6 +119,10 @@ export class ProductOrderService {
           destinationFormattedAddress: finalFormattedAddress,
           destinationCity: finalCity,
           destinationRegion: finalRegion,
+          originMapboxId,
+          originFormattedAddress,
+          originCity,
+          originRegion,
           buyerId,
           totalAmount,
           currentStatus: OrderStatus.PENDING
@@ -101,16 +131,27 @@ export class ProductOrderService {
 
       // 6. Set Spatial Coordinates
       // If client provided explicitly coords, use them. Otherwise, copy from the buyer's profile via SQL.
+      // Additionally, always set origin_coords from product or seller location.
       if (destinationCoords && destinationCoords.latitude != null && destinationCoords.longitude != null) {
         await tx.$executeRaw`
           UPDATE product_order 
-          SET destination_coords = ST_SetSRID(ST_MakePoint(${destinationCoords.longitude}, ${destinationCoords.latitude}), 4326)
+          SET 
+            destination_coords = ST_SetSRID(ST_MakePoint(${destinationCoords.longitude}, ${destinationCoords.latitude}), 4326),
+            origin_coords = COALESCE(
+              (SELECT location_coords FROM product WHERE id = ${createProductOrderDto.productId}::uuid),
+              (SELECT location_coords FROM user_account WHERE id = ${product.sellerId}::uuid)
+            )
           WHERE id = ${order.id}::uuid;
         `;
       } else {
         await tx.$executeRaw`
           UPDATE product_order 
-          SET destination_coords = (SELECT location_coords FROM user_account WHERE id = ${buyerId}::uuid)
+          SET 
+            destination_coords = (SELECT location_coords FROM user_account WHERE id = ${buyerId}::uuid),
+            origin_coords = COALESCE(
+              (SELECT location_coords FROM product WHERE id = ${createProductOrderDto.productId}::uuid),
+              (SELECT location_coords FROM user_account WHERE id = ${product.sellerId}::uuid)
+            )
           WHERE id = ${order.id}::uuid;
         `;
       }
