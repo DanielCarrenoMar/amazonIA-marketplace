@@ -32,6 +32,8 @@ export class ProductOrderService {
     private readonly outbox: OutboxService,
     private readonly telemetryIntegration: TelemetryIntegrationService,
     private readonly configService: ConfigService,
+    private readonly notaryClient: NotaryClientService,
+    private readonly notificationService: NotificationService,
   ) {}
 
 
