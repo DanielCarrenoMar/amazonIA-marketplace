@@ -41,6 +41,7 @@ export default function ProductDetailPage() {
   const [activeTab, setActiveTab] = useState<'process' | 'additional_info' | 'artisan'>('process');
   const [activeReviewIndex, setActiveReviewIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollRelated, setCanScrollRelated] = useState(false);
   const [isBuying, setIsBuying] = useState(false);
 
   // Authentication & Reviews
@@ -69,6 +70,22 @@ export default function ProductDetailPage() {
   const handleNextMedia = () => {
     setActiveMediaIndex((prev) => (prev === behindTheScenesMedia.length - 1 ? 0 : prev + 1));
   };
+
+  useEffect(() => {
+    const checkScroll = () => {
+      if (scrollRef.current) {
+        setCanScrollRelated(scrollRef.current.scrollWidth > scrollRef.current.clientWidth);
+      }
+    };
+    checkScroll();
+    // Use setTimeout to ensure DOM is fully rendered before checking again
+    const timeout = setTimeout(checkScroll, 100);
+    window.addEventListener('resize', checkScroll);
+    return () => {
+      clearTimeout(timeout);
+      window.removeEventListener('resize', checkScroll);
+    };
+  }, [relatedProducts]);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -756,18 +773,22 @@ export default function ProductDetailPage() {
 
           <div className="relative group">
             {/* Side Arrows */}
-            <button
-              onClick={() => scroll('left')}
-              className="absolute -left-4 md:-left-5 top-[40%] -translate-y-1/2 w-12 h-12 rounded-full bg-white hover:bg-gray-50 flex items-center justify-center shadow-lg border border-gray-100 z-10 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-            >
-              <Icon icon="lucide:chevron-left" className="w-6 h-6 text-slate-700" />
-            </button>
-            <button
-              onClick={() => scroll('right')}
-              className="absolute -right-4 md:-right-5 top-[40%] -translate-y-1/2 w-12 h-12 rounded-full bg-white hover:bg-gray-50 flex items-center justify-center shadow-lg border border-gray-100 z-10 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-            >
-              <Icon icon="lucide:chevron-right" className="w-6 h-6 text-slate-700" />
-            </button>
+            {canScrollRelated && (
+              <>
+                <button
+                  onClick={() => scroll('left')}
+                  className="absolute -left-4 md:-left-5 top-[40%] -translate-y-1/2 w-12 h-12 rounded-full bg-white hover:bg-gray-50 flex items-center justify-center shadow-lg border border-gray-100 z-10 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                >
+                  <Icon icon="lucide:chevron-left" className="w-6 h-6 text-slate-700" />
+                </button>
+                <button
+                  onClick={() => scroll('right')}
+                  className="absolute -right-4 md:-right-5 top-[40%] -translate-y-1/2 w-12 h-12 rounded-full bg-white hover:bg-gray-50 flex items-center justify-center shadow-lg border border-gray-100 z-10 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                >
+                  <Icon icon="lucide:chevron-right" className="w-6 h-6 text-slate-700" />
+                </button>
+              </>
+            )}
 
             {/* Scroll Container */}
             <div
