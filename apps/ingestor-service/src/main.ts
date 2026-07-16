@@ -1,4 +1,4 @@
-try { require('dotenv/config'); } catch {}
+try { require('dotenv/config'); } catch { }
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { Transport, MicroserviceOptions } from '@nestjs/microservices';
@@ -30,6 +30,7 @@ async function bootstrap() {
       protocol: 'mqtts', // Obligatorio TLS en HiveMQ Cloud
       username: process.env.HIVEMQ_USERNAME,
       password: process.env.HIVEMQ_PASSWORD,
+      clean: true,
     },
   });
 
