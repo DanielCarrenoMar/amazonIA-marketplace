@@ -14,8 +14,8 @@ const client = mqtt.connect({
   password: process.env.SENSOR_1_PASSWORD,
 });
 
-const CONTAINER_ID = "DEV-AMAZONIA-002";
-const TOPIC = `amazonia/iot/control/${CONTAINER_ID}`;
+const SENSOR_ID = "ORD-002";
+const TOPIC = `amazonia/iot/control/${SENSOR_ID}`;
 
 const assignmentPayload = {
   action: "START_TRANSIT",
@@ -26,7 +26,7 @@ const assignmentPayload = {
 
 client.on("connect", () => {
   console.log(`\n🔗 Conectado a HiveMQ.`);
-  console.log(`🚀 Enviando orden de asignación al contenedor: ${CONTAINER_ID}...`);
+  console.log(`🚀 Enviando orden de asignación al sensor: ${SENSOR_ID}...`);
   
   client.publish(TOPIC, JSON.stringify(assignmentPayload), { qos: 1 }, (err) => {
     if (err) {

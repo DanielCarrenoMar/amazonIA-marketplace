@@ -65,6 +65,11 @@ if (username.toLowerCase().includes("clima")) {
 }
 
 let trackingNumber = prefix === "CLM" ? `CLM-${sensorNumber}` : null;
+const SENSOR_ID =
+  prefix === "CLM"
+    ? `CLM-${sensorNumber}`
+    : `ORD-${sensorNumber.padStart(3, "0")}`;
+
 const CONTAINER_ID =
   prefix === "CLM"
     ? `DEV-CLIMA-${sensorNumber.padStart(3, "0")}`
@@ -197,7 +202,7 @@ function publishTelemetry() {
     payload.metadata = {
       tracking_number: trackingNumber,
       container_id: CONTAINER_ID,
-      sensor_id: CONTAINER_ID,
+      sensor_id: SENSOR_ID,
     };
     const checkpoint = routeCheckpoints[currentCheckpoint];
     payload.business_context = {
@@ -251,7 +256,7 @@ client.on("connect", () => {
   );
 
   if (prefix !== "CLM") {
-    const controlTopic = `amazonia/iot/control/${CONTAINER_ID}`;
+    const controlTopic = `amazonia/iot/control/${SENSOR_ID}`;
     client.subscribe(controlTopic, { qos: 1 }, (err) => {
       if (err) {
         console.error(`❌ Error al suscribirse al tópico de control: ${err.message}`);
@@ -271,7 +276,7 @@ client.on("connect", () => {
 });
 
 client.on("message", (topic, message) => {
-  if (topic === `amazonia/iot/control/${CONTAINER_ID}`) {
+  if (topic === `amazonia/iot/control/${SENSOR_ID}`) {
     try {
       const data = JSON.parse(message.toString());
       if (data.action === "START_TRANSIT") {
