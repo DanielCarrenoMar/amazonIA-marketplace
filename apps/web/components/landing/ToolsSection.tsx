@@ -25,7 +25,7 @@ export function ToolsSection() {
   ];
 
   return (
-    <section id="herramientas" className="w-full bg-linear-to-b from-brand-primary to-[#064e3b] py-24 px-6 md:px-12 flex flex-col">
+    <section id="soluciones" className="w-full bg-linear-to-b from-brand-primary to-[#064e3b] py-24 px-6 md:px-12 flex flex-col">
       <div className="w-full max-w-4xl mx-auto flex flex-col gap-6 items-center text-center mb-16">
         <h2 className="text-4xl md:text-5xl font-bold text-white leading-[1.15]">
           Tecnología al servicio <br className="hidden md:block" />
