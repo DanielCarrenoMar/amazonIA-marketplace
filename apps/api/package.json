@@ -47,6 +47,7 @@
     "event-types": "workspace:*",
     "helmet": "^8.1.0",
     "messaging": "workspace:*",
+    "mqtt": "^5.15.1",
     "mongoose": "^8.24.0",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",

@@ -52,52 +52,30 @@ console.log(`🔗 Conectando a HiveMQ Cloud en ${hivemqHost}:${hivemqPort}...`);
 // Determinar tipo de sensor basado en el usuario de HiveMQ
 const username = process.env.HIVEMQ_USERNAME || "";
 let prefix = "ORD";
-let sensorNumber = "001";
+let sensorNumber = "1";
 
 if (username.toLowerCase().includes("clima")) {
   prefix = "CLM";
-  sensorNumber = username.replace(/\D/g, "") || "001";
+  const digits = username.replace(/\D/g, "");
+  sensorNumber = digits ? parseInt(digits, 10).toString() : "1";
 } else if (username.toLowerCase().includes("sensor")) {
   prefix = "ORD";
-  sensorNumber = username.replace(/\D/g, "") || "001";
+  const digits = username.replace(/\D/g, "");
+  sensorNumber = digits ? parseInt(digits, 10).toString() : "1";
 }
 
-const formattedNumber = sensorNumber.padStart(3, "0");
-const ORDER_ID = `${prefix}-${formattedNumber}`;
+let trackingNumber = prefix === "CLM" ? `CLM-${sensorNumber}` : null;
+const SENSOR_ID =
+  prefix === "CLM"
+    ? `CLM-${sensorNumber}`
+    : `ORD-${sensorNumber.padStart(3, "0")}`;
+
 const CONTAINER_ID =
   prefix === "CLM"
-    ? `DEV-CLIMA-${formattedNumber}`
-    : `DEV-AMAZONIA-${formattedNumber}`;
+    ? `DEV-CLIMA-${sensorNumber.padStart(3, "0")}`
+    : `DEV-AMAZONIA-${sensorNumber.padStart(3, "0")}`;
 
-// Ruta simulada: puntos GPS del Amazonas
-const ROUTE_CHECKPOINTS = [
-  { lat: -3.119, lng: -60.0217, name: "Manaos - Origen", status: "ORIGIN" },
-  {
-    lat: -3.2741,
-    lng: -60.4522,
-    name: "Puerto Fluvial Iranduba",
-    status: "IN_TRANSIT",
-  },
-  { lat: -3.4653, lng: -62.2159, name: "Alenquer", status: "IN_TRANSIT" },
-  {
-    lat: -2.4384,
-    lng: -54.7308,
-    name: "Santarém - Checkpoint",
-    status: "CHECKPOINT",
-  },
-  {
-    lat: -1.4558,
-    lng: -48.5044,
-    name: "Belém - Zona Urbana",
-    status: "NEAR_DESTINATION",
-  },
-  {
-    lat: -1.3567,
-    lng: -48.4682,
-    name: "Belém - Destino Final",
-    status: "DELIVERED",
-  },
-];
+
 
 // Estaciones meteorológicas fijas en la cuenca del Amazonas
 const WEATHER_STATIONS = [
@@ -109,6 +87,8 @@ const WEATHER_STATIONS = [
 ];
 
 let currentCheckpoint = 0;
+let isAssigned = false;
+let routeCheckpoints = [];
 
 // Seleccionar estación fija para sensores de clima (basado en número de sensor)
 const weatherStationIndex =
@@ -117,6 +97,30 @@ const weatherStationIndex =
     : 0;
 
 // ── Helpers ──
+function generateRoute(origin, destination) {
+  const steps = 5;
+  const checkpoints = [];
+  for (let i = 0; i <= steps; i++) {
+    const ratio = i / steps;
+    const lat = origin.lat + (destination.lat - origin.lat) * ratio;
+    const lng = origin.lng + (destination.lng - origin.lng) * ratio;
+
+    let status = "IN_TRANSIT";
+    if (i === 0) status = "ORIGIN";
+    else if (i === steps) status = "DELIVERED";
+    else if (i === steps - 1) status = "NEAR_DESTINATION";
+    else if (i === Math.floor(steps / 2)) status = "CHECKPOINT";
+
+    checkpoints.push({
+      lat,
+      lng,
+      name: i === 0 ? "Origen" : i === steps ? "Destino Final" : `Punto de Control ${i}`,
+      status
+    });
+  }
+  return checkpoints;
+}
+
 function randomBetween(min, max) {
   return parseFloat((Math.random() * (max - min) + min).toFixed(2));
 }
@@ -150,6 +154,11 @@ function mapStatus(status) {
 
 // ── Publicar evento consolidado compatible ─────────────────────────
 function publishTelemetry() {
+  if (prefix !== "CLM" && !isAssigned) {
+    console.log(`⏳ [SENSOR] ${CONTAINER_ID} en espera de asignación de paquete y ruta...`);
+    return;
+  }
+
   let lat, lng, locationName;
 
   if (prefix === "CLM") {
@@ -160,7 +169,7 @@ function publishTelemetry() {
     locationName = station.name;
   } else {
     // Sensor de paquete: avanza por la ruta
-    const checkpoint = ROUTE_CHECKPOINTS[currentCheckpoint];
+    const checkpoint = routeCheckpoints[currentCheckpoint];
     lat = checkpoint.lat + randomBetween(-0.005, 0.005);
     lng = checkpoint.lng + randomBetween(-0.005, 0.005);
     locationName = checkpoint.name;
@@ -169,16 +178,14 @@ function publishTelemetry() {
   const payload = {
     event_type: prefix === "CLM" ? "environment_reading" : "shipment_telemetry",
     recorded_at: getTimestamp(),
-    location: {
-      type: "Point",
-      coordinates: [parseFloat(lng.toFixed(6)), parseFloat(lat.toFixed(6))], // [longitude, latitude] GeoJSON
-    },
+    latitude: parseFloat(lat.toFixed(6)),
+    longitude: parseFloat(lng.toFixed(6)),
   };
 
   if (prefix === "CLM") {
     // Contexto de estación meteorológica (metadata DTO compatible)
     payload.metadata = {
-      sensor_id: ORDER_ID,
+      sensor_id: trackingNumber,
       facility_id: "FAC-AMAZONAS-01",
       sensor_type: "fixed_hvac"
     };
@@ -193,10 +200,11 @@ function publishTelemetry() {
   } else {
     // Contexto logístico (metadata y business_context)
     payload.metadata = {
-      tracking_number: ORDER_ID,
+      tracking_number: trackingNumber,
       container_id: CONTAINER_ID,
+      sensor_id: SENSOR_ID,
     };
-    const checkpoint = ROUTE_CHECKPOINTS[currentCheckpoint];
+    const checkpoint = routeCheckpoints[currentCheckpoint];
     payload.business_context = {
       status: mapStatus(checkpoint.status),
       scan_type: "gps",
@@ -215,7 +223,7 @@ function publishTelemetry() {
   console.log(
     `   Lugar: ${locationName} | Tipo: ${prefix === "CLM" ? "Clima" : "Paquete"}`,
   );
-  console.log(`   GPS: [${payload.location.coordinates.join(", ")}]`);
+  console.log(`   GPS: [${payload.latitude}, ${payload.longitude}]`);
 
   if (prefix === "CLM") {
     console.log(
@@ -229,11 +237,13 @@ function publishTelemetry() {
 
   // Avanzar checkpoint solo para sensores de paquete
   if (prefix !== "CLM") {
-    if (currentCheckpoint < ROUTE_CHECKPOINTS.length - 1) {
-      currentCheckpoint++;
-    } else {
-      console.log("🔄 Ruta completada. Reiniciando simulación del trayecto...");
-      currentCheckpoint = 0;
+    if (isAssigned) {
+      if (currentCheckpoint < routeCheckpoints.length - 1) {
+        currentCheckpoint++;
+      } else {
+        console.log("🔄 Ruta completada. Reiniciando simulación del trayecto...");
+        currentCheckpoint = 0;
+      }
     }
   }
 }
@@ -242,8 +252,20 @@ function publishTelemetry() {
 client.on("connect", () => {
   console.log(`✅ Sensor conectado exitosamente a HiveMQ Cloud`);
   console.log(
-    `📦 Simulando dispositivo: ${ORDER_ID} (Tipo: ${prefix === "CLM" ? "Clima" : "Paquete"})`,
+    `📦 Simulando dispositivo: ${CONTAINER_ID} (Tipo: ${prefix === "CLM" ? "Clima" : "Paquete"})`,
   );
+
+  if (prefix !== "CLM") {
+    const controlTopic = `amazonia/iot/control/${SENSOR_ID}`;
+    client.subscribe(controlTopic, { qos: 1 }, (err) => {
+      if (err) {
+        console.error(`❌ Error al suscribirse al tópico de control: ${err.message}`);
+      } else {
+        console.log(`📥 Suscrito a tópico de control: ${controlTopic}`);
+      }
+    });
+  }
+
   console.log("─".repeat(55));
 
   // Publicar datos cada 5 segundos de forma consolidada y compatible
@@ -251,6 +273,32 @@ client.on("connect", () => {
 
   // Publicar el primer dato inmediatamente
   publishTelemetry();
+});
+
+client.on("message", (topic, message) => {
+  if (topic === `amazonia/iot/control/${SENSOR_ID}`) {
+    try {
+      const data = JSON.parse(message.toString());
+      if (data.action === "START_TRANSIT") {
+        if (data.trackingNumber && data.origin && data.destination) {
+          trackingNumber = data.trackingNumber;
+          routeCheckpoints = generateRoute(data.origin, data.destination);
+          currentCheckpoint = 0;
+          isAssigned = true;
+          
+          console.log(`\n🚀 [SENSOR] ${CONTAINER_ID} Activado!`);
+          console.log(`📦 Asignado al paquete: ${trackingNumber}`);
+          console.log(`📍 Ruta generada con ${routeCheckpoints.length} puntos de control desde origen a destino.`);
+          
+          publishTelemetry();
+        } else {
+          console.warn("⚠️  Mensaje START_TRANSIT incompleto. Faltan datos de tracking, origin o destination.");
+        }
+      }
+    } catch (err) {
+      console.error("❌ Error decodificando mensaje de control:", err.message);
+    }
+  }
 });
 
 client.on("error", (error) => {
