@@ -364,6 +364,13 @@ model ProductOrder {
   paymentMethod     String?     @map("payment_method") @db.VarChar(50)
   currentStatus     OrderStatus @default(PENDING) @map("current_status")
 
+  // Origin
+  originCoords           Unsupported("geography(Point, 4326)")? @map("origin_coords")
+  originMapboxId         String?                                @map("origin_mapbox_id") @db.VarChar(100)
+  originFormattedAddress String?                                @map("origin_formatted_address")
+  originCity             String?                                @map("origin_city") @db.VarChar(100)
+  originRegion           String?                                @map("origin_region") @db.VarChar(100)
+
   // Destination
   destinationCoords           Unsupported("geography(Point, 4326)")? @map("destination_coords")
   destinationMapboxId         String?                                @map("destination_mapbox_id") @db.VarChar(100)

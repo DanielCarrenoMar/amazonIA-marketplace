@@ -26,6 +26,11 @@ export class ProductOrderResponseDto {
   transactionHash: string | null;
   currentStatus: OrderStatus;
 
+  // Origin fields
+  originMapboxId: string | null;
+  originFormattedAddress: string | null;
+  originCity: string | null;
+  originRegion: string | null;
   // Destination fields
   destinationMapboxId: string | null;
   destinationFormattedAddress: string | null;
