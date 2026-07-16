@@ -72,7 +72,7 @@ export function OrderChat({ orderId, currentStatus, currentUserId }: OrderChatPr
   };
 
   return (
-    <Card padding="none" className="flex flex-col h-[500px] border border-gray-200 shadow-sm overflow-hidden bg-white">
+    <Card padding="none" className="flex flex-col flex-1 min-h-[400px] border border-gray-200 shadow-sm overflow-hidden bg-white">
       {/* Header */}
       <div className="p-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
         <h3 className="font-bold text-slate-900">Mensajes del Pedido</h3>
