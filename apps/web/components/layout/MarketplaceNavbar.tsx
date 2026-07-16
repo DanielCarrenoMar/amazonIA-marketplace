@@ -152,7 +152,7 @@ function MarketplaceNavbarContent() {
               onClick={() => setIsCartOpen(true)} 
               className="relative p-2.5 text-slate-600 hover:text-brand-primary transition-colors cursor-pointer"
             >
-              <Icon icon="lucide:shopping-cart" className="w-[22px] h-[22px]" />
+              <Icon icon="lucide:shopping-basket" className="w-[22px] h-[22px]" />
               {totalItems > 0 && (
                 <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 bg-brand-primary text-white text-[11px] font-bold rounded-full flex items-center justify-center border-2 border-white shadow-sm">
                   {totalItems}

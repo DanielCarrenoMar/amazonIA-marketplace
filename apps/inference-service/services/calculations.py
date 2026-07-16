@@ -1,5 +1,17 @@
 from typing import List, Optional
 
+# Velocidad promedio asumida por modo de transporte, solo para estimar duración
+# en metadata/auditoría. El modelo XGBoost NO usa estimated_duration_days como
+# feature (no está en model_service.model_features) — seguro de refinar después
+# sin afectar el score de riesgo. TODO: reemplazar con ETA real de un motor de ruteo.
+ASSUMED_SPEED_KMH = {"terrestre": 60.0, "fluvial": 15.0, "maritimo": 25.0, "aereo": 500.0}
+DEFAULT_SPEED_KMH = 40.0
+
+def estimate_duration_days(distance_km: float, transport_type: str) -> float:
+    """Estimates transit duration in days from distance and assumed transport speed."""
+    speed = ASSUMED_SPEED_KMH.get(transport_type, DEFAULT_SPEED_KMH)
+    return round(distance_km / speed / 24.0, 2) if speed > 0 else 5.0
+
 def safe_max(values: List[Optional[float]], default: float = 0.0) -> float:
     """Returns the maximum ignoring None values, or default if empty/all None."""
     valid_values = [v for v in values if v is not None]

@@ -3,7 +3,7 @@ import { MongoModule } from 'database';
 import { WorkerService } from './worker.service';
 
 @Module({
-  imports: [MongoModule],
+  imports: [],
   providers: [WorkerService],
 })
 export class WorkerModule {}

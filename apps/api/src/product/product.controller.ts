@@ -1,9 +1,9 @@
 import {
   Controller, Get, Post, Body, Patch, Param,
   Delete, ParseUUIDPipe, UseGuards, Query,
-  UseInterceptors, UploadedFile, BadRequestException, Req
+  UseInterceptors, UploadedFile, UploadedFiles, BadRequestException, Req
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { ProductService } from './product.service';
 import { CreateProductDto, UpdateProductDto, FindProductsDto, FindNearbyDto, UserRole, PaginationDto, ProductResponseDto, NearbyProductResponseDto, PaginatedResponseDto, ProductMetricsDto } from 'event-types';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -100,6 +100,30 @@ export class ProductController {
     }
 
     return this.productService.uploadImage(id, file, req.user);
+  }
+
+  // Only sellers and admins can upload elaboration images
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SELLER, UserRole.ADMIN)
+  @Post(':id/elaboration-images')
+  @UseInterceptors(FilesInterceptor('files', 4, {
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter: (_req, file, cb) => {
+      if (!file.mimetype.startsWith('image/')) {
+        return cb(new BadRequestException('Solo se permiten archivos de imagen'), false);
+      }
+      cb(null, true);
+    },
+  }))
+  async uploadElaborationImages(
+    @Param('id', ParseUUIDPipe) id: string,
+    @UploadedFiles() files: Express.Multer.File[],
+    @Req() req: any,
+  ): Promise<ProductResponseDto> {
+    if (!files || files.length === 0) {
+      throw new BadRequestException('No se han proporcionado archivos');
+    }
+    return this.productService.uploadElaborationImages(id, files, req.user);
   }
 
   // Only sellers and admins can delete product images

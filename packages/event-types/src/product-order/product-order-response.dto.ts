@@ -31,11 +31,13 @@ export class ProductOrderResponseDto {
   originFormattedAddress: string | null;
   originCity: string | null;
   originRegion: string | null;
+  originCoords: { latitude: number; longitude: number } | null;
   // Destination fields
   destinationMapboxId: string | null;
   destinationFormattedAddress: string | null;
   destinationCity: string | null;
   destinationRegion: string | null;
+  destinationCoords: { latitude: number; longitude: number } | null;
 
   createdAt: Date;
   updatedAt: Date;

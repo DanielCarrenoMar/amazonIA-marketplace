@@ -36,7 +36,7 @@ function buildClimateMessage(
         sensor_type: 'temperature' as any,
       },
       location: { type: 'Point', coordinates: [-73.12, -3.89] },
-      telemetry: { temperature_celsius: 22.5 },
+      telemetry: { temperature_celsius: 22.5, humidity_percent: 50 },
       ...overrides,
     },
     timestamp: Date.now(),

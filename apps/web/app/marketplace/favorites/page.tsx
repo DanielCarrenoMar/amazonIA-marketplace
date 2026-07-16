@@ -146,10 +146,10 @@ function FavoritesContent() {
                       return (
                         <Icon
                           key={star}
-                          icon="lucide:star"
+                          icon="mdi:star"
                           onMouseEnter={() => setHoverRating(star)}
                           onClick={() => setMinRating(star)}
-                          className={`w-6 h-6 cursor-pointer transition-colors ${isFilled ? "fill-amber-400 text-amber-400 hover:scale-110" : "fill-gray-300 text-gray-300 hover:scale-110 hover:fill-amber-200 hover:text-amber-200"
+                          className={`w-6 h-6 cursor-pointer transition-colors ${isFilled ? "text-amber-400 hover:scale-110" : "text-gray-300 hover:scale-110 hover:text-amber-200"
                             }`}
                         />
                       );

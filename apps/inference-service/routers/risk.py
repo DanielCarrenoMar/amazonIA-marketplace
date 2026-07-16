@@ -14,14 +14,90 @@ from services.model_service import model_service
 from schemas.features import ClimateData, TelemetryData, ShipmentData, HydroData
 from services.feature_pipeline import construir_features_globales
 from services.inpa_fallback import get_inpa_fallback_climate
-from services.spatial import interpolate_climate_idw
+from services.spatial import interpolate_climate_idw, calculate_haversine_distance
 from services.spatial_risk_engine import ZONES
+from services.calculations import estimate_duration_days
 
 router = APIRouter(prefix="/api/v1/risk", tags=["Risk"])
 
 def calculate_distance(lat1, lon1, lat2, lon2):
     """Calcula distancia euclidiana simple para ponderar"""
     return math.sqrt((lat1 - lat2)**2 + (lon1 - lon2)**2)
+
+def find_critical_segment(climate_list: list[ClimateData], route_points: list[dict]) -> HeuristicSegment:
+    """Identifies which route point has the most dangerous individual climate reading,
+    so the response can point at a specific segment instead of always the first point."""
+    best_idx = 0
+    best_severity = -1.0
+    best_hazard = None
+
+    for i, climate in enumerate(climate_list):
+        if climate is None or i >= len(route_points):
+            continue
+        max_precip = max((v for v in climate.daily_precip if v is not None), default=0.0)
+        max_temp = max((v for v in climate.daily_max_temp if v is not None), default=0.0)
+        max_wind = max((v for v in climate.daily_wind if v is not None), default=0.0)
+
+        hazards = {
+            "precip": max(0.0, (max_precip - 50.0) / 50.0) * 0.5,
+            "temp": max(0.0, (max_temp - 30.0) / 10.0) * 0.3,
+            "wind": max(0.0, (max_wind - 15.0) / 15.0) * 0.2,
+        }
+        dominant_hazard = max(hazards, key=hazards.get)
+        severity = hazards[dominant_hazard]
+
+        if severity > best_severity:
+            best_severity = severity
+            best_idx = i
+            best_hazard = dominant_hazard if severity > 0 else None
+
+    observations = {
+        "precip": "Riesgo de lluvias intensas en este tramo.",
+        "temp": "Riesgo de temperatura extrema en este tramo.",
+        "wind": "Riesgo de vientos fuertes en este tramo.",
+        None: "Segmento principal evaluado.",
+    }
+
+    return HeuristicSegment(
+        segment_idx=best_idx,
+        coordinates=route_points[best_idx],
+        observation=observations[best_hazard]
+    )
+
+CLIMATE_DAILY_FIELDS = [
+    "daily_precip", "daily_max_temp", "daily_min_temp",
+    "daily_humidity", "daily_wind", "daily_radiation"
+]
+
+def fill_missing_climate_with_idw(climate_list: list[Optional[ClimateData]], route_points: list[dict]) -> list[ClimateData]:
+    """Fills route points whose climate fetch failed by spatially interpolating (IDW),
+    per day and per variable, from the points that did succeed. Only points that
+    genuinely have no data get replaced — a partial climate failure should not force
+    the whole route onto the generic INPA climatology fallback."""
+    known_indices = [i for i, c in enumerate(climate_list) if c is not None]
+    missing_indices = [i for i, c in enumerate(climate_list) if c is None]
+    if not known_indices or not missing_indices:
+        return climate_list
+
+    days = max(len(getattr(climate_list[i], "daily_precip")) for i in known_indices)
+    result = list(climate_list)
+
+    for m in missing_indices:
+        target = route_points[m]
+        filled_values = {}
+        for field in CLIMATE_DAILY_FIELDS:
+            day_values = []
+            for day in range(days):
+                known_day_points = []
+                for i in known_indices:
+                    series = getattr(climate_list[i], field)
+                    if day < len(series) and series[day] is not None:
+                        known_day_points.append({"lat": route_points[i]["lat"], "lon": route_points[i]["lon"], "v": series[day]})
+                day_values.append(interpolate_climate_idw(target["lat"], target["lon"], known_day_points, "v") if known_day_points else None)
+            filled_values[field] = day_values
+        result[m] = ClimateData(**filled_values)
+
+    return result
 
 def aggregate_route_climate(climate_list: list[ClimateData]) -> ClimateData:
     """Consolida el clima de toda la ruta calculando el 'peor caso' (máximos y mínimos críticos) por día."""
@@ -132,9 +208,9 @@ async def get_spatial_risk(
             alert_level = "RED"
             
         human_labels = {
-            "temperatura_max_c": "Temperatura Extrema",
-            "precipitacion_7d_acum": "Lluvias Intensas",
-            "velocidad_viento_ms": "Vientos Fuertes",
+            "max_temperatura_c": "Temperatura Extrema",
+            "precipitacion_acum_mm": "Lluvias Intensas",
+            "max_viento_ms": "Vientos Fuertes",
             "tipo_transporte": "Vulnerabilidad del Transporte",
             "tipo_producto": "Sensibilidad del Producto",
             "nivel_rio_m": "Nivel del Río"
@@ -221,7 +297,7 @@ async def evaluate_risk(request: EvaluationRequest, user_payload: dict = Depends
             climate_data_list = [fallback for _ in range(len(climate_data_list))]
         else:
             try:
-                climate_data_list = interpolate_climate_idw(climate_data_list, request.route_points)
+                climate_data_list = fill_missing_climate_with_idw(climate_data_list, request.route_points)
                 confianza_clima = 0.8
             except Exception:
                 is_inpa = True
@@ -240,11 +316,17 @@ async def evaluate_risk(request: EvaluationRequest, user_payload: dict = Depends
         river_current_speed_ms=hydro_res["river_current_speed_ms"]
     )
     
+    shipment_transport_type = request.transport_types[0] if request.transport_types else "terrestre"
+    origin = request.route_points[0]
+    destination = request.route_points[-1]
+    distance_km = calculate_haversine_distance(origin["lat"], origin["lon"], destination["lat"], destination["lon"])
+    estimated_duration_days = estimate_duration_days(distance_km, shipment_transport_type)
+
     shipment = ShipmentData(
-        transport_type=request.transport_types[0] if request.transport_types else "terrestre",
+        transport_type=shipment_transport_type,
         product_type=request.product_types[0] if request.product_types else "perecedero_bajo",
-        distance_km=100.0, # Placeholder until calculated
-        estimated_duration_days=5.0, # Placeholder
+        distance_km=distance_km,
+        estimated_duration_days=estimated_duration_days,
         month_of_year=departure_dt.month
     )
     
@@ -278,17 +360,13 @@ async def evaluate_risk(request: EvaluationRequest, user_payload: dict = Depends
         alert_level = "RED"
         
     # 9. Deduce critical segment
-    critical_segment = HeuristicSegment(
-        segment_idx=0,
-        coordinates=request.route_points[0],
-        observation=f"Segmento principal evaluado."
-    )
+    critical_segment = find_critical_segment(climate_data_list, request.route_points)
     
     # 10. Populate reasons (using model's Top 3 SHAP)
     human_labels = {
-        "temperatura_max_c": "Temperatura Extrema",
-        "precipitacion_7d_acum": "Lluvias Intensas",
-        "velocidad_viento_ms": "Vientos Fuertes",
+        "max_temperatura_c": "Temperatura Extrema",
+        "precipitacion_acum_mm": "Lluvias Intensas",
+        "max_viento_ms": "Vientos Fuertes",
         "tipo_transporte": "Vulnerabilidad del Transporte",
         "tipo_producto": "Sensibilidad del Producto",
         "nivel_rio_m": "Nivel del Río (Peligro de Encallar)",
@@ -309,14 +387,20 @@ async def evaluate_risk(request: EvaluationRequest, user_payload: dict = Depends
         "confianza_iot": confianza_iot,
         "penalizacion_aplicada": penalizacion,
         "base_score": base_score,
-        "iot_found": iot_res.get("found", False)
+        "iot_found": iot_res.get("found", False),
+        "distance_km": distance_km,
+        "estimated_duration_days": estimated_duration_days
     }
-    
+
+    message = "Evaluación de riesgo completada."
+    if penalizacion > 0:
+        message += " Se aplicó una penalización por datos de clima o IoT incompletos; el score puede ser menos preciso."
+
     response = RiskResponse(
         shipment_id=request.shipment_id,
         composite_score_pct=composite_score_pct,
         alert_level=alert_level,
-        message="Evaluación de riesgo completada.",
+        message=message,
         main_reasons=main_reasons,
         critical_segment=critical_segment,
         shap_plot_base64=prediction.get("shap_plot_base64"),

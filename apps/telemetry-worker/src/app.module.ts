@@ -10,7 +10,7 @@ import { WorkerModule } from './worker/worker.module';
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     ScheduleModule.forRoot(), // Enables @Interval() and @Cron() decorators
-    MongoModule,
+    MongoModule.forRoot(),
     MessagingModule.forRoot(),
     HealthModule,
     WorkerModule,

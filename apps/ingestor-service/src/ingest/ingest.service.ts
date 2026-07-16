@@ -104,19 +104,31 @@ export class IngestService {
   // -------------------------------------------------------------------------
 
   private enrichClimateEvent(dto: CreateClimateEventDto): IClimateEvent {
+    const { latitude, longitude, ...rest } = dto as any;
+    const location = latitude != null && longitude != null
+      ? { type: 'Point' as const, coordinates: [longitude, latitude] as [number, number] }
+      : undefined;
+
     return {
-      ...dto,
+      ...rest,
       event_id: dto.event_id ?? `env_${uuidv4().replace(/-/g, '').slice(0, 8)}`,
       ingested_at: new Date().toISOString(),
+      ...(location ? { location } : {}),
     } as IClimateEvent;
   }
 
   private enrichShipmentEvent(dto: CreateShipmentEventDto): IShipmentEvent {
+    const { latitude, longitude, ...rest } = dto as any;
+    const location = latitude != null && longitude != null
+      ? { type: 'Point' as const, coordinates: [longitude, latitude] as [number, number] }
+      : undefined;
+
     return {
-      ...dto,
+      ...rest,
       event_id:
         dto.event_id ?? `pkg_evt_${uuidv4().replace(/-/g, '').slice(0, 7)}`,
       ingested_at: new Date().toISOString(),
+      ...(location ? { location } : {}),
     } as IShipmentEvent;
   }
 }

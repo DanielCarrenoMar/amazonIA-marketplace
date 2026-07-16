@@ -4,6 +4,8 @@ import { CreateProductOrderDto, FindOrdersDto, PaginationDto, ProductOrderRespon
 import { UpdateProductOrderDto } from 'event-types';
 import { OrderStatus, UserRole } from 'event-types';
 import { STREAM_TOPICS } from 'messaging';
+import { ConfigService } from '@nestjs/config';
+import * as mqtt from 'mqtt';
 import { PrismaService } from '../prisma/prisma.service';
 import { OutboxService } from '../outbox/outbox.service';
 import { TelemetryIntegrationService } from '../telemetry-integration/telemetry-integration.service';
@@ -29,6 +31,7 @@ export class ProductOrderService {
     private readonly prisma: PrismaService,
     private readonly outbox: OutboxService,
     private readonly telemetryIntegration: TelemetryIntegrationService,
+    private readonly configService: ConfigService,
     private readonly notaryClient: NotaryClientService,
     private readonly notificationService: NotificationService,
   ) {}
@@ -375,7 +378,32 @@ export class ProductOrderService {
       }
     }
 
-    return order as unknown as ProductOrderResponseDto;
+    // origin_coords/destination_coords are geography(Point,4326) columns, which
+    // Prisma's findUnique cannot select (Unsupported type) - extract them via
+    // raw SQL, same pattern as product.service.ts's PostGIS queries.
+    const [coordsRow] = await this.prisma.$queryRaw<
+      Array<{ originLat: number | null; originLon: number | null; destLat: number | null; destLon: number | null }>
+    >`
+      SELECT
+        ST_Y(origin_coords::geometry)      AS "originLat",
+        ST_X(origin_coords::geometry)      AS "originLon",
+        ST_Y(destination_coords::geometry) AS "destLat",
+        ST_X(destination_coords::geometry) AS "destLon"
+      FROM product_order
+      WHERE id = ${id}::uuid;
+    `;
+
+    return {
+      ...order,
+      originCoords:
+        coordsRow?.originLat != null && coordsRow?.originLon != null
+          ? { latitude: coordsRow.originLat, longitude: coordsRow.originLon }
+          : null,
+      destinationCoords:
+        coordsRow?.destLat != null && coordsRow?.destLon != null
+          ? { latitude: coordsRow.destLat, longitude: coordsRow.destLon }
+          : null,
+    } as unknown as ProductOrderResponseDto;
   }
 
   /**
@@ -619,30 +647,15 @@ export class ProductOrderService {
       return updatedOrder;
     });
 
-    // Disparar notarización si cambió a PAID
-    if (updateProductOrderDto.currentStatus === OrderStatus.PAID) {
-      this.prisma.product.findUnique({
-        where: { id: result.productId },
-        select: { id: true, sellerId: true },
-      }).then(async (product) => {
-        if (product) {
-          const productHash = crypto
-            .createHash('sha256')
-            .update(`${result.productId}-${product.sellerId}-${result.createdAt.getTime()}`)
-            .digest('hex');
-
-          this.logger.log(`Firing asynchronous notarization proposal creation for order ${id}`);
-          await this.notaryClient.notarizeOrder({
-            orderId: id,
-            amount: Number(result.totalAmount),
-            paymentMethod: updateProductOrderDto.paymentMethod ?? 'UNKNOWN',
-            productHash,
-            buyerId: result.buyerId,
-            sellerId: product.sellerId,
-            webhookUrl: '',
-          });
-        }
-      }).catch(err => this.logger.error(`Notarization trigger failed for order ${id}: ${err.message}`));
+    if (result.sensorId && result.currentStatus === OrderStatus.SHIPPED) {
+      this.publishSensorStartSignal(
+        result.sensorId,
+        result.trackingNumber,
+        result.productId,
+        result.buyerId,
+      ).catch((err) => {
+        console.error('Failed to trigger sensor activation MQTT message', err);
+      });
     }
 
     return result as unknown as ProductOrderResponseDto;
@@ -688,6 +701,75 @@ export class ProductOrderService {
       });
     });
     return result as unknown as ProductOrderResponseDto;
+  }
+
+  private async publishSensorStartSignal(
+    sensorId: string,
+    trackingNumber: string | null,
+    productId: string,
+    buyerId: string,
+  ): Promise<void> {
+    const host = this.configService.get<string>('HIVEMQ_HOST');
+    const port = Number(this.configService.get<string>('HIVEMQ_PORT', '8883'));
+    const username = this.configService.get<string>('HIVEMQ_USERNAME');
+    const password = this.configService.get<string>('HIVEMQ_PASSWORD');
+
+    if (!host || !username || !password) {
+      console.warn('HiveMQ configuration missing in API service. Cannot send START_TRANSIT signal.');
+      return;
+    }
+
+    try {
+      // 1. Fetch origin coordinates (Product/Seller)
+      const sellerLocation = await this.prisma.$queryRaw<Array<{ lat: number | null; lng: number | null }>>`
+        SELECT ST_Y("location_coords"::geometry) as lat, ST_X("location_coords"::geometry) as lng
+        FROM product WHERE id = ${productId}::uuid
+      `;
+
+      // 2. Fetch destination coordinates (Buyer)
+      const buyerLocation = await this.prisma.$queryRaw<Array<{ lat: number | null; lng: number | null }>>`
+        SELECT ST_Y("location_coords"::geometry) as lat, ST_X("location_coords"::geometry) as lng
+        FROM user_account WHERE id = ${buyerId}::uuid
+      `;
+
+      const origin = sellerLocation?.[0] || null;
+      const destination = buyerLocation?.[0] || null;
+
+      const client = mqtt.connect({
+        host,
+        port,
+        protocol: 'mqtts',
+        username,
+        password,
+      });
+
+      client.on('connect', () => {
+        const payload = JSON.stringify({
+          action: 'START_TRANSIT',
+          trackingNumber,
+          sensorId,
+          origin: origin && origin.lat !== null && origin.lng !== null ? { lat: origin.lat, lng: origin.lng } : null,
+          destination: destination && destination.lat !== null && destination.lng !== null ? { lat: destination.lat, lng: destination.lng } : null,
+          timestamp: new Date().toISOString(),
+        });
+
+        client.publish(`amazonia/iot/control/${sensorId}`, payload, { qos: 1, retain: true }, (err) => {
+          if (err) {
+            console.error(`Error publishing START_TRANSIT to MQTT for sensor ${sensorId}`, err);
+          } else {
+            console.log(`Sent START_TRANSIT signal to MQTT topic amazonia/iot/control/${sensorId}`);
+          }
+          client.end();
+        });
+      });
+
+      client.on('error', (err) => {
+        console.error(`MQTT connection error in product-order service: ${err.message}`);
+        client.end();
+      });
+    } catch (err) {
+      console.error(`Failed to connect or publish to MQTT: ${err.message}`);
+    }
   }
 }
 
