@@ -239,6 +239,17 @@ export class TribeService {
     }) as unknown as TribeMembershipRequestResponseDto;
   }
 
+  async getMyMembershipRequests(sellerId: string): Promise<TribeMembershipRequestResponseDto[]> {
+    const requests = await this.prisma.tribeMembershipRequest.findMany({
+      where: { sellerId },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        tribe: true,
+      }
+    });
+    return requests as unknown as TribeMembershipRequestResponseDto[];
+  }
+
   async findMembershipRequests(tribeId: number, query?: PaginationDto & { status?: string }): Promise<PaginatedResponseDto<TribeMembershipRequestResponseDto>> {
     const page = parseInt(String(query?.page), 10) || 1;
     const limit = parseInt(String(query?.limit), 10) || 10;

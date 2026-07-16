@@ -170,7 +170,14 @@ export class TribeController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.SELLER)
+  @Roles(UserRole.SELLER, UserRole.BUYER, UserRole.ADMIN)
+  @Get('my-membership-requests')
+  getMyMembershipRequests(@Request() req: any): Promise<TribeMembershipRequestResponseDto[]> {
+    return this.tribeService.getMyMembershipRequests(req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SELLER, UserRole.BUYER, UserRole.ADMIN)
   @Get('my-tribe')
   getMyTribe(@Request() req: any): Promise<TribeResponseDto> {
     return this.tribeService.getMyTribe(req.user.id);

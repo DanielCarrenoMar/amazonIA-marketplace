@@ -22,6 +22,7 @@ export interface ProductCardProps {
   price: string;
   originalPrice?: string;
   href?: string;
+  hideFavorite?: boolean;
 }
 
 export function ProductCard({
@@ -34,6 +35,7 @@ export function ProductCard({
   price,
   originalPrice,
   href,
+  hideFavorite = false,
 }: ProductCardProps) {
   const { favoriteIds, toggleFavorite } = useFavorites();
   const { user } = useAuth();
@@ -78,17 +80,19 @@ export function ProductCard({
           </div>
         )}
 
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleFavoriteClick}
-          className="absolute top-3 right-3 bg-white/80! backdrop-blur-md hover:bg-white! hover:scale-110 z-10 shadow-sm"
-        >
-          <Icon 
-            icon="lucide:heart" 
-            className={`w-5 h-5 ${isFavorite ? 'text-red-500 fill-red-500' : 'text-gray-500'}`} 
-          />
-        </Button>
+        {!hideFavorite && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleFavoriteClick}
+            className="absolute top-3 right-3 bg-white/80! backdrop-blur-md hover:bg-white! hover:scale-110 z-10 shadow-sm"
+          >
+            <Icon 
+              icon="lucide:heart" 
+              className={`w-5 h-5 ${isFavorite ? 'text-red-500 fill-red-500' : 'text-gray-500'}`} 
+            />
+          </Button>
+        )}
       </ImageWrapper>
 
       <div className="p-5 flex flex-col gap-3 grow">

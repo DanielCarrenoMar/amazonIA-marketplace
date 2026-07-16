@@ -1,12 +1,14 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import { Icon } from "@iconify/react";
 import { 
   getMyTribe, 
   getTribeMembershipRequests, 
   reviewTribeMembership, 
-  removeTribeMember 
+  removeTribeMember,
+  getMyMembershipRequests
 } from "@/lib/api/tribe.api";
 import { findSellers } from "@/lib/api/seller.api";
 import { getProducts } from "@/lib/api/product.api";
@@ -24,6 +26,7 @@ export default function TribeManagementPage() {
   const [members, setMembers] = useState<SellerResponseDto[]>([]);
   const [requests, setRequests] = useState<TribeMembershipRequestResponseDto[]>([]);
   const [products, setProducts] = useState<ProductResponseDto[]>([]);
+  const [myPendingRequest, setMyPendingRequest] = useState<TribeMembershipRequestResponseDto | null>(null);
   
   const [isLoading, setIsLoading] = useState(true);
   const [isActionLoading, setIsActionLoading] = useState<number | string | null>(null);
@@ -31,7 +34,12 @@ export default function TribeManagementPage() {
   const loadTribeData = async () => {
     try {
       setIsLoading(true);
-      const myTribe = await getMyTribe();
+      let myTribe = null;
+      try {
+        myTribe = await getMyTribe();
+      } catch (err) {
+        console.warn("User has no active tribe", err);
+      }
       setTribe(myTribe);
       
       if (myTribe) {
@@ -40,13 +48,32 @@ export default function TribeManagementPage() {
         setMembers(sellersRes.data);
         
         // Fetch Tribe Products
-        const productsRes = await getProducts({ tribeId: myTribe.id });
+        const productsRes = await getProducts({ tribeIds: myTribe.id.toString() });
         setProducts(productsRes.data);
         
-        // Fetch pending requests (only if leader)
-        if (isLeader) {
-          const requestsRes = await getTribeMembershipRequests(myTribe.id, new URLSearchParams({ status: "PENDING" }));
-          setRequests(requestsRes.data);
+        // Fetch pending requests — compute leadership from fresh tribe data
+        // instead of relying on `isLeader` from useAuth (which may be stale)
+        const amILeader = user && (
+          myTribe.primaryLeaderId === user.id || 
+          myTribe.secondaryLeaderId === user.id
+        );
+        
+        if (amILeader) {
+          try {
+            const requestsRes = await getTribeMembershipRequests(myTribe.id, new URLSearchParams({ status: "PENDING" }));
+            setRequests(requestsRes.data);
+          } catch (err) {
+            console.error("Error loading membership requests:", err);
+          }
+        }
+      } else {
+        // Fetch if the seller has a pending request to join a tribe
+        try {
+          const myReqs = await getMyMembershipRequests();
+          const pending = myReqs.find(req => req.status === "PENDING");
+          setMyPendingRequest(pending || null);
+        } catch (e) {
+          console.error("No se pudieron cargar las solicitudes pendientes");
         }
       }
     } catch (error) {
@@ -104,15 +131,44 @@ export default function TribeManagementPage() {
   }
 
   if (!tribe) {
+    if (myPendingRequest && myPendingRequest.tribe) {
+      return (
+        <div className="bg-white rounded-3xl p-10 border border-yellow-200 shadow-sm text-center max-w-2xl mx-auto mt-10">
+          <div className="w-20 h-20 bg-yellow-50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Icon icon="lucide:clock" className="w-10 h-10 text-yellow-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Solicitud en Proceso</h2>
+          <p className="text-gray-500 max-w-md mx-auto mb-8">
+            Has solicitado unirte a la tribu <span className="font-bold text-gray-900">{myPendingRequest.tribe.name}</span>. Por favor, espera a que el líder apruebe tu solicitud.
+          </p>
+          <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 inline-block text-left mb-6">
+            <p className="text-sm font-medium text-gray-500 mb-1">Tu mensaje:</p>
+            <p className="text-sm text-gray-800 italic">"{myPendingRequest.message}"</p>
+          </div>
+          <br/>
+          <Link href="/tribes" className="inline-flex items-center text-brand-primary font-medium hover:underline">
+            ← Volver a explorar tribus
+          </Link>
+        </div>
+      );
+    }
+
     return (
-      <div className="bg-white rounded-3xl p-10 border border-gray-100 shadow-sm text-center">
+      <div className="bg-white rounded-3xl p-10 border border-gray-100 shadow-sm text-center max-w-2xl mx-auto mt-10">
         <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
           <Icon icon="lucide:tent" className="w-10 h-10 text-gray-400" />
         </div>
         <h2 className="text-2xl font-bold text-gray-900 mb-2">No perteneces a una tribu</h2>
-        <p className="text-gray-500 max-w-md mx-auto">
-          Explora las tribus activas y solicita unirte a una para ver esta información.
+        <p className="text-gray-500 max-w-md mx-auto mb-8">
+          Explora las tribus activas y solicita unirte a una para ver esta información y colaborar con otros vendedores locales.
         </p>
+        <Link 
+          href="/tribes"
+          className="bg-brand-primary text-white px-8 py-3 rounded-xl font-bold hover:bg-brand-secondary transition-colors inline-flex items-center"
+        >
+          <Icon icon="lucide:compass" className="w-5 h-5 mr-2" />
+          Explorar Tribus
+        </Link>
       </div>
     );
   }

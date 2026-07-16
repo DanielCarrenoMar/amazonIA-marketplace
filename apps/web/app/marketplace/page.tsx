@@ -21,13 +21,21 @@ function MarketplaceContent() {
 
   const categoryParam = searchParams.get('category');
   const qParam = searchParams.get('q');
+  const tribeIdParam = searchParams.get('tribeId');
+  
   const [activeCategory, setActiveCategory] = useState<string | null>(categoryParam || null);
 
   const [products, setProducts] = useState<ProductResponseDto[]>([]);
   const [categories, setCategories] = useState<ProductCategoryResponseDto[]>([]);
   const [tribes, setTribes] = useState<TribeResponseDto[]>([]);
-  const [activeTribeIds, setActiveTribeIds] = useState<number[]>([]);
+  const [activeTribeIds, setActiveTribeIds] = useState<number[]>(
+    tribeIdParam ? [parseInt(tribeIdParam, 10)] : []
+  );
   const [loading, setLoading] = useState(true);
+
+  const [page, setPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [lastFiltersKey, setLastFiltersKey] = useState<string>('');
 
   const [minRating, setMinRating] = useState<number>(0);
   const [hoverRating, setHoverRating] = useState<number>(0);
@@ -78,6 +86,15 @@ function MarketplaceContent() {
     async function loadProducts() {
       setLoading(true);
       try {
+        const currentFiltersKey = `${activeCategory}|${qParam}|${debouncedMinPrice}|${debouncedMaxPrice}|${minRating}|${activeTribeIds.join(',')}`;
+        let currentPage = page;
+        
+        if (currentFiltersKey !== lastFiltersKey) {
+          currentPage = 1;
+          setPage(1);
+          setLastFiltersKey(currentFiltersKey);
+        }
+
         const params: any = {};
         if (activeCategory) params.categoryName = activeCategory;
         if (qParam) params.search = qParam;
@@ -85,9 +102,15 @@ function MarketplaceContent() {
         if (debouncedMaxPrice) params.maxPrice = Number(debouncedMaxPrice);
         if (minRating > 0) params.minRating = minRating;
         if (activeTribeIds.length > 0) params.tribeIds = activeTribeIds.join(',');
+        
+        params.page = currentPage;
+        params.limit = 12;
 
         const res = await getProducts(params);
         setProducts(res.data || []);
+        if (res.meta) {
+          setTotalPages(res.meta.totalPages || 1);
+        }
       } catch (err) {
         console.error("Error loading products", err);
       } finally {
@@ -99,7 +122,7 @@ function MarketplaceContent() {
     if (!activeCategory || categories.length > 0) {
       loadProducts();
     }
-  }, [activeCategory, categories, qParam, debouncedMinPrice, debouncedMaxPrice, minRating, activeTribeIds]);
+  }, [activeCategory, categories, qParam, debouncedMinPrice, debouncedMaxPrice, minRating, activeTribeIds, page, lastFiltersKey]);
 
   const handleCategoryClick = (cat: string) => {
     if (activeCategory === cat) {
@@ -317,6 +340,29 @@ function MarketplaceContent() {
                     )}
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* PAGINATION */}
+            {!loading && totalPages > 1 && (
+              <div className="flex justify-center items-center gap-4 mt-12">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                >
+                  Anterior
+                </Button>
+                <span className="text-sm font-medium text-slate-600">
+                  Página {page} de {totalPages}
+                </span>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                >
+                  Siguiente
+                </Button>
               </div>
             )}
           </div>

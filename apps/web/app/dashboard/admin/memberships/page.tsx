@@ -66,7 +66,7 @@ export default function AdminMembershipsPage() {
                 
                 <div className="mb-4">
                   <h3 className="text-xl font-bold font-outfit text-foreground">
-                    Tribu: {(req.tribe as any)?.name || `ID ${req.tribeId}`}
+                    Tribu: {(req as any).tribe?.name || `ID ${req.tribeId}`}
                   </h3>
                   <p className="text-sm text-muted">Solicitud de membresía #{req.id}</p>
                 </div>

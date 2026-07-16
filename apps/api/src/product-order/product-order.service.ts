@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { CreateProductOrderDto, FindOrdersDto, PaginationDto, ProductOrderResponseDto, PaginatedResponseDto, OrderStatusHistoryResponseDto, OrderTimelineResponseDto } from 'event-types';
 import { UpdateProductOrderDto } from 'event-types';
@@ -7,6 +7,8 @@ import { STREAM_TOPICS } from 'messaging';
 import { PrismaService } from '../prisma/prisma.service';
 import { OutboxService } from '../outbox/outbox.service';
 import { TelemetryIntegrationService } from '../telemetry-integration/telemetry-integration.service';
+import { NotaryClientService } from '../blockchain/services/notary-client.service';
+import * as crypto from 'crypto';
 
 const allowedOrderStatusTransitions: Record<OrderStatus, readonly OrderStatus[]> = {
   [OrderStatus.PENDING]: [OrderStatus.PAID, OrderStatus.CANCELED],
@@ -21,12 +23,16 @@ import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class ProductOrderService {
+  private readonly logger = new Logger(ProductOrderService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly outbox: OutboxService,
     private readonly telemetryIntegration: TelemetryIntegrationService,
+    private readonly notaryClient: NotaryClientService,
     private readonly notificationService: NotificationService,
-  ) { }
+  ) {}
+
 
   // buyerId comes from the JWT token (req.user.id), NOT from the client body
   async create(buyerId: string, createProductOrderDto: CreateProductOrderDto): Promise<ProductOrderResponseDto> {
@@ -104,12 +110,14 @@ export class ProductOrderService {
       const finalFormattedAddress = rest.destinationFormattedAddress ?? buyer.locationFormattedAddress;
       const finalCity = rest.destinationCity ?? buyer.locationCity;
       const finalRegion = rest.destinationRegion ?? buyer.locationRegion;
-
       // Use product location, or fallback to seller's user profile location
       const originMapboxId = product.locationMapboxId ?? product.seller.user.locationMapboxId;
       const originFormattedAddress = product.locationFormattedAddress ?? product.seller.user.locationFormattedAddress;
       const originCity = product.locationCity ?? product.seller.user.locationCity;
       const originRegion = product.locationRegion ?? product.seller.user.locationRegion;
+
+      const initialStatus = createProductOrderDto.transactionHash ? OrderStatus.PAID : OrderStatus.PENDING;
+      const paymentMethod = createProductOrderDto.transactionHash ? 'CRYPTO' : undefined;
 
       // 5. Create the order
       const order = await tx.productOrder.create({
@@ -125,7 +133,8 @@ export class ProductOrderService {
           originRegion,
           buyerId,
           totalAmount,
-          currentStatus: OrderStatus.PENDING
+          currentStatus: initialStatus,
+          paymentMethod,
         },
       });
 
@@ -156,8 +165,79 @@ export class ProductOrderService {
         `;
       }
 
+      // Audit Log for initial creation
+      await tx.orderStatusHistory.create({
+        data: {
+          orderId: order.id,
+          changedByUserId: buyerId,
+          previousStatus: null,
+          newStatus: OrderStatus.PENDING,
+          statusNote: 'Pedido creado',
+        },
+      });
+
+      if (initialStatus === OrderStatus.PAID) {
+        await tx.orderStatusHistory.create({
+          data: {
+            orderId: order.id,
+            changedByUserId: buyerId,
+            previousStatus: OrderStatus.PENDING,
+            newStatus: OrderStatus.PAID,
+            statusNote: 'Pago registrado con Hash de Transacción',
+          },
+        });
+
+        // Append outbox event for paid order
+        await this.outbox.append(
+          tx,
+          'ProductOrder',
+          order.id,
+          `order.paid`,
+          {
+            orderId: order.id,
+            productId: order.productId,
+            buyerId: order.buyerId,
+            sellerId: product.sellerId,
+            quantity: order.quantity,
+            totalAmount: order.totalAmount.toString(),
+            previousStatus: OrderStatus.PENDING,
+            newStatus: OrderStatus.PAID,
+            changedByUserId: buyerId,
+            trackingNumber: null,
+            topic: STREAM_TOPICS.SHIPMENT_EVENTS,
+          },
+        );
+      }
+
       return order;
     });
+
+    // Disparar notarización si se creó directamente como PAID
+    if (result.currentStatus === OrderStatus.PAID && result.transactionHash) {
+      this.prisma.product.findUnique({
+        where: { id: result.productId },
+        select: { id: true, sellerId: true },
+      }).then(async (product) => {
+        if (product) {
+          const productHash = crypto
+            .createHash('sha256')
+            .update(`${result.productId}-${product.sellerId}-${result.createdAt.getTime()}`)
+            .digest('hex');
+
+          this.logger.log(`Firing asynchronous notarization proposal creation for order ${result.id} from creation`);
+          await this.notaryClient.notarizeOrder({
+            orderId: result.id,
+            amount: Number(result.totalAmount),
+            paymentMethod: result.paymentMethod ?? 'CRYPTO',
+            productHash,
+            buyerId: result.buyerId,
+            sellerId: product.sellerId,
+            webhookUrl: '',
+          });
+        }
+      }).catch(err => this.logger.error(`Notarization trigger failed for order ${result.id}: ${err.message}`));
+    }
+
     return result as unknown as ProductOrderResponseDto;
   }
 
@@ -283,6 +363,7 @@ export class ProductOrderService {
         product: { include: { seller: { include: { user: { omit: { passwordHash: true } } } } } },
         buyer: { omit: { passwordHash: true } },
         statusHistory: true,
+        blockchainRecord: true,
       },
     });
 
@@ -537,6 +618,33 @@ export class ProductOrderService {
 
       return updatedOrder;
     });
+
+    // Disparar notarización si cambió a PAID
+    if (updateProductOrderDto.currentStatus === OrderStatus.PAID) {
+      this.prisma.product.findUnique({
+        where: { id: result.productId },
+        select: { id: true, sellerId: true },
+      }).then(async (product) => {
+        if (product) {
+          const productHash = crypto
+            .createHash('sha256')
+            .update(`${result.productId}-${product.sellerId}-${result.createdAt.getTime()}`)
+            .digest('hex');
+
+          this.logger.log(`Firing asynchronous notarization proposal creation for order ${id}`);
+          await this.notaryClient.notarizeOrder({
+            orderId: id,
+            amount: Number(result.totalAmount),
+            paymentMethod: updateProductOrderDto.paymentMethod ?? 'UNKNOWN',
+            productHash,
+            buyerId: result.buyerId,
+            sellerId: product.sellerId,
+            webhookUrl: '',
+          });
+        }
+      }).catch(err => this.logger.error(`Notarization trigger failed for order ${id}: ${err.message}`));
+    }
+
     return result as unknown as ProductOrderResponseDto;
   }
 

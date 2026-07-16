@@ -46,7 +46,9 @@ export default function DashboardPage() {
         subtitle="Aquí está el resumen de tu actividad en AmazonIA."
         action={
           <Link href="/dashboard/inventory/new">
-            <Button variant="primary">+ Añadir Nueva Artesanía</Button>
+            <button className="bg-[#FFB700] hover:bg-[#F2AE00] text-white font-bold text-[15px] px-6 py-3 rounded-xl shadow-[0_4px_20px_rgba(255,183,0,0.4)] transition-all flex items-center gap-2 border-none cursor-pointer">
+              <span className="text-[22px] leading-none font-bold">+</span> Añadir Nueva Artesanía
+            </button>
           </Link>
         }
       />
@@ -73,16 +75,13 @@ export default function DashboardPage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="flex flex-col gap-8">
         {/* Tus Tareas */}
-        <div className="lg:col-span-2 space-y-4">
+        <div className="space-y-4">
           <h3 className="text-lg font-outfit font-bold">Tus Tareas</h3>
           {tasks.length > 0 ? (
             <div className="space-y-4">
-              <div className="flex items-center gap-2 text-brand-urgency-dark bg-brand-urgency/10 px-3 py-1.5 rounded-lg w-fit text-sm font-semibold">
-                <AlertTriangle className="w-4 h-4" /> REQUIERE TU ACCIÓN
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {tasks.map(task => (
                   <OrderCard key={task.id} order={task} viewMode="seller" />
                 ))}
@@ -93,23 +92,6 @@ export default function DashboardPage() {
               <p className="text-muted">No tienes tareas pendientes por ahora.</p>
             </Card>
           )}
-        </div>
-
-        {/* Avisos */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-outfit font-bold">Avisos</h3>
-          <Card className="bg-brand-secondary/5 border-brand-secondary/20 p-5">
-            <h4 className="font-semibold text-brand-secondary-dark mb-2">Consejo de Venta</h4>
-            <p className="text-sm text-muted mb-4 leading-relaxed">
-              Las artesanías con 3 o más fotos se venden un 40% más rápido. 
-              Asegúrate de mostrar los detalles de tu trabajo.
-            </p>
-            <Link href="/dashboard/inventory">
-              <Button variant="outline" size="sm" className="w-full">
-                Revisar mi Inventario
-              </Button>
-            </Link>
-          </Card>
         </div>
       </div>
     </div>
