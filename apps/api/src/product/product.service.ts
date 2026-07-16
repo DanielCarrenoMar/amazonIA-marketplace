@@ -15,12 +15,26 @@ export class ProductService {
   async create(createProductDto: CreateProductDto, sellerId: string): Promise<ProductResponseDto> {
     const { coords, elaborationSteps, ...rest } = createProductDto;
 
+    const sellerUser = await this.prisma.userAccount.findUnique({
+      where: { id: sellerId },
+      select: { locationMapboxId: true, locationFormattedAddress: true, locationCity: true, locationRegion: true }
+    });
+
+    const locationMapboxId = rest.locationMapboxId || sellerUser?.locationMapboxId;
+    const locationFormattedAddress = rest.locationFormattedAddress || sellerUser?.locationFormattedAddress;
+    const locationCity = rest.locationCity || sellerUser?.locationCity;
+    const locationRegion = rest.locationRegion || sellerUser?.locationRegion;
+
     // Use $transaction so we don't end up with orphaned rows if the spatial query fails
     return this.prisma.$transaction(async (tx) => {
       // 1. Create the standard product record
       const product = await tx.product.create({
         data: {
           ...rest,
+          locationMapboxId,
+          locationFormattedAddress,
+          locationCity,
+          locationRegion,
           sellerId,
           ...(elaborationSteps && elaborationSteps.length > 0 ? {
             elaborationSteps: {
@@ -35,6 +49,13 @@ export class ProductService {
         await tx.$executeRaw`
           UPDATE product 
           SET "locationCoords" = ST_SetSRID(ST_MakePoint(${coords.longitude}, ${coords.latitude}), 4326)
+          WHERE id = ${product.id}::uuid;
+        `;
+      } else {
+        // Fallback: inherit coordinates from the seller's user account
+        await tx.$executeRaw`
+          UPDATE product 
+          SET "locationCoords" = (SELECT "location_coords" FROM "user_account" WHERE id = ${sellerId}::uuid)
           WHERE id = ${product.id}::uuid;
         `;
       }
