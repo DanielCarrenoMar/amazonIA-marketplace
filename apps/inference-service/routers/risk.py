@@ -144,10 +144,12 @@ async def get_spatial_risk(
     (Respuesta rápida < 100ms)
     """
     try:
-        # 1. Leer datos pre-calculados de las zonas desde Redis
+        # 1. Leer datos pre-calculados de las zonas desde Redis de una sola vez
+        zone_keys = [f"zone:data:{zone['id']}" for zone in ZONES]
+        raw_values = await iot_service.redis.mget(*zone_keys)
+        
         zone_data = []
-        for zone in ZONES:
-            raw = await iot_service.redis.get(f"zone:data:{zone['id']}")
+        for zone, raw in zip(ZONES, raw_values):
             if raw:
                 try:
                     data = json.loads(raw)
@@ -253,12 +255,16 @@ async def evaluate_risk(request: EvaluationRequest, user_payload: dict = Depends
     climate_tasks = []
     for pt in request.route_points:
         lat, lon = pt["lat"], pt["lon"]
-        if departure_dt >= today:
-            # Forecast (7 days)
+        if departure_dt >= today - timedelta(days=5):
+            # Forecast (7 days) - Archive API tiene un lag de ~5 días
             climate_tasks.append(climate_service.get_forecast(lat, lon, days=7))
         else:
             # Historical (7 days window)
             end_dt = departure_dt + timedelta(days=7)
+            # Clamp end_dt para no pedir fechas recientes a la API histórica
+            max_archive_date = today - timedelta(days=5)
+            if end_dt > max_archive_date:
+                end_dt = max_archive_date
             climate_tasks.append(climate_service.get_historical_climate(lat, lon, departure_dt, end_dt))
             
     # Also fetch hydro data for the first point as reference
