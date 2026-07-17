@@ -348,8 +348,45 @@ export class ProductOrderService {
       }),
     ]);
 
+    // Query coordinates for these orders in bulk (since Prisma doesn't support geography Point types natively)
+    const orderIds = data.map((o) => o.id);
+    const coordsMap: Record<string, { originCoords: { latitude: number; longitude: number } | null; destinationCoords: { latitude: number; longitude: number } | null }> = {};
+    
+    if (orderIds.length > 0) {
+      const coordsRows = await this.prisma.$queryRaw<
+        Array<{ id: string; originLat: number | null; originLon: number | null; destLat: number | null; destLon: number | null }>
+      >`
+        SELECT
+          id::text,
+          ST_Y(origin_coords::geometry)      AS "originLat",
+          ST_X(origin_coords::geometry)      AS "originLon",
+          ST_Y(destination_coords::geometry) AS "destLat",
+          ST_X(destination_coords::geometry) AS "destLon"
+        FROM product_order
+        WHERE id IN (${Prisma.join(orderIds.map((id) => id))});
+      `;
+      for (const row of coordsRows) {
+        coordsMap[row.id] = {
+          originCoords:
+            row.originLat != null && row.originLon != null
+              ? { latitude: row.originLat, longitude: row.originLon }
+              : null,
+          destinationCoords:
+            row.destLat != null && row.destLon != null
+              ? { latitude: row.destLat, longitude: row.destLon }
+              : null,
+        };
+      }
+    }
+
+    const enrichedData = data.map((order) => ({
+      ...order,
+      originCoords: coordsMap[order.id]?.originCoords ?? null,
+      destinationCoords: coordsMap[order.id]?.destinationCoords ?? null,
+    }));
+
     return {
-      data: data as unknown as ProductOrderResponseDto[],
+      data: enrichedData as unknown as ProductOrderResponseDto[],
       meta: {
         total,
         page,

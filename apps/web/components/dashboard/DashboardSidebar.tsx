@@ -15,7 +15,8 @@ import {
   ShieldCheck,
   LogOut,
   ChevronDown,
-  User
+  User,
+  BrainCircuit,
 } from "lucide-react";
 
 export function DashboardSidebar() {
@@ -29,6 +30,7 @@ export function DashboardSidebar() {
     ...(isBuyer ? [] : [{ name: "Dashboard", href: "/dashboard", icon: LayoutDashboard }]),
     ...(isBuyer ? [] : [{ name: "Inventario", href: "/dashboard/inventory", icon: Package }]),
     { name: "Pedidos", href: "/dashboard/orders", icon: ShoppingBag },
+    ...(isBuyer ? [] : [{ name: "IA Logística", href: "/dashboard/logistics-ai", icon: BrainCircuit }]),
     ...(isBuyer ? [] : [{ name: "Mi Tribu", href: "/dashboard/tribe", icon: Users }]),
     ...(isBuyer ? [] : [{ name: "Mi Billetera", href: "/dashboard/wallet", icon: Wallet }]),
   ];

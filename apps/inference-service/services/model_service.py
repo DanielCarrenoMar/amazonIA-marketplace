@@ -174,12 +174,23 @@ class ModelService:
           """
           Generates a horizontal bar chart of SHAP values and returns it as a base64 string.
           """
+          feature_translations = {
+              "max_temperatura_c": "Temperatura Máxima (°C)",
+              "precipitacion_acum_mm": "Precipitación Acumulada (mm)",
+              "max_viento_ms": "Velocidad del Viento (m/s)",
+              "tipo_transporte": "Tipo de Transporte",
+              "tipo_producto": "Tipo de Producto",
+              "nivel_rio_m": "Nivel del Río (m)",
+              "regimen_hidrologico": "Régimen Hidrológico",
+              "velocidad_corriente_rio_ms": "Velocidad de la Corriente (m/s)"
+          }
+          
           features = list(shap_values.keys())
           impacts = list(shap_values.values())
           
           # Sort by absolute impact
           sorted_indices = sorted(range(len(impacts)), key=lambda k: abs(impacts[k]))
-          sorted_features = [features[i] for i in sorted_indices]
+          sorted_features = [feature_translations.get(features[i], features[i]) for i in sorted_indices]
           sorted_impacts = [impacts[i] for i in sorted_indices]
           
           # Colors: Red for pushing risk up, Blue for pushing risk down
@@ -187,8 +198,8 @@ class ModelService:
           
           plt.figure(figsize=(8, 5))
           plt.barh(sorted_features, sorted_impacts, color=colors)
-          plt.xlabel('Impact on Logistics Risk (SHAP Value)')
-          plt.title('Explainable AI: Why did the model make this prediction?')
+          plt.xlabel('Impacto en el Riesgo Logístico (Valor SHAP)')
+          plt.title('Explicabilidad IA: Factores clave en este pedido')
           plt.tight_layout()
           
           buf = io.BytesIO()

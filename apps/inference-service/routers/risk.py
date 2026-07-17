@@ -393,8 +393,6 @@ async def evaluate_risk(request: EvaluationRequest, user_payload: dict = Depends
     }
 
     message = "Evaluación de riesgo completada."
-    if penalizacion > 0:
-        message += " Se aplicó una penalización por datos de clima o IoT incompletos; el score puede ser menos preciso."
 
     response = RiskResponse(
         shipment_id=request.shipment_id,

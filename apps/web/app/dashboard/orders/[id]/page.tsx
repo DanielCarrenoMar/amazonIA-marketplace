@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getOrder, getOrderTimeline, updateOrder } from "@/lib/api";
 import type { OrderTimelineResponseDto, ProductOrderResponseDto, OrderTimelineItemDto } from "event-types";
-import { DashboardHeader, LogisticsRiskPanel, ShipmentModal, OrderChat } from "@/components/dashboard";
+import { DashboardHeader, ShipmentModal, OrderChat } from "@/components/dashboard";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { MapPin, Truck, CheckCircle2, ChevronLeft, AlertTriangle, User, Phone, Navigation } from "lucide-react";
+import { MapPin, Truck, CheckCircle2, ChevronLeft, AlertTriangle, User, Phone, Navigation, BrainCircuit, ArrowRight } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useAuth } from "@/lib/useAuth";
@@ -336,14 +336,33 @@ export default function OrderDetailPage() {
           )}
 
           {isSeller && (
-            <LogisticsRiskPanel
-              order={{
-                id: order.id,
-                originCoords: order.originCoords,
-                destinationCoords: order.destinationCoords,
-                requiresColdChain: order.product?.requiresColdChain,
-              }}
-            />
+            <Card padding="md" className="border-brand-primary/20 bg-linear-to-br from-white to-brand-primary/5">
+              <div className="flex items-start gap-3">
+                <div className="p-2 rounded-lg bg-brand-primary/10 shrink-0">
+                  <BrainCircuit className="w-5 h-5 text-brand-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-slate-900 mb-1">Análisis de Riesgo IA</h3>
+                  <p className="text-sm text-muted mb-3">
+                    Evalúa clima, hidrología e IoT con el modelo XGBoost + SHAP en el centro de monitoreo dedicado.
+                  </p>
+                  {order.originCoords && order.destinationCoords ? (
+                    <Link
+                      href={`/dashboard/logistics-ai?orderId=${order.id}`}
+                      className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-primary hover:underline"
+                    >
+                      Abrir monitoreo completo
+                      <ArrowRight className="w-4 h-4" />
+                    </Link>
+                  ) : (
+                    <p className="text-xs text-amber-700 flex items-center gap-1">
+                      <AlertTriangle className="w-3.5 h-3.5" />
+                      Este pedido no tiene coordenadas de ruta guardadas.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </Card>
           )}
         </div>
       </div>
