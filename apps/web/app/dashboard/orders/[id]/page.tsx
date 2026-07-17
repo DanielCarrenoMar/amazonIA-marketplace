@@ -73,6 +73,28 @@ export default function OrderDetailPage() {
   const isSeller = user?.id === order.product.seller?.user?.id;
   const isBuyer = user?.id === order.buyer?.id;
 
+  const translateStatus = (status: string) => {
+    const map: Record<string, string> = {
+      PENDING: 'Pendiente de Pago',
+      PAID: 'Pagado',
+      SHIPPED: 'Enviado',
+      DELIVERED: 'Entregado',
+      CANCELED: 'Cancelado',
+      REFUNDED: 'Reembolsado'
+    };
+    return map[status] || status;
+  };
+
+  const getStatusVariant = (status: string) => {
+    switch(status) {
+      case 'PENDING': return 'accent';
+      case 'PAID':
+      case 'DELIVERED': return 'nature';
+      case 'SHIPPED': return 'primary';
+      default: return 'outline';
+    }
+  };
+
   return (
     <div className="space-y-6">
       <button onClick={() => router.back()} className="flex items-center text-brand-primary hover:underline text-sm font-semibold">
@@ -80,13 +102,22 @@ export default function OrderDetailPage() {
       </button>
 
       <div className="flex justify-between items-start">
-         <DashboardHeader 
-          title={`Pedido #${order.id.slice(0,8)}`}
-          subtitle={`Producto: ${order.product.name} • Estado: ${order.currentStatus}`}
-        />
+        <div>
+          <h1 className="text-[42px] font-outfit font-extrabold text-[#333333] tracking-tight leading-none mb-2">
+            Pedido #{order.id.slice(0,8)}
+          </h1>
+          <div className="flex items-center gap-3">
+            <p className="text-[17px] text-gray-500 font-medium">
+              Producto: {order.product.name}
+            </p>
+            <Badge variant={getStatusVariant(order.currentStatus)} className="text-sm px-3 py-0.5">
+              {translateStatus(order.currentStatus)}
+            </Badge>
+          </div>
+        </div>
         <div className="flex flex-col items-end gap-2">
           {order.sensorId && (
-            <Badge variant="nature" className="animate-pulse">
+            <Badge variant="nature" className="animate-pulse text-xs">
               ● Seguimiento IoT Activo
             </Badge>
           )}
@@ -94,7 +125,7 @@ export default function OrderDetailPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div className="md:col-span-2 space-y-6">
+        <div className="md:col-span-2 flex flex-col gap-6">
           <Card padding="lg">
              <h3 className="text-xl font-bold font-outfit mb-6">Línea de Tiempo Logística</h3>
              <div className="space-y-8 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-linear-to-b before:from-transparent before:via-gray-300 before:to-transparent">
@@ -190,20 +221,31 @@ export default function OrderDetailPage() {
           </Card>
 
           <Card padding="md">
-            <h3 className="font-bold mb-4">Estado del Pago</h3>
+            <h3 className="font-bold mb-4">Gestión del Pedido</h3>
             <div className="space-y-4 text-sm">
-              <div className="flex justify-between items-center">
-                <span className="text-muted">Estado Actual:</span>
-                <Badge variant={order.currentStatus === 'PENDING' ? 'accent' : order.currentStatus === 'PAID' ? 'nature' : 'outline'}>
-                  {order.currentStatus === 'PENDING' ? 'Pendiente' : 
-                   order.currentStatus === 'PAID' ? 'Pagado' : order.currentStatus}
-                </Badge>
-              </div>
-              
+              {/* Información de envío (solo si ya se pagó o envió) */}
+              {order.currentStatus !== 'PENDING' && (
+                <div className="space-y-3 mb-4 bg-gray-50/50 p-3 rounded-lg border border-gray-100">
+                  <div className="flex justify-between">
+                    <span className="text-muted">Transportista:</span>
+                    <span className="font-semibold">{order.carrierId ? `ID ${order.carrierId}` : 'No asignado'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted">Tracking N°:</span>
+                    <span className="font-semibold font-mono">{order.trackingNumber || 'N/A'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted">Sensor IoT:</span>
+                    <span className="font-semibold">{order.sensorId || 'No asignado'}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Botones de acción según el estado y rol */}
               {isSeller && order.currentStatus === 'PENDING' && (
                 <Button 
                   variant="primary" 
-                  className="w-full mt-2"
+                  className="w-full"
                   onClick={() => handleStatusUpdate('PAID', 'El pago ha sido validado exitosamente.')}
                   isLoading={isUpdating}
                 >
@@ -214,60 +256,33 @@ export default function OrderDetailPage() {
               {isBuyer && order.currentStatus === 'PENDING' && (
                 <Button 
                   variant="primary" 
-                  className="w-full mt-2"
+                  className="w-full"
                   onClick={() => handleStatusUpdate('PAID', 'El pago ha sido simulado exitosamente.')}
                   isLoading={isUpdating}
                 >
                   Pagar Pedido
                 </Button>
               )}
-            </div>
-          </Card>
-
-          <Card padding="md">
-            <h3 className="font-bold mb-4">Detalles del Envío</h3>
-            <div className="space-y-3 text-sm">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-muted">Estado de Envío:</span>
-                <Badge variant={
-                  order.currentStatus === 'DELIVERED' ? 'nature' : 
-                  order.currentStatus === 'SHIPPED' ? 'primary' : 'outline'
-                }>
-                  {order.currentStatus === 'DELIVERED' ? 'Entregado' : order.currentStatus === 'SHIPPED' ? 'Enviado' : 'Pendiente de Envío'}
-                </Badge>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted">Transportista:</span>
-                <span className="font-semibold">{order.carrierId ? `ID ${order.carrierId}` : 'No asignado'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted">Tracking N°:</span>
-                <span className="font-semibold font-mono">{order.trackingNumber || 'N/A'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted">Sensor IoT:</span>
-                <span className="font-semibold">{order.sensorId || 'No asignado'}</span>
-              </div>
-
-              {isBuyer && order.currentStatus === 'SHIPPED' && (
-                <Button 
-                  variant="primary" 
-                  className="w-full mt-4"
-                  onClick={() => handleStatusUpdate('DELIVERED', 'Has confirmado la recepción del paquete.')}
-                  isLoading={isUpdating}
-                >
-                  Confirmar Recepción del Envío
-                </Button>
-              )}
 
               {isSeller && order.currentStatus === 'PAID' && (
                 <Button 
                   variant="primary" 
-                  className="w-full mt-4"
+                  className="w-full"
                   onClick={() => setShipModalOpen(true)}
                   isLoading={isUpdating}
                 >
                   Marcar como Enviado
+                </Button>
+              )}
+
+              {isBuyer && order.currentStatus === 'SHIPPED' && (
+                <Button 
+                  variant="primary" 
+                  className="w-full"
+                  onClick={() => handleStatusUpdate('DELIVERED', 'Has confirmado la recepción del paquete.')}
+                  isLoading={isUpdating}
+                >
+                  Confirmar Recepción del Envío
                 </Button>
               )}
             </div>

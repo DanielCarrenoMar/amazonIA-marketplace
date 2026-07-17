@@ -14,10 +14,14 @@ import { Footer } from '@/components/layout/Footer';
 import { getProducts, getCategories, getActiveTribes } from '@/lib/api';
 import { mockProductDtos } from '@/lib/mock-data';
 import type { ProductResponseDto, ProductCategoryResponseDto, TribeResponseDto } from 'event-types';
+import { useCart } from '@/lib/cartContext';
+import { useToast } from '@/components/ui/Toast';
 
 function MarketplaceContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { addItem } = useCart();
+  const { toast } = useToast();
 
   const categoryParam = searchParams.get('category');
   const qParam = searchParams.get('q');
@@ -329,6 +333,13 @@ function MarketplaceContent() {
                         rating={product.averageRating ? Math.round(Number(product.averageRating)) : 0}
                         category={mappedCategory}
                         href={`/marketplace/${product.id}`}
+                        onAddToCart={(id) => {
+                          const productToAdd = products.find(p => p.id === id);
+                          if (productToAdd) {
+                            addItem(productToAdd, 1);
+                            toast({ title: "¡Añadido a la cesta!", description: `¡Añadiste ${productToAdd.name} a la cesta!`, variant: "success" });
+                          }
+                        }}
                       />
                     );
                   })

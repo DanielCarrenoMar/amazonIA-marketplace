@@ -9,7 +9,8 @@ import { Button } from './Button';
 import { Card } from './Card';
 import { useFavorites } from '@/lib/favoriteContext';
 import { useAuth } from '@/lib/useAuth';
-import { toast } from 'sonner';
+import { useToast } from '@/components/ui/Toast';
+import { useCart } from '@/lib/cartContext';
 
 export interface ProductCardProps {
   id?: string;
@@ -23,9 +24,11 @@ export interface ProductCardProps {
   originalPrice?: string;
   href?: string;
   hideFavorite?: boolean;
+  onAddToCart?: (id: string) => void;
 }
 
 export function ProductCard({
+  id,
   image,
   discount,
   title,
@@ -36,23 +39,32 @@ export function ProductCard({
   originalPrice,
   href,
   hideFavorite = false,
+  onAddToCart,
 }: ProductCardProps) {
   const { favoriteIds, toggleFavorite } = useFavorites();
   const { user } = useAuth();
-  
-  // Si tenemos el id real del producto (pasado en ProductCardProps como id)
-  // lo chequeamos. Algunos lugares pasan id, otros no.
-  const productId = arguments[0].id;
+  const { toast } = useToast();
+
+  const productId = id;
   const isFavorite = productId ? favoriteIds.has(productId) : false;
 
   const handleFavoriteClick = async (e: React.MouseEvent) => {
     e.preventDefault(); // Prevenir que el click se vaya al link del producto
     if (!user) {
-      toast.error('Inicia sesión para guardar favoritos');
+      toast({ title: 'Inicia sesión para guardar favoritos', variant: 'error' });
       return;
     }
     if (productId) {
       await toggleFavorite(productId);
+    }
+  };
+
+  const handleAddClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (onAddToCart && productId) {
+      onAddToCart(productId);
+    } else {
+      toast({ title: "Acción no disponible", description: "No se puede añadir este producto a la cesta.", variant: "warning" });
     }
   };
 
@@ -87,9 +99,9 @@ export function ProductCard({
             onClick={handleFavoriteClick}
             className="absolute top-3 right-3 bg-white/80! backdrop-blur-md hover:bg-white! hover:scale-110 z-10 shadow-sm"
           >
-            <Icon 
-              icon={isFavorite ? "mdi:heart" : "mdi:heart-outline"} 
-              className={`w-5 h-5 ${isFavorite ? 'text-red-500' : 'text-gray-500'}`} 
+            <Icon
+              icon={isFavorite ? "mdi:heart" : "mdi:heart-outline"}
+              className={`w-5 h-5 ${isFavorite ? 'text-red-500' : 'text-gray-500'}`}
             />
           </Button>
         )}
@@ -146,6 +158,7 @@ export function ProductCard({
             size="sm"
             className="font-medium!"
             rightIcon={<Icon icon="lucide:shopping-basket" className="w-4 h-4" />}
+            onClick={handleAddClick}
           >
             Agregar
           </Button>
