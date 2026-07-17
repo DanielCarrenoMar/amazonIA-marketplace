@@ -57,6 +57,7 @@ export * from './shipping-carrier/shipping-carrier-response.dto';
 
 // Inference
 export * from './inference/spatial-risk-query.dto';
+export * from './inference/risk-evaluation.dto';
 
 // IoT / Telemetry event contracts
 export * from './iot';

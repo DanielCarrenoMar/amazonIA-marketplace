@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { getOrder, getOrderTimeline, updateOrder, evaluateRisk } from "@/lib/api";
+import { getOrder, getOrderTimeline, updateOrder } from "@/lib/api";
 import type { OrderTimelineResponseDto, ProductOrderResponseDto, OrderTimelineItemDto } from "event-types";
 import { DashboardHeader, LogisticsRiskPanel, ShipmentModal, OrderChat } from "@/components/dashboard";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { MapPin, Truck, CheckCircle2, ChevronLeft, AlertTriangle, Cpu, User, Phone, Navigation } from "lucide-react";
+import { MapPin, Truck, CheckCircle2, ChevronLeft, AlertTriangle, User, Phone, Navigation } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useAuth } from "@/lib/useAuth";
@@ -26,11 +26,6 @@ export default function OrderDetailPage() {
   const { toast } = useToast();
   const [isUpdating, setIsUpdating] = useState(false);
   const [shipModalOpen, setShipModalOpen] = useState(false);
-  
-  // Inference State
-  const [riskData, setRiskData] = useState<any>(null);
-  const [isRiskLoading, setIsRiskLoading] = useState(false);
-  const [riskError, setRiskError] = useState<string | null>(null);
 
   const fetchOrderDetails = () => {
     getOrder(id).then(setOrder).catch(console.error);
@@ -40,41 +35,6 @@ export default function OrderDetailPage() {
   useEffect(() => {
     fetchOrderDetails();
   }, [id]);
-
-  useEffect(() => {
-    if (order && user?.id === order.product?.seller?.user?.id && !riskData && !isRiskLoading && !riskError) {
-      if (!order.originCoords || !order.destinationCoords) {
-        console.warn(`Order ${order.id} has no saved origin/destination coordinates; skipping risk evaluation.`);
-        setRiskError('No se pudo evaluar el riesgo: el pedido no tiene coordenadas de origen/destino guardadas.');
-        return;
-      }
-
-      const productType = order.product?.requiresColdChain ? 'perecedero_alto' : 'normal';
-
-      setIsRiskLoading(true);
-      setRiskError(null);
-
-      const payload = {
-        shipment_id: order.id,
-        route_id: order.id, // required by schema
-        route_points: [
-          { lat: order.originCoords.latitude, lon: order.originCoords.longitude },
-          { lat: order.destinationCoords.latitude, lon: order.destinationCoords.longitude }
-        ],
-        departure_date: new Date().toISOString().split('T')[0], // format "YYYY-MM-DD" is safer
-        transport_types: ['terrestre'],
-        product_types: [productType]
-      };
-
-      evaluateRisk(payload)
-        .then(setRiskData)
-        .catch((e) => {
-          console.error(e);
-          setRiskError('El asistente de Inferencia no está disponible en este momento. Puedes procesar el pedido normalmente.');
-        })
-        .finally(() => setIsRiskLoading(false));
-    }
-  }, [order, user?.id]);
 
   const handleStatusUpdate = async (newStatus: string, successMessage: string) => {
     try {
@@ -375,63 +335,15 @@ export default function OrderDetailPage() {
             </Card>
           )}
 
-          {/* Panel Asistente de Embalaje IA (Sólo vendedor) */}
           {isSeller && (
-            <Card padding="md" className="border-brand-primary/20 bg-linear-to-b from-white to-brand-primary/5">
-              <h3 className="font-bold mb-4 flex items-center gap-2">
-                <Cpu className="w-5 h-5 text-brand-primary" />
-                Asistente de Embalaje IA
-              </h3>
-              
-              {isRiskLoading ? (
-                <div className="space-y-2 animate-pulse">
-                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                  <p className="text-sm text-muted mt-2">Analizando ruta y clima con IA...</p>
-                </div>
-              ) : riskError ? (
-                <div className="bg-brand-urgency/10 text-brand-urgency p-3 rounded-md text-sm border border-brand-urgency/20">
-                  <p className="font-semibold flex items-center gap-1"><AlertTriangle className="w-4 h-4"/> No Disponible</p>
-                  <p className="mt-1">{riskError}</p>
-                </div>
-              ) : riskData ? (
-                <div className="space-y-3 text-sm">
-                  <div className="bg-brand-nature-bg p-3 rounded-md border border-brand-nature-content/20">
-                    <p className="font-semibold text-brand-nature-content mb-1">Recomendación Logística</p>
-                    <p>{riskData.message || "La ruta pasa por una zona de clima estable. Un empaque estándar es suficiente."}</p>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-2 mt-3">
-                    <div className="border border-border rounded p-2">
-                      <span className="text-muted block text-xs">Score de Riesgo</span>
-                      <span className="font-semibold">{riskData.composite_score_pct ? `${riskData.composite_score_pct.toFixed(2)}%` : 'N/A'}</span>
-                    </div>
-                    <div className="border border-border rounded p-2">
-                      <span className="text-muted block text-xs">Nivel de Alerta</span>
-                      <span className="font-semibold capitalize">{riskData.alert_level || 'Bajo'}</span>
-                    </div>
-                  </div>
-                  
-                  {riskData.main_reasons && riskData.main_reasons.length > 0 && (
-                    <div className="mt-3 text-xs text-muted">
-                      <strong>Factores de Riesgo:</strong>
-                      <ul className="list-disc pl-4 mt-1">
-                        {riskData.main_reasons.slice(0, 3).map((reason: any, idx: number) => (
-                          <li key={idx}>{reason.feature}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <p className="text-sm text-muted">No se ha podido analizar la ruta.</p>
-              )}
-            </Card>
-          )}
-
-          {/* Panel de Riesgo IoT (Sólo vendedor) */}
-          {isSeller && (
-             <LogisticsRiskPanel />
+            <LogisticsRiskPanel
+              order={{
+                id: order.id,
+                originCoords: order.originCoords,
+                destinationCoords: order.destinationCoords,
+                requiresColdChain: order.product?.requiresColdChain,
+              }}
+            />
           )}
         </div>
       </div>
