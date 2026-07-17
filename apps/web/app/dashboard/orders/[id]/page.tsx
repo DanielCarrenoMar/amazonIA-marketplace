@@ -43,26 +43,29 @@ export default function OrderDetailPage() {
 
   useEffect(() => {
     if (order && user?.id === order.product?.seller?.user?.id && !riskData && !isRiskLoading && !riskError) {
-      // Usamos una coordenada de prueba si no hay destino guardado para demostración
-      const lat = /*order.destinationCoords?.latitude ||*/ -34.6037;
-      const lon = /*order.destinationCoords?.longitude ||*/ -58.3816;
+      if (!order.originCoords || !order.destinationCoords) {
+        console.warn(`Order ${order.id} has no saved origin/destination coordinates; skipping risk evaluation.`);
+        setRiskError('No se pudo evaluar el riesgo: el pedido no tiene coordenadas de origen/destino guardadas.');
+        return;
+      }
+
       const productType = order.product?.requiresColdChain ? 'perecedero_alto' : 'normal';
-      
+
       setIsRiskLoading(true);
       setRiskError(null);
-      
+
       const payload = {
         shipment_id: order.id,
         route_id: order.id, // required by schema
         route_points: [
-          { lat: /*order.originCoords?.latitude ||*/ -3.1190, lon: /*order.originCoords?.longitude ||*/ -60.0210 },
-          { lat: lat, lon: lon }
+          { lat: order.originCoords.latitude, lon: order.originCoords.longitude },
+          { lat: order.destinationCoords.latitude, lon: order.destinationCoords.longitude }
         ],
         departure_date: new Date().toISOString().split('T')[0], // format "YYYY-MM-DD" is safer
         transport_types: ['terrestre'],
         product_types: [productType]
       };
-      
+
       evaluateRisk(payload)
         .then(setRiskData)
         .catch((e) => {

@@ -376,7 +376,32 @@ export class ProductOrderService {
       }
     }
 
-    return order as unknown as ProductOrderResponseDto;
+    // origin_coords/destination_coords are geography(Point,4326) columns, which
+    // Prisma's findUnique cannot select (Unsupported type) - extract them via
+    // raw SQL, same pattern as product.service.ts's PostGIS queries.
+    const [coordsRow] = await this.prisma.$queryRaw<
+      Array<{ originLat: number | null; originLon: number | null; destLat: number | null; destLon: number | null }>
+    >`
+      SELECT
+        ST_Y(origin_coords::geometry)      AS "originLat",
+        ST_X(origin_coords::geometry)      AS "originLon",
+        ST_Y(destination_coords::geometry) AS "destLat",
+        ST_X(destination_coords::geometry) AS "destLon"
+      FROM product_order
+      WHERE id = ${id}::uuid;
+    `;
+
+    return {
+      ...order,
+      originCoords:
+        coordsRow?.originLat != null && coordsRow?.originLon != null
+          ? { latitude: coordsRow.originLat, longitude: coordsRow.originLon }
+          : null,
+      destinationCoords:
+        coordsRow?.destLat != null && coordsRow?.destLon != null
+          ? { latitude: coordsRow.destLat, longitude: coordsRow.destLon }
+          : null,
+    } as unknown as ProductOrderResponseDto;
   }
 
   /**
