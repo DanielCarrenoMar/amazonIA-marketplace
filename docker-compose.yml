@@ -57,6 +57,23 @@ services:
         max-file: "3"
 
   # ══════════════════════════════════════════════════════════════════════════
+  # MongoDB Local
+  # ══════════════════════════════════════════════════════════════════════════
+  mongodb:
+    image: mongo:6
+    container_name: amazonia-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    networks:
+      - amazonia-internal
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ══════════════════════════════════════════════════════════════════════════
   # Ingestor Service — Gateway MQTT → Redis Streams
   # ══════════════════════════════════════════════════════════════════════════
   ingestor-service:

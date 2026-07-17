@@ -32,6 +32,8 @@ export class ProductOrderService {
     private readonly outbox: OutboxService,
     private readonly telemetryIntegration: TelemetryIntegrationService,
     private readonly configService: ConfigService,
+    private readonly notificationService: NotificationService,
+    private readonly notaryClient: NotaryClientService,
   ) {}
 
 
@@ -765,8 +767,8 @@ export class ProductOrderService {
         console.error(`MQTT connection error in product-order service: ${err.message}`);
         client.end();
       });
-    } catch (err) {
-      console.error(`Failed to connect or publish to MQTT: ${err.message}`);
+    } catch (err: any) {
+      console.error(`Failed to connect or publish to MQTT: ${err?.message || err}`);
     }
   }
 }
