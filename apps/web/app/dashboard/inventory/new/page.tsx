@@ -8,12 +8,20 @@ import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { FileDrop } from "@/components/ui/FileDrop";
 import { Switch } from "@/components/ui/Switch";
-import { Card } from "@/components/ui/Card";
-import { getCategories, createProduct, uploadProductImage } from "@/lib/api";
+import { getCategories, createProduct, uploadProductImage, uploadElaborationImages } from "@/lib/api";
 import type { ProductCategoryResponseDto, GroupedCategoryResponseDto } from "event-types";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/Toast";
 import { MapPin } from "lucide-react";
+import { Icon } from "@iconify/react";
+
+const wizardSteps = [
+  { id: 'identidad', label: 'Identidad', title: 'Nombre, precio y stock', icon: 'lucide:tag' },
+  { id: 'territorio', label: 'Territorio', title: 'Categoría y Ubicación', icon: 'lucide:map-pin' },
+  { id: 'historia', label: 'Historia', title: 'Historia, Visuales y Logística', icon: 'lucide:feather' },
+  { id: 'elaboracion', label: 'Elaboración', title: 'Proceso de Elaboración', icon: 'lucide:hammer' },
+  { id: 'verificar', label: 'Verificar', title: 'Verificar y Publicar', icon: 'lucide:shield-check' }
+];
 
 export default function NewProductPage() {
   const router = useRouter();
@@ -28,6 +36,8 @@ export default function NewProductPage() {
   const [stock, setStock] = useState("1");
   const [categoryId, setCategoryId] = useState("");
   const [description, setDescription] = useState("");
+  const [elaborationSteps, setElaborationSteps] = useState("");
+  const [elaborationImages, setElaborationImages] = useState<File[]>([]);
   const [imageFile, setImageFile] = useState<File | null>(null);
 
   // Logistics State
@@ -49,7 +59,7 @@ export default function NewProductPage() {
     try {
       const payload: any = {
         name,
-        description,
+        description: elaborationSteps ? `${description}\n\n**Proceso de Elaboración:**\n${elaborationSteps}` : description,
         price: parseFloat(price),
         stockAvailable: parseInt(stock),
         categoryId: parseInt(categoryId),
@@ -65,9 +75,13 @@ export default function NewProductPage() {
       }
 
       const prod = await createProduct(payload);
-      
+
       if (imageFile) {
         await uploadProductImage(prod.id, imageFile);
+      }
+
+      if (elaborationImages.length > 0) {
+        await uploadElaborationImages(prod.id, elaborationImages);
       }
 
       toast({ title: "Artesanía creada", variant: "success" });
@@ -80,22 +94,46 @@ export default function NewProductPage() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-8">
-      <DashboardHeader title="Nueva Artesanía" subtitle="Publica tu obra en el mundo" />
-      
-      <ProductWizard 
-        steps={['Identidad', 'Territorio', 'Historia', 'Logística', 'Verificar']}
+    <div className="max-w-5xl mx-auto space-y-8">
+      <DashboardHeader
+        title="Nueva Artesanía"
+        subtitle={`Paso ${step + 1} de ${wizardSteps.length} — ${wizardSteps[step].title}`}
+      />
+
+      <ProductWizard
+        steps={wizardSteps}
         currentStep={step}
       />
 
-      <Card padding="lg">
+      <div className="pb-12">
         {step === 0 && (
           <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
-            <h3 className="text-xl font-outfit font-bold">Identidad de la Obra</h3>
-            <Input label="Nombre de la obra" value={name} onChange={e => setName(e.target.value)} required />
+            <Input
+              label="NOMBRE DE LA OBRA:"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              placeholder="ej. Collar Wayúu bordado en algodón"
+              required
+            />
             <div className="grid grid-cols-2 gap-4">
-              <Input label="Precio ($ USD)" type="number" step="0.01" value={price} onChange={e => setPrice(e.target.value)} required />
-              <Input label="Stock disponible" type="number" min="1" value={stock} onChange={e => setStock(e.target.value)} required />
+              <Input
+                label="PRECIO ($ USD):"
+                type="number"
+                step="0.01"
+                value={price}
+                onChange={e => setPrice(e.target.value)}
+                placeholder="0.00"
+                required
+              />
+              <Input
+                label="STOCK DISPONIBLE (UNIDADES):"
+                type="number"
+                min="1"
+                value={stock}
+                onChange={e => setStock(e.target.value)}
+                placeholder="1"
+                required
+              />
             </div>
           </div>
         )}
@@ -103,9 +141,9 @@ export default function NewProductPage() {
         {step === 1 && (
           <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
             <h3 className="text-xl font-outfit font-bold">Territorio y Comunidad</h3>
-            <Select 
-              label="Categoría / Técnica" 
-              value={categoryId} 
+            <Select
+              label="Categoría / Técnica"
+              value={categoryId}
               onChange={setCategoryId}
               options={categories.flatMap(cat =>
                 cat.subcategories.map(sub => ({
@@ -113,14 +151,14 @@ export default function NewProductPage() {
                   label: sub.subcategoryName ? `${cat.categoryName} - ${sub.subcategoryName}` : cat.categoryName
                 }))
               )}
-              required 
+              required
             />
-            
+
             <div className="p-6 bg-brand-nature-bg border border-brand-primary-light rounded-xl flex items-center justify-center flex-col gap-3 text-brand-nature-content text-center">
-               <div className="p-3 bg-brand-primary text-white rounded-full">
-                 <MapPin className="w-6 h-6" />
-               </div>
-               <p className="font-semibold">La ubicación se tomará de tu perfil de vendedor.</p>
+              <div className="p-3 bg-brand-primary text-white rounded-full">
+                <MapPin className="w-6 h-6" />
+              </div>
+              <p className="font-semibold">La ubicación se tomará de tu perfil de vendedor.</p>
             </div>
           </div>
         )}
@@ -128,58 +166,54 @@ export default function NewProductPage() {
         {step === 2 && (
           <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
             <h3 className="text-xl font-outfit font-bold">Historia y Visuales</h3>
-            <Textarea 
-              label="Historia / Descripción" 
-              value={description} 
+            <Textarea
+              label="Historia / Descripción"
+              value={description}
               onChange={e => setDescription(e.target.value)}
               placeholder="Cuenta la historia detrás de esta artesanía..."
               rows={4}
-              required 
+              required
             />
-            <FileDrop 
-              label="Foto Principal" 
-              accept="image/*" 
+            <FileDrop
+              label="Foto Principal"
+              accept="image/*"
               maxSizeMB={5}
               onFilesChanged={files => setImageFile(files[0] || null)}
             />
-          </div>
-        )}
 
-        {step === 3 && (
-          <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
-            <h3 className="text-xl font-outfit font-bold">Logística y Cuidados</h3>
+            <h3 className="text-xl font-outfit font-bold mt-8">Logística y Cuidados</h3>
             <div className="space-y-4">
-              <Switch 
-                label="Producto Frágil" 
+              <Switch
+                label="Producto Frágil"
                 description="Requiere embalaje y manejo especial durante el transporte."
-                checked={isFragile} 
-                onChange={(e) => setIsFragile(e.target.checked)} 
+                checked={isFragile}
+                onChange={(e) => setIsFragile(e.target.checked)}
               />
-              <Switch 
-                label="Requiere Cadena de Frío" 
+              <Switch
+                label="Requiere Cadena de Frío"
                 description="El producto debe mantenerse a temperatura controlada."
-                checked={requiresColdChain} 
-                onChange={(e) => setRequiresColdChain(e.target.checked)} 
+                checked={requiresColdChain}
+                onChange={(e) => setRequiresColdChain(e.target.checked)}
               />
-              
+
               {requiresColdChain && (
                 <div className="grid grid-cols-2 gap-4 mt-4 p-4 bg-gray-50 border border-gray-100 rounded-xl">
-                  <Input 
-                    label="Temp. Máxima (°C)" 
-                    type="number" 
-                    step="0.1" 
-                    value={maxTemperatureCelsius} 
-                    onChange={e => setMaxTemperatureCelsius(e.target.value)} 
+                  <Input
+                    label="Temp. Máxima (°C)"
+                    type="number"
+                    step="0.1"
+                    value={maxTemperatureCelsius}
+                    onChange={e => setMaxTemperatureCelsius(e.target.value)}
                     placeholder="Ej. 8"
                   />
-                  <Input 
-                    label="Humedad Máx. (%)" 
-                    type="number" 
-                    step="1" 
+                  <Input
+                    label="Humedad Máx. (%)"
+                    type="number"
+                    step="1"
                     min="0"
                     max="100"
-                    value={maxHumidity} 
-                    onChange={e => setMaxHumidity(e.target.value)} 
+                    value={maxHumidity}
+                    onChange={e => setMaxHumidity(e.target.value)}
                     placeholder="Ej. 60"
                   />
                 </div>
@@ -188,36 +222,88 @@ export default function NewProductPage() {
           </div>
         )}
 
+        {step === 3 && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
+            <h3 className="text-xl font-outfit font-bold">Proceso de Elaboración</h3>
+            <Textarea
+              label="Pasos de elaboración (Opcional)"
+              value={elaborationSteps}
+              onChange={e => setElaborationSteps(e.target.value)}
+              placeholder="Describe paso a paso cómo elaboras esta artesanía (materiales, técnicas, tiempo)..."
+              rows={6}
+            />
+            <FileDrop
+              label="Fotos del proceso (Opcional)"
+              accept="image/*"
+              maxSizeMB={5}
+              multiple={true}
+              maxFiles={4}
+              onFilesChanged={files => setElaborationImages(files)}
+            />
+          </div>
+        )}
+
         {step === 4 && (
           <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
             <h3 className="text-xl font-outfit font-bold">Verificar y Publicar</h3>
-            <div className="bg-gray-50 p-6 rounded-xl space-y-3">
-              <p><strong>Nombre:</strong> {name}</p>
-              <p><strong>Precio:</strong> ${price}</p>
-              <p><strong>Stock:</strong> {stock}</p>
-              <p><strong>Frágil:</strong> {isFragile ? 'Sí' : 'No'}</p>
-              <p><strong>Cadena de Frío:</strong> {requiresColdChain ? 'Sí' : 'No'} {requiresColdChain && maxTemperatureCelsius ? `(Máx. ${maxTemperatureCelsius}°C)` : ''}</p>
-              <p><strong>Foto:</strong> {imageFile ? imageFile.name : 'No hay foto'}</p>
+            <div className="bg-gray-50 p-6 rounded-xl space-y-6">
+              <div className="flex flex-col md:flex-row gap-8">
+                <div className="flex-1 space-y-3">
+                  <p><strong>Nombre:</strong> {name}</p>
+                  <p><strong>Precio:</strong> ${price}</p>
+                  <p><strong>Stock:</strong> {stock}</p>
+                  <p><strong>Frágil:</strong> {isFragile ? 'Sí' : 'No'}</p>
+                  <p><strong>Cadena de Frío:</strong> {requiresColdChain ? 'Sí' : 'No'} {requiresColdChain && maxTemperatureCelsius ? `(Máx. ${maxTemperatureCelsius}°C)` : ''}</p>
+                  {!imageFile && <p><strong>Foto:</strong> No hay foto</p>}
+                </div>
+                {imageFile && (
+                  <div className="w-full md:w-1/3">
+                    <img src={URL.createObjectURL(imageFile)} alt="Preview" className="w-full h-48 md:h-full max-h-64 rounded-lg object-cover border shadow-sm" />
+                  </div>
+                )}
+              </div>
+
+              {elaborationImages.length > 0 && (
+                <div className="pt-4 border-t border-gray-200">
+                  <p><strong>Fotos de Elaboración ({elaborationImages.length}):</strong></p>
+                  <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {elaborationImages.map((file, i) => (
+                      <img key={i} src={URL.createObjectURL(file)} alt={`Elaboración ${i + 1}`} className="w-full h-32 rounded-lg object-cover border shadow-sm" />
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
 
-        <div className="mt-8 flex justify-between pt-6 border-t border-border">
-          <Button variant="ghost" onClick={() => setStep(s => Math.max(0, s - 1))} disabled={step === 0}>
-            Anterior
-          </Button>
-          
+        <div className="mt-12 flex justify-end pt-6">
+          {step > 0 && (
+            <Button variant="ghost" className="mr-auto" onClick={() => setStep(s => Math.max(0, s - 1))}>
+              Anterior
+            </Button>
+          )}
+
           {step < 4 ? (
-            <Button variant="primary" onClick={() => setStep(s => Math.min(4, s + 1))}>
-              Siguiente
+            <Button
+              className="bg-brand-accent hover:bg-[#f59e0b] text-white font-bold rounded-full px-6 flex items-center gap-2"
+              onClick={() => setStep(s => Math.min(4, s + 1))}
+            >
+              Siguiente: {wizardSteps[step + 1].label}
+              <Icon icon="lucide:chevron-right" className="w-5 h-5" />
             </Button>
           ) : (
-            <Button variant="primary" onClick={handleSubmit} isLoading={loading}>
+            <Button
+              className="bg-[#10b981] hover:bg-brand-primary text-white font-bold rounded-full px-6 flex items-center gap-2"
+              onClick={handleSubmit}
+              isLoading={loading}
+            >
               Publicar Artesanía
+              <Icon icon="lucide:check" className="w-5 h-5" />
             </Button>
           )}
         </div>
-      </Card>
+      </div>
     </div>
   );
 }

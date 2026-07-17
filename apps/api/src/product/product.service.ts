@@ -295,6 +295,37 @@ export class ProductService {
     }
   }
 
+  async uploadElaborationImages(id: string, files: Express.Multer.File[], user: any): Promise<ProductResponseDto> {
+    const product = await this.findOne(id);
+
+    // Security check: Only the owner or an ADMIN can update
+    if (user.role !== UserRole.ADMIN && product.sellerId !== user.id) {
+      throw new ForbiddenException('No tienes permiso para actualizar las imágenes de este producto');
+    }
+
+    try {
+      // 1. Upload all files concurrently
+      const uploadPromises = files.map(file => this.storageService.uploadOptimizedImage(file));
+      const urls = await Promise.all(uploadPromises);
+
+      // 2. Append to existing elaborationMediaUrls
+      const currentUrls = product.elaborationMediaUrls || [];
+      const updatedUrls = [...currentUrls, ...urls];
+
+      // 3. Update the product record in the database
+      const updatedProduct = await this.prisma.product.update({
+        where: { id },
+        data: { elaborationMediaUrls: updatedUrls },
+      });
+
+      return updatedProduct;
+    } catch (error: any) {
+      throw new InternalServerErrorException(
+        `No se pudieron subir las imágenes de elaboración: ${error.message}`
+      );
+    }
+  }
+
   async getMetrics(id: string, user: any): Promise<ProductMetricsDto> {
     const product = await this.findOne(id);
     if (user.role !== UserRole.ADMIN && product.sellerId !== user.id) {
