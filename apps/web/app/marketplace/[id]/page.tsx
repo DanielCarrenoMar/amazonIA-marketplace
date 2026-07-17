@@ -56,18 +56,20 @@ export default function ProductDetailPage() {
   const handlePrevReview = () => setActiveReviewIndex(i => (i === 0 ? Math.max(0, reviews.length - 1) : i - 1));
   const handleNextReview = () => setActiveReviewIndex(i => (i === reviews.length - 1 ? 0 : i + 1));
 
-  // Mock data for the behind-the-scenes carousel
-  const behindTheScenesMedia = [
-    { type: 'video', src: activeImage || '/ceramica-pemón.jpg', title: 'Proceso de Creación' },
-    { type: 'image', src: '/bolso-de-moriche.webp', title: 'El Taller' },
-    { type: 'video', src: '/cesta-wayuu.jpg', title: 'Técnicas Ancestrales' },
-  ];
+  // Real data for the behind-the-scenes carousel or fallback
+  const behindTheScenesMedia = product?.elaborationMediaUrls && product.elaborationMediaUrls.length > 0
+    ? product.elaborationMediaUrls.map((url, i) => ({ type: 'image', src: url, title: `Paso ${i + 1}` }))
+    : [
+        { type: 'image', src: activeImage || '/ceramica-pemón.jpg', title: 'Proceso de Creación' }
+      ];
 
   const handlePrevMedia = () => {
+    if (!behindTheScenesMedia.length) return;
     setActiveMediaIndex((prev) => (prev === 0 ? behindTheScenesMedia.length - 1 : prev - 1));
   };
 
   const handleNextMedia = () => {
+    if (!behindTheScenesMedia.length) return;
     setActiveMediaIndex((prev) => (prev === behindTheScenesMedia.length - 1 ? 0 : prev + 1));
   };
 

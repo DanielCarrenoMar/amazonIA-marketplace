@@ -25,8 +25,13 @@ export type ShipmentEventDocumentType =
 @Schema({
   collection: 'shipment_events',
   timestamps: false,
-  autoIndex: false, // Do not automatically build indexes in production
+  autoIndex: true, // Autocrea índices y la colección
   strict: false,
+  timeseries: {
+    timeField: 'recorded_at',
+    metaField: 'metadata',
+    granularity: 'seconds',
+  },
 })
 export class ShipmentEventDocument {
   @Prop({ required: true })

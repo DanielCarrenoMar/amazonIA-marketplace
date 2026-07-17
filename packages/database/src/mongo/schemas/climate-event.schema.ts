@@ -27,8 +27,13 @@ export type ClimateEventDocumentType = HydratedDocument<ClimateEventDocument>;
 @Schema({
   collection: 'climate_events',
   timestamps: false, // We manage recorded_at and ingested_at explicitly
-  autoIndex: false,  // Do not automatically build indexes in production
+  autoIndex: true,  // Autocrea índices y la colección
   strict: false,
+  timeseries: {
+    timeField: 'recorded_at',
+    metaField: 'metadata',
+    granularity: 'minutes',
+  },
 })
 export class ClimateEventDocument {
   @Prop({ required: true })

@@ -180,10 +180,26 @@ export default function TribeManagementPage() {
           <h1 className="text-3xl font-bold font-poppins text-gray-900 mb-2">
             {isLeader ? "Gestión de la Tribu" : "Mi Tribu"}
           </h1>
-          <p className="text-gray-500">
-            {isLeader ? "Administra los vendedores de " : "Perteneces a "}
-            <span className="font-semibold text-brand-primary">{tribe.name}</span>
+          <p className="text-xl font-semibold text-brand-primary mb-2">
+            {tribe.name}
           </p>
+          {tribe.description && (
+            <p className="text-gray-600 max-w-3xl mb-3 leading-relaxed">
+              {tribe.description}
+            </p>
+          )}
+          <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 font-medium">
+            {tribe.locationFormattedAddress && (
+              <span className="flex items-center">
+                <Icon icon="lucide:map-pin" className="w-4 h-4 mr-1.5" />
+                {tribe.locationFormattedAddress}
+              </span>
+            )}
+            <span className="flex items-center">
+              <Icon icon="lucide:calendar" className="w-4 h-4 mr-1.5" />
+              Creada el {new Date(tribe.createdAt).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}
+            </span>
+          </div>
         </div>
         <div className="flex items-center gap-3">
           <div className="px-4 py-2 bg-brand-primary/10 text-brand-primary rounded-xl font-medium border border-brand-primary/20 flex items-center">
@@ -199,9 +215,9 @@ export default function TribeManagementPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="overflow-hidden mt-6">
         {/* Tabs */}
-        <div className="flex border-b border-gray-100">
+        <div className="flex border-b border-gray-200">
           <button
             onClick={() => setActiveTab("members")}
             className={`flex-1 flex items-center justify-center py-4 font-medium transition-colors ${
@@ -247,7 +263,7 @@ export default function TribeManagementPage() {
         </div>
 
         {/* Tab Content */}
-        <div className="p-6 md:p-8 min-h-[400px]">
+        <div className="py-8 min-h-[400px]">
           
           {/* MEMBERS TAB */}
           {activeTab === "members" && (

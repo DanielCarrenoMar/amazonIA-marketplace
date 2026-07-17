@@ -268,8 +268,8 @@ client.on("connect", () => {
 
   console.log("─".repeat(55));
 
-  // Publicar datos cada 5 segundos de forma consolidada y compatible
-  setInterval(publishTelemetry, 5000);
+  // Publicar datos cada 30 segundos de forma consolidada y compatible (ahorro de cuota Upstash)
+  setInterval(publishTelemetry, 30000);
 
   // Publicar el primer dato inmediatamente
   publishTelemetry();
