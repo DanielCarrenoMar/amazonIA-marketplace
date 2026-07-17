@@ -133,6 +133,34 @@ function formatDuration(days: number): string {
     : `${fullDays} ${fullDays === 1 ? "día" : "días"}`;
 }
 
+function getLogisticsProtocol(risk: RiskEvaluationResponseDto, requiresColdChain?: boolean): string[] {
+  const actions: string[] = [];
+
+  // Base protocol
+  actions.push("Verificar señal del sensor IoT antes de sellar el contenedor de despacho.");
+
+  if (requiresColdChain) {
+    actions.push("Despachar preferiblemente en la madrugada para evitar picos de calor extremo.");
+    actions.push("Asegurar geles refrigerantes en los costados y la base del producto.");
+  }
+
+  if (risk.alert_level !== "GREEN") {
+    actions.push("Notificar al comprador de posibles demoras climáticas preventivas.");
+    actions.push("Establecer contacto con el transportista de respaldo para monitoreo manual.");
+  } else {
+    actions.push("Utilizar la ruta fluvial / terrestre convencional sin desvíos previstos.");
+  }
+
+  const hasRiver = risk.main_reasons.some(
+    (r) => r.feature.toLowerCase().includes("río") || r.feature.toLowerCase().includes("rio")
+  );
+  if (hasRiver) {
+    actions.push("Confirmar con la capitanía del puerto el calado y paso de botes autorizados.");
+  }
+
+  return actions;
+}
+
 function confidenceBadgeVariant(value?: number): "nature" | "accent" | "danger" | "outline" {
   if (value == null) return "outline";
   if (value >= 0.8) return "nature";
@@ -143,7 +171,7 @@ function confidenceBadgeVariant(value?: number): "nature" | "accent" | "danger" 
 function MetricCard({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
     <div
-      className={`bg-white rounded-xl border border-slate-100 shadow-sm p-4 flex flex-col justify-center min-h-[120px] ${className}`}
+      className={`bg-white rounded-xl border border-slate-100 shadow-sm p-4 flex flex-col h-full min-h-[120px] ${className}`}
     >
       {children}
     </div>
@@ -182,9 +210,12 @@ function DashboardSkeleton() {
           <div key={i} className="h-[120px] bg-white rounded-xl border border-slate-100 shadow-sm" />
         ))}
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
         <div className="lg:col-span-2 h-64 bg-white rounded-xl border border-slate-100 shadow-sm" />
-        <div className="h-64 bg-white rounded-xl border border-slate-100 shadow-sm" />
+        <div className="flex flex-col gap-4 h-64">
+          <div className="h-[45%] bg-amber-50 rounded-xl border border-amber-100 shadow-sm" />
+          <div className="flex-1 bg-white rounded-xl border border-slate-100 shadow-sm" />
+        </div>
       </div>
       <p className="text-sm text-slate-500 text-center">Analizando ruta, clima e hidrología…</p>
     </div>
@@ -274,9 +305,9 @@ export function LogisticsRiskPanel({ order, enabled = true, orderLabel }: Logist
       ) : (
         <>
           {/* Fila superior: 3 métricas */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 items-stretch">
             {/* Tarjeta 1: Score */}
-            <MetricCard>
+            <MetricCard className="justify-between">
               <div className="flex items-center gap-3">
                 <ScoreRing score={riskData.composite_score_pct} ringClass={alert.ring} />
                 <div className="min-w-0">
@@ -353,10 +384,10 @@ export function LogisticsRiskPanel({ order, enabled = true, orderLabel }: Logist
             </MetricCard>
           </div>
 
-          {/* Sección central: 2/3 + 1/3 */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Sección central: 2/3 + 1/3 — items-stretch iguala altura de columnas */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
             {/* Columna izquierda: SHAP */}
-            <div className="lg:col-span-2 space-y-4">
+            <div className="lg:col-span-2 flex flex-col gap-4">
               <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-5">
                 <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide mb-4 flex items-center gap-2">
                   <Icon icon="lucide:bar-chart-horizontal" className="w-4 h-4 text-brand-primary" />
@@ -418,11 +449,11 @@ export function LogisticsRiskPanel({ order, enabled = true, orderLabel }: Logist
               )}
             </div>
 
-            {/* Columna derecha: tramo crítico + recomendaciones */}
-            <div className="lg:col-span-1 space-y-4">
+            {/* Columna derecha: tramo crítico + recomendaciones (altura uniforme) */}
+            <div className="lg:col-span-1 flex flex-col gap-4 min-h-0">
               {riskData.critical_segment && (
                 <div
-                  className={`rounded-xl border p-4 shadow-sm ${alert.segmentBg} ${alert.segmentBorder}`}
+                  className={`rounded-xl border p-4 shadow-sm shrink-0 ${alert.segmentBg} ${alert.segmentBorder}`}
                 >
                   <p
                     className={`font-semibold flex items-center gap-2 text-sm mb-2 ${alert.segmentText}`}
@@ -441,11 +472,11 @@ export function LogisticsRiskPanel({ order, enabled = true, orderLabel }: Logist
               )}
 
               {recommendations.length > 0 && (
-                <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-5">
-                  <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide mb-3">
+                <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-5 flex-1 flex flex-col min-h-0">
+                  <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide mb-3 shrink-0">
                     Recomendaciones de empaque
                   </h3>
-                  <ol className="space-y-3">
+                  <ol className="space-y-3 flex-1">
                     {recommendations.map((rec, i) => (
                       <li key={i} className="text-sm text-slate-700 flex items-start gap-2.5">
                         <span className="flex items-center justify-center w-5 h-5 rounded-full bg-brand-primary/10 text-brand-primary text-xs font-bold shrink-0 mt-0.5">
@@ -459,6 +490,31 @@ export function LogisticsRiskPanel({ order, enabled = true, orderLabel }: Logist
                       </li>
                     ))}
                   </ol>
+                </div>
+              )}
+
+              {/* Protocolo de Despacho Seguro */}
+              <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-5 shrink-0">
+                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide mb-3 flex items-center gap-2">
+                  <Icon icon="lucide:clipboard-check" className="w-4 h-4 text-brand-primary" />
+                  Protocolo de Despacho Seguro
+                </h3>
+                <ul className="space-y-2.5">
+                  {getLogisticsProtocol(riskData, order.requiresColdChain).map((action, i) => (
+                    <li key={i} className="text-sm text-slate-700 flex items-start gap-2.5">
+                      <Icon
+                        icon="lucide:check-circle-2"
+                        className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5"
+                      />
+                      <span>{action}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {!riskData.critical_segment && recommendations.length === 0 && (
+                <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-5 flex-1 flex items-center justify-center text-sm text-slate-400">
+                  Sin alertas adicionales para esta ruta.
                 </div>
               )}
             </div>
