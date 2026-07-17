@@ -83,13 +83,13 @@ export function DashboardSidebar() {
   return (
     <aside className="fixed inset-y-0 left-0 w-72 flex flex-col z-20 bg-[#091d13] border-r border-white/5 text-white shadow-2xl">
       {/* Logo */}
-      <div className="px-6 py-8 flex items-center gap-4">
+      <Link href="/" className="px-6 py-8 flex items-center gap-4 hover:bg-white/5 transition-colors cursor-pointer border-b border-white/5">
         <img src={logo.src} alt="AmazonIA" className="w-12 h-12 rounded-full shadow-md" />
         <div className="flex flex-col justify-center">
           <span className="font-outfit font-extrabold text-[22px] tracking-tight text-white leading-none mb-1">AmazonIA 4.0</span>
           <p className="text-white/60 text-[9px] font-semibold tracking-wide uppercase leading-tight">Marketplace & Herramientas Amazónicas</p>
         </div>
-      </div>
+      </Link>
 
       {/* Navigation Top */}
       <nav className="flex-1 px-4 py-2 flex flex-col gap-2 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
