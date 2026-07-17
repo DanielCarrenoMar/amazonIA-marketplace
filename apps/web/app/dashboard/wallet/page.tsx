@@ -108,8 +108,6 @@ export default function WalletPage() {
         <div className="lg:col-span-2 space-y-6">
           {/* Current Wallet Status */}
           <Card padding="lg" className="bg-white overflow-hidden relative">
-            <div className="absolute top-0 left-0 w-1 h-full bg-brand-primary"></div>
-            
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
               <div>
                 <h3 className="text-lg font-bold font-outfit text-foreground flex items-center gap-2">
@@ -209,8 +207,8 @@ export default function WalletPage() {
         </div>
 
         {/* Sidebar Info */}
-        <div className="space-y-6">
-          <Card padding="md" className="bg-brand-nature-bg border border-brand-primary-light">
+        <div className="flex flex-col gap-6 h-full">
+          <Card padding="md" className="bg-brand-nature-bg border border-brand-primary-light shrink-0">
             <div className="flex gap-3">
               <Info className="w-5 h-5 text-brand-primary shrink-0" />
               <div>
@@ -222,23 +220,23 @@ export default function WalletPage() {
             </div>
           </Card>
           
-          <Card padding="md" className="bg-white">
-            <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-amber-500" />
+          <Card padding="md" className="bg-white flex-1 flex flex-col">
+            <h4 className="font-semibold text-foreground mb-4 flex items-center gap-2 text-lg">
+              <AlertTriangle className="w-5 h-5 text-amber-500" />
               Avisos de Seguridad
             </h4>
-            <ul className="space-y-3 text-sm text-muted">
-              <li className="flex gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-brand-primary mt-1.5 shrink-0"></div>
-                <span><strong>Verifica la red:</strong> AmazonIA opera en redes de Capa 2 (Polygon, Arbitrum) para mantener comisiones bajas.</span>
+            <ul className="flex-1 flex flex-col justify-around text-sm text-muted py-2">
+              <li className="flex gap-3">
+                <div className="w-2 h-2 rounded-full bg-brand-primary mt-1.5 shrink-0"></div>
+                <span><strong className="block text-foreground mb-1">Verifica la red</strong> AmazonIA opera en redes de Capa 2 (Polygon, Arbitrum) para mantener comisiones bajas.</span>
               </li>
-              <li className="flex gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-brand-primary mt-1.5 shrink-0"></div>
-                <span><strong>No somos un exchange:</strong> Te recomendamos usar una billetera de autocustodia (Metamask, TrustWallet) en lugar de la dirección de un exchange.</span>
+              <li className="flex gap-3">
+                <div className="w-2 h-2 rounded-full bg-brand-primary mt-1.5 shrink-0"></div>
+                <span><strong className="block text-foreground mb-1">No somos un exchange</strong> Te recomendamos usar una billetera de autocustodia (Metamask, TrustWallet) en lugar de la dirección de un exchange.</span>
               </li>
-              <li className="flex gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-brand-primary mt-1.5 shrink-0"></div>
-                <span><strong>Nunca pidas soporte con tu frase semilla:</strong> AmazonIA nunca te pedirá tu frase semilla ni tu clave privada.</span>
+              <li className="flex gap-3">
+                <div className="w-2 h-2 rounded-full bg-brand-primary mt-1.5 shrink-0"></div>
+                <span><strong className="block text-foreground mb-1">Cuidado con tu frase semilla</strong> AmazonIA nunca te pedirá tu frase semilla ni tu clave privada bajo ninguna circunstancia.</span>
               </li>
             </ul>
           </Card>
