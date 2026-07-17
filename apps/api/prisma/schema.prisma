@@ -24,6 +24,15 @@ enum UserRole {
 }
 
 // ---------------------------------------------------------------------------
+enum TransportType {
+  TERRESTRE
+  AEREO
+  MARITIMO
+
+  @@map("transport_type_enum")
+}
+
+// ---------------------------------------------------------------------------
 
 enum OrderStatus {
   PENDING
@@ -363,6 +372,7 @@ model ProductOrder {
   transactionHash   String?     @map("transaction_hash") @db.VarChar(255)
   paymentMethod     String?     @map("payment_method") @db.VarChar(50)
   currentStatus     OrderStatus @default(PENDING) @map("current_status")
+  transportType     TransportType @default(TERRESTRE) @map("transport_type")
 
   // Origin
   originCoords           Unsupported("geography(Point, 4326)")? @map("origin_coords")

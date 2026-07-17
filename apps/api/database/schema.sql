@@ -22,6 +22,15 @@ BEGIN
         );
     END IF;
 
+    -- Transport Type
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'transport_type_enum') THEN
+        CREATE TYPE transport_type_enum AS ENUM (
+            'TERRESTRE',
+            'AEREO',
+            'MARITIMO'
+        );
+    END IF;
+
     -- User Roles
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role_enum') THEN
         CREATE TYPE user_role_enum AS ENUM (
@@ -218,6 +227,7 @@ CREATE TABLE IF NOT EXISTS product_order (
     transaction_hash            VARCHAR(255),
     -- Current lifecycle state
     current_status              order_status_enum        NOT NULL DEFAULT 'PENDING',
+    transport_type              transport_type_enum      NOT NULL DEFAULT 'TERRESTRE',
     -- Destination spatial location
     destination_coords            GEOGRAPHY(Point, 4326),
     destination_mapbox_id         VARCHAR(100),

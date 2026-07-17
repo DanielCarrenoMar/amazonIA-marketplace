@@ -1,4 +1,5 @@
 import { IsString, IsNotEmpty, IsOptional, MaxLength, IsNumber, Min, Max, IsUUID, IsInt, IsEnum } from 'class-validator';
+import { TransportType } from '../enums';
 
 
 export class CreateProductOrderDto {
@@ -23,6 +24,10 @@ export class CreateProductOrderDto {
   @IsOptional()
   @MaxLength(255)
   transactionHash?: string;
+
+  @IsEnum(TransportType)
+  @IsOptional()
+  transportType?: TransportType;
 
   // Destination fields
   @IsString()

@@ -149,6 +149,7 @@ function LogisticsAiDashboardContent() {
             originCoords: selectedOrder.originCoords,
             destinationCoords: selectedOrder.destinationCoords,
             requiresColdChain: selectedOrder.product?.requiresColdChain,
+            transportType: selectedOrder.transportType,
           }}
           orderLabel={`#${selectedOrder.id.slice(0, 8)} · ${selectedOrder.product?.name ?? "Producto"}`}
         />

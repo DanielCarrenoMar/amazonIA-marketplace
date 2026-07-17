@@ -11,6 +11,7 @@ export interface LogisticsRiskPanelOrderInput {
   originCoords: { latitude: number; longitude: number } | null;
   destinationCoords: { latitude: number; longitude: number } | null;
   requiresColdChain?: boolean;
+  transportType?: string;
 }
 
 interface LogisticsRiskPanelProps {
@@ -249,7 +250,7 @@ export function LogisticsRiskPanel({ order, enabled = true, orderLabel }: Logist
         { lat: order.destinationCoords.latitude, lon: order.destinationCoords.longitude },
       ],
       departure_date: new Date().toISOString().split("T")[0],
-      transport_types: ["terrestre"],
+      transport_types: [order.transportType?.toLowerCase() || "terrestre"],
       product_types: [productType],
     })
       .then(setRiskData)
@@ -384,7 +385,7 @@ export function LogisticsRiskPanel({ order, enabled = true, orderLabel }: Logist
             </MetricCard>
           </div>
 
-          {/* Sección central: 2/3 + 1/3 — items-stretch iguala altura de columnas */}
+          {/* Sección central: 2/3 + 1/3 */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
             {/* Columna izquierda: SHAP */}
             <div className="lg:col-span-2 flex flex-col gap-4">
@@ -435,16 +436,18 @@ export function LogisticsRiskPanel({ order, enabled = true, orderLabel }: Logist
               </div>
 
               {riskData.shap_plot_base64 && (
-                <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-5">
-                  <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide mb-3 flex items-center gap-2">
+                <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-5 flex-1 flex flex-col min-h-[350px]">
+                  <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide mb-3 flex items-center gap-2 shrink-0">
                     <Icon icon="lucide:line-chart" className="w-4 h-4 text-brand-primary" />
                     Gráfico de explicabilidad SHAP
                   </h3>
-                  <img
-                    src={`data:image/png;base64,${riskData.shap_plot_base64}`}
-                    alt="Gráfico SHAP: impacto de cada variable en la predicción de riesgo logístico"
-                    className="w-full rounded-lg border border-slate-100 bg-slate-50"
-                  />
+                  <div className="flex-1 w-full relative">
+                    <img
+                      src={`data:image/png;base64,${riskData.shap_plot_base64}`}
+                      alt="Gráfico SHAP: impacto de cada variable en la predicción de riesgo logístico"
+                      className="absolute inset-0 w-full h-full object-contain rounded-lg border border-slate-100 bg-slate-50"
+                    />
+                  </div>
                 </div>
               )}
             </div>
@@ -473,23 +476,23 @@ export function LogisticsRiskPanel({ order, enabled = true, orderLabel }: Logist
 
               {recommendations.length > 0 && (
                 <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-5 flex-1 flex flex-col min-h-0">
-                  <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide mb-3 shrink-0">
+                  <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide mb-4 shrink-0 flex items-center gap-2">
+                    <Icon icon="lucide:package" className="w-4 h-4 text-brand-primary" />
                     Recomendaciones de empaque
                   </h3>
-                  <ol className="space-y-3 flex-1">
+                  <ul className="space-y-2.5 flex-1 overflow-y-auto">
                     {recommendations.map((rec, i) => (
-                      <li key={i} className="text-sm text-slate-700 flex items-start gap-2.5">
-                        <span className="flex items-center justify-center w-5 h-5 rounded-full bg-brand-primary/10 text-brand-primary text-xs font-bold shrink-0 mt-0.5">
-                          {i + 1}
-                        </span>
-                        <Icon
-                          icon="lucide:package-check"
-                          className="w-4 h-4 text-brand-primary shrink-0 mt-0.5"
-                        />
-                        <span>{rec}</span>
+                      <li key={i} className="text-sm text-slate-700 flex items-start gap-3 bg-slate-50/50 p-3 rounded-lg border border-slate-100/80">
+                        <div className="flex items-center justify-center w-6 h-6 rounded-full bg-brand-primary/10 text-brand-primary shrink-0 mt-0.5">
+                          <Icon
+                            icon="lucide:package-check"
+                            className="w-3.5 h-3.5"
+                          />
+                        </div>
+                        <span className="leading-relaxed">{rec}</span>
                       </li>
                     ))}
-                  </ol>
+                  </ul>
                 </div>
               )}
 

@@ -1,4 +1,4 @@
-import { OrderStatus } from '../enums';
+import { OrderStatus, TransportType } from '../enums';
 
 export class OrderStatusHistoryResponseDto {
   id: number;
@@ -25,6 +25,7 @@ export class ProductOrderResponseDto {
   buyerRatingValue: number | null;
   transactionHash: string | null;
   currentStatus: OrderStatus;
+  transportType: TransportType;
 
   // Origin fields
   originMapboxId: string | null;

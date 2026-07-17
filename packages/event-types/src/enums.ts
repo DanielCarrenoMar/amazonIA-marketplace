@@ -13,6 +13,12 @@ export enum OrderStatus {
   REFUNDED = 'REFUNDED',
 }
 
+export enum TransportType {
+  TERRESTRE = 'TERRESTRE',
+  AEREO = 'AEREO',
+  MARITIMO = 'MARITIMO',
+}
+
 // ---------------------------------------------------------------------------
 // Tribe Enums
 // ---------------------------------------------------------------------------
