@@ -322,8 +322,15 @@ async def evaluate_risk(request: EvaluationRequest, user_payload: dict = Depends
     distance_km = calculate_haversine_distance(origin["lat"], origin["lon"], destination["lat"], destination["lon"])
     estimated_duration_days = estimate_duration_days(distance_km, shipment_transport_type)
 
+    # Map unseen frontend transport types to what the XGBoost model was trained on
+    model_transport_type = shipment_transport_type
+    if model_transport_type == "maritimo":
+        model_transport_type = "fluvial"
+    elif model_transport_type == "aereo":
+        model_transport_type = "terrestre"
+
     shipment = ShipmentData(
-        transport_type=shipment_transport_type,
+        transport_type=model_transport_type,
         product_type=request.product_types[0] if request.product_types else "perecedero_bajo",
         distance_km=distance_km,
         estimated_duration_days=estimated_duration_days,
@@ -346,12 +353,26 @@ async def evaluate_risk(request: EvaluationRequest, user_payload: dict = Depends
     base_score = prediction["risk_score"]
     shap_values = prediction["shap_values"]
     
-    # 7. Apply penalization based on data source confidence
-    penalizacion = (1.0 - confianza_clima) * 0.3 + (1.0 - confianza_iot) * 0.2
-    final_score = base_score * (1.0 + penalizacion)
-    composite_score_pct = min(100.0, final_score * 100.0)
+    # 7. Apply transport vulnerability multiplier (post-hoc — not learned by the model).
+    # The XGBoost model predicts pure environmental risk. Transport type amplifies it:
+    # fluvial rivers have unpredictable currents and flooding, maritime has coastal storms,
+    # terrestre and aereo are less sensitive to hydrological variables.
+    TRANSPORT_MULTIPLIERS = {
+        "terrestre": 1.00,
+        "aereo":     1.05,
+        "maritimo":  1.25,
+        "fluvial":   1.50,
+    }
+    transport_mult = TRANSPORT_MULTIPLIERS.get(shipment_transport_type, 1.0)
     
-    # 8. Alert levels mapping
+    # 8. Apply data-confidence penalization (capped at +20% to avoid inflating nulls into 100% alerts)
+    penalizacion = min(0.20, (1.0 - confianza_clima) * 0.3 + (1.0 - confianza_iot) * 0.2)
+    
+    final_score = base_score * transport_mult * (1.0 + penalizacion)
+    # Hard cap at 95 — reserve "100%" as a truly exceptional value, not a math artifact
+    composite_score_pct = min(95.0, final_score * 100.0)
+    
+    # 9. Alert levels mapping
     if composite_score_pct < 30.0:
         alert_level = "GREEN"
     elif composite_score_pct < 70.0:
@@ -359,23 +380,32 @@ async def evaluate_risk(request: EvaluationRequest, user_payload: dict = Depends
     else:
         alert_level = "RED"
         
-    # 9. Deduce critical segment
+    # 10. Deduce critical segment
     critical_segment = find_critical_segment(climate_data_list, request.route_points)
     
-    # 10. Populate reasons (using model's Top 3 SHAP)
+    # 11. Populate reasons (using model's Top SHAP values)
     human_labels = {
         "max_temperatura_c": "Temperatura Extrema",
         "precipitacion_acum_mm": "Lluvias Intensas",
         "max_viento_ms": "Vientos Fuertes",
-        "tipo_transporte": "Vulnerabilidad del Transporte",
-        "tipo_producto": "Sensibilidad del Producto",
-        "nivel_rio_m": "Nivel del Río (Peligro de Encallar)",
+        "tipo_producto": "Perecibilidad del Producto",
+        "nivel_rio_m": "Nivel del Río (Riesgo de Encallar)",
+        "velocidad_corriente_rio_ms": "Velocidad de la Corriente del Río",
+        "regimen_hidrologico": "Régimen Hidrológico",
         "es_fallback_inpa": "Datos Climáticos Inciertos"
     }
+    
+    RIVER_FEATURES = {"nivel_rio_m", "velocidad_corriente_rio_ms", "regimen_hidrologico"}
     
     main_reasons = []
     for reason in prediction.get("top_reasons", []):
         raw_feat = reason["feature"]
+        
+        # River-hydro factors only make sense for true river transport
+        if shipment_transport_type != "fluvial":
+            if raw_feat in RIVER_FEATURES:
+                continue
+
         impact = reason["impact"]
         label = human_labels.get(raw_feat, raw_feat)
         main_reasons.append(RiskReason(impact=impact, feature=label))

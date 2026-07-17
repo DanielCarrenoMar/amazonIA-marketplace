@@ -223,6 +223,21 @@ function DashboardSkeleton() {
   );
 }
 
+function getTransportIconAndLabel(transportType?: string) {
+  const type = transportType?.toLowerCase() || "terrestre";
+  switch (type) {
+    case "aereo":
+      return { label: "Aéreo", icon: "lucide:plane", color: "bg-blue-50 text-blue-700 border-blue-200" };
+    case "maritimo":
+      return { label: "Marítimo", icon: "lucide:ship", color: "bg-cyan-50 text-cyan-700 border-cyan-200" };
+    case "fluvial":
+      return { label: "Fluvial", icon: "lucide:droplets", color: "bg-teal-50 text-teal-700 border-teal-200" };
+    case "terrestre":
+    default:
+      return { label: "Terrestre", icon: "lucide:truck", color: "bg-orange-50 text-orange-700 border-orange-200" };
+  }
+}
+
 export function LogisticsRiskPanel({ order, enabled = true, orderLabel }: LogisticsRiskPanelProps) {
   const [riskData, setRiskData] = useState<RiskEvaluationResponseDto | null>(null);
   const [loading, setLoading] = useState(false);
@@ -267,14 +282,22 @@ export function LogisticsRiskPanel({ order, enabled = true, orderLabel }: Logist
     ? Math.max(...riskData.main_reasons.map((r) => r.impact), 0.001)
     : 1;
 
+  const transport = getTransportIconAndLabel(order.transportType);
+
   return (
     <section className="w-full rounded-xl border border-slate-100 bg-slate-50/50 p-6">
       {/* Encabezado */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div>
-          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2 flex-wrap">
             <Icon icon="lucide:brain-circuit" className="w-5 h-5 text-brand-primary" />
             Monitoreo Logístico IA
+            {order.transportType && (
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border ${transport.color}`}>
+                <Icon icon={transport.icon} className="w-3.5 h-3.5" />
+                {transport.label}
+              </span>
+            )}
           </h2>
           <p className="text-sm text-slate-500 mt-0.5">
             {orderLabel ? `Pedido: ${orderLabel}` : `ID: ${order.id.slice(0, 8)}…`}

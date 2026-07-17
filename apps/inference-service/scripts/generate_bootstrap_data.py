@@ -5,43 +5,71 @@ import random
 from datetime import date, timedelta
 import httpx
 
-# Real routes constants in the Amazon
+# Real routes constants in the Amazon + Venezuela
 ROUTES = [
     {"name": "Manaus-Belem", "lat": -3.119, "lon": -60.021, "type": "fluvial"},
     {"name": "PortoVelho-Manaus", "lat": -8.761, "lon": -63.903, "type": "fluvial"},
-    {"name": "Manaus-BoaVista", "lat": -3.119, "lon": -60.021, "type": "terrestre"}
+    {"name": "Manaus-BoaVista", "lat": -3.119, "lon": -60.021, "type": "terrestre"},
+    {"name": "Caracas-Maracaibo", "lat": 10.480, "lon": -66.903, "type": "terrestre"},
+    {"name": "Miami-LaGuaira", "lat": 10.601, "lon": -66.932, "type": "maritimo"},
+    {"name": "Panama-PuertoCabello", "lat": 10.478, "lon": -68.012, "type": "maritimo"},
+    {"name": "Bogota-Caracas", "lat": 4.711, "lon": -74.072, "type": "aereo"},
+    {"name": "Miami-Caracas", "lat": 25.761, "lon": -80.191, "type": "aereo"}
 ]
 
 PRODUCTS = ["perecedero_alto", "perecedero_bajo", "electronica", "general"]
-NUM_SAMPLES = 15000 # Increased dataset size
+NUM_SAMPLES = 15000 
 
-def check_failure(route_type: str, product: str, max_temp: float, precip_sum: float, wind_speed: float, river_discharge: float) -> int:
+def check_failure(route_type: str, product: str, max_temp: float, precip_sum: float,
+                   wind_ms: float, river_discharge: float, nivel_rio: float) -> int:
     """
-    Applies hard heuristics of Amazon logistics to determine if the shipment fails.
+    Balanced failure heuristic. Wind values in m/s (consistent with inference service).
+    Target failure rate: 6-10% across all transport types.
+    A single moderate condition does NOT trigger failure alone.
+    
+    Reference m/s wind thresholds:
+      4-6 m/s = light breeze (normal tropical trade winds)
+      7-9 m/s = fresh breeze (choppy sea, some spray)
+      10-12 m/s = strong breeze (rough conditions on water)
+      > 12 m/s = near-gale (dangerous for small vessels)
     """
-    # 1. Fluvial routes with extreme rain (floods, navigation hazards)
-    if route_type == "fluvial" and precip_sum > 100.0:
+    risk_score = 0.0
+    
+    # 1. Temperature x product fragility
+    if product == "perecedero_alto":
+        if max_temp > 37.0: risk_score += 0.50    # Alone can trigger failure
+        elif max_temp > 35.0: risk_score += 0.25  # Needs a second factor
+        elif max_temp > 33.0: risk_score += 0.10  # Minor concern
+    elif product == "perecedero_bajo":
+        if max_temp > 38.5: risk_score += 0.40
+        elif max_temp > 36.0: risk_score += 0.15
+    
+    # 2. Rain (7-day accumulated)
+    if precip_sum > 110.0: risk_score += 0.35    # Heavy rainy week
+    elif precip_sum > 65.0: risk_score += 0.15   # Moderate rain
+    
+    # 3. Wind in m/s — stricter for water transport
+    if route_type in ["fluvial", "maritimo"]:
+        if wind_ms > 11.0: risk_score += 0.45    # Near-gale on water
+        elif wind_ms > 7.5: risk_score += 0.20   # Fresh breeze on vessels
+    else:  # terrestre / aereo
+        if wind_ms > 14.0: risk_score += 0.30    # Gale-level
+        elif wind_ms > 10.0: risk_score += 0.10
+    
+    # 4. Fluvial-specific hydrology
+    if route_type == "fluvial":
+        if river_discharge > 3.0: risk_score += 0.30
+        if nivel_rio < 10.5: risk_score += 0.25  # Low water level (drought)
+    
+    # 5. Stochastic: accidents, customs, mechanical
+    risk_score += random.uniform(0.0, 0.15)
+    
+    if risk_score >= 0.75:
         return 1
-    # 2. Perishables in extreme heat (cold chain failure)
-    if product == "perecedero_alto" and max_temp > 35.0:
-        return 1
-    # 3. Strong winds on vessels
-    if route_type == "fluvial" and wind_speed > 25.0:
-        return 1
-    # 4. Fluvial routes with dangerous river currents (from Flood API discharge proxy)
-    if route_type == "fluvial" and river_discharge > 2.3:
-        return 1
-    # 5. Base stochastic factor (random accidents, etc.)
-    if random.random() < 0.05:
-        return 1
-        
     return 0
 
+
 async def fetch_yearly_weather(client: httpx.AsyncClient, lat: float, lon: float, start_d: date, end_d: date) -> dict:
-    """
-    Fetches the weather for a whole year to avoid rate limits and speed up generation.
-    Returns a dictionary mapping 'YYYY-MM-DD' to daily weather stats.
-    """
     url = "https://archive-api.open-meteo.com/v1/archive"
     params = {
         "latitude": lat,
@@ -49,6 +77,7 @@ async def fetch_yearly_weather(client: httpx.AsyncClient, lat: float, lon: float
         "start_date": start_d.isoformat(),
         "end_date": end_d.isoformat(),
         "daily": ["temperature_2m_max", "precipitation_sum", "wind_speed_10m_max"],
+        "wind_speed_unit": "ms",  # Match the inference service — both must use m/s
         "timezone": "auto"
     }
     
@@ -57,7 +86,6 @@ async def fetch_yearly_weather(client: httpx.AsyncClient, lat: float, lon: float
         resp.raise_for_status()
         data = resp.json().get("daily", {})
         
-        # Convert parallel arrays into a date-indexed dictionary
         weather_map = {}
         if "time" in data:
             for i, d_str in enumerate(data["time"]):
@@ -100,9 +128,8 @@ async def fetch_yearly_hydro(client: httpx.AsyncClient, lat: float, lon: float, 
 async def generate():
     print(f"Starting Synthetic Bootstrap Dataset generation ({NUM_SAMPLES} samples)...")
     start_date = date(2022, 1, 1)
-    end_date = date(2023, 12, 31) # 2 years of data
+    end_date = date(2023, 12, 31)
     
-    # 1. Pre-fetch all weather data for our 3 routes to save time and API calls
     print("Pre-fetching 2 years of climate and hydro data for all routes...")
     climate_cache = {}
     hydro_cache = {}
@@ -115,20 +142,17 @@ async def generate():
             hydro_cache[route["name"]] = await fetch_yearly_hydro(
                 client, route["lat"], route["lon"], start_date, end_date
             )
-            await asyncio.sleep(1) # Be nice to the API
+            await asyncio.sleep(1)
             
-    # 2. Generate random shipments using the cached data
-    delta = (end_date - start_date).days - 7 # Leave room for the 7-day trip
+    delta = (end_date - start_date).days - 7
     dataset = []
     
     for i in range(NUM_SAMPLES):
         route = random.choice(ROUTES)
         product = random.choice(PRODUCTS)
         
-        # Random start date
         d = start_date + timedelta(days=random.randint(0, delta))
         
-        # Aggregate the 7-day trip from cache
         route_climate = climate_cache.get(route["name"], {})
         route_hydro = hydro_cache.get(route["name"], {})
         
@@ -150,13 +174,22 @@ async def generate():
         if t_max_list and h_list:
             max_temp = max(t_max_list)
             precip_sum = sum(p_sum_list)
-            wind_speed = max(w_max_list)
+            wind_ms = max(w_max_list)   # Already in m/s from API (wind_speed_unit=ms)
             
-            # Hydro data extraction (using avg discharge for the trip)
             avg_discharge = sum(h_list) / len(h_list)
-            nivel_rio = max(10.0, avg_discharge * 2.0)
             
-            failure = check_failure(route["type"], product, max_temp, precip_sum, wind_speed, avg_discharge)
+            # Create variance in river level based on month (seasonality)
+            month = d.month
+            if month in [1, 2, 3, 4]:
+                nivel_rio = random.uniform(8.0, 15.0) # Aguas bajas
+            elif month in [8, 9]:
+                nivel_rio = random.uniform(20.0, 28.0) # Aguas altas
+            elif month in [5, 6, 7]:
+                nivel_rio = random.uniform(15.0, 22.0) # Ascenso
+            else:
+                nivel_rio = random.uniform(12.0, 20.0) # Descenso
+                
+            failure = check_failure(route["type"], product, max_temp, precip_sum, wind_ms, avg_discharge, nivel_rio)
             
             dataset.append({
                 "fecha_despacho": d.isoformat(),
@@ -167,7 +200,7 @@ async def generate():
                 "tipo_producto": product,
                 "max_temperatura_c": max_temp,
                 "precipitacion_acum_mm": precip_sum,
-                "max_viento_ms": wind_speed,
+                "max_viento_ms": wind_ms,
                 "nivel_rio_m": round(nivel_rio, 2),
                 "velocidad_corriente_rio_ms": round(avg_discharge, 2),
                 "fracaso_logistico": failure
@@ -185,6 +218,7 @@ async def generate():
     df.to_csv(out_path, index=False)
     print(f"\n[SUCCESS] Dataset saved to {out_path} with {len(df)} records.")
     print(f"Synthetic Failure Rate (Danger): {df['fracaso_logistico'].mean() * 100:.1f}%")
+    print(df.groupby(['tipo_transporte','fracaso_logistico']).size().unstack(fill_value=0))
 
 if __name__ == "__main__":
     asyncio.run(generate())

@@ -18,11 +18,14 @@ def train():
     df = pd.read_csv(data_path)
     print(f"Dataset loaded: {len(df)} samples")
     
+    # tipo_transporte is intentionally excluded — transport type becomes a
+    # post-hoc multiplier in risk.py instead of a learnable feature. This prevents
+    # the model from learning "maritimo/fluvial = always fails" and ensures SHAP
+    # values only explain actionable external factors (climate, hydrology, product).
     feature_cols = [
         "max_temperatura_c",
         "precipitacion_acum_mm",
         "max_viento_ms",
-        "tipo_transporte",
         "tipo_producto",
         "nivel_rio_m",
         "regimen_hidrologico",
@@ -33,7 +36,7 @@ def train():
     y = df["fracaso_logistico"].copy()
     
     # Cast strings to pandas category dtype for native XGBoost support
-    categorias = ["tipo_transporte", "tipo_producto", "regimen_hidrologico"]
+    categorias = ["tipo_producto", "regimen_hidrologico"]
     for cat in categorias:
         X[cat] = X[cat].astype("category")
     
@@ -46,22 +49,25 @@ def train():
     
     print(f"Data Split -> Train: {len(X_train)} | Val: {len(X_val)} | Test: {len(X_test)}")
     
-    # 3. Calcular scale_pos_weight para balancear las clases (mayor peso a fracasos)
-    # scale_pos_weight = count(negative examples) / count(positive examples)
+    # 3. Calcular scale_pos_weight para balancear las clases
+    # Usamos sqrt(neg/pos) en lugar de neg/pos para un balance más suave.
+    # neg/pos = 5.86 causa sobrepredicción agresiva; sqrt(5.86) ≈ 2.42 da probabilidades más calibradas.
     neg_count = len(y_train[y_train == 0])
     pos_count = len(y_train[y_train == 1])
-    spw = neg_count / pos_count
-    print(f"Calculated scale_pos_weight: {spw:.2f} (to penalize false negatives)")
+    spw = (neg_count / pos_count) ** 0.5  # Square root: moderate upweighting
+    print(f"Calculated scale_pos_weight: {spw:.2f} (sqrt formula for calibrated probabilities)")
     
     # 4. Configurar modelo con parámetros optimizados
     model = xgb.XGBClassifier(
         n_estimators=300,
-        max_depth=6,
+        max_depth=4,          # Reduced from 6 to prevent overfitting
         learning_rate=0.03,
+        subsample=0.8,        # Regularization
+        colsample_bytree=0.8, # Regularization
+        min_child_weight=5,   # Prevent learning from tiny specific cases
         enable_categorical=True,
         early_stopping_rounds=15,
         random_state=42,
-        base_score=0.5,
         scale_pos_weight=spw
     )
     

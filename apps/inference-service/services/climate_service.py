@@ -18,7 +18,8 @@ class ClimateService:
             "start_date": start_date.isoformat(),
             "end_date": end_date.isoformat(),
             "daily": ["temperature_2m_max", "temperature_2m_min", "precipitation_sum", "wind_speed_10m_max"],
-            "timezone": "auto"
+            "timezone": "auto",
+            "wind_speed_unit": "ms"
         }
         
         async with httpx.AsyncClient() as client:
@@ -54,7 +55,8 @@ class ClimateService:
             "longitude": lon,
             "daily": ["temperature_2m_max", "temperature_2m_min", "precipitation_sum", "wind_speed_10m_max"],
             "timezone": "auto",
-            "forecast_days": days
+            "forecast_days": days,
+            "wind_speed_unit": "ms"
         }
         
         async with httpx.AsyncClient() as client:
