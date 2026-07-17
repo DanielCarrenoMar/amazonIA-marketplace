@@ -285,11 +285,11 @@ client.on("message", (topic, message) => {
           routeCheckpoints = generateRoute(data.origin, data.destination);
           currentCheckpoint = 0;
           isAssigned = true;
-          
+
           console.log(`\n🚀 [SENSOR] ${CONTAINER_ID} Activado!`);
           console.log(`📦 Asignado al paquete: ${trackingNumber}`);
           console.log(`📍 Ruta generada con ${routeCheckpoints.length} puntos de control desde origen a destino.`);
-          
+
           publishTelemetry();
         } else {
           console.warn("⚠️  Mensaje START_TRANSIT incompleto. Faltan datos de tracking, origin o destination.");

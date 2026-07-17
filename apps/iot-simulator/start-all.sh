@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # ─────────────────────────────────────────────────────────────
 # start-all.sh  – Lanzador paralelo de sensores IoT AmazonIA
 #
@@ -10,25 +10,29 @@
 #   SENSOR_2_PASSWORD=<password>
 #   ...
 # ─────────────────────────────────────────────────────────────
-set -euo pipefail
+set -eu
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ENV_FILE="${SCRIPT_DIR}/.env"
 
-# ── Cargar variables compartidas desde .env ──────────────────
+# ── Cargar variables compartidas desde .env si existe ────────
+# En Docker las variables se inyectan como env vars; .env es opcional
 if [[ -f "${ENV_FILE}" ]]; then
   set -a
   # shellcheck source=/dev/null
   source "${ENV_FILE}"
   set +a
-else
-  echo "❌ No se encontró ${ENV_FILE}. Copia .env.example → .env y complétalo."
+fi
+
+# Verificar que al menos existan las variables mínimas del broker
+if [[ -z "${HIVEMQ_HOST:-}" ]]; then
+  echo "❌ HIVEMQ_HOST no definido. Configúralo en .env o como variable de entorno."
   exit 1
 fi
 
-# ── Validar variables mínimas del broker ─────────────────────
-if [[ -z "${HIVEMQ_HOST:-}" || -z "${HIVEMQ_PORT:-}" ]]; then
-  echo "❌ HIVEMQ_HOST o HIVEMQ_PORT no definidos en ${ENV_FILE}."
+# ── Validar que al menos hay un sensor configurado ──────────
+if [[ -z "${SENSOR_1_USERNAME:-}" ]]; then
+  echo "❌ Debes definir al menos SENSOR_1_USERNAME y SENSOR_1_PASSWORD."
   exit 1
 fi
 
