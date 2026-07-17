@@ -144,10 +144,12 @@ async def get_spatial_risk(
     (Respuesta rápida < 100ms)
     """
     try:
-        # 1. Leer datos pre-calculados de las zonas desde Redis
+        # 1. Leer datos pre-calculados de las zonas desde Redis de una sola vez
+        zone_keys = [f"zone:data:{zone['id']}" for zone in ZONES]
+        raw_values = await iot_service.redis.mget(*zone_keys)
+        
         zone_data = []
-        for zone in ZONES:
-            raw = await iot_service.redis.get(f"zone:data:{zone['id']}")
+        for zone, raw in zip(ZONES, raw_values):
             if raw:
                 try:
                     data = json.loads(raw)

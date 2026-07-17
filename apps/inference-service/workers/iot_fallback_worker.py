@@ -156,6 +156,7 @@ async def run_worker():
                     messages = stream_data[1]
                     if messages:
                         has_messages = True
+                    msg_ids_to_ack = []
                     for msg in messages:
                         msg_id = msg[0]
                         message_data = msg[1]
@@ -169,10 +170,14 @@ async def run_worker():
                         # Despachar a la función correcta según el stream
                         if stream == STREAM_NAME:
                             await process_iot_message(redis, msg_dict)
-                            await redis.execute(["XACK", STREAM_NAME, CONSUMER_GROUP, msg_id])
                         elif stream == CLIMATE_STREAM:
                             await process_climate_message(redis, msg_dict)
-                            await redis.execute(["XACK", CLIMATE_STREAM, CONSUMER_GROUP, msg_id])
+                            
+                        msg_ids_to_ack.append(msg_id)
+                        
+                    # Batch XACK all processed messages for this stream in a single request
+                    if msg_ids_to_ack:
+                        await redis.execute(["XACK", stream, CONSUMER_GROUP, *msg_ids_to_ack])
             
             # Polling adaptativo más relajado: si procesó mensajes duerme 5s (antes 1s), si está inactivo duerme 60s (antes 30s)
             sleep_time = 5 if has_messages else 60
