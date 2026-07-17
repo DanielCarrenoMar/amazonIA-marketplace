@@ -183,8 +183,14 @@ async def run_worker():
             sleep_time = 5 if has_messages else 60
             await asyncio.sleep(sleep_time)
         except Exception as e:
-            logger.error(f"Worker loop error: {e}")
-            await asyncio.sleep(5)
+            error_msg = str(e)
+            logger.error(f"Worker loop error: {error_msg}")
+            # Si superamos la cuota mensual de Upstash, dormir por 1 hora para no hacer spam de peticiones HTTP
+            if "max requests limit exceeded" in error_msg.lower():
+                logger.warning("Upstash quota exceeded. Sleeping for 1 hour before retrying...")
+                await asyncio.sleep(3600)
+            else:
+                await asyncio.sleep(5)
 
 if __name__ == "__main__":
     try:
