@@ -27,6 +27,9 @@ LABEL org.opencontainers.image.title="amazonia-iot-simulator" \
 # dumb-init desde la stage anterior (ya compilado para alpine)
 COPY --from=deps /usr/bin/dumb-init /usr/bin/dumb-init
 
+# Instalar bash (necesario para start-all.sh) y otras utilidades mínimas
+RUN apk add --no-cache bash
+
 # Ejecutar como usuario no-root por seguridad
 RUN addgroup --system --gid 1001 nodejs \
     && adduser  --system --uid 1001 sensor
@@ -36,6 +39,13 @@ WORKDIR /app
 # Copiar node_modules de producción y el código fuente del simulador
 COPY --from=deps --chown=sensor:nodejs /app/node_modules ./node_modules
 COPY --chown=sensor:nodejs sensor.js .
+COPY --chown=sensor:nodejs start-all.sh .
+
+# Convertir CRLF → LF por si el archivo fue editado en Windows
+RUN sed -i 's/\r//' start-all.sh
+
+# Dar permisos de ejecución al script
+RUN chmod +x start-all.sh
 
 USER sensor
 
@@ -47,4 +57,4 @@ ENV NODE_ENV=production \
 # (el sensor es puramente un cliente MQTT saliente)
 
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["node", "sensor.js"]
+CMD ["bash", "start-all.sh"]

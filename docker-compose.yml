@@ -26,8 +26,13 @@ services:
     environment:
       - HIVEMQ_HOST=${HIVEMQ_HOST}
       - HIVEMQ_PORT=${HIVEMQ_PORT:-8883}
-      - HIVEMQ_USERNAME=${HIVEMQ_USERNAME}
-      - HIVEMQ_PASSWORD=${HIVEMQ_PASSWORD}
+      # Credenciales para start-all.sh (3 sensores en paralelo)
+      - SENSOR_1_USERNAME=${SENSOR_1_USERNAME}
+      - SENSOR_1_PASSWORD=${SENSOR_1_PASSWORD}
+      - SENSOR_2_USERNAME=${SENSOR_2_USERNAME}
+      - SENSOR_2_PASSWORD=${SENSOR_2_PASSWORD}
+      - SENSOR_3_USERNAME=${SENSOR_3_USERNAME}
+      - SENSOR_3_PASSWORD=${SENSOR_3_PASSWORD}
     networks:
       - amazonia-internal
     # Sin puertos expuestos: el sensor solo PUBLICA hacia HiveMQ Cloud

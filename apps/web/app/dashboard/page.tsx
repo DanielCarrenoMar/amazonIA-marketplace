@@ -1,39 +1,69 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/lib/useAuth";
-import { getSellerMetrics, getSellerOrders } from "@/lib/api";
+import { getSellerMetrics, getSellerOrders, updateOrder } from "@/lib/api";
 import type { SellerMetricsResponseDto, ProductOrderResponseDto } from "event-types";
-import { DashboardHeader, StatsCard } from "@/components/dashboard";
+import { DashboardHeader, StatsCard, ShipmentModal } from "@/components/dashboard";
 import { DollarSign, Wallet, TrendingUp, AlertTriangle } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 import { OrderCard } from "@/components/dashboard/OrderCard";
+import { useToast } from "@/components/ui/Toast";
 
 export default function DashboardPage() {
   const { user } = useAuth();
   const [metrics, setMetrics] = useState<SellerMetricsResponseDto | null>(null);
   const [tasks, setTasks] = useState<ProductOrderResponseDto[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  const [shipModalOpen, setShipModalOpen] = useState(false);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  const loadData = useCallback(async () => {
+    try {
+      const [m, orders] = await Promise.all([
+        getSellerMetrics(),
+        getSellerOrders(new URLSearchParams({ limit: "10" }))
+      ]);
+      setMetrics(m);
+      setTasks(orders.data.filter(o => o.currentStatus === 'PAID'));
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    async function loadData() {
-      try {
-        const [m, orders] = await Promise.all([
-          getSellerMetrics(),
-          getSellerOrders(new URLSearchParams({ limit: "10" }))
-        ]);
-        setMetrics(m);
-        setTasks(orders.data.filter(o => o.currentStatus === 'PAID'));
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    }
     loadData();
-  }, []);
+  }, [loadData]);
+
+  const handleAction = (action: string, orderId: string) => {
+    if (action === "ship") {
+      setSelectedOrderId(orderId);
+      setShipModalOpen(true);
+    }
+  };
+
+  const handleShipSubmit = async (data: any) => {
+    if (!selectedOrderId) return;
+    try {
+      await updateOrder(selectedOrderId, {
+        currentStatus: "SHIPPED",
+        trackingNumber: data.trackingNumber,
+        carrierId: data.carrierId,
+        sensorId: data.sensorId,
+      });
+      toast({ title: "Pedido actualizado a Enviado", variant: "success" });
+      setShipModalOpen(false);
+      loadData();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "error" });
+    }
+  };
 
   if (loading) {
     return <div className="animate-pulse flex space-y-4 flex-col">Cargando...</div>;
@@ -83,7 +113,7 @@ export default function DashboardPage() {
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {tasks.map(task => (
-                  <OrderCard key={task.id} order={task} viewMode="seller" />
+                  <OrderCard key={task.id} order={task} viewMode="seller" onAction={handleAction} />
                 ))}
               </div>
             </div>
@@ -94,6 +124,12 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
+
+      <ShipmentModal
+        isOpen={shipModalOpen}
+        onClose={() => setShipModalOpen(false)}
+        onSubmit={handleShipSubmit}
+      />
     </div>
   );
 }
