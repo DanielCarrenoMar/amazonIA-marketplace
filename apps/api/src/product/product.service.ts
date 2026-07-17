@@ -48,14 +48,14 @@ export class ProductService {
       if (coords && coords.latitude != null && coords.longitude != null) {
         await tx.$executeRaw`
           UPDATE product 
-          SET "locationCoords" = ST_SetSRID(ST_MakePoint(${coords.longitude}, ${coords.latitude}), 4326)
+          SET "location_coords" = ST_SetSRID(ST_MakePoint(${coords.longitude}, ${coords.latitude}), 4326)
           WHERE id = ${product.id}::uuid;
         `;
       } else {
         // Fallback: inherit coordinates from the seller's user account
         await tx.$executeRaw`
           UPDATE product 
-          SET "locationCoords" = (SELECT "location_coords" FROM "user_account" WHERE id = ${sellerId}::uuid)
+          SET "location_coords" = (SELECT "location_coords" FROM "user_account" WHERE id = ${sellerId}::uuid)
           WHERE id = ${product.id}::uuid;
         `;
       }
