@@ -81,7 +81,7 @@ export class ProductController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SELLER, UserRole.ADMIN)
   @Post(':id/image')
-  @UseInterceptors(FileInterceptor('file', {
+  @UseInterceptors(FilesInterceptor('files', 4, {
     limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB max
     fileFilter: (_req, file, cb) => {
       if (!file.mimetype.startsWith('image/')) {
@@ -92,21 +92,21 @@ export class ProductController {
   }))
   async uploadImage(
     @Param('id', ParseUUIDPipe) id: string,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFiles() files: Express.Multer.File[],
     @Req() req: any,
   ): Promise<ProductResponseDto> {
-    if (!file) {
-      throw new BadRequestException('No se ha proporcionado ningún archivo de imagen');
+    if (!files || files.length === 0) {
+      throw new BadRequestException('No se han proporcionado archivos de imagen');
     }
 
-    return this.productService.uploadImage(id, file, req.user);
+    return this.productService.uploadImage(id, files, req.user);
   }
 
   // Only sellers and admins can upload elaboration images
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SELLER, UserRole.ADMIN)
   @Post(':id/elaboration-images')
-  @UseInterceptors(FilesInterceptor('files', 4, {
+  @UseInterceptors(FilesInterceptor('files', 20, {
     limits: { fileSize: 5 * 1024 * 1024 },
     fileFilter: (_req, file, cb) => {
       if (!file.mimetype.startsWith('image/')) {
