@@ -446,11 +446,10 @@ export default function ProductDetailPage() {
           </div>
         </div>
 
-        {/* TAB CONTENTS */}
         <div className="py-12">
           {activeTab === 'process' && (
             <section>
-              <div className={`grid grid-cols-1 ${behindTheScenesMedia.length > 0 ? 'lg:grid-cols-2' : ''} gap-12 items-center`}>
+              <div className={`grid grid-cols-1 ${behindTheScenesMedia.length > 0 ? 'lg:grid-cols-2' : ''} gap-12 items-start`}>
                 {/* Multimedia / Video Carousel */}
                 {behindTheScenesMedia.length > 0 && (
                   <div className="relative w-full aspect-video rounded-3xl overflow-hidden group shadow-lg border border-gray-100">

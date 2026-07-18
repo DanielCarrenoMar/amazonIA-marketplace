@@ -7,8 +7,9 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { getMyProducts, getProducts, deleteProduct, getCategories, getActiveTribes } from "@/lib/api";
+import { Modal } from "@/components/ui/Modal";
 import type { ProductResponseDto, ProductCategoryResponseDto, TribeResponseDto } from "event-types";
-import { Search, LayoutGrid, List, SlidersHorizontal, Star, ChevronDown, ChevronUp } from "lucide-react";
+import { Search, LayoutGrid, List, SlidersHorizontal, Star, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import { Icon } from "@iconify/react";
 import Link from "next/link";
 import { useToast } from "@/components/ui/Toast";
@@ -20,6 +21,9 @@ export default function InventoryPage() {
   const [categories, setCategories] = useState<any[]>([]);
   const [tribes, setTribes] = useState<TribeResponseDto[]>([]);
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
+  
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<ProductResponseDto | null>(null);
   
   // Filtros
   const [showFilters, setShowFilters] = useState(false);
@@ -70,14 +74,25 @@ export default function InventoryPage() {
     }
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("¿Seguro que deseas eliminar esta artesanía?")) return;
+  const handleDelete = (id: string) => {
+    const product = products.find(p => p.id === id);
+    if (product) {
+      setProductToDelete(product);
+      setIsDeleteModalOpen(true);
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!productToDelete) return;
     try {
-      await deleteProduct(id);
-      toast({ title: "Producto eliminado", variant: "success" });
+      await deleteProduct(productToDelete.id);
+      toast({ title: "Producto eliminado", description: "El producto ha sido eliminado exitosamente.", variant: "success" });
       loadProducts();
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "error" });
+      toast({ title: "Error", description: err.message || "Error al eliminar el producto", variant: "error" });
+    } finally {
+      setIsDeleteModalOpen(false);
+      setProductToDelete(null);
     }
   };
 
@@ -399,6 +414,30 @@ export default function InventoryPage() {
         onEdit={handleEdit}
         onDelete={handleDelete}
       />
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => { setIsDeleteModalOpen(false); setProductToDelete(null); }}
+        title="Eliminar Artesanía"
+        description="¿Estás seguro de que deseas eliminar esta artesanía de tu inventario? Esta acción no se puede deshacer y borrará permanentemente toda su información e historial."
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => { setIsDeleteModalOpen(false); setProductToDelete(null); }}>Cancelar</Button>
+            <Button variant="danger" onClick={confirmDelete}>Sí, Eliminar Permanentemente</Button>
+          </>
+        }
+      >
+        <div className="py-4 text-center">
+          <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+            <Trash2 className="w-8 h-8 text-red-600" />
+          </div>
+          <p className="text-gray-700 text-sm">
+            Si eliminas <strong>{productToDelete?.name}</strong> ya no será visible para los compradores en el Marketplace ni podrás gestionar su stock.
+          </p>
+        </div>
+      </Modal>
+
     </div>
   );
 }

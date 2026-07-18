@@ -23,6 +23,7 @@ export default function ProductDashboardPage() {
   const [product, setProduct] = useState<ProductResponseDto | null>(null);
   const [metrics, setMetrics] = useState<ProductMetricsDto | null>(null);
   const [isStockModalOpen, setIsStockModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [stockActionType, setStockActionType] = useState<"add" | "remove">("add");
   const [stockAmount, setStockAmount] = useState<number>(1);
   useEffect(() => {
@@ -45,15 +46,19 @@ export default function ProductDashboardPage() {
     fetchData();
   }, [id, toast]);
 
-  const handleDelete = async () => {
-    if (confirm("¿Estás seguro de que deseas eliminar este producto? Esta acción no se puede deshacer.")) {
-      try {
-        await deleteProduct(id);
-        toast({ title: "Producto eliminado", description: "El producto ha sido eliminado exitosamente", variant: "default" });
-        router.push("/dashboard/inventory");
-      } catch (err: any) {
-        toast({ title: "Error", description: err.message || "Error al eliminar el producto", variant: "error" });
-      }
+  const handleDelete = () => {
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      await deleteProduct(id);
+      toast({ title: "Producto eliminado", description: "El producto ha sido eliminado exitosamente", variant: "default" });
+      router.push("/dashboard/inventory");
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Error al eliminar el producto", variant: "error" });
+    } finally {
+      setIsDeleteModalOpen(false);
     }
   };
 
@@ -279,6 +284,29 @@ export default function ProductDashboardPage() {
               {stockActionType === 'add' ? (product?.stockAvailable || 0) + stockAmount : Math.max(0, (product?.stockAvailable || 0) - stockAmount)} un.
             </span>
           </div>
+        </div>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        title="Eliminar Artesanía"
+        description="¿Estás seguro de que deseas eliminar esta artesanía de tu inventario? Esta acción no se puede deshacer y borrará permanentemente toda su información e historial."
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setIsDeleteModalOpen(false)}>Cancelar</Button>
+            <Button variant="danger" onClick={confirmDelete}>Sí, Eliminar Permanentemente</Button>
+          </>
+        }
+      >
+        <div className="py-4 text-center">
+          <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+            <Trash2 className="w-8 h-8 text-red-600" />
+          </div>
+          <p className="text-gray-700 text-sm">
+            Si eliminas <strong>{product?.name}</strong> ya no será visible para los compradores en el Marketplace ni podrás gestionar su stock.
+          </p>
         </div>
       </Modal>
 

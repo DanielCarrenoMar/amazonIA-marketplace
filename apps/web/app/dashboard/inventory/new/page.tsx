@@ -180,6 +180,7 @@ export default function NewProductPage() {
               maxSizeMB={5}
               multiple={true}
               maxFiles={4}
+              initialFiles={imageFiles}
               onFilesChanged={files => setImageFiles(files)}
             />
 
@@ -240,6 +241,7 @@ export default function NewProductPage() {
               maxSizeMB={5}
               multiple={true}
               maxFiles={20}
+              initialFiles={elaborationImages}
               onFilesChanged={files => setElaborationImages(files)}
             />
           </div>
@@ -252,27 +254,42 @@ export default function NewProductPage() {
               <div className="flex flex-col md:flex-row gap-8">
                 <div className="flex-1 space-y-3">
                   <p><strong>Nombre:</strong> {name}</p>
+                  
+                  <div className="py-1">
+                    <p className="font-semibold text-gray-900 mb-1">Descripción:</p>
+                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{description || "Sin descripción"}</p>
+                  </div>
+
                   <p><strong>Precio:</strong> ${price}</p>
                   <p><strong>Stock:</strong> {stock}</p>
                   <p><strong>Frágil:</strong> {isFragile ? 'Sí' : 'No'}</p>
                   <p><strong>Cadena de Frío:</strong> {requiresColdChain ? 'Sí' : 'No'} {requiresColdChain && maxTemperatureCelsius ? `(Máx. ${maxTemperatureCelsius}°C)` : ''}</p>
-                  {!imageFiles.length && <p><strong>Foto:</strong> No hay foto</p>}
+                  {!imageFiles.length && <p className="pt-2 border-t border-gray-100 mt-2"><strong>Foto:</strong> No hay foto</p>}
                 </div>
                 {imageFiles.length > 0 && (
-                  <div className="w-full md:w-1/3 grid grid-cols-2 gap-2">
+                  <div className="w-full md:w-1/3 grid grid-cols-2 gap-2 content-start h-fit">
                     {imageFiles.map((file, i) => (
-                      <img key={i} src={URL.createObjectURL(file)} alt={`Preview ${i + 1}`} className="w-full h-32 rounded-lg object-cover border shadow-sm" />
+                      <img key={i} src={URL.createObjectURL(file)} alt={`Preview ${i + 1}`} className="w-full h-32 rounded-lg object-cover shadow-sm" />
                     ))}
                   </div>
                 )}
               </div>
+
+              {elaborationSteps && (
+                <div className="pt-4 border-t border-gray-100 mt-6 space-y-4">
+                  <div>
+                    <p className="font-semibold text-gray-900 mb-1">Proceso de Elaboración:</p>
+                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{elaborationSteps}</p>
+                  </div>
+                </div>
+              )}
 
               {elaborationImages.length > 0 && (
                 <div className="pt-4 border-t border-gray-200">
                   <p><strong>Fotos de Elaboración ({elaborationImages.length}):</strong></p>
                   <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-4">
                     {elaborationImages.map((file, i) => (
-                      <img key={i} src={URL.createObjectURL(file)} alt={`Elaboración ${i + 1}`} className="w-full h-32 rounded-lg object-cover border shadow-sm" />
+                      <img key={i} src={URL.createObjectURL(file)} alt={`Elaboración ${i + 1}`} className="w-full h-32 rounded-lg object-cover shadow-sm" />
                     ))}
                   </div>
                 </div>
