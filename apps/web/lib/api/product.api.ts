@@ -67,8 +67,15 @@ export function getProductMetrics(id: string): Promise<ProductMetricsDto> {
   return authFetch<ProductMetricsDto>(`/product/${id}/metrics`);
 }
 
-export function deleteProductImage(id: string): Promise<ProductResponseDto> {
-  return authFetch<ProductResponseDto>(`/product/${id}/image`, {
+export function deleteProductImage(id: string, url?: string): Promise<ProductResponseDto> {
+  const query = url ? `?url=${encodeURIComponent(url)}` : '';
+  return authFetch<ProductResponseDto>(`/product/${id}/image${query}`, {
+    method: "DELETE",
+  });
+}
+
+export function deleteElaborationImage(id: string, url: string): Promise<ProductResponseDto> {
+  return authFetch<ProductResponseDto>(`/product/${id}/elaboration-image?url=${encodeURIComponent(url)}`, {
     method: "DELETE",
   });
 }

@@ -333,6 +333,7 @@ function MarketplaceContent() {
                         rating={product.averageRating ? Math.round(Number(product.averageRating)) : 0}
                         category={mappedCategory}
                         href={`/marketplace/${product.id}`}
+                        stockAvailable={product.stockAvailable}
                         onAddToCart={(id) => {
                           const productToAdd = products.find(p => p.id === id);
                           if (productToAdd) {

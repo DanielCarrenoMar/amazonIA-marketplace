@@ -58,12 +58,12 @@ export default function ProductDetailPage() {
 
   const splitDescription = (desc: string | null | undefined) => {
     if (!desc) return { main: '', process: '' };
-    const marker = '**Proceso de Elaboración:**';
-    const idx = desc.indexOf(marker);
-    if (idx !== -1) {
+    const markerRegex = /\*\*?Proceso de Elaboraci[oó]n:\*\*?/i;
+    const match = desc.match(markerRegex);
+    if (match && match.index !== undefined) {
       return {
-        main: desc.slice(0, idx).trim(),
-        process: desc.slice(idx + marker.length).trim()
+        main: desc.slice(0, match.index).trim(),
+        process: desc.slice(match.index + match[0].length).trim()
       };
     }
     return { main: desc, process: '' };
@@ -367,22 +367,32 @@ export default function ProductDetailPage() {
               {mainDescription}
             </p>
 
-            <div className="mb-10 max-w-40">
-              <div>
-                <label className="text-sm font-semibold text-gray-900 block mb-1.5">Cantidad</label>
-                <div className="flex items-center h-[50px] border border-gray-200 rounded-xl overflow-hidden shadow-sm bg-white">
-                  <button onClick={handleDecrease} className="w-12 h-full flex items-center justify-center hover:bg-gray-50 text-gray-600 transition-colors cursor-pointer">
-                    <Icon icon="lucide:minus" className="w-4 h-4" />
-                  </button>
-                  <div className="flex-1 h-full flex items-center justify-center font-semibold text-gray-900 border-x border-gray-200">
-                    {quantity}
+            {product.stockAvailable > 0 ? (
+              <div className="mb-10 max-w-40">
+                <div>
+                  <label className="text-sm font-semibold text-gray-900 block mb-1.5">Cantidad</label>
+                  <div className="flex items-center h-[50px] border border-gray-200 rounded-xl overflow-hidden shadow-sm bg-white">
+                    <button onClick={handleDecrease} className="w-12 h-full flex items-center justify-center hover:bg-gray-50 text-gray-600 transition-colors cursor-pointer">
+                      <Icon icon="lucide:minus" className="w-4 h-4" />
+                    </button>
+                    <div className="flex-1 h-full flex items-center justify-center font-semibold text-gray-900 border-x border-gray-200">
+                      {quantity}
+                    </div>
+                    <button onClick={handleIncrease} className="w-12 h-full flex items-center justify-center hover:bg-gray-50 text-gray-600 transition-colors cursor-pointer">
+                      <Icon icon="lucide:plus" className="w-4 h-4" />
+                    </button>
                   </div>
-                  <button onClick={handleIncrease} className="w-12 h-full flex items-center justify-center hover:bg-gray-50 text-gray-600 transition-colors cursor-pointer">
-                    <Icon icon="lucide:plus" className="w-4 h-4" />
-                  </button>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="mb-10 bg-red-50 border border-red-100 rounded-xl p-4 flex items-center gap-3 text-red-700">
+                <Icon icon="lucide:alert-circle" className="w-6 h-6 shrink-0" />
+                <div>
+                  <h4 className="font-bold text-sm">Agotado</h4>
+                  <p className="text-xs mt-0.5">Este producto ya no tiene unidades disponibles por el momento.</p>
+                </div>
+              </div>
+            )}
 
             <div className="flex flex-col gap-4 mt-auto">
               <Button
@@ -825,6 +835,7 @@ export default function ProductDetailPage() {
                       rating={related.averageRating ? Math.round(Number(related.averageRating)) : 0}
                       category={related.category?.name || "Categoría"}
                       href={`/marketplace/${related.id}`}
+                      stockAvailable={related.stockAvailable}
                     />
                   </div>
                 ))

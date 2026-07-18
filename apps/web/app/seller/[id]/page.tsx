@@ -153,6 +153,7 @@ export default function SellerProfilePage() {
                   rating={product.averageRating ? Math.round(Number(product.averageRating)) : 0}
                   category={product.category?.name || "Categoría"}
                   href={`/marketplace/${product.id}`} 
+                  stockAvailable={product.stockAvailable}
                 />
               ))}
             </div>

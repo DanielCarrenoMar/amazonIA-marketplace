@@ -239,6 +239,48 @@ export class ProductService {
     });
   }
 
+  async removeSpecificImage(id: string, urlToRemove: string, reqUser: { id: string; role: UserRole }): Promise<ProductResponseDto> {
+    const product = await this.findOne(id);
+    if (product.sellerId !== reqUser.id && reqUser.role !== UserRole.ADMIN) {
+      throw new ForbiddenException('No tienes permiso para modificar este producto');
+    }
+
+    const currentUrls = Array.from(new Set([product.imageUrl, ...(product.imageUrls || [])].filter(Boolean))) as string[];
+    const updatedUrls = currentUrls.filter(url => url !== urlToRemove);
+
+    await this.storageService.deleteImage(urlToRemove).catch((err) => {
+      console.error(`Failed to delete specific image in Supabase: ${err.message}`);
+    });
+
+    const newMainUrl = updatedUrls.length > 0 ? updatedUrls[0] : null;
+
+    return this.prisma.product.update({
+      where: { id },
+      data: { imageUrl: newMainUrl, imageUrls: updatedUrls },
+      include: { seller: true, category: true, elaborationSteps: { orderBy: { stepNumber: 'asc' } } },
+    });
+  }
+
+  async removeSpecificElaborationImage(id: string, urlToRemove: string, reqUser: { id: string; role: UserRole }): Promise<ProductResponseDto> {
+    const product = await this.findOne(id);
+    if (product.sellerId !== reqUser.id && reqUser.role !== UserRole.ADMIN) {
+      throw new ForbiddenException('No tienes permiso para modificar este producto');
+    }
+
+    const currentUrls = product.elaborationMediaUrls || [];
+    const updatedUrls = currentUrls.filter(url => url !== urlToRemove);
+
+    await this.storageService.deleteImage(urlToRemove).catch((err) => {
+      console.error(`Failed to delete specific elaboration image in Supabase: ${err.message}`);
+    });
+
+    return this.prisma.product.update({
+      where: { id },
+      data: { elaborationMediaUrls: updatedUrls },
+      include: { seller: true, category: true, elaborationSteps: { orderBy: { stepNumber: 'asc' } } },
+    });
+  }
+
   async remove(id: string, reqUser: { id: string; role: UserRole }): Promise<ProductResponseDto> {
     const product = await this.findOne(id); // Check existence
 

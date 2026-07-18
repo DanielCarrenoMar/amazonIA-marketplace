@@ -336,6 +336,7 @@ export default function TribeManagementPage() {
                       category={product.category?.name || "General"}
                       rating={product.averageRating ? Number(product.averageRating) : 5}
                       href={`/store/product/${product.id}`}
+                      stockAvailable={product.stockAvailable}
                     />
                   ))}
                 </div>

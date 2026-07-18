@@ -18,6 +18,15 @@ export class CreateProductDto {
   @IsOptional()
   description?: string;
 
+  @IsString()
+  @IsOptional()
+  imageUrl?: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  imageUrls?: string[];
+
   // Decimal mapped as Number in validation
   @IsNumber()
   @Min(0)

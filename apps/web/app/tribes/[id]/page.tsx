@@ -264,6 +264,7 @@ export default function TribeDetailPage() {
                         description={product.description || ""}
                         price={`$${product.price}`}
                         href={`/marketplace/${product.id}`}
+                        stockAvailable={product.stockAvailable}
                       />
                     ))}
                   </div>

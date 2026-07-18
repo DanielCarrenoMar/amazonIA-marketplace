@@ -102,6 +102,18 @@ export class ProductController {
     return this.productService.uploadImage(id, files, req.user);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SELLER, UserRole.ADMIN)
+  @Delete(':id/elaboration-image')
+  async removeElaborationImage(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Req() req: any,
+    @Query('url') url: string,
+  ): Promise<ProductResponseDto> {
+    if (!url) throw new BadRequestException('Image URL is required');
+    return this.productService.removeSpecificElaborationImage(id, url, req.user);
+  }
+
   // Only sellers and admins can upload elaboration images
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SELLER, UserRole.ADMIN)
@@ -133,7 +145,11 @@ export class ProductController {
   async removeImage(
     @Param('id', ParseUUIDPipe) id: string,
     @Req() req: any,
+    @Query('url') url?: string,
   ): Promise<ProductResponseDto> {
+    if (url) {
+      return this.productService.removeSpecificImage(id, url, req.user);
+    }
     return this.productService.removeImage(id, req.user);
   }
 

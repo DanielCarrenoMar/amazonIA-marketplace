@@ -181,6 +181,7 @@ function FavoritesContent() {
                         description={p.description || ''}
                         rating={Number(p.averageRating || 0)}
                         href={`/marketplace/${p.id}`}
+                        stockAvailable={p.stockAvailable}
                       />
                     );
                   })}
