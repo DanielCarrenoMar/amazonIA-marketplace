@@ -8,7 +8,13 @@
 // the DB, the service can populate them and these types stay as-is.
 // =============================================================================
 
-export type ProposalStatus = 'PENDING' | 'CONFIRMED' | 'VETOED';
+// Matches the full Prisma `ProposalStatus` enum (PENDING, APPROVED, VETOED,
+// CONFIRMED, FAILED). The explorer's public status *filter* intentionally
+// restricts to a 3-value subset (see PROPOSAL_STATUS_FILTER in
+// list-proposals.dto.ts) but the *response* status field can be any of the 5
+// real values a proposal ends up with (e.g. `finalize()` sets FAILED when a
+// vote doesn't pass), so this type must cover all of them.
+export type ProposalStatus = 'PENDING' | 'APPROVED' | 'CONFIRMED' | 'VETOED' | 'FAILED';
 export type VoteType = 'FAVOR' | 'AGAINST';
 
 export interface ProposalSummaryDto {

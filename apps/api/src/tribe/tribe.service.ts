@@ -406,7 +406,11 @@ export class TribeService {
     }) as unknown as TribeResponseDto;
   }
 
-  async removeMember(tribeId: number, sellerId: string): Promise<void> {
+  async removeMember(tribeId: number, sellerId: string, requestingUserId?: string): Promise<void> {
+    if (requestingUserId && requestingUserId === sellerId) {
+      throw new BadRequestException('No podés expulsarte a vos mismo de la tribu');
+    }
+
     const seller = await this.prisma.seller.findUnique({ where: { id: sellerId } });
     if (!seller || seller.tribeId !== tribeId) {
       throw new NotFoundException('Miembro no encontrado en la tribu');

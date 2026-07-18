@@ -15,6 +15,14 @@ export class ProductService {
   async create(createProductDto: CreateProductDto, sellerId: string): Promise<ProductResponseDto> {
     const { coords, elaborationSteps, ...rest } = createProductDto;
 
+    // A BUYER can publish products, but only after joining a tribe (which creates
+    // their Seller row — see TribeService). Without it, product.sellerId would
+    // violate the FK constraint and crash with an unhandled Prisma error.
+    const seller = await this.prisma.seller.findUnique({ where: { id: sellerId } });
+    if (!seller) {
+      throw new BadRequestException('Debes unirte a una tribu antes de poder publicar productos');
+    }
+
     const sellerUser = await this.prisma.userAccount.findUnique({
       where: { id: sellerId },
       select: { locationMapboxId: true, locationFormattedAddress: true, locationCity: true, locationRegion: true }

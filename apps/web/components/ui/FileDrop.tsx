@@ -49,10 +49,12 @@ export const FileDrop = forwardRef<HTMLInputElement, FileDropProps>(
       (newFiles: FileList | File[]) => {
         setInternalError(null);
         let filesArray = Array.from(newFiles);
+        const rejectedCount = { types: 0 };
 
         // Validación de tipo (Extensión mime)
         if (accept) {
           const acceptedTypes = accept.split(",").map(type => type.trim());
+          const originalCount = filesArray.length;
           filesArray = filesArray.filter(file => {
             return acceptedTypes.some(type => {
               if (type.startsWith(".")) {
@@ -65,7 +67,8 @@ export const FileDrop = forwardRef<HTMLInputElement, FileDropProps>(
               return file.type === type;
             });
           });
-          
+          rejectedCount.types = originalCount - filesArray.length;
+
           if (filesArray.length === 0) {
             setInternalError(`Formatos inválidos. Aceptamos: ${accept}`);
             return;
@@ -79,20 +82,30 @@ export const FileDrop = forwardRef<HTMLInputElement, FileDropProps>(
           return;
         }
 
-        // Limitación de Cantidad
-        if (!multiple) {
-          filesArray = filesArray.slice(0, 1);
-        } else if (maxFiles && filesArray.length > maxFiles) {
-          filesArray = filesArray.slice(0, maxFiles);
-          setInternalError(`Solo se pueden subir hasta ${maxFiles} archivos.`);
+        // Combina con lo ya seleccionado en vez de reemplazarlo, para no perder
+        // un lote previo cuando el usuario agrega más archivos.
+        let combinedFiles = multiple ? [...selectedFiles, ...filesArray] : filesArray.slice(0, 1);
+
+        let limitMessage: string | null = null;
+        if (multiple && maxFiles && combinedFiles.length > maxFiles) {
+          combinedFiles = combinedFiles.slice(0, maxFiles);
+          limitMessage = `Solo se pueden subir hasta ${maxFiles} archivos.`;
         }
 
-        setSelectedFiles(filesArray);
+        if (rejectedCount.types > 0) {
+          setInternalError(
+            `${rejectedCount.types} archivo(s) fueron ignorados por formato inválido. Aceptamos: ${accept}`
+          );
+        } else if (limitMessage) {
+          setInternalError(limitMessage);
+        }
+
+        setSelectedFiles(combinedFiles);
         if (onFilesChanged) {
-          onFilesChanged(filesArray);
+          onFilesChanged(combinedFiles);
         }
       },
-      [accept, multiple, maxFiles, maxSizeMB, onFilesChanged]
+      [accept, multiple, maxFiles, maxSizeMB, onFilesChanged, selectedFiles]
     );
 
     const onDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {

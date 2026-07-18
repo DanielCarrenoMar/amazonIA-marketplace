@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { DashboardHeader, ProductWizard } from "@/components/dashboard";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -50,6 +50,19 @@ export default function NewProductPage() {
     getCategories().then(setCategories).catch(console.error);
   }, []);
 
+  // Object URLs for the "verificar" preview step — created once per file list
+  // (not on every render) and revoked when the list changes or on unmount.
+  const imagePreviewUrls = useMemo(() => imageFiles.map(f => URL.createObjectURL(f)), [imageFiles]);
+  const elaborationPreviewUrls = useMemo(() => elaborationImages.map(f => URL.createObjectURL(f)), [elaborationImages]);
+
+  useEffect(() => {
+    return () => { imagePreviewUrls.forEach(url => URL.revokeObjectURL(url)); };
+  }, [imagePreviewUrls]);
+
+  useEffect(() => {
+    return () => { elaborationPreviewUrls.forEach(url => URL.revokeObjectURL(url)); };
+  }, [elaborationPreviewUrls]);
+
   const handleSubmit = async () => {
     if (!name || !price || !categoryId || !description || !stock) {
       toast({ title: "Faltan datos", description: "Completa todos los campos obligatorios.", variant: "warning" });
@@ -59,7 +72,8 @@ export default function NewProductPage() {
     try {
       const payload: any = {
         name,
-        description: elaborationSteps ? `${description}\n\n**Proceso de Elaboración:**\n${elaborationSteps}` : description,
+        description,
+        elaborationText: elaborationSteps || undefined,
         price: parseFloat(price),
         stockAvailable: parseInt(stock),
         categoryId: parseInt(categoryId),
@@ -268,8 +282,8 @@ export default function NewProductPage() {
                 </div>
                 {imageFiles.length > 0 && (
                   <div className="w-full md:w-1/3 grid grid-cols-2 gap-2 content-start h-fit">
-                    {imageFiles.map((file, i) => (
-                      <img key={i} src={URL.createObjectURL(file)} alt={`Preview ${i + 1}`} className="w-full h-32 rounded-lg object-cover shadow-sm" />
+                    {imagePreviewUrls.map((url, i) => (
+                      <img key={i} src={url} alt={`Preview ${i + 1}`} className="w-full h-32 rounded-lg object-cover shadow-sm" />
                     ))}
                   </div>
                 )}
@@ -288,8 +302,8 @@ export default function NewProductPage() {
                 <div className="pt-4 border-t border-gray-200">
                   <p><strong>Fotos de Elaboración ({elaborationImages.length}):</strong></p>
                   <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {elaborationImages.map((file, i) => (
-                      <img key={i} src={URL.createObjectURL(file)} alt={`Elaboración ${i + 1}`} className="w-full h-32 rounded-lg object-cover shadow-sm" />
+                    {elaborationPreviewUrls.map((url, i) => (
+                      <img key={i} src={url} alt={`Elaboración ${i + 1}`} className="w-full h-32 rounded-lg object-cover shadow-sm" />
                     ))}
                   </div>
                 </div>

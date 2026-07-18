@@ -16,18 +16,15 @@ import { toast } from 'sonner';
 import { getActiveTribes } from '@/lib/api/tribe.api';
 import { findSellers } from '@/lib/api/seller.api';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
-import { 
-  Gavel, 
-  Plus, 
-  Users, 
-  Clock, 
-  CheckCircle2, 
-  XCircle, 
-  ChevronRight, 
-  UserPlus, 
-  UserMinus, 
-  Coins, 
-  FileText 
+import {
+  Plus,
+  CheckCircle2,
+  XCircle,
+  ChevronRight,
+  UserPlus,
+  UserMinus,
+  Coins,
+  FileText
 } from 'lucide-react';
 
 function GovernanceContent() {
@@ -35,7 +32,6 @@ function GovernanceContent() {
   const router = useRouter();
   
   const [proposals, setProposals] = useState<ProposalSummary[]>([]);
-  const [members, setMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const [userRole, setUserRole] = useState<'NONE' | 'MEMBER' | 'ELDER'>('NONE');
@@ -115,8 +111,7 @@ function GovernanceContent() {
     try {
       setLoading(true);
       const membersData = await getExplorerMembers();
-      setMembers(membersData);
-      
+
       if (user) {
         const found = membersData.find(m => m.userId === user.id);
         setIsAuthorized(!!found);
@@ -192,7 +187,7 @@ function GovernanceContent() {
 
   // Filters
   const activeProposals = proposals.filter(p => p.status === 'PENDING');
-  const completedProposals = proposals.filter(p => p.status === 'CONFIRMED' || p.status === 'VETOED');
+  const completedProposals = proposals.filter(p => p.status !== 'PENDING');
 
   const getProposalTypeIcon = (type?: string) => {
     switch (type) {

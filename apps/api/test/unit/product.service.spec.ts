@@ -58,6 +58,7 @@ describe('ProductService — ownership checks', () => {
       expect(prismaMock.product.update).toHaveBeenCalledWith({
         where: { id: PRODUCT_ID },
         data: { name: 'Updated' },
+        include: { elaborationSteps: { orderBy: { stepNumber: 'asc' } } },
       });
     });
 

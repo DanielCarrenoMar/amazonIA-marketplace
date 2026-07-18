@@ -18,6 +18,7 @@ function GovernanceDetailContent() {
   const [proposal, setProposal] = useState<ProposalDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
+  const [memberRole, setMemberRole] = useState<'NONE' | 'MEMBER' | 'ELDER'>('NONE');
 
   useEffect(() => {
     if (!authLoading) {
@@ -30,9 +31,10 @@ function GovernanceDetailContent() {
       // Check if user is a member of the council
       getExplorerMembers()
         .then(members => {
-          const found = members.some(m => m.userId === user.id);
-          setIsAuthorized(found);
+          const found = members.find(m => m.userId === user.id);
+          setIsAuthorized(!!found);
           if (found) {
+            setMemberRole(found.role as 'MEMBER' | 'ELDER');
             // Load specific proposal
             return getExplorerProposalById(id);
           }
@@ -88,7 +90,7 @@ function GovernanceDetailContent() {
           <p>El identificador '{id}' no existe en la red de gobernanza actual.</p>
         </div>
       ) : (
-        <ProposalDetailView proposal={proposal} readOnly={false} />
+        <ProposalDetailView proposal={proposal} readOnly={false} memberRole={memberRole} />
       )}
     </div>
   );

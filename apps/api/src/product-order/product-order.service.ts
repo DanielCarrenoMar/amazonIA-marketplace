@@ -12,6 +12,8 @@ import { TelemetryIntegrationService } from '../telemetry-integration/telemetry-
 import { NotaryClientService } from '../blockchain/services/notary-client.service';
 import * as crypto from 'crypto';
 
+const TX_HASH_REGEX = /^0x[0-9a-fA-F]{64}$/;
+
 const allowedOrderStatusTransitions: Record<OrderStatus, readonly OrderStatus[]> = {
   [OrderStatus.PENDING]: [OrderStatus.PAID, OrderStatus.CANCELED],
   [OrderStatus.PAID]: [OrderStatus.SHIPPED, OrderStatus.REFUNDED],
@@ -39,6 +41,10 @@ export class ProductOrderService {
 
   // buyerId comes from the JWT token (req.user.id), NOT from the client body
   async create(buyerId: string, createProductOrderDto: CreateProductOrderDto): Promise<ProductOrderResponseDto> {
+    if (createProductOrderDto.transactionHash && !TX_HASH_REGEX.test(createProductOrderDto.transactionHash)) {
+      throw new BadRequestException('transactionHash inválido: debe ser un hash de transacción on-chain');
+    }
+
     const result = await this.prisma.$transaction(async (tx) => {
       // 1. Get the current stock and price
       const product = await tx.product.findUnique({
@@ -591,6 +597,23 @@ export class ProductOrderService {
         if (!finalTrackingNumber || !finalCarrierId) {
           throw new BadRequestException(
             'Se requiere un trackingNumber y un carrierId (empresa logística) al marcar la orden como enviada',
+          );
+        }
+      }
+
+      if (statusChanged && nextStatus === OrderStatus.PAID) {
+        // Solo el propio comprador (o un admin) puede confirmar el pago de su orden —
+        // el vendedor no debe poder auto-marcarla como pagada.
+        if (reqUser.role !== UserRole.ADMIN && reqUser.id !== currentOrder.buyerId) {
+          throw new ForbiddenException(
+            'Solo el comprador (o un admin) puede confirmar el pago de la orden',
+          );
+        }
+
+        const finalTransactionHash = orderData.transactionHash || currentOrder.transactionHash;
+        if (!finalTransactionHash || !TX_HASH_REGEX.test(finalTransactionHash)) {
+          throw new BadRequestException(
+            'Se requiere un transactionHash de blockchain válido para marcar la orden como pagada',
           );
         }
       }

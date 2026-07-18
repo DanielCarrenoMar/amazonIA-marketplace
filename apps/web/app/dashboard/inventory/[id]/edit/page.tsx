@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { Card } from "@/components/ui/Card";
+import { Switch } from "@/components/ui/Switch";
 import { useToast } from "@/components/ui/Toast";
 import { getProductById, updateProduct, getCategories, uploadProductImage, deleteProductImage, uploadElaborationImages, deleteElaborationImage } from "@/lib/api";
 import type { ProductResponseDto, GroupedCategoryResponseDto } from "event-types";
@@ -39,6 +40,12 @@ export default function EditProductPage() {
   const [draggedProductIdx, setDraggedProductIdx] = useState<number | null>(null);
   const [draggedElabIdx, setDraggedElabIdx] = useState<number | null>(null);
 
+  // Logistics State
+  const [isFragile, setIsFragile] = useState(false);
+  const [requiresColdChain, setRequiresColdChain] = useState(false);
+  const [maxTemperatureCelsius, setMaxTemperatureCelsius] = useState("");
+  const [maxHumidity, setMaxHumidity] = useState("");
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -68,7 +75,12 @@ export default function EditProductPage() {
 
         setDescription(initDesc);
         setElaborationText(initElab);
-        
+
+        setIsFragile(prodData.isFragile ?? false);
+        setRequiresColdChain(prodData.requiresColdChain ?? false);
+        setMaxTemperatureCelsius(prodData.maxTemperatureCelsius != null ? String(prodData.maxTemperatureCelsius) : "");
+        setMaxHumidity(prodData.maxHumidity != null ? String(prodData.maxHumidity) : "");
+
         setProductImages(Array.from(new Set([prodData.imageUrl, ...(prodData.imageUrls || [])].filter(Boolean))) as string[]);
         setElaborationMedia(prodData.elaborationMediaUrls || []);
 
@@ -88,7 +100,7 @@ export default function EditProductPage() {
     }
     setSaving(true);
     try {
-      await updateProduct(id, {
+      const updatePayload: any = {
         name,
         price: parseFloat(price),
         stockAvailable: parseInt(stock),
@@ -97,8 +109,14 @@ export default function EditProductPage() {
         elaborationText,
         imageUrl: productImages.length > 0 ? productImages[0] : undefined,
         imageUrls: productImages,
-        elaborationMediaUrls: elaborationMedia
-      });
+        elaborationMediaUrls: elaborationMedia,
+        isFragile,
+        requiresColdChain,
+        maxTemperatureCelsius: requiresColdChain && maxTemperatureCelsius ? parseFloat(maxTemperatureCelsius) : null,
+        maxHumidity: requiresColdChain && maxHumidity ? parseFloat(maxHumidity) : null,
+      };
+
+      await updateProduct(id, updatePayload);
 
       if (imageFiles.length > 0) {
         await uploadProductImage(id, imageFiles);
@@ -297,6 +315,45 @@ export default function EditProductPage() {
                   onChange={e => setDescription(e.target.value)}
                   rows={5}
                 />
+
+                <div className="space-y-4 pt-2">
+                  <h4 className="text-sm font-bold text-foreground">Logística y Cuidados</h4>
+                  <Switch
+                    label="Producto Frágil"
+                    description="Requiere embalaje y manejo especial durante el transporte."
+                    checked={isFragile}
+                    onChange={(e) => setIsFragile(e.target.checked)}
+                  />
+                  <Switch
+                    label="Requiere Cadena de Frío"
+                    description="El producto debe mantenerse a temperatura controlada."
+                    checked={requiresColdChain}
+                    onChange={(e) => setRequiresColdChain(e.target.checked)}
+                  />
+
+                  {requiresColdChain && (
+                    <div className="grid grid-cols-2 gap-4 mt-2 p-4 bg-gray-50 border border-gray-100 rounded-xl">
+                      <Input
+                        label="Temp. Máxima (°C)"
+                        type="number"
+                        step="0.1"
+                        value={maxTemperatureCelsius}
+                        onChange={e => setMaxTemperatureCelsius(e.target.value)}
+                        placeholder="Ej. 8"
+                      />
+                      <Input
+                        label="Humedad Máx. (%)"
+                        type="number"
+                        step="1"
+                        min="0"
+                        max="100"
+                        value={maxHumidity}
+                        onChange={e => setMaxHumidity(e.target.value)}
+                        placeholder="Ej. 60"
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>

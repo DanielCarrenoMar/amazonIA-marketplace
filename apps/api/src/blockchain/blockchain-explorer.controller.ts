@@ -17,6 +17,10 @@ import { BlockchainExplorerService } from './services/blockchain-explorer.servic
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PrismaService } from '../prisma/prisma.service';
 
+// Bounds how long a proxied request to blockchain-notary can hang — without this,
+// a stuck notary (e.g. waiting on the Hardhat node) blocks the caller indefinitely.
+const NOTARY_TIMEOUT_MS = 10_000;
+
 @Controller('api/v1/blockchain/explorer')
 export class BlockchainExplorerController {
   constructor(
@@ -61,7 +65,7 @@ export class BlockchainExplorerController {
       throw new ForbiddenException('You are not a registered member of the governance council.');
     }
 
-    const notaryUrl = process.env.NOTARY_SERVICE_URL || 'http://localhost:3002/api/v1';
+    const notaryUrl = process.env.NOTARY_SERVICE_URL || 'http://localhost:3004/api/v1';
     const apiKey = process.env.NOTARY_API_KEY || 'apikeyBlockchain';
 
     try {
@@ -78,6 +82,7 @@ export class BlockchainExplorerController {
           deadlineMinutes: body.deadlineMinutes,
           type: body.type,
         }),
+        signal: AbortSignal.timeout(NOTARY_TIMEOUT_MS),
       });
 
       if (!response.ok) {
@@ -108,7 +113,7 @@ export class BlockchainExplorerController {
     }
 
     // Hacer proxy de la petición al Notario
-    const notaryUrl = process.env.NOTARY_SERVICE_URL || 'http://localhost:3002/api/v1';
+    const notaryUrl = process.env.NOTARY_SERVICE_URL || 'http://localhost:3004/api/v1';
     const apiKey = process.env.NOTARY_API_KEY || 'apikeyBlockchain';
 
     try {
@@ -122,6 +127,7 @@ export class BlockchainExplorerController {
           voterUserId: userId,
           inFavor: body.inFavor,
         }),
+        signal: AbortSignal.timeout(NOTARY_TIMEOUT_MS),
       });
 
       if (!response.ok) {
@@ -192,7 +198,7 @@ export class BlockchainExplorerController {
     }
 
     // Hacer proxy al Notario
-    const notaryUrl = process.env.NOTARY_SERVICE_URL || 'http://localhost:3002/api/v1';
+    const notaryUrl = process.env.NOTARY_SERVICE_URL || 'http://localhost:3004/api/v1';
     const apiKey = process.env.NOTARY_API_KEY || 'apikeyBlockchain';
 
     try {
@@ -205,6 +211,7 @@ export class BlockchainExplorerController {
         body: JSON.stringify({
           elderUserId: userId,
         }),
+        signal: AbortSignal.timeout(NOTARY_TIMEOUT_MS),
       });
 
       if (!response.ok) {
@@ -235,7 +242,7 @@ export class BlockchainExplorerController {
     }
 
     // Hacer proxy al Notario
-    const notaryUrl = process.env.NOTARY_SERVICE_URL || 'http://localhost:3002/api/v1';
+    const notaryUrl = process.env.NOTARY_SERVICE_URL || 'http://localhost:3004/api/v1';
     const apiKey = process.env.NOTARY_API_KEY || 'apikeyBlockchain';
 
     try {
@@ -249,6 +256,7 @@ export class BlockchainExplorerController {
           elderUserId: userId,
           reason: body.reason,
         }),
+        signal: AbortSignal.timeout(NOTARY_TIMEOUT_MS),
       });
 
       if (!response.ok) {

@@ -5,7 +5,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { Icon } from "@iconify/react";
-import { mockProductDtos } from '@/lib/mock-data';
 import { getProductById, getProducts, createOrder } from '@/lib/api';
 import { getProductComments, createProductComment, createProductRating, getProductRatings } from '@/lib/api/product.api';
 import type { ProductResponseDto } from 'event-types';
@@ -39,7 +38,6 @@ export default function ProductDetailPage() {
   const [selectedSize, setSelectedSize] = useState('100m');
   const [activeMediaIndex, setActiveMediaIndex] = useState(0);
   const [activeTab, setActiveTab] = useState<'process' | 'additional_info' | 'artisan'>('process');
-  const [activeReviewIndex, setActiveReviewIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollRelated, setCanScrollRelated] = useState(false);
   const [isBuying, setIsBuying] = useState(false);
@@ -52,9 +50,6 @@ export default function ProductDetailPage() {
   const [newCommentText, setNewCommentText] = useState('');
   const [newRating, setNewRating] = useState(0);
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
-
-  const handlePrevReview = () => setActiveReviewIndex(i => (i === 0 ? Math.max(0, reviews.length - 1) : i - 1));
-  const handleNextReview = () => setActiveReviewIndex(i => (i === reviews.length - 1 ? 0 : i + 1));
 
   const splitDescription = (desc: string | null | undefined) => {
     if (!desc) return { main: '', process: '' };
@@ -181,19 +176,6 @@ export default function ProductDetailPage() {
       toast({ title: "Error al comprar", description: err.message, variant: "error" });
     } finally {
       setIsBuying(false);
-    }
-  };
-
-  const handleWriteReview = () => {
-    if (!user) {
-      setIsModalOpen(true);
-      return;
-    }
-    // Scroll to the review input box if we have one, or open a review form modal
-    const reviewForm = document.getElementById('review-form');
-    if (reviewForm) {
-      reviewForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      reviewForm.focus();
     }
   };
 
@@ -833,7 +815,7 @@ export default function ProductDetailPage() {
                       price={`$${Number(related.price).toFixed(2)}`}
                       image={related.imageUrl || "/bolso-de-moriche.webp"}
                       rating={related.averageRating ? Math.round(Number(related.averageRating)) : 0}
-                      category={related.category?.name || "Categoría"}
+                      category={related.category?.categoryName || "Categoría"}
                       href={`/marketplace/${related.id}`}
                       stockAvailable={related.stockAvailable}
                     />

@@ -469,6 +469,24 @@ export class GovernanceService implements OnModuleInit {
   }
 
   /**
+   * Valida y extrae userId/tribeId del contentHash de propuestas TRIBE_ADMISSION/TRIBE_EXPULSION.
+   * contentHash es un campo de texto libre que cualquier miembro puede fijar al crear la propuesta,
+   * así que no puede interpolarse en SQL crudo sin validar su forma primero.
+   */
+  private parseTribeMembershipMetadata(metadata: any): { userId: string; tribeId: number } {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+    if (!metadata || typeof metadata.userId !== 'string' || !uuidRegex.test(metadata.userId)) {
+      throw new Error(`Invalid or missing userId in proposal metadata: ${JSON.stringify(metadata)}`);
+    }
+    if (typeof metadata.tribeId !== 'number' || !Number.isInteger(metadata.tribeId)) {
+      throw new Error(`Invalid or missing tribeId in proposal metadata: ${JSON.stringify(metadata)}`);
+    }
+
+    return { userId: metadata.userId, tribeId: metadata.tribeId };
+  }
+
+  /**
    * Finaliza una propuesta (DB + On-chain)
    */
   async finalize(proposalId: string, elderUserId: string) {
@@ -616,24 +634,25 @@ export class GovernanceService implements OnModuleInit {
     if (passed && proposal.type === ProposalType.TRIBE_ADMISSION) {
       try {
         const metadata = JSON.parse(proposal.contentHash);
-        this.logger.log(`Tribe Admission approved. Syncing DB for user ${metadata.userId} to tribe ${metadata.tribeId}`);
+        const { userId, tribeId } = this.parseTribeMembershipMetadata(metadata);
+        this.logger.log(`Tribe Admission approved. Syncing DB for user ${userId} to tribe ${tribeId}`);
         await this.prisma.$transaction(async (tx) => {
-          await tx.$executeRawUnsafe(`
+          await tx.$executeRaw`
             INSERT INTO seller (id, description)
-            VALUES ('${metadata.userId}'::uuid, 'Miembro de la tribu')
+            VALUES (${userId}::uuid, 'Miembro de la tribu')
             ON CONFLICT (id) DO NOTHING;
-          `);
-          await tx.$executeRawUnsafe(`
-            UPDATE seller SET tribe_id = ${metadata.tribeId} WHERE id = '${metadata.userId}'::uuid;
-          `);
-          await tx.$executeRawUnsafe(`
-            UPDATE user_account SET role = 'SELLER' WHERE id = '${metadata.userId}'::uuid;
-          `);
-          await tx.$executeRawUnsafe(`
-            UPDATE tribe_membership_request 
+          `;
+          await tx.$executeRaw`
+            UPDATE seller SET tribe_id = ${tribeId} WHERE id = ${userId}::uuid;
+          `;
+          await tx.$executeRaw`
+            UPDATE user_account SET role = 'SELLER' WHERE id = ${userId}::uuid;
+          `;
+          await tx.$executeRaw`
+            UPDATE tribe_membership_request
             SET status = 'APPROVED', reviewed_at = NOW(), review_note = 'Aprobado por votación comunitaria'
-            WHERE seller_id = '${metadata.userId}'::uuid AND tribe_id = ${metadata.tribeId} AND status = 'PENDING';
-          `);
+            WHERE seller_id = ${userId}::uuid AND tribe_id = ${tribeId} AND status = 'PENDING';
+          `;
         });
         this.logger.log(`Tribe Admission database sync complete.`);
       } catch (e: any) {
@@ -644,14 +663,15 @@ export class GovernanceService implements OnModuleInit {
     if (passed && proposal.type === ProposalType.TRIBE_EXPULSION) {
       try {
         const metadata = JSON.parse(proposal.contentHash);
-        this.logger.log(`Tribe Expulsion approved. Syncing DB to remove user ${metadata.userId}`);
+        const { userId } = this.parseTribeMembershipMetadata(metadata);
+        this.logger.log(`Tribe Expulsion approved. Syncing DB to remove user ${userId}`);
         await this.prisma.$transaction(async (tx) => {
-          await tx.$executeRawUnsafe(`
-            UPDATE seller SET tribe_id = NULL WHERE id = '${metadata.userId}'::uuid;
-          `);
-          await tx.$executeRawUnsafe(`
-            UPDATE user_account SET role = 'BUYER' WHERE id = '${metadata.userId}'::uuid;
-          `);
+          await tx.$executeRaw`
+            UPDATE seller SET tribe_id = NULL WHERE id = ${userId}::uuid;
+          `;
+          await tx.$executeRaw`
+            UPDATE user_account SET role = 'BUYER' WHERE id = ${userId}::uuid;
+          `;
         });
         this.logger.log(`Tribe Expulsion database sync complete.`);
       } catch (e: any) {
@@ -736,6 +756,16 @@ export class GovernanceService implements OnModuleInit {
    * Listado paginado de propuestas
    */
   async listProposals(status?: ProposalStatus, page: number = 1, limit: number = 10) {
+    if (status !== undefined && !Object.values(ProposalStatus).includes(status)) {
+      throw new BadRequestException(`Invalid status: ${status}`);
+    }
+    if (!Number.isInteger(page) || page < 1) {
+      throw new BadRequestException('page must be a positive integer');
+    }
+    if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
+      throw new BadRequestException('limit must be an integer between 1 and 100');
+    }
+
     const skip = (page - 1) * limit;
 
     const [proposals, total] = await Promise.all([

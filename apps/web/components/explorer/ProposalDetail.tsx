@@ -2,14 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { ProposalDetail as IProposalDetail } from '@/lib/explorer-mock';
 import { VoteProgressBar } from './VoteProgressBar';
 import { useAuth } from '@/lib/useAuth';
-import { getExplorerMembers, getExplorerProposalById, voteProposal, finalizeProposal, vetoProposal } from '@/lib/explorer-api';
+import { getExplorerProposalById, voteProposal, finalizeProposal, vetoProposal } from '@/lib/explorer-api';
 import { getMyTribe } from '@/lib/api/tribe.api';
 import { toast } from 'sonner';
 
-export function ProposalDetail({ proposal, readOnly = false }: { proposal: IProposalDetail, readOnly?: boolean }) {
+export function ProposalDetail({ proposal, readOnly = false, memberRole = 'NONE' }: { proposal: IProposalDetail, readOnly?: boolean, memberRole?: 'NONE' | 'MEMBER' | 'ELDER' }) {
   const { user } = useAuth();
   const [localProposal, setLocalProposal] = useState<IProposalDetail>(proposal);
-  const [memberRole, setMemberRole] = useState<'NONE' | 'MEMBER' | 'ELDER'>('NONE');
   const [isLeaderOfTribe, setIsLeaderOfTribe] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [showVetoModal, setShowVetoModal] = useState(false);
@@ -21,13 +20,6 @@ export function ProposalDetail({ proposal, readOnly = false }: { proposal: IProp
 
   useEffect(() => {
     if (user && !readOnly) {
-      // Check governance council membership
-      getExplorerMembers().then(members => {
-        const found = members.find(m => m.userId === user.id);
-        if (found) {
-          setMemberRole(found.role as 'MEMBER' | 'ELDER');
-        }
-      });
       // Check tribe leadership
       getMyTribe().then(tribe => {
         if (tribe && (tribe.primaryLeaderId === user.id || tribe.secondaryLeaderId === user.id)) {
