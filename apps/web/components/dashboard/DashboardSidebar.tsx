@@ -16,6 +16,7 @@ import {
   LogOut,
   ChevronDown,
   User,
+  BrainCircuit,
   Gavel,
   FileText,
   PanelLeftClose,
