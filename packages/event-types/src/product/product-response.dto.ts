@@ -18,6 +18,7 @@ export class ProductResponseDto {
   price: any; // Decimal maps to Decimal type or string in JSON
   stockAvailable: number;
   imageUrl: string | null;
+  imageUrls: string[];
   averageRating: any | null; // Decimal
   totalReviews: number;
   isActive: boolean;

@@ -5,7 +5,10 @@
 export interface BlockchainConfig {
   rpcUrl: string;
   privateKey: string;
-  contractAddress: string;     // NotaryRegistry (legacy)
+  // NotaryRegistry (legacy) — no `deploy-all.ts` script deploys this contract
+  // anymore and no code path calls BlockchainService.registerTransaction(),
+  // so it's optional. Kept only for environments that still run the old contract.
+  contractAddress?: string;
   governanceContractAddress: string; // GovernanceRegistry (nuevo)
   nftFactoryAddress: string;   // ArtisanNFTFactory (nuevo)
   apiKey: string;
@@ -25,7 +28,6 @@ export const blockchainConfig = (): { blockchain: BlockchainConfig } => {
 
   if (!rpcUrl) throw new Error('RPC_URL is required');
   if (!privateKey) throw new Error('PRIVATE_KEY is required');
-  if (!contractAddress) throw new Error('CONTRACT_ADDRESS is required');
   if (!governanceContractAddress) throw new Error('GOVERNANCE_CONTRACT_ADDRESS is required');
   if (!nftFactoryAddress) throw new Error('NFT_FACTORY_ADDRESS is required');
   if (!apiKey) throw new Error('API_KEY is required');

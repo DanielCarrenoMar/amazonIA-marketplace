@@ -2,13 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { ProposalDetail as IProposalDetail } from '@/lib/explorer-mock';
 import { VoteProgressBar } from './VoteProgressBar';
 import { useAuth } from '@/lib/useAuth';
-import { getExplorerMembers, getExplorerProposalById, voteProposal, finalizeProposal, vetoProposal } from '@/lib/explorer-api';
+import { getExplorerProposalById, voteProposal, finalizeProposal, vetoProposal } from '@/lib/explorer-api';
+import { getMyTribe } from '@/lib/api/tribe.api';
 import { toast } from 'sonner';
 
-export function ProposalDetail({ proposal, readOnly = false }: { proposal: IProposalDetail, readOnly?: boolean }) {
+export function ProposalDetail({ proposal, readOnly = false, memberRole = 'NONE' }: { proposal: IProposalDetail, readOnly?: boolean, memberRole?: 'NONE' | 'MEMBER' | 'ELDER' }) {
   const { user } = useAuth();
   const [localProposal, setLocalProposal] = useState<IProposalDetail>(proposal);
-  const [memberRole, setMemberRole] = useState<'NONE' | 'MEMBER' | 'ELDER'>('NONE');
+  const [isLeaderOfTribe, setIsLeaderOfTribe] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [showVetoModal, setShowVetoModal] = useState(false);
   const [vetoReason, setVetoReason] = useState('');
@@ -19,12 +20,12 @@ export function ProposalDetail({ proposal, readOnly = false }: { proposal: IProp
 
   useEffect(() => {
     if (user && !readOnly) {
-      getExplorerMembers().then(members => {
-        const found = members.find(m => m.userId === user.id);
-        if (found) {
-          setMemberRole(found.role as 'MEMBER' | 'ELDER');
+      // Check tribe leadership
+      getMyTribe().then(tribe => {
+        if (tribe && (tribe.primaryLeaderId === user.id || tribe.secondaryLeaderId === user.id)) {
+          setIsLeaderOfTribe(true);
         }
-      });
+      }).catch(() => setIsLeaderOfTribe(false));
     }
   }, [user, readOnly]);
 
@@ -34,7 +35,7 @@ export function ProposalDetail({ proposal, readOnly = false }: { proposal: IProp
       await voteProposal(localProposal.id, inFavor);
       const updated = await getExplorerProposalById(localProposal.id);
       if (updated) setLocalProposal(updated);
-      toast.success(inFavor ? 'Voto registrado A Favor 👍' : 'Voto registrado En Contra 👎');
+      toast.success(inFavor ? 'Voto registrado A Favor' : 'Voto registrado En Contra');
     } catch (err: any) {
       toast.error(err.message || 'Error al registrar el voto');
     } finally {
@@ -48,9 +49,17 @@ export function ProposalDetail({ proposal, readOnly = false }: { proposal: IProp
       await finalizeProposal(localProposal.id);
       const updated = await getExplorerProposalById(localProposal.id);
       if (updated) setLocalProposal(updated);
-      toast.success('Propuesta finalizada y procesada en la blockchain ⚡');
+      toast.success('Propuesta finalizada y procesada en la blockchain');
     } catch (err: any) {
-      toast.error(err.message || 'Error al finalizar la propuesta');
+      // Si ya fue finalizada (estado desactualizado en la UI), refrescar el estado real
+      const msg: string = err.message || '';
+      if (msg.toLowerCase().includes('already finalized') || msg.toLowerCase().includes('ya finalizada')) {
+        const updated = await getExplorerProposalById(localProposal.id).catch(() => null);
+        if (updated) setLocalProposal(updated);
+        toast.info('Esta propuesta ya fue finalizada anteriormente. Actualizando estado...');
+      } else {
+        toast.error(msg || 'Error al finalizar la propuesta');
+      }
     } finally {
       setSubmitting(false);
     }
@@ -67,7 +76,7 @@ export function ProposalDetail({ proposal, readOnly = false }: { proposal: IProp
       const updated = await getExplorerProposalById(localProposal.id);
       if (updated) setLocalProposal(updated);
       setShowVetoModal(false);
-      toast.success('Propuesta vetada de forma permanente 🚫');
+      toast.success('Propuesta vetada de forma permanente');
     } catch (err: any) {
       toast.error(err.message || 'Error al vetar la propuesta');
     } finally {
@@ -87,6 +96,19 @@ export function ProposalDetail({ proposal, readOnly = false }: { proposal: IProp
   return (
     <div className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-sm flex flex-col gap-8">
       <div>
+        {localProposal.type && (
+          <div className="mb-4">
+            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${
+              localProposal.type === 'TRIBE_ADMISSION' ? 'text-blue-750 bg-blue-50 border border-blue-200' :
+              localProposal.type === 'TRIBE_EXPULSION' ? 'text-red-750 bg-red-50 border border-red-200' :
+              'text-emerald-750 bg-emerald-50 border border-emerald-200'
+            }`}>
+              {localProposal.type === 'TRIBE_ADMISSION' ? 'Admisión a Tribu' :
+               localProposal.type === 'TRIBE_EXPULSION' ? 'Expulsión / Veto' :
+               'Certificación de Pago'}
+            </span>
+          </div>
+        )}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
           <h2 className="text-2xl md:text-3xl font-bold text-slate-900 leading-tight">{localProposal.title}</h2>
           <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-sm font-bold shrink-0 ${getStatusColor(localProposal.status)}`}>
@@ -102,16 +124,18 @@ export function ProposalDetail({ proposal, readOnly = false }: { proposal: IProp
           {localProposal.description}
         </p>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
-          <div className="p-5 bg-gray-50 rounded-2xl border border-gray-100">
-            <span className="block text-xs font-bold text-slate-500 mb-2 tracking-wider">CÓDIGO DE PRODUCTO</span>
-            <span className="font-mono text-sm font-semibold text-slate-900">{localProposal.productId}</span>
+        {(!localProposal.type || localProposal.type === 'TRANSACTION_NOTARIZATION') && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
+            <div className="p-5 bg-gray-50 rounded-2xl border border-gray-100">
+              <span className="block text-xs font-bold text-slate-500 mb-2 tracking-wider">CÓDIGO DE PRODUCTO</span>
+              <span className="font-mono text-sm font-semibold text-slate-900">{localProposal.productId || 'N/A'}</span>
+            </div>
+            <div className="p-5 bg-gray-50 rounded-2xl border border-gray-100">
+              <span className="block text-xs font-bold text-slate-500 mb-2 tracking-wider">BILLETERA COMPRADOR</span>
+              <span className="font-mono text-sm font-semibold text-slate-900 break-all">{localProposal.buyerAddress || 'N/A'}</span>
+            </div>
           </div>
-          <div className="p-5 bg-gray-50 rounded-2xl border border-gray-100">
-            <span className="block text-xs font-bold text-slate-500 mb-2 tracking-wider">BILLETERA COMPRADOR</span>
-            <span className="font-mono text-sm font-semibold text-slate-900 break-all">{localProposal.buyerAddress}</span>
-          </div>
-        </div>
+        )}
       </div>
 
       <div className="border-t border-gray-100 pt-8">
@@ -121,46 +145,59 @@ export function ProposalDetail({ proposal, readOnly = false }: { proposal: IProp
         </div>
       </div>
 
-      {!readOnly && memberRole !== 'NONE' && localProposal.status === 'PENDING' && (
+      {!readOnly && (memberRole !== 'NONE' || isLeaderOfTribe) && localProposal.status === 'PENDING' && (
         <div className="border-t border-gray-100 pt-8">
           <div className="bg-brand-nature-bg/30 p-6 rounded-3xl border border-brand-primary-light flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
               <h3 className="text-lg font-bold text-slate-900 font-outfit">Panel de Control de Gobernanza</h3>
-              <p className="text-xs text-slate-600">Identificado como miembro: <span className="font-bold text-brand-primary">{memberRole}</span></p>
+              <p className="text-xs text-slate-600">
+                Identificado como:{' '}
+                <span className="font-bold text-brand-primary">
+                  {memberRole === 'ELDER' ? 'ELDER' : isLeaderOfTribe ? 'LÍDER DE TRIBU' : memberRole}
+                </span>
+              </p>
             </div>
 
             <div className="flex flex-wrap gap-3 items-center">
-              <button
-                disabled={submitting}
-                onClick={() => handleVote(true)}
-                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-bold text-sm shadow-sm hover:shadow-md transition-all disabled:opacity-50 flex items-center justify-center gap-1.5"
-              >
-                A Favor 👍
-              </button>
-              <button
-                disabled={submitting}
-                onClick={() => handleVote(false)}
-                className="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-full font-bold text-sm shadow-sm hover:shadow-md transition-all disabled:opacity-50 flex items-center justify-center gap-1.5"
-              >
-                En Contra 👎
-              </button>
+              {/* Votar solo si es miembro del consejo de gobernanza */}
+              {memberRole !== 'NONE' && (
+                <>
+                  <button
+                    disabled={submitting}
+                    onClick={() => handleVote(true)}
+                    className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-bold text-sm shadow-sm hover:shadow-md transition-all disabled:opacity-50 flex items-center justify-center gap-1.5"
+                  >
+                    A Favor
+                  </button>
+                  <button
+                    disabled={submitting}
+                    onClick={() => handleVote(false)}
+                    className="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-full font-bold text-sm shadow-sm hover:shadow-md transition-all disabled:opacity-50 flex items-center justify-center gap-1.5"
+                  >
+                    En Contra
+                  </button>
+                </>
+              )}
 
-              {memberRole === 'ELDER' && (
+              {/* Finalizar: disponible para Elder o Líder de Tribu */}
+              {(memberRole === 'ELDER' || isLeaderOfTribe) && (
                 <div className="flex gap-3 border-l border-gray-200 pl-3">
                   <button
                     disabled={submitting}
                     onClick={handleFinalize}
                     className="px-5 py-2 bg-brand-primary text-white hover:bg-brand-primary-dark rounded-full font-bold text-sm shadow-sm hover:shadow-md transition-all disabled:opacity-50"
                   >
-                    Finalizar y Ejecutar ⚡
+                    Finalizar y Ejecutar
                   </button>
-                  <button
-                    disabled={submitting}
-                    onClick={() => setShowVetoModal(true)}
-                    className="px-5 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-full font-bold text-sm shadow-sm hover:shadow-md transition-all disabled:opacity-50"
-                  >
-                    Vetar 🚫
-                  </button>
+                  {memberRole === 'ELDER' && (
+                    <button
+                      disabled={submitting}
+                      onClick={() => setShowVetoModal(true)}
+                      className="px-5 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-full font-bold text-sm shadow-sm hover:shadow-md transition-all disabled:opacity-50"
+                    >
+                      Vetar
+                    </button>
+                  )}
                 </div>
               )}
             </div>

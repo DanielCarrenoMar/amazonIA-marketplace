@@ -5,6 +5,8 @@ import { OutboxService } from '../outbox/outbox.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { TelemetryIntegrationService } from '../telemetry-integration/telemetry-integration.service';
 import { ConfigService } from '@nestjs/config';
+import { NotificationService } from '../notification/notification.service';
+import { NotaryClientService } from '../blockchain/services/notary-client.service';
 import { ProductOrderService } from './product-order.service';
 
 const makeOrder = (overrides: Partial<Record<string, unknown>> = {}) => ({
@@ -23,10 +25,13 @@ describe('ProductOrderService', () => {
   let service: ProductOrderService;
   let prisma: Record<string, jest.Mock>;
   let outbox: { append: jest.Mock };
+  let notificationService: { createNotification: jest.Mock };
+  let notaryClient: { notarizeOrder: jest.Mock };
 
   beforeEach(async () => {
     prisma = {
       $transaction: jest.fn(),
+      $queryRaw: jest.fn().mockResolvedValue([]),
       productOrder: {
         findUnique: jest.fn(),
         update: jest.fn(),
@@ -39,9 +44,13 @@ describe('ProductOrderService', () => {
       orderStatusHistory: { create: jest.fn() } as unknown as jest.Mock,
       product: { update: jest.fn(), findUnique: jest.fn() } as unknown as jest.Mock,
       seller: { update: jest.fn() } as unknown as jest.Mock,
+      blockchainRecord: { findUnique: jest.fn() } as unknown as jest.Mock,
     };
 
     outbox = { append: jest.fn().mockResolvedValue({ id: 'outbox-uuid' }) };
+
+    notificationService = { createNotification: jest.fn().mockResolvedValue(undefined) };
+    notaryClient = { notarizeOrder: jest.fn().mockResolvedValue(undefined) };
 
     const telemetry = {
       getShipmentTelemetry: jest.fn().mockResolvedValue(null),
@@ -65,6 +74,8 @@ describe('ProductOrderService', () => {
         { provide: OutboxService, useValue: outbox },
         { provide: TelemetryIntegrationService, useValue: telemetry },
         { provide: ConfigService, useValue: config },
+        { provide: NotificationService, useValue: notificationService },
+        { provide: NotaryClientService, useValue: notaryClient },
       ],
     }).compile();
 

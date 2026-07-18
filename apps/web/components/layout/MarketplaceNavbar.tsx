@@ -143,7 +143,6 @@ function MarketplaceNavbarContent() {
             {isGovMember && (
               <Link href="/marketplace/governance" title="Gobernanza del Consejo" className="relative p-2.5 text-slate-600 hover:text-brand-primary transition-colors cursor-pointer flex items-center justify-center">
                 <Icon icon="lucide:gavel" className="w-[22px] h-[22px]" />
-                <span className="absolute -top-1 -right-1 bg-brand-primary text-white text-[8px] font-bold px-1 rounded-full border border-white">Votar</span>
               </Link>
             )}
 

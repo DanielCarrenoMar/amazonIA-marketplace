@@ -31,7 +31,7 @@ export class BlockchainService implements OnModuleInit {
   private readonly logger = new Logger(BlockchainService.name);
   private provider: ethers.JsonRpcProvider;
   private wallet: ethers.Wallet;
-  private contract: ethers.Contract;
+  private contract: ethers.Contract | null = null;
   private governanceContract: ethers.Contract;
   private nftFactoryContract: ethers.Contract;
   private config: BlockchainConfig;
@@ -43,11 +43,13 @@ export class BlockchainService implements OnModuleInit {
   async onModuleInit() {
     this.provider = new ethers.JsonRpcProvider(this.config.rpcUrl);
     this.wallet = new ethers.Wallet(this.config.privateKey, this.provider);
-    this.contract = new ethers.Contract(
-      this.config.contractAddress,
-      NOTARY_REGISTRY_ABI,
-      this.wallet,
-    );
+    if (this.config.contractAddress) {
+      this.contract = new ethers.Contract(
+        this.config.contractAddress,
+        NOTARY_REGISTRY_ABI,
+        this.wallet,
+      );
+    }
     this.governanceContract = new ethers.Contract(
       this.config.governanceContractAddress,
       GOVERNANCE_REGISTRY_ABI,
@@ -61,7 +63,7 @@ export class BlockchainService implements OnModuleInit {
 
     this.logger.log(`Blockchain service initialized`);
     this.logger.log(`Network: ${this.config.networkName}`);
-    this.logger.log(`Contract: ${this.config.contractAddress}`);
+    this.logger.log(`Contract: ${this.config.contractAddress ?? '(not configured — legacy NotaryRegistry disabled)'}`);
     this.logger.log(`Governance Contract: ${this.config.governanceContractAddress}`);
     this.logger.log(`NFT Factory Contract: ${this.config.nftFactoryAddress}`);
     this.logger.log(`Wallet: ${this.wallet.address}`);
@@ -72,6 +74,9 @@ export class BlockchainService implements OnModuleInit {
    * Esta es la función principal heredada del microservicio.
    */
   async registerTransaction(params: RegisterTransactionParams): Promise<TransactionResult> {
+    if (!this.contract) {
+      throw new Error('Legacy NotaryRegistry contract is not configured (CONTRACT_ADDRESS not set)');
+    }
     this.logger.log(`Sending transaction to blockchain for order: ${params.orderId}`);
 
     const amountInWei = ethers.parseUnits(params.amount.toString(), 18);

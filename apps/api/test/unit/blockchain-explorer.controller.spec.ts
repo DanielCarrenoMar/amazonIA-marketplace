@@ -18,7 +18,9 @@ describe('BlockchainExplorerController', () => {
     findMembers: jest.fn(),
   } as any;
 
-  const controller = new BlockchainExplorerController(serviceMock);
+  const prismaMock = {} as any;
+
+  const controller = new BlockchainExplorerController(serviceMock, prismaMock);
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -125,11 +127,11 @@ describe('BlockchainExplorerController', () => {
 
     it('forwards params.id to findProposal and returns null on miss', async () => {
       serviceMock.findProposal.mockResolvedValue(null);
-      const params = { id: '00000000-0000-4000-8000-000000000000' };
+      const id = '00000000-0000-4000-8000-000000000000';
 
-      const result = await controller.findProposal(params);
+      const result = await controller.findProposal(id);
 
-      expect(serviceMock.findProposal).toHaveBeenCalledWith(params.id);
+      expect(serviceMock.findProposal).toHaveBeenCalledWith(id);
       expect(result).toBeNull();
     });
   });

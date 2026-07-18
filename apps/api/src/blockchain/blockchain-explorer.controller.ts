@@ -17,6 +17,10 @@ import { BlockchainExplorerService } from './services/blockchain-explorer.servic
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PrismaService } from '../prisma/prisma.service';
 
+// Bounds how long a proxied request to blockchain-notary can hang — without this,
+// a stuck notary (e.g. waiting on the Hardhat node) blocks the caller indefinitely.
+const NOTARY_TIMEOUT_MS = 10_000;
+
 @Controller('api/v1/blockchain/explorer')
 export class BlockchainExplorerController {
   constructor(
@@ -48,6 +52,51 @@ export class BlockchainExplorerController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Post('proposals')
+  async createProposal(
+    @Body() body: { proposalId: string; contentHash: string; deadlineMinutes: number; type: string },
+    @Req() req: any,
+  ) {
+    const userId = req.user.id;
+    const member = await this.prisma.governanceMember.findUnique({
+      where: { userId },
+    });
+    if (!member || member.role === 'NONE') {
+      throw new ForbiddenException('You are not a registered member of the governance council.');
+    }
+
+    const notaryUrl = process.env.NOTARY_SERVICE_URL || 'http://localhost:3004/api/v1';
+    const apiKey = process.env.NOTARY_API_KEY || 'apikeyBlockchain';
+
+    try {
+      const response = await fetch(`${notaryUrl}/governance/proposals`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+        },
+        body: JSON.stringify({
+          proposalId: body.proposalId,
+          contentHash: body.contentHash,
+          proposerUserId: userId,
+          deadlineMinutes: body.deadlineMinutes,
+          type: body.type,
+        }),
+        signal: AbortSignal.timeout(NOTARY_TIMEOUT_MS),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new BadRequestException(`Notary error: ${errorText}`);
+      }
+
+      return await response.json();
+    } catch (error: any) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Post('proposals/:id/vote')
   async voteProposal(
     @Param('id') id: string,
@@ -64,7 +113,7 @@ export class BlockchainExplorerController {
     }
 
     // Hacer proxy de la petición al Notario
-    const notaryUrl = process.env.NOTARY_SERVICE_URL || 'http://localhost:3002/api/v1';
+    const notaryUrl = process.env.NOTARY_SERVICE_URL || 'http://localhost:3004/api/v1';
     const apiKey = process.env.NOTARY_API_KEY || 'apikeyBlockchain';
 
     try {
@@ -78,6 +127,7 @@ export class BlockchainExplorerController {
           voterUserId: userId,
           inFavor: body.inFavor,
         }),
+        signal: AbortSignal.timeout(NOTARY_TIMEOUT_MS),
       });
 
       if (!response.ok) {
@@ -98,16 +148,57 @@ export class BlockchainExplorerController {
     @Req() req: any,
   ) {
     const userId = req.user.id;
-    // Verificar si el usuario es Elder
+    // Verificar si el usuario es Elder o el líder de la tribu de la propuesta
     const member = await this.prisma.governanceMember.findUnique({
       where: { userId },
     });
-    if (!member || member.role !== 'ELDER') {
-      throw new ForbiddenException('Only the Elder can finalize proposals.');
+
+    let isAuthorized = member && member.role === 'ELDER';
+
+    if (!isAuthorized) {
+      const proposal = await this.prisma.proposal.findUnique({
+        where: { proposalId: id },
+      });
+      if (proposal) {
+        if (proposal.type === 'TRIBE_ADMISSION' || proposal.type === 'TRIBE_EXPULSION') {
+          // Líderes pueden finalizar propuestas de admisión/expulsión de su tribu
+          try {
+            const content = JSON.parse(proposal.contentHash);
+            if (content && typeof content.tribeId === 'number') {
+              const tribe = await this.prisma.tribe.findUnique({
+                where: { id: content.tribeId },
+              });
+              if (tribe && (tribe.primaryLeaderId === userId || tribe.secondaryLeaderId === userId)) {
+                isAuthorized = true;
+              }
+            }
+          } catch {
+            // ignore
+          }
+        } else if (proposal.type === 'TRANSACTION_NOTARIZATION') {
+          // Líderes pueden finalizar certificaciones de productos de vendedores en su tribu
+          try {
+            const order = await this.prisma.productOrder.findUnique({
+              where: { id: proposal.proposalId },
+              include: { product: { include: { seller: { include: { tribe: true } } } } },
+            });
+            const sellerTribe = order?.product?.seller?.tribe;
+            if (sellerTribe && (sellerTribe.primaryLeaderId === userId || sellerTribe.secondaryLeaderId === userId)) {
+              isAuthorized = true;
+            }
+          } catch {
+            // ignore
+          }
+        }
+      }
+    }
+
+    if (!isAuthorized) {
+      throw new ForbiddenException('Only the Elder or the Tribe Leader can finalize this proposal.');
     }
 
     // Hacer proxy al Notario
-    const notaryUrl = process.env.NOTARY_SERVICE_URL || 'http://localhost:3002/api/v1';
+    const notaryUrl = process.env.NOTARY_SERVICE_URL || 'http://localhost:3004/api/v1';
     const apiKey = process.env.NOTARY_API_KEY || 'apikeyBlockchain';
 
     try {
@@ -120,6 +211,7 @@ export class BlockchainExplorerController {
         body: JSON.stringify({
           elderUserId: userId,
         }),
+        signal: AbortSignal.timeout(NOTARY_TIMEOUT_MS),
       });
 
       if (!response.ok) {
@@ -150,7 +242,7 @@ export class BlockchainExplorerController {
     }
 
     // Hacer proxy al Notario
-    const notaryUrl = process.env.NOTARY_SERVICE_URL || 'http://localhost:3002/api/v1';
+    const notaryUrl = process.env.NOTARY_SERVICE_URL || 'http://localhost:3004/api/v1';
     const apiKey = process.env.NOTARY_API_KEY || 'apikeyBlockchain';
 
     try {
@@ -164,6 +256,7 @@ export class BlockchainExplorerController {
           elderUserId: userId,
           reason: body.reason,
         }),
+        signal: AbortSignal.timeout(NOTARY_TIMEOUT_MS),
       });
 
       if (!response.ok) {

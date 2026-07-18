@@ -5,7 +5,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { Icon } from "@iconify/react";
-import { mockProductDtos } from '@/lib/mock-data';
 import { getProductById, getProducts, createOrder } from '@/lib/api';
 import { getProductComments, createProductComment, createProductRating, getProductRatings } from '@/lib/api/product.api';
 import type { ProductResponseDto } from 'event-types';
@@ -39,7 +38,6 @@ export default function ProductDetailPage() {
   const [selectedSize, setSelectedSize] = useState('100m');
   const [activeMediaIndex, setActiveMediaIndex] = useState(0);
   const [activeTab, setActiveTab] = useState<'process' | 'additional_info' | 'artisan'>('process');
-  const [activeReviewIndex, setActiveReviewIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollRelated, setCanScrollRelated] = useState(false);
   const [isBuying, setIsBuying] = useState(false);
@@ -53,15 +51,26 @@ export default function ProductDetailPage() {
   const [newRating, setNewRating] = useState(0);
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
-  const handlePrevReview = () => setActiveReviewIndex(i => (i === 0 ? Math.max(0, reviews.length - 1) : i - 1));
-  const handleNextReview = () => setActiveReviewIndex(i => (i === reviews.length - 1 ? 0 : i + 1));
+  const splitDescription = (desc: string | null | undefined) => {
+    if (!desc) return { main: '', process: '' };
+    const markerRegex = /\*\*?Proceso de Elaboraci[oó]n:\*\*?/i;
+    const match = desc.match(markerRegex);
+    if (match && match.index !== undefined) {
+      return {
+        main: desc.slice(0, match.index).trim(),
+        process: desc.slice(match.index + match[0].length).trim()
+      };
+    }
+    return { main: desc, process: '' };
+  };
+
+  const { main: mainDescription, process: parsedProcess } = splitDescription(product?.description);
+  const processText = product?.elaborationText || parsedProcess || "No se ha proporcionado información sobre el proceso de elaboración.";
 
   // Real data for the behind-the-scenes carousel or fallback
   const behindTheScenesMedia = product?.elaborationMediaUrls && product.elaborationMediaUrls.length > 0
     ? product.elaborationMediaUrls.map((url, i) => ({ type: 'image', src: url, title: `Paso ${i + 1}` }))
-    : [
-        { type: 'image', src: activeImage || '/ceramica-pemón.jpg', title: 'Proceso de Creación' }
-      ];
+    : [];
 
   const handlePrevMedia = () => {
     if (!behindTheScenesMedia.length) return;
@@ -170,19 +179,6 @@ export default function ProductDetailPage() {
     }
   };
 
-  const handleWriteReview = () => {
-    if (!user) {
-      setIsModalOpen(true);
-      return;
-    }
-    // Scroll to the review input box if we have one, or open a review form modal
-    const reviewForm = document.getElementById('review-form');
-    if (reviewForm) {
-      reviewForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      reviewForm.focus();
-    }
-  };
-
   const handleSubmitReview = async () => {
     if (!user) {
       setIsModalOpen(true);
@@ -239,13 +235,7 @@ export default function ProductDetailPage() {
     }
   };
 
-  // You can replace these with actual product images later
-  const thumbnails = [
-    '/cesta-wayuu.jpg',
-    '/bolso-de-moriche.webp',
-    '/ceramica-pemón.jpg',
-    '/collar-de-semillas.jpg'
-  ];
+
 
   if (loading) {
     return (
@@ -305,17 +295,24 @@ export default function ProductDetailPage() {
               </Button>
             </div>
 
-            <div className="grid grid-cols-4 gap-4 mt-2">
-              {thumbnails.map((thumb, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setActiveImage(thumb)}
-                  className={`relative aspect-square rounded-xl overflow-hidden border-2 transition-all cursor-pointer ${activeImage === thumb ? 'border-brand-primary shadow-md scale-105 z-10' : 'border-transparent opacity-70 hover:opacity-100'}`}
-                >
-                  <Image src={thumb} alt={`Miniatura ${idx + 1}`} fill className="object-cover bg-gray-100" />
-                </button>
-              ))}
-            </div>
+            {(() => {
+              const allImages = product ? Array.from(new Set([product.imageUrl, ...(product.imageUrls || [])].filter(Boolean))) as string[] : [];
+              if (allImages.length <= 1) return null;
+              return (
+                <div className="grid grid-cols-4 gap-3">
+                  {allImages.map((url, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setActiveImage(url)}
+                      className={`relative w-full aspect-square rounded-xl overflow-hidden border-2 transition-all ${activeImage === url ? 'border-brand-primary shadow-sm' : 'border-transparent opacity-70 hover:opacity-100'}`}
+                    >
+                      <Image src={url} alt={`Vista ${i + 1}`} fill className="object-cover" />
+                    </button>
+                  ))}
+                </div>
+              );
+            })()}
+
           </div>
 
           {/* RIGHT: DETAILS */}
@@ -327,7 +324,7 @@ export default function ProductDetailPage() {
             <div className="flex items-center gap-3 mb-4">
               {product.category && (
                 <Badge variant="secondary" className="px-4 py-1.5 text-sm">
-                  {product.category.name || 'Categoría'}
+                  {(product.category as any).categoryName || 'Categoría'}
                 </Badge>
               )}
             </div>
@@ -348,26 +345,36 @@ export default function ProductDetailPage() {
               <span className="text-4xl font-bold text-brand-primary">${Number(product.price).toFixed(2)}</span>
             </div>
 
-            <p className="text-gray-600 leading-relaxed mb-8">
-              {product.description}
+            <p className="text-gray-600 leading-relaxed mb-8 whitespace-pre-wrap">
+              {mainDescription}
             </p>
 
-            <div className="mb-10 max-w-40">
-              <div>
-                <label className="text-sm font-semibold text-gray-900 block mb-1.5">Cantidad</label>
-                <div className="flex items-center h-[50px] border border-gray-200 rounded-xl overflow-hidden shadow-sm bg-white">
-                  <button onClick={handleDecrease} className="w-12 h-full flex items-center justify-center hover:bg-gray-50 text-gray-600 transition-colors cursor-pointer">
-                    <Icon icon="lucide:minus" className="w-4 h-4" />
-                  </button>
-                  <div className="flex-1 h-full flex items-center justify-center font-semibold text-gray-900 border-x border-gray-200">
-                    {quantity}
+            {product.stockAvailable > 0 ? (
+              <div className="mb-10 max-w-40">
+                <div>
+                  <label className="text-sm font-semibold text-gray-900 block mb-1.5">Cantidad</label>
+                  <div className="flex items-center h-[50px] border border-gray-200 rounded-xl overflow-hidden shadow-sm bg-white">
+                    <button onClick={handleDecrease} className="w-12 h-full flex items-center justify-center hover:bg-gray-50 text-gray-600 transition-colors cursor-pointer">
+                      <Icon icon="lucide:minus" className="w-4 h-4" />
+                    </button>
+                    <div className="flex-1 h-full flex items-center justify-center font-semibold text-gray-900 border-x border-gray-200">
+                      {quantity}
+                    </div>
+                    <button onClick={handleIncrease} className="w-12 h-full flex items-center justify-center hover:bg-gray-50 text-gray-600 transition-colors cursor-pointer">
+                      <Icon icon="lucide:plus" className="w-4 h-4" />
+                    </button>
                   </div>
-                  <button onClick={handleIncrease} className="w-12 h-full flex items-center justify-center hover:bg-gray-50 text-gray-600 transition-colors cursor-pointer">
-                    <Icon icon="lucide:plus" className="w-4 h-4" />
-                  </button>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="mb-10 bg-red-50 border border-red-100 rounded-xl p-4 flex items-center gap-3 text-red-700">
+                <Icon icon="lucide:alert-circle" className="w-6 h-6 shrink-0" />
+                <div>
+                  <h4 className="font-bold text-sm">Agotado</h4>
+                  <p className="text-xs mt-0.5">Este producto ya no tiene unidades disponibles por el momento.</p>
+                </div>
+              </div>
+            )}
 
             <div className="flex flex-col gap-4 mt-auto">
               <Button
@@ -431,57 +438,58 @@ export default function ProductDetailPage() {
           </div>
         </div>
 
-        {/* TAB CONTENTS */}
         <div className="py-12">
           {activeTab === 'process' && (
             <section>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              <div className={`grid grid-cols-1 ${behindTheScenesMedia.length > 0 ? 'lg:grid-cols-2' : ''} gap-12 items-start`}>
                 {/* Multimedia / Video Carousel */}
-                <div className="relative w-full aspect-video rounded-3xl overflow-hidden group shadow-lg border border-gray-100">
-                  <div className="relative w-full h-full transition-transform duration-500">
-                    <Image
-                      src={behindTheScenesMedia[activeMediaIndex].src}
-                      alt="Detrás de escena"
-                      fill
-                      className={`object-cover ${behindTheScenesMedia[activeMediaIndex].type === 'video' ? 'blur-[2px] brightness-75 cursor-pointer group-hover:scale-105 transition-transform duration-500' : 'brightness-90 transition-transform duration-500 group-hover:scale-105'}`}
-                    />
-                  </div>
-
-                  {behindTheScenesMedia[activeMediaIndex].type === 'video' && (
-                    <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors flex items-center justify-center cursor-pointer pointer-events-none">
-                      <div className="w-20 h-20 bg-white/30 backdrop-blur-md rounded-full flex items-center justify-center border border-white/50 group-hover:scale-110 transition-transform shadow-xl">
-                        <Icon icon="lucide:play" className="w-8 h-8 text-white fill-white ml-1" />
-                      </div>
+                {behindTheScenesMedia.length > 0 && (
+                  <div className="relative w-full aspect-video rounded-3xl overflow-hidden group shadow-lg border border-gray-100">
+                    <div className="relative w-full h-full transition-transform duration-500">
+                      <Image
+                        src={behindTheScenesMedia[activeMediaIndex].src}
+                        alt="Detrás de escena"
+                        fill
+                        className={`object-cover ${behindTheScenesMedia[activeMediaIndex].type === 'video' ? 'blur-[2px] brightness-75 cursor-pointer group-hover:scale-105 transition-transform duration-500' : 'brightness-90 transition-transform duration-500 group-hover:scale-105'}`}
+                      />
                     </div>
-                  )}
 
-                  <div className="absolute bottom-6 left-6 right-6 flex items-end justify-end pointer-events-none">
-                    <h3 className="text-white font-bold text-xl drop-shadow-md">
-                      {activeMediaIndex + 1} / {behindTheScenesMedia.length}
-                    </h3>
+                    {behindTheScenesMedia[activeMediaIndex].type === 'video' && (
+                      <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors flex items-center justify-center cursor-pointer pointer-events-none">
+                        <div className="w-20 h-20 bg-white/30 backdrop-blur-md rounded-full flex items-center justify-center border border-white/50 group-hover:scale-110 transition-transform shadow-xl">
+                          <Icon icon="lucide:play" className="w-8 h-8 text-white fill-white ml-1" />
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="absolute bottom-6 left-6 right-6 flex items-end justify-end pointer-events-none">
+                      <h3 className="text-white font-bold text-xl drop-shadow-md">
+                        {activeMediaIndex + 1} / {behindTheScenesMedia.length}
+                      </h3>
+                    </div>
+
+                    {/* Carousel Navigation Buttons */}
+                    <button
+                      onClick={handlePrevMedia}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/70 hover:bg-white backdrop-blur flex items-center justify-center shadow transition-colors z-10 opacity-0 group-hover:opacity-100 cursor-pointer"
+                    >
+                      <Icon icon="lucide:chevron-left" className="w-6 h-6 text-slate-800" />
+                    </button>
+                    <button
+                      onClick={handleNextMedia}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/70 hover:bg-white backdrop-blur flex items-center justify-center shadow transition-colors z-10 opacity-0 group-hover:opacity-100 cursor-pointer"
+                    >
+                      <Icon icon="lucide:chevron-right" className="w-6 h-6 text-slate-800" />
+                    </button>
                   </div>
-
-                  {/* Carousel Navigation Buttons */}
-                  <button
-                    onClick={handlePrevMedia}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/70 hover:bg-white backdrop-blur flex items-center justify-center shadow transition-colors z-10 opacity-0 group-hover:opacity-100 cursor-pointer"
-                  >
-                    <Icon icon="lucide:chevron-left" className="w-6 h-6 text-slate-800" />
-                  </button>
-                  <button
-                    onClick={handleNextMedia}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/70 hover:bg-white backdrop-blur flex items-center justify-center shadow transition-colors z-10 opacity-0 group-hover:opacity-100 cursor-pointer"
-                  >
-                    <Icon icon="lucide:chevron-right" className="w-6 h-6 text-slate-800" />
-                  </button>
-                </div>
+                )}
 
                 {/* Elaboraton Process */}
                 <div className="flex flex-col">
                   <h2 className="text-2xl md:text-3xl font-extrabold text-slate-900 mb-6">Proceso de Elaboración</h2>
 
-                  <p className="text-gray-600 leading-relaxed mb-6 text-lg">
-                    Esta pieza fue elaborada utilizando técnicas ancestrales transmitidas de generación en generación. Desde la recolección responsable de la materia prima en las profundidades de la selva, hasta el minucioso proceso de secado, teñido natural y ensamblaje final. Cada etapa se realiza a mano, respetando los tiempos de la naturaleza y garantizando un nivel de detalle que las máquinas no pueden replicar.
+                  <p className="text-gray-600 leading-relaxed mb-6 text-lg whitespace-pre-wrap">
+                    {processText}
                   </p>
                 </div>
               </div>
@@ -501,7 +509,7 @@ export default function ProductDetailPage() {
                   <tbody className="text-gray-700">
                     <tr className="border-b border-gray-100 hover:bg-gray-50">
                       <td className="py-4 px-6 font-medium text-slate-900">Categoría</td>
-                      <td className="py-4 px-6">{product.category?.name || "No especificada"}</td>
+                      <td className="py-4 px-6">{(product.category as any)?.categoryName || "No especificada"}</td>
                     </tr>
                     <tr className="border-b border-gray-100 hover:bg-gray-50">
                       <td className="py-4 px-6 font-medium text-slate-900">Stock Disponible</td>
@@ -807,8 +815,9 @@ export default function ProductDetailPage() {
                       price={`$${Number(related.price).toFixed(2)}`}
                       image={related.imageUrl || "/bolso-de-moriche.webp"}
                       rating={related.averageRating ? Math.round(Number(related.averageRating)) : 0}
-                      category={related.category?.name || "Categoría"}
+                      category={related.category?.categoryName || "Categoría"}
                       href={`/marketplace/${related.id}`}
+                      stockAvailable={related.stockAvailable}
                     />
                   </div>
                 ))

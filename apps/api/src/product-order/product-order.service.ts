@@ -12,6 +12,8 @@ import { TelemetryIntegrationService } from '../telemetry-integration/telemetry-
 import { NotaryClientService } from '../blockchain/services/notary-client.service';
 import * as crypto from 'crypto';
 
+const TX_HASH_REGEX = /^0x[0-9a-fA-F]{64}$/;
+
 const allowedOrderStatusTransitions: Record<OrderStatus, readonly OrderStatus[]> = {
   [OrderStatus.PENDING]: [OrderStatus.PAID, OrderStatus.CANCELED],
   [OrderStatus.PAID]: [OrderStatus.SHIPPED, OrderStatus.REFUNDED],
@@ -39,6 +41,10 @@ export class ProductOrderService {
 
   // buyerId comes from the JWT token (req.user.id), NOT from the client body
   async create(buyerId: string, createProductOrderDto: CreateProductOrderDto): Promise<ProductOrderResponseDto> {
+    if (createProductOrderDto.transactionHash && !TX_HASH_REGEX.test(createProductOrderDto.transactionHash)) {
+      throw new BadRequestException('transactionHash inválido: debe ser un hash de transacción on-chain');
+    }
+
     const result = await this.prisma.$transaction(async (tx) => {
       // 1. Get the current stock and price
       const product = await tx.product.findUnique({
@@ -595,6 +601,23 @@ export class ProductOrderService {
         }
       }
 
+      if (statusChanged && nextStatus === OrderStatus.PAID) {
+        // Solo el propio comprador (o un admin) puede confirmar el pago de su orden —
+        // el vendedor no debe poder auto-marcarla como pagada.
+        if (reqUser.role !== UserRole.ADMIN && reqUser.id !== currentOrder.buyerId) {
+          throw new ForbiddenException(
+            'Solo el comprador (o un admin) puede confirmar el pago de la orden',
+          );
+        }
+
+        const finalTransactionHash = orderData.transactionHash || currentOrder.transactionHash;
+        if (!finalTransactionHash || !TX_HASH_REGEX.test(finalTransactionHash)) {
+          throw new BadRequestException(
+            'Se requiere un transactionHash de blockchain válido para marcar la orden como pagada',
+          );
+        }
+      }
+
       const updatedOrder = await tx.productOrder.update({
         where: { id },
         data: orderData,
@@ -693,6 +716,36 @@ export class ProductOrderService {
       ).catch((err) => {
         console.error('Failed to trigger sensor activation MQTT message', err);
       });
+    }
+
+    if (result.currentStatus === OrderStatus.PAID && result.transactionHash) {
+      this.prisma.blockchainRecord.findUnique({
+        where: { orderId: result.id }
+      }).then(async (exists) => {
+        if (!exists) {
+          const product = await this.prisma.product.findUnique({
+            where: { id: result.productId },
+            select: { id: true, sellerId: true }
+          });
+          if (product) {
+            const productHash = crypto
+              .createHash('sha256')
+              .update(`${result.productId}-${product.sellerId}-${result.createdAt.getTime()}`)
+              .digest('hex');
+
+            this.logger.log(`Firing asynchronous notarization proposal creation for order ${result.id} from update`);
+            await this.notaryClient.notarizeOrder({
+              orderId: result.id,
+              amount: Number(result.totalAmount),
+              paymentMethod: result.paymentMethod ?? 'CRYPTO',
+              productHash,
+              buyerId: result.buyerId,
+              sellerId: product.sellerId,
+              webhookUrl: '',
+            });
+          }
+        }
+      }).catch(err => this.logger.error(`Notarization trigger from update failed for order ${result.id}: ${err.message}`));
     }
 
     return result as unknown as ProductOrderResponseDto;

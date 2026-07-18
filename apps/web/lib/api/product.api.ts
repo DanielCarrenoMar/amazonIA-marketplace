@@ -33,9 +33,9 @@ export function deleteProduct(id: string): Promise<any> {
   return authFetch(`/product/${id}`, { method: "DELETE" });
 }
 
-export function uploadProductImage(id: string, file: File): Promise<ProductResponseDto> {
+export function uploadProductImage(id: string, files: File[]): Promise<ProductResponseDto> {
   const formData = new FormData();
-  formData.append("file", file);
+  files.forEach(file => formData.append("files", file));
 
   const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
   const headers = new Headers();
@@ -67,8 +67,15 @@ export function getProductMetrics(id: string): Promise<ProductMetricsDto> {
   return authFetch<ProductMetricsDto>(`/product/${id}/metrics`);
 }
 
-export function deleteProductImage(id: string): Promise<ProductResponseDto> {
-  return authFetch<ProductResponseDto>(`/product/${id}/image`, {
+export function deleteProductImage(id: string, url?: string): Promise<ProductResponseDto> {
+  const query = url ? `?url=${encodeURIComponent(url)}` : '';
+  return authFetch<ProductResponseDto>(`/product/${id}/image${query}`, {
+    method: "DELETE",
+  });
+}
+
+export function deleteElaborationImage(id: string, url: string): Promise<ProductResponseDto> {
+  return authFetch<ProductResponseDto>(`/product/${id}/elaboration-image?url=${encodeURIComponent(url)}`, {
     method: "DELETE",
   });
 }

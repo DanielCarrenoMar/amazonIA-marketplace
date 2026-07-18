@@ -10,6 +10,7 @@ export interface ProposalSummary {
   votesFor: number;
   votesAgainst: number;
   createdAt: string; // ISO Date string
+  type?: string;
 }
 
 // Endpoint 2: GET /api/v1/blockchain/explorer/proposals/:id

@@ -25,6 +25,7 @@ export interface ProductCardProps {
   href?: string;
   hideFavorite?: boolean;
   onAddToCart?: (id: string) => void;
+  stockAvailable?: number;
 }
 
 export function ProductCard({
@@ -40,6 +41,7 @@ export function ProductCard({
   href,
   hideFavorite = false,
   onAddToCart,
+  stockAvailable,
 }: ProductCardProps) {
   const { favoriteIds, toggleFavorite } = useFavorites();
   const { user } = useAuth();
@@ -71,6 +73,8 @@ export function ProductCard({
   const ImageWrapper = href ? Link : 'div';
   const TitleWrapper = href ? Link : 'div';
 
+  const cleanDescription = description ? description.split('**Proceso de Elaboración:**')[0].trim() : '';
+
   return (
     <Card
       padding="none"
@@ -89,6 +93,12 @@ export function ProductCard({
         {discount && (
           <div className="absolute top-0 left-0 bg-brand-accent text-amber-950 px-5 py-1.5 font-black rounded-br-3xl text-md z-10 shadow-md">
             {discount}
+          </div>
+        )}
+
+        {stockAvailable === 0 && (
+          <div className="absolute top-0 left-0 bg-red-600 text-white px-5 py-1.5 font-black rounded-br-3xl text-sm z-10 shadow-md">
+            Agotado
           </div>
         )}
 
@@ -138,8 +148,8 @@ export function ProductCard({
           </Badge>
         </div>
 
-        <p className="text-muted text-xs leading-relaxed line-clamp-2">
-          {description}
+        <p className="text-muted text-xs leading-relaxed line-clamp-2" title={cleanDescription}>
+          {cleanDescription}
         </p>
         <div className="mt-auto flex justify-between items-center pt-2 gap-2">
           <div className="flex flex-col">
@@ -154,13 +164,14 @@ export function ProductCard({
           </div>
 
           <Button
-            variant="primary"
+            variant={stockAvailable === 0 ? "ghost" : "primary"}
             size="sm"
-            className="font-medium!"
-            rightIcon={<Icon icon="lucide:shopping-basket" className="w-4 h-4" />}
-            onClick={handleAddClick}
+            className={`font-medium! ${stockAvailable === 0 ? "opacity-50 cursor-not-allowed bg-gray-100 text-gray-500 hover:bg-gray-100" : ""}`}
+            rightIcon={stockAvailable === 0 ? undefined : <Icon icon="lucide:shopping-basket" className="w-4 h-4" />}
+            onClick={stockAvailable === 0 ? undefined : handleAddClick}
+            disabled={stockAvailable === 0}
           >
-            Agregar
+            {stockAvailable === 0 ? "Agotado" : "Agregar"}
           </Button>
         </div>
       </div>

@@ -125,10 +125,10 @@ function buildMocks(
   return {
     env: overrides.env ?? {},
     climateModel: overrides.climateModel ?? {
-      create: jest.fn().mockResolvedValue({}),
+      insertMany: jest.fn().mockResolvedValue([]),
     },
     shipmentModel: overrides.shipmentModel ?? {
-      create: jest.fn().mockResolvedValue({}),
+      insertMany: jest.fn().mockResolvedValue([]),
     },
     consumer:
       overrides.consumer ??
@@ -159,13 +159,16 @@ describe('WorkerService', () => {
 
     await service.pollStreams();
 
-    expect(mocks.climateModel.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        event_id: 'evt-001',
-        event_type: 'environment_reading',
-        metadata: expect.objectContaining({ sensor_id: 'sensor-1' }),
-        telemetry: expect.objectContaining({ temperature_celsius: 22.5 }),
-      }),
+    expect(mocks.climateModel.insertMany).toHaveBeenCalledWith(
+      [
+        expect.objectContaining({
+          event_id: 'evt-001',
+          event_type: 'environment_reading',
+          metadata: expect.objectContaining({ sensor_id: 'sensor-1' }),
+          telemetry: expect.objectContaining({ temperature_celsius: 22.5 }),
+        }),
+      ],
+      { ordered: false },
     );
     expect(consumer.ack).toHaveBeenCalledWith(
       CONSUMER_GROUP,
@@ -197,13 +200,16 @@ describe('WorkerService', () => {
       ack: jest.fn().mockResolvedValue(undefined),
     };
 
+    // insertWithRetry() internally retries insertMany up to 3 times per
+    // pollStreams() call, so we can't count exact calls here — instead reject
+    // based on whether the batch actually contains the unparsable date.
     const climateModel = {
-      create: jest
-        .fn()
-        .mockRejectedValueOnce(new Error('Invalid Date'))
-        .mockRejectedValueOnce(new Error('Invalid Date'))
-        .mockRejectedValueOnce(new Error('Invalid Date'))
-        .mockResolvedValue({}),
+      insertMany: jest.fn().mockImplementation((docs: any[]) => {
+        const [doc] = docs;
+        return isNaN(new Date(doc.recorded_at).getTime())
+          ? Promise.reject(new Error('Invalid Date'))
+          : Promise.resolve([]);
+      }),
     };
 
     const { service, mocks } = await createService({
@@ -248,9 +254,12 @@ describe('WorkerService', () => {
       invalidMessage.offset,
     );
 
-    // Subsequent valid message is processed normally
+    // Subsequent valid message is processed normally.
+    // Each of the 3 failed outer attempts exhausts insertWithRetry's own
+    // internal 3-attempt loop (9 calls), plus 1 successful call for the
+    // valid message = 10 total.
     await service.pollStreams();
-    expect(climateModel.create).toHaveBeenCalledTimes(4);
+    expect(climateModel.insertMany).toHaveBeenCalledTimes(10);
     expect(consumer.ack).toHaveBeenCalledWith(
       CONSUMER_GROUP,
       STREAM_TOPICS.CLIMATE_EVENTS,
@@ -275,7 +284,7 @@ describe('WorkerService', () => {
     };
 
     const climateModel = {
-      create: jest.fn().mockResolvedValue({}),
+      insertMany: jest.fn().mockResolvedValue([]),
     };
 
     const { service, mocks } = await createService({ consumer, climateModel });
@@ -283,7 +292,7 @@ describe('WorkerService', () => {
     await service.pollStreams();
 
     // The corrupt message is rejected during validation, so only the valid one reaches MongoDB.
-    expect(climateModel.create).toHaveBeenCalledTimes(1);
+    expect(climateModel.insertMany).toHaveBeenCalledTimes(1);
     expect(consumer.ack).toHaveBeenCalledTimes(1);
     expect(consumer.ack).toHaveBeenCalledWith(
       CONSUMER_GROUP,
@@ -312,7 +321,7 @@ describe('WorkerService', () => {
     };
 
     const climateModel = {
-      create: jest.fn().mockRejectedValue(new Error('CastError')),
+      insertMany: jest.fn().mockRejectedValue(new Error('CastError')),
     };
 
     const { service, mocks } = await createService({

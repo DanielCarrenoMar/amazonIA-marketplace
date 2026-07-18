@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { DashboardHeader, ProductWizard } from "@/components/dashboard";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -38,7 +38,7 @@ export default function NewProductPage() {
   const [description, setDescription] = useState("");
   const [elaborationSteps, setElaborationSteps] = useState("");
   const [elaborationImages, setElaborationImages] = useState<File[]>([]);
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
 
   // Logistics State
   const [isFragile, setIsFragile] = useState(false);
@@ -50,6 +50,19 @@ export default function NewProductPage() {
     getCategories().then(setCategories).catch(console.error);
   }, []);
 
+  // Object URLs for the "verificar" preview step — created once per file list
+  // (not on every render) and revoked when the list changes or on unmount.
+  const imagePreviewUrls = useMemo(() => imageFiles.map(f => URL.createObjectURL(f)), [imageFiles]);
+  const elaborationPreviewUrls = useMemo(() => elaborationImages.map(f => URL.createObjectURL(f)), [elaborationImages]);
+
+  useEffect(() => {
+    return () => { imagePreviewUrls.forEach(url => URL.revokeObjectURL(url)); };
+  }, [imagePreviewUrls]);
+
+  useEffect(() => {
+    return () => { elaborationPreviewUrls.forEach(url => URL.revokeObjectURL(url)); };
+  }, [elaborationPreviewUrls]);
+
   const handleSubmit = async () => {
     if (!name || !price || !categoryId || !description || !stock) {
       toast({ title: "Faltan datos", description: "Completa todos los campos obligatorios.", variant: "warning" });
@@ -59,7 +72,8 @@ export default function NewProductPage() {
     try {
       const payload: any = {
         name,
-        description: elaborationSteps ? `${description}\n\n**Proceso de Elaboración:**\n${elaborationSteps}` : description,
+        description,
+        elaborationText: elaborationSteps || undefined,
         price: parseFloat(price),
         stockAvailable: parseInt(stock),
         categoryId: parseInt(categoryId),
@@ -76,8 +90,8 @@ export default function NewProductPage() {
 
       const prod = await createProduct(payload);
 
-      if (imageFile) {
-        await uploadProductImage(prod.id, imageFile);
+      if (imageFiles.length > 0) {
+        await uploadProductImage(prod.id, imageFiles);
       }
 
       if (elaborationImages.length > 0) {
@@ -175,10 +189,13 @@ export default function NewProductPage() {
               required
             />
             <FileDrop
-              label="Foto Principal"
+              label="Fotos de la Artesanía (Máximo 4)"
               accept="image/*"
               maxSizeMB={5}
-              onFilesChanged={files => setImageFile(files[0] || null)}
+              multiple={true}
+              maxFiles={4}
+              initialFiles={imageFiles}
+              onFilesChanged={files => setImageFiles(files)}
             />
 
             <h3 className="text-xl font-outfit font-bold mt-8">Logística y Cuidados</h3>
@@ -237,7 +254,8 @@ export default function NewProductPage() {
               accept="image/*"
               maxSizeMB={5}
               multiple={true}
-              maxFiles={4}
+              maxFiles={20}
+              initialFiles={elaborationImages}
               onFilesChanged={files => setElaborationImages(files)}
             />
           </div>
@@ -250,25 +268,42 @@ export default function NewProductPage() {
               <div className="flex flex-col md:flex-row gap-8">
                 <div className="flex-1 space-y-3">
                   <p><strong>Nombre:</strong> {name}</p>
+                  
+                  <div className="py-1">
+                    <p className="font-semibold text-gray-900 mb-1">Descripción:</p>
+                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{description || "Sin descripción"}</p>
+                  </div>
+
                   <p><strong>Precio:</strong> ${price}</p>
                   <p><strong>Stock:</strong> {stock}</p>
                   <p><strong>Frágil:</strong> {isFragile ? 'Sí' : 'No'}</p>
                   <p><strong>Cadena de Frío:</strong> {requiresColdChain ? 'Sí' : 'No'} {requiresColdChain && maxTemperatureCelsius ? `(Máx. ${maxTemperatureCelsius}°C)` : ''}</p>
-                  {!imageFile && <p><strong>Foto:</strong> No hay foto</p>}
+                  {!imageFiles.length && <p className="pt-2 border-t border-gray-100 mt-2"><strong>Foto:</strong> No hay foto</p>}
                 </div>
-                {imageFile && (
-                  <div className="w-full md:w-1/3">
-                    <img src={URL.createObjectURL(imageFile)} alt="Preview" className="w-full h-48 md:h-full max-h-64 rounded-lg object-cover border shadow-sm" />
+                {imageFiles.length > 0 && (
+                  <div className="w-full md:w-1/3 grid grid-cols-2 gap-2 content-start h-fit">
+                    {imagePreviewUrls.map((url, i) => (
+                      <img key={i} src={url} alt={`Preview ${i + 1}`} className="w-full h-32 rounded-lg object-cover shadow-sm" />
+                    ))}
                   </div>
                 )}
               </div>
+
+              {elaborationSteps && (
+                <div className="pt-4 border-t border-gray-100 mt-6 space-y-4">
+                  <div>
+                    <p className="font-semibold text-gray-900 mb-1">Proceso de Elaboración:</p>
+                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{elaborationSteps}</p>
+                  </div>
+                </div>
+              )}
 
               {elaborationImages.length > 0 && (
                 <div className="pt-4 border-t border-gray-200">
                   <p><strong>Fotos de Elaboración ({elaborationImages.length}):</strong></p>
                   <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {elaborationImages.map((file, i) => (
-                      <img key={i} src={URL.createObjectURL(file)} alt={`Elaboración ${i + 1}`} className="w-full h-32 rounded-lg object-cover border shadow-sm" />
+                    {elaborationPreviewUrls.map((url, i) => (
+                      <img key={i} src={url} alt={`Elaboración ${i + 1}`} className="w-full h-32 rounded-lg object-cover shadow-sm" />
                     ))}
                   </div>
                 </div>
