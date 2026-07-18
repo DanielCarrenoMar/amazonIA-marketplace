@@ -12,6 +12,7 @@ interface AuthContextType {
   isBuyer: boolean;
   isAdmin: boolean;
   isLeader: boolean;
+  hasTribe: boolean;
   login: (tokens: { accessToken: string; refreshToken: string }) => Promise<void>;
   refreshUser: () => Promise<void>;
   logout: () => void;
@@ -67,9 +68,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user?.seller?.tribe && 
     (user.seller.tribe.primaryLeaderId === user.id || user.seller.tribe.secondaryLeaderId === user.id)
   );
+  
+  const hasTribe = Boolean(user?.seller?.tribe);
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, isSeller, isBuyer, isAdmin, isLeader, login, refreshUser: fetchUser, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, isSeller, isBuyer, isAdmin, isLeader, hasTribe, login, refreshUser: fetchUser, logout }}>
       {children}
     </AuthContext.Provider>
   );

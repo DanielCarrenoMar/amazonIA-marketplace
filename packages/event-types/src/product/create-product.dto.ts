@@ -96,4 +96,8 @@ export class CreateProductDto {
   @IsOptional()
   @IsNumber()
   maxHumidity?: number;
+
+  @IsOptional()
+  @Type(() => Boolean)
+  isActive?: boolean;
 }

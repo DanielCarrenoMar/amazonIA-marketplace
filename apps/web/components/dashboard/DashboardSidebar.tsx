@@ -21,22 +21,22 @@ import {
 
 export function DashboardSidebar() {
   const pathname = usePathname();
-  const { user, logout, isAdmin, isLeader } = useAuth();
+  const { user, logout, isAdmin, isLeader, hasTribe } = useAuth();
 
   const isBuyer = user?.role === "BUYER";
 
   const topLinks = [
     ...(isAdmin ? [{ name: "Administración", href: "/dashboard/admin", icon: ShieldCheck }] : []),
-    ...(isBuyer ? [] : [{ name: "Dashboard", href: "/dashboard", icon: LayoutDashboard }]),
-    ...(isBuyer ? [] : [{ name: "Inventario", href: "/dashboard/inventory", icon: Package }]),
+    ...(isAdmin || hasTribe ? [{ name: "Dashboard", href: "/dashboard", icon: LayoutDashboard }] : []),
+    ...(isAdmin || hasTribe ? [{ name: "Inventario", href: "/dashboard/inventory", icon: Package }] : []),
     { name: "Pedidos", href: "/dashboard/orders", icon: ShoppingBag },
-    ...(isBuyer ? [] : [{ name: "IA Logística", href: "/dashboard/logistics-ai", icon: BrainCircuit }]),
-    ...(isBuyer ? [] : [{ name: "Mi Tribu", href: "/dashboard/tribe", icon: Users }]),
-    ...(isBuyer ? [] : [{ name: "Mi Billetera", href: "/dashboard/wallet", icon: Wallet }]),
+    ...(isAdmin || hasTribe ? [{ name: "IA Logística", href: "/dashboard/logistics-ai", icon: BrainCircuit }] : []),
+    { name: "Mi Tribu", href: "/dashboard/tribe", icon: Users },
+    { name: "Mi Billetera", href: "/dashboard/wallet", icon: Wallet },
   ];
 
   const bottomLinks = [
-    ...(isBuyer ? [] : [{ name: "Notificaciones", href: "/dashboard/notifications", icon: Bell }]),
+    { name: "Notificaciones", href: "/dashboard/notifications", icon: Bell },
     { name: "Configuración", href: "/dashboard/settings", icon: Settings },
   ];
 

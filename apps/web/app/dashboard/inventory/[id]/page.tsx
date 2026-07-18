@@ -10,7 +10,7 @@ import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
 import { getProductById, getProductMetrics, deleteProduct, updateProduct } from "@/lib/api";
 import type { ProductResponseDto, ProductMetricsDto } from "event-types";
-import { DollarSign, ShoppingCart, Star, Edit, MapPin, Package, AlertTriangle, Snowflake, Trash2, Plus } from "lucide-react";
+import { DollarSign, ShoppingCart, Star, Edit, MapPin, Package, AlertTriangle, Snowflake, Trash2, Plus, Eye, EyeOff } from "lucide-react";
 import Image from "next/image";
 
 export default function ProductDashboardPage() {
@@ -80,6 +80,18 @@ export default function ProductDashboardPage() {
     }
   };
 
+  const handleToggleStatus = async () => {
+    if (!product) return;
+    try {
+      const newStatus = !product.isActive;
+      await updateProduct(id, { isActive: newStatus });
+      setProduct({ ...product, isActive: newStatus });
+      toast({ title: newStatus ? "Producto Activo" : "Producto Pausado", description: newStatus ? "El producto ahora es visible en el marketplace." : "El producto ha sido ocultado del marketplace.", variant: "success" });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Error al actualizar estado", variant: "error" });
+    }
+  };
+
   if (loading || !product || !metrics) {
     return <div className="p-8 text-center text-muted">Cargando información del producto...</div>;
   }
@@ -99,6 +111,21 @@ export default function ProductDashboardPage() {
           subtitle="Información y rendimiento"
           action={
             <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={handleToggleStatus} 
+                className={`flex items-center gap-2 shadow-sm transition-colors ${
+                  product.isActive 
+                    ? "text-amber-600 border-amber-200 hover:bg-amber-600 hover:text-white hover:border-amber-600" 
+                    : "text-green-600 border-green-200 hover:bg-green-600 hover:text-white hover:border-green-600"
+                }`}
+              >
+                {product.isActive ? (
+                  <><EyeOff className="w-4 h-4" /> Pausar</>
+                ) : (
+                  <><Eye className="w-4 h-4" /> Activar</>
+                )}
+              </Button>
               <Button variant="outline" onClick={() => setIsStockModalOpen(true)} className="flex items-center gap-2 shadow-sm text-brand-primary border-brand-primary hover:bg-brand-primary hover:text-white transition-colors">
                 <Package className="w-4 h-4" /> Stock
               </Button>
@@ -131,11 +158,22 @@ export default function ProductDashboardPage() {
             <div className="flex-1 space-y-4">
               <div>
                 <h4 className="text-xl font-bold text-foreground mb-1">{product.name}</h4>
-                {product.category && (
-                  <span className="inline-block px-3 py-1 bg-brand-nature-bg text-brand-nature-content text-xs font-semibold rounded-full border-none shadow-sm">
-                    {(product.category as any).categoryName || 'Categoría'}
-                  </span>
-                )}
+                <div className="flex gap-2 items-center flex-wrap">
+                  {product.category && (
+                    <span className="inline-block px-3 py-1 bg-brand-nature-bg text-brand-nature-content text-xs font-semibold rounded-full border-none shadow-sm">
+                      {(product.category as any).categoryName || 'Categoría'}
+                    </span>
+                  )}
+                  {product.isActive ? (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full border-none shadow-sm">
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span> Activo
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-100 text-amber-700 text-xs font-semibold rounded-full border-none shadow-sm">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Pausado
+                    </span>
+                  )}
+                </div>
               </div>
               
               <div className="grid grid-cols-2 gap-4">

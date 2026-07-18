@@ -7,9 +7,10 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { getMyProducts, getProducts, deleteProduct, getCategories, getActiveTribes } from "@/lib/api";
+import { getMyTribe } from "@/lib/api/tribe.api";
 import { Modal } from "@/components/ui/Modal";
 import type { ProductResponseDto, ProductCategoryResponseDto, TribeResponseDto } from "event-types";
-import { Search, LayoutGrid, List, SlidersHorizontal, Star, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
+import { Search, LayoutGrid, List, SlidersHorizontal, Star, ChevronDown, ChevronUp, Trash2, Users } from "lucide-react";
 import { Icon } from "@iconify/react";
 import Link from "next/link";
 import { useToast } from "@/components/ui/Toast";
@@ -20,6 +21,7 @@ export default function InventoryPage() {
   const [products, setProducts] = useState<ProductResponseDto[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [tribes, setTribes] = useState<TribeResponseDto[]>([]);
+  const [hasTribe, setHasTribe] = useState<boolean | null>(null);
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -55,6 +57,11 @@ export default function InventoryPage() {
 
   useEffect(() => {
     if (user) {
+      if (isAdmin) {
+        setHasTribe(true);
+      } else {
+        getMyTribe().then(tribe => setHasTribe(!!tribe)).catch(() => setHasTribe(false));
+      }
       loadProducts();
       getCategories().then(res => {
         setCategories(res);
@@ -62,7 +69,7 @@ export default function InventoryPage() {
       
       getActiveTribes().then(res => setTribes(res.data || [])).catch(console.error);
     }
-  }, [user]);
+  }, [user, isAdmin]);
 
   async function loadProducts() {
     try {
@@ -116,6 +123,34 @@ export default function InventoryPage() {
 
     return matchesSearch && matchesCat && matchesMinPrice && matchesMaxPrice && matchesRating && finalTribeMatch && matchesStatus;
   });
+
+  if (hasTribe === false) {
+    return (
+      <div className="space-y-6">
+        <DashboardHeader
+          title="Gestión de Inventario"
+          subtitle="Tribu Requerida"
+        />
+        
+        <div className="bg-white rounded-3xl p-10 border border-yellow-200 shadow-sm text-center max-w-2xl mx-auto mt-10">
+          <div className="w-20 h-20 bg-yellow-50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Users className="w-10 h-10 text-yellow-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Aún no tienes una tribu</h2>
+          <p className="text-gray-600 mb-8 max-w-md mx-auto">
+            Para poder subir productos y convertirte en vendedor en AmazonIA 4.0, primero debes unirte a una Tribu o crear una. Esto nos ayuda a garantizar el origen y la calidad de nuestras artesanías.
+          </p>
+          <div className="flex gap-4 justify-center">
+            <Link href="/dashboard/tribe">
+              <Button variant="primary" className="font-bold">
+                Ir a Mi Tribu
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
