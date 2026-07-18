@@ -7,7 +7,7 @@ import type { OrderTimelineResponseDto, ProductOrderResponseDto, OrderTimelineIt
 import { DashboardHeader, ShipmentModal, OrderChat } from "@/components/dashboard";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { MapPin, Truck, CheckCircle2, ChevronLeft, AlertTriangle, User, Phone, Navigation, BrainCircuit, ArrowRight } from "lucide-react";
+import { MapPin, Truck, CheckCircle2, ChevronLeft, AlertTriangle, User, Phone, Navigation, BrainCircuit, ArrowRight, XCircle } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useAuth } from "@/lib/useAuth";
@@ -319,6 +319,19 @@ export default function OrderDetailPage() {
                   </div>
                   <p className="text-xs text-muted leading-relaxed">
                     Este producto artesanal ha sido certificado mediante un token no fungible ERC-721 en la red descentralizada de AmazonIA.
+                  </p>
+                </div>
+              ) : (order as any).blockchainRecord.status === 'FAILED' ? (
+                <div className="space-y-3 text-sm text-slate-800">
+                  <div className="flex items-center gap-2 text-rose-800 bg-rose-100 px-3 py-1.5 rounded-full text-xs font-bold w-fit">
+                    <XCircle className="w-4 h-4 text-rose-600" />
+                    Certificación Rechazada
+                  </div>
+                  <p className="text-xs text-rose-600/90 font-medium">
+                    Motivo: {(order as any).blockchainRecord.errorMessage || 'Rechazado por el Consejo Comunitario de la Blockchain.'}
+                  </p>
+                  <p className="text-xs text-muted leading-relaxed">
+                    Esta orden fue revisada y rechazada por votación de la gobernanza comunitaria descentralizada.
                   </p>
                 </div>
               ) : (
