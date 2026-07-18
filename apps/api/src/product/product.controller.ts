@@ -14,9 +14,9 @@ import { Roles } from '../auth/decorators/roles.decorator';
 export class ProductController {
   constructor(private readonly productService: ProductService) { }
 
-  // Only authenticated sellers or admins can create products
+  // Only authenticated sellers or admins can create products, but we also allow buyers to upload and become sellers
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.SELLER, UserRole.ADMIN)
+  @Roles(UserRole.SELLER, UserRole.BUYER, UserRole.ADMIN)
   @Post()
   create(@Body() createProductDto: CreateProductDto, @Req() req: any): Promise<ProductResponseDto> {
     return this.productService.create(createProductDto, req.user.id);
@@ -35,9 +35,10 @@ export class ProductController {
   }
 
   // Only the authenticated seller can see their own products.
+  // We allow BUYER as well so they don't get a 403 Forbidden when visiting the inventory page before uploading.
   // Admins should use GET /product?sellerId=<uuid> to inspect any seller's products.
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.SELLER)
+  @Roles(UserRole.SELLER, UserRole.BUYER)
   @Get('my-products')
   findBySeller(@Req() req: any, @Query() query: PaginationDto): Promise<PaginatedResponseDto<ProductResponseDto>> {
     return this.productService.findBySeller(req.user.id, query);
@@ -51,7 +52,7 @@ export class ProductController {
 
   // Only the authenticated seller or admin can see metrics
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.SELLER, UserRole.ADMIN)
+  @Roles(UserRole.SELLER, UserRole.BUYER, UserRole.ADMIN)
   @Get(':id/metrics')
   getMetrics(@Param('id', ParseUUIDPipe) id: string, @Req() req: any): Promise<ProductMetricsDto> {
     return this.productService.getMetrics(id, req.user);
@@ -59,7 +60,7 @@ export class ProductController {
 
   // Only authenticated sellers or admins can update — service enforces ownership
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.SELLER, UserRole.ADMIN)
+  @Roles(UserRole.SELLER, UserRole.BUYER, UserRole.ADMIN)
   @Patch(':id')
   update(
     @Param('id', ParseUUIDPipe) id: string,
@@ -71,7 +72,7 @@ export class ProductController {
 
   // Sellers can delete their own products; admins can delete any — service enforces ownership
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.SELLER, UserRole.ADMIN)
+  @Roles(UserRole.SELLER, UserRole.BUYER, UserRole.ADMIN)
   @Delete(':id')
   remove(@Param('id', ParseUUIDPipe) id: string, @Req() req: any): Promise<ProductResponseDto> {
     return this.productService.remove(id, req.user);
@@ -81,7 +82,7 @@ export class ProductController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SELLER, UserRole.ADMIN)
   @Post(':id/image')
-  @UseInterceptors(FileInterceptor('file', {
+  @UseInterceptors(FilesInterceptor('files', 4, {
     limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB max
     fileFilter: (_req, file, cb) => {
       if (!file.mimetype.startsWith('image/')) {
@@ -92,21 +93,33 @@ export class ProductController {
   }))
   async uploadImage(
     @Param('id', ParseUUIDPipe) id: string,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFiles() files: Express.Multer.File[],
     @Req() req: any,
   ): Promise<ProductResponseDto> {
-    if (!file) {
-      throw new BadRequestException('No se ha proporcionado ningún archivo de imagen');
+    if (!files || files.length === 0) {
+      throw new BadRequestException('No se han proporcionado archivos de imagen');
     }
 
-    return this.productService.uploadImage(id, file, req.user);
+    return this.productService.uploadImage(id, files, req.user);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SELLER, UserRole.BUYER, UserRole.ADMIN)
+  @Delete(':id/elaboration-image')
+  async removeElaborationImage(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Req() req: any,
+    @Query('url') url: string,
+  ): Promise<ProductResponseDto> {
+    if (!url) throw new BadRequestException('Image URL is required');
+    return this.productService.removeSpecificElaborationImage(id, url, req.user);
   }
 
   // Only sellers and admins can upload elaboration images
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SELLER, UserRole.ADMIN)
   @Post(':id/elaboration-images')
-  @UseInterceptors(FilesInterceptor('files', 4, {
+  @UseInterceptors(FilesInterceptor('files', 20, {
     limits: { fileSize: 5 * 1024 * 1024 },
     fileFilter: (_req, file, cb) => {
       if (!file.mimetype.startsWith('image/')) {
@@ -128,12 +141,16 @@ export class ProductController {
 
   // Only sellers and admins can delete product images
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.SELLER, UserRole.ADMIN)
+  @Roles(UserRole.SELLER, UserRole.BUYER, UserRole.ADMIN)
   @Delete(':id/image')
   async removeImage(
     @Param('id', ParseUUIDPipe) id: string,
     @Req() req: any,
+    @Query('url') url?: string,
   ): Promise<ProductResponseDto> {
+    if (url) {
+      return this.productService.removeSpecificImage(id, url, req.user);
+    }
     return this.productService.removeImage(id, req.user);
   }
 

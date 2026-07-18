@@ -135,7 +135,7 @@ model Product {
   requiresColdChain        Boolean                   @default(false) @map("requires_cold_chain")
   maxHumidity              Decimal?                  @map("max_humidity") @db.Decimal(5, 2)
   maxTemperatureCelsius    Decimal?                  @map("max_temperature_celsius") @db.Decimal(5, 2)
-  image_urls               String[]                  @default([])
+  imageUrls                String[]                  @default([]) @map("image_urls")
   comments                 ProductComment[]
   favoritedBy              UserFavoriteProduct[]
   category                 ProductCategory           @relation(fields: [categoryId], references: [id])
@@ -487,3 +487,4 @@ enum ProposalType {
 
   @@map("proposal_type_enum")
 }
+

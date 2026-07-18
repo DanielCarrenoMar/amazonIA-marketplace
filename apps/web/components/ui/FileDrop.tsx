@@ -10,6 +10,7 @@ export interface FileDropProps extends Omit<React.InputHTMLAttributes<HTMLInputE
   onFilesChanged?: (files: File[]) => void;
   maxFiles?: number;
   maxSizeMB?: number;
+  initialFiles?: File[];
 }
 
 export const FileDrop = forwardRef<HTMLInputElement, FileDropProps>(
@@ -25,6 +26,7 @@ export const FileDrop = forwardRef<HTMLInputElement, FileDropProps>(
       onFilesChanged,
       maxFiles = 1,
       maxSizeMB = 5,
+      initialFiles = [],
       id,
       ...props
     },
@@ -34,8 +36,11 @@ export const FileDrop = forwardRef<HTMLInputElement, FileDropProps>(
     const resolvedRef = (ref as React.RefObject<HTMLInputElement>) || internalRef;
     
     const [isDragging, setIsDragging] = useState(false);
-    const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+    const [selectedFiles, setSelectedFiles] = useState<File[]>(initialFiles);
     const [internalError, setInternalError] = useState<string | null>(null);
+
+    const [draggedItemIdx, setDraggedItemIdx] = useState<number | null>(null);
+    const [dragOverItemIdx, setDragOverItemIdx] = useState<number | null>(null);
 
     const generatedId = React.useId();
     const inputId = id || generatedId;
@@ -79,7 +84,7 @@ export const FileDrop = forwardRef<HTMLInputElement, FileDropProps>(
           filesArray = filesArray.slice(0, 1);
         } else if (maxFiles && filesArray.length > maxFiles) {
           filesArray = filesArray.slice(0, maxFiles);
-          setInternalError(`El límite por carga es de hasta ${maxFiles} archivos.`);
+          setInternalError(`Solo se pueden subir hasta ${maxFiles} archivos.`);
         }
 
         setSelectedFiles(filesArray);
@@ -141,6 +146,48 @@ export const FileDrop = forwardRef<HTMLInputElement, FileDropProps>(
       if (resolvedRef.current) {
         resolvedRef.current.value = '';
       }
+    };
+
+    const handleItemDragStart = (e: React.DragEvent, idx: number) => {
+      setDraggedItemIdx(idx);
+      e.dataTransfer.effectAllowed = "move";
+    };
+
+    const handleItemDragOver = (e: React.DragEvent, idx: number) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+      if (idx !== dragOverItemIdx) {
+        setDragOverItemIdx(idx);
+      }
+    };
+
+    const handleItemDragLeave = (e: React.DragEvent) => {
+      e.preventDefault();
+      setDragOverItemIdx(null);
+    };
+
+    const handleItemDrop = (e: React.DragEvent, targetIdx: number) => {
+      e.preventDefault();
+      setDragOverItemIdx(null);
+      if (draggedItemIdx === null || draggedItemIdx === targetIdx || disabled) {
+        setDraggedItemIdx(null);
+        return;
+      }
+      
+      const newFiles = [...selectedFiles];
+      const [removed] = newFiles.splice(draggedItemIdx, 1);
+      newFiles.splice(targetIdx, 0, removed);
+      
+      setSelectedFiles(newFiles);
+      if (onFilesChanged) {
+        onFilesChanged(newFiles);
+      }
+      setDraggedItemIdx(null);
+    };
+
+    const handleItemDragEnd = () => {
+      setDraggedItemIdx(null);
+      setDragOverItemIdx(null);
     };
 
     const displayError = error || internalError;
@@ -215,12 +262,22 @@ export const FileDrop = forwardRef<HTMLInputElement, FileDropProps>(
             {selectedFiles.map((file, idx) => (
               <li 
                 key={`${file.name}-${idx}`}
-                className={`flex items-center justify-between p-3 bg-white border border-border rounded-xl text-sm
-                 transition-all ${disabled ? "opacity-70" : "hover:shadow-sm"}`}
+                draggable={!disabled && multiple}
+                onDragStart={(e) => handleItemDragStart(e, idx)}
+                onDragOver={(e) => handleItemDragOver(e, idx)}
+                onDragLeave={handleItemDragLeave}
+                onDrop={(e) => handleItemDrop(e, idx)}
+                onDragEnd={handleItemDragEnd}
+                className={`flex items-center justify-between p-3 bg-white border-2 rounded-xl text-sm transition-all 
+                 ${disabled ? "opacity-70" : "hover:shadow-sm"} 
+                 ${multiple && !disabled ? "cursor-grab active:cursor-grabbing" : ""}
+                 ${dragOverItemIdx === idx ? "border-brand-primary bg-brand-primary/5 scale-[1.02]" : "border-border"}
+                 ${draggedItemIdx === idx ? "opacity-50 border-dashed" : "opacity-100"}
+                `}
               >
                 <div className="flex items-center gap-3 overflow-hidden">
-                  <div className="p-2 bg-brand-nature-bg text-brand-primary rounded-lg shrink-0">
-                    <Icon icon="lucide:file" className="w-4 h-4" />
+                  <div className="p-2 bg-brand-nature-bg text-brand-primary rounded-lg shrink-0 cursor-grab">
+                    <Icon icon="lucide:grip-vertical" className="w-4 h-4 text-brand-primary/60" />
                   </div>
                   <div className="flex flex-col truncate">
                     <span className="font-medium text-foreground truncate">{file.name}</span>
@@ -232,15 +289,22 @@ export const FileDrop = forwardRef<HTMLInputElement, FileDropProps>(
                     </span>
                   </div>
                 </div>
-                {!disabled && (
-                  <button 
-                    type="button" 
-                    onClick={(e) => removeFile(e, idx)}
-                    className="p-1.5 text-muted hover:text-brand-urgency hover:bg-brand-urgency/10 rounded-full transition-colors"
-                  >
-                    <Icon icon="lucide:x" className="w-4 h-4" />
-                  </button>
-                )}
+                <div className="flex items-center gap-2">
+                  {idx === 0 && multiple && (
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-brand-primary/10 text-brand-primary border border-brand-primary/20">
+                      Principal
+                    </span>
+                  )}
+                  {!disabled && (
+                    <button 
+                      type="button" 
+                      onClick={(e) => removeFile(e, idx)}
+                      className="p-1.5 text-muted hover:text-brand-urgency hover:bg-brand-urgency/10 rounded-full transition-colors"
+                    >
+                      <Icon icon="lucide:x" className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
               </li>
             ))}
           </ul>

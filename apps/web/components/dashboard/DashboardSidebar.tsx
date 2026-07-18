@@ -16,15 +16,21 @@ import {
   LogOut,
   ChevronDown,
   User,
-  BrainCircuit,
   Gavel,
   FileText,
+  PanelLeftClose,
+  X
 } from "lucide-react";
 import { getExplorerMembers } from "@/lib/explorer-api";
 
-export function DashboardSidebar() {
+interface DashboardSidebarProps {
+  isOpen?: boolean;
+  setIsOpen?: (open: boolean) => void;
+}
+
+export function DashboardSidebar({ isOpen = true, setIsOpen }: DashboardSidebarProps) {
   const pathname = usePathname();
-  const { user, logout, isAdmin, isLeader } = useAuth();
+  const { user, logout, isAdmin, isLeader, hasTribe } = useAuth();
   const [isGovMember, setIsGovMember] = useState(false);
 
   useEffect(() => {
@@ -42,8 +48,8 @@ export function DashboardSidebar() {
 
   const topLinks = [
     ...(isAdmin ? [{ name: "Administración", href: "/dashboard/admin", icon: ShieldCheck }] : []),
-    ...(isBuyer ? [] : [{ name: "Dashboard", href: "/dashboard", icon: LayoutDashboard }]),
-    ...(isBuyer ? [] : [{ name: "Inventario", href: "/dashboard/inventory", icon: Package }]),
+    ...(isAdmin || hasTribe ? [{ name: "Dashboard", href: "/dashboard", icon: LayoutDashboard }] : []),
+    ...(isAdmin || hasTribe ? [{ name: "Inventario", href: "/dashboard/inventory", icon: Package }] : []),
     { name: "Pedidos", href: "/dashboard/orders", icon: ShoppingBag },
     ...(isBuyer ? [] : [{ name: "IA Logística", href: "/dashboard/logistics-ai", icon: BrainCircuit }]),
     ...(isBuyer ? [] : [{ name: "Mi Tribu", href: "/dashboard/tribe", icon: Users }]),
@@ -53,7 +59,7 @@ export function DashboardSidebar() {
   ];
 
   const bottomLinks = [
-    ...(isBuyer ? [] : [{ name: "Notificaciones", href: "/dashboard/notifications", icon: Bell }]),
+    { name: "Notificaciones", href: "/dashboard/notifications", icon: Bell },
     { name: "Configuración", href: "/dashboard/settings", icon: Settings },
   ];
 
@@ -86,6 +92,9 @@ export function DashboardSidebar() {
       <Link
         key={link.name}
         href={link.href}
+        onClick={() => {
+          if (window.innerWidth < 768 && setIsOpen) setIsOpen(false);
+        }}
         className={`flex items-center gap-4 px-5 py-3.5 font-bold transition-all text-[15px] group ${isActive
           ? "bg-brand-primary text-white rounded-full shadow-md"
           : "text-white/90 hover:text-white hover:bg-white/5 rounded-full"
@@ -98,15 +107,25 @@ export function DashboardSidebar() {
   };
 
   return (
-    <aside className="fixed inset-y-0 left-0 w-72 flex flex-col z-20 bg-[#091d13] border-r border-white/5 text-white shadow-2xl">
+    <aside className={`fixed inset-y-0 left-0 w-72 flex flex-col z-40 bg-[#091d13] border-r border-white/5 text-white shadow-2xl transition-transform duration-300 transform ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
       {/* Logo */}
-      <Link href="/" className="px-6 py-8 flex items-center gap-4 hover:bg-white/5 transition-colors cursor-pointer border-b border-white/5">
-        <img src={logo.src} alt="AmazonIA" className="w-12 h-12 rounded-full shadow-md" />
-        <div className="flex flex-col justify-center">
-          <span className="font-outfit font-extrabold text-[22px] tracking-tight text-white leading-none mb-1">AmazonIA 4.0</span>
-          <p className="text-white/60 text-[9px] font-semibold tracking-wide uppercase leading-tight">Marketplace & Herramientas Amazónicas</p>
-        </div>
-      </Link>
+      <div className="flex items-center justify-between px-6 py-8 border-b border-white/5">
+        <Link href="/" className="flex items-center gap-4 hover:bg-white/5 transition-colors cursor-pointer rounded-xl p-1 -ml-1">
+          <img src={logo.src} alt="AmazonIA" className="w-12 h-12 rounded-full shadow-md shrink-0" />
+          <div className="flex flex-col justify-center min-w-0">
+            <span className="font-outfit font-extrabold text-[22px] tracking-tight text-white leading-none mb-1 truncate">AmazonIA 4.0</span>
+            <p className="text-white/60 text-[9px] font-semibold tracking-wide uppercase leading-tight">Marketplace & Herramientas Amazónicas</p>
+          </div>
+        </Link>
+        {setIsOpen && (
+          <button 
+            onClick={() => setIsOpen(false)}
+            className="p-2 -mr-3 text-white/50 hover:text-white hover:bg-white/10 rounded-xl transition-colors md:hidden"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
+      </div>
 
       {/* Navigation Top */}
       <nav className="flex-1 px-4 py-2 flex flex-col gap-2 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">

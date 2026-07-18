@@ -234,7 +234,49 @@ export class ProductService {
 
     return this.prisma.product.update({
       where: { id },
-      data: { imageUrl: null },
+      data: { imageUrl: null, imageUrls: [] },
+      include: { seller: true, category: true, elaborationSteps: { orderBy: { stepNumber: 'asc' } } },
+    });
+  }
+
+  async removeSpecificImage(id: string, urlToRemove: string, reqUser: { id: string; role: UserRole }): Promise<ProductResponseDto> {
+    const product = await this.findOne(id);
+    if (product.sellerId !== reqUser.id && reqUser.role !== UserRole.ADMIN) {
+      throw new ForbiddenException('No tienes permiso para modificar este producto');
+    }
+
+    const currentUrls = Array.from(new Set([product.imageUrl, ...(product.imageUrls || [])].filter(Boolean))) as string[];
+    const updatedUrls = currentUrls.filter(url => url !== urlToRemove);
+
+    await this.storageService.deleteImage(urlToRemove).catch((err) => {
+      console.error(`Failed to delete specific image in Supabase: ${err.message}`);
+    });
+
+    const newMainUrl = updatedUrls.length > 0 ? updatedUrls[0] : null;
+
+    return this.prisma.product.update({
+      where: { id },
+      data: { imageUrl: newMainUrl, imageUrls: updatedUrls },
+      include: { seller: true, category: true, elaborationSteps: { orderBy: { stepNumber: 'asc' } } },
+    });
+  }
+
+  async removeSpecificElaborationImage(id: string, urlToRemove: string, reqUser: { id: string; role: UserRole }): Promise<ProductResponseDto> {
+    const product = await this.findOne(id);
+    if (product.sellerId !== reqUser.id && reqUser.role !== UserRole.ADMIN) {
+      throw new ForbiddenException('No tienes permiso para modificar este producto');
+    }
+
+    const currentUrls = product.elaborationMediaUrls || [];
+    const updatedUrls = currentUrls.filter(url => url !== urlToRemove);
+
+    await this.storageService.deleteImage(urlToRemove).catch((err) => {
+      console.error(`Failed to delete specific elaboration image in Supabase: ${err.message}`);
+    });
+
+    return this.prisma.product.update({
+      where: { id },
+      data: { elaborationMediaUrls: updatedUrls },
       include: { seller: true, category: true, elaborationSteps: { orderBy: { stepNumber: 'asc' } } },
     });
   }
@@ -283,7 +325,7 @@ export class ProductService {
     });
   }
 
-  async uploadImage(id: string, file: Express.Multer.File, user: any): Promise<ProductResponseDto> {
+  async uploadImage(id: string, files: Express.Multer.File[], user: any): Promise<ProductResponseDto> {
     const product = await this.findOne(id);
 
     // Security check: Only the owner or an ADMIN can update the product image
@@ -292,20 +334,38 @@ export class ProductService {
     }
 
     if (product.imageUrl) {
-      // Delete old image before uploading a new one
+      // Delete old main image before uploading new ones
       await this.storageService.deleteImage(product.imageUrl).catch((err) => {
         console.error(`Failed to delete old image in Supabase: ${err.message}`);
       });
     }
+    
+    if (product.imageUrls && product.imageUrls.length > 0) {
+      // Delete old additional images
+      await Promise.all(
+        product.imageUrls.map(url => 
+          this.storageService.deleteImage(url).catch(err => 
+            console.error(`Failed to delete old additional image in Supabase: ${err.message}`)
+          )
+        )
+      );
+    }
 
     try {
-      // 1. Delegate processing and upload to the injected service
-      const imageUrl = await this.storageService.uploadOptimizedImage(file);
+      // 1. Upload all files concurrently
+      const uploadPromises = files.map(file => this.storageService.uploadOptimizedImage(file));
+      const urls = await Promise.all(uploadPromises);
 
-      // 2. Update the product record in the database via Prisma
+      // 2. The first URL is the main imageUrl, all are stored in imageUrls
+      const mainImageUrl = urls[0];
+
+      // 3. Update the product record in the database via Prisma
       const updatedProduct = await this.prisma.product.update({
         where: { id },
-        data: { imageUrl },
+        data: { 
+          imageUrl: mainImageUrl,
+          imageUrls: urls,
+        },
       });
 
       return updatedProduct;

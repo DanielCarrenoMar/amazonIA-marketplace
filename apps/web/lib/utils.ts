@@ -4,9 +4,9 @@
  */
 export function formatDecimal(value: number | string): string {
   const num = typeof value === "string" ? parseFloat(value) : value;
-  
+
   if (isNaN(num)) return "0.00";
-  
+
   return num.toFixed(2);
 }
 
@@ -16,13 +16,13 @@ export function formatDecimal(value: number | string): string {
  */
 export function formatDate(date: Date | string): string {
   const d = new Date(date);
-  
+
   if (isNaN(d.getTime())) return "--/--/--";
-  
+
   const day = String(d.getDate()).padStart(2, "0");
   const month = String(d.getMonth() + 1).padStart(2, "0");
   const year = String(d.getFullYear()).slice(-2);
-  
+
   return `${day}/${month}/${year}`;
 }
 
@@ -53,4 +53,32 @@ export function isValidNumeric(val: string): boolean {
  */
 export function capitalize(text: string): string {
   return text.toLowerCase().replace(/\b\w/g, (l) => l.toUpperCase());
+}
+
+export function isEmpty(text: string | null | undefined): boolean {
+  if (text === null || text === undefined) return true;
+  return text.toString().trim().length === 0;
+}
+
+export function isNumbersLettersAndSymbolsValid(text: string): boolean {
+  const regex = /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ!@#\$%\^&*\)\(+=._,\s-]+$/;
+  return !isEmpty(text) && regex.test(text);
+}
+
+export function isEmail(email: string): boolean {
+  const regexEmail: RegExp = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  return !isEmpty(email) && regexEmail.test(email);
+}
+
+export function isPhone(phone: string): boolean {
+  if (isEmpty(phone)) return false;
+  const regexPhone: RegExp = /^\+?\d{1,4}?[-.\s]?(\(?\d{1,4}?\))?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}$/;
+  return regexPhone.test(phone);
+}
+
+export function isValidID(id: string): boolean {
+  if (isEmpty(id)) return false;
+  const justNumbers = id.replace(/-/g, "").toUpperCase();
+  const regex = /^[VE][0-9]{7,8}$/;
+  return regex.test(justNumbers);
 }

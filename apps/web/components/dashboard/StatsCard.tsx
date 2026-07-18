@@ -28,7 +28,7 @@ export function StatsCard({ icon, label, value, subtitle, variant = "default" }:
   };
 
   return (
-    <Card padding="lg" className={`${getStyles()} border`}>
+    <Card padding="lg" className={`${getStyles()} border-none shadow-sm`}>
       <div className="flex items-start justify-between">
         <div className="space-y-2">
           <p className="text-sm font-semibold opacity-80">{label}</p>
