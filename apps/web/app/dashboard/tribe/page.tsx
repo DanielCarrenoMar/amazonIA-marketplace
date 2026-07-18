@@ -17,6 +17,7 @@ import type { TribeResponseDto, SellerResponseDto, TribeMembershipRequestRespons
 import { ProductCard } from "@/components/ui/ProductCard";
 import { Button } from "@/components/ui/Button";
 import { toast } from "sonner";
+import { createProposalProxy, getExplorerMembers, getExplorerProposals, finalizeProposal } from "@/lib/explorer-api";
 
 export default function TribeManagementPage() {
   const { user, isLeader } = useAuth();
@@ -30,6 +31,67 @@ export default function TribeManagementPage() {
   
   const [isLoading, setIsLoading] = useState(true);
   const [isActionLoading, setIsActionLoading] = useState<number | string | null>(null);
+  const [isGovMember, setIsGovMember] = useState(false);
+  const [govProposals, setGovProposals] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (user) {
+      getExplorerMembers()
+        .then((members) => {
+          const found = members.some((m) => m.userId === user.id);
+          setIsGovMember(found);
+        })
+        .catch(() => setIsGovMember(false));
+    }
+  }, [user]);
+
+  const handleInitiateVote = async (req: TribeMembershipRequestResponseDto) => {
+    try {
+      setIsActionLoading(`vote-${req.id}`);
+      
+      const randomPart = Math.random().toString(36).substring(2, 6);
+      const proposalId = `gov-tribe_admission-${Date.now().toString().slice(-6)}-${randomPart}`;
+      
+      const candidateName = req.seller?.user?.fullName || req.seller?.user?.username || "Candidato";
+      const candidateUserId = req.sellerId;
+      const targetTribeId = req.tribeId;
+
+      const contentHashObj = {
+        userId: candidateUserId,
+        name: candidateName,
+        tribeId: targetTribeId,
+      };
+
+      await createProposalProxy(
+        proposalId,
+        JSON.stringify(contentHashObj),
+        60,
+        "TRIBE_ADMISSION"
+      );
+
+      toast.success("Votación iniciada en blockchain para admitir al miembro");
+      await loadTribeData();
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Error al iniciar la votación");
+    } finally {
+      setIsActionLoading(null);
+    }
+  };
+
+  const handleFinalizeVote = async (proposalId: string) => {
+    try {
+      setIsActionLoading(`finalize-${proposalId}`);
+      await finalizeProposal(proposalId);
+      toast.success("Votación finalizada con éxito");
+      await loadTribeData();
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Error al finalizar la votación");
+    } finally {
+      setIsActionLoading(null);
+    }
+  };
 
   const loadTribeData = async () => {
     try {
@@ -60,10 +122,15 @@ export default function TribeManagementPage() {
         
         if (amILeader) {
           try {
-            const requestsRes = await getTribeMembershipRequests(myTribe.id, new URLSearchParams({ status: "PENDING" }));
+            const [requestsRes, proposalsRes] = await Promise.all([
+              getTribeMembershipRequests(myTribe.id, new URLSearchParams({ status: "PENDING" })),
+              getExplorerProposals(),
+            ]);
             setRequests(requestsRes.data);
+            // Filter only pending proposals that match admission type
+            setGovProposals(proposalsRes.filter(p => p.status === "PENDING" && p.type === "TRIBE_ADMISSION"));
           } catch (err) {
-            console.error("Error loading membership requests:", err);
+            console.error("Error loading membership requests / proposals:", err);
           }
         }
       } else {
@@ -402,24 +469,67 @@ export default function TribeManagementPage() {
                           "{req.message || "Quiero unirme a la tribu."}"
                         </p>
                       </div>
-                      
-                      <div className="flex items-center gap-3 shrink-0">
-                        <Button
-                          variant="outline"
-                          onClick={() => handleReviewRequest(req.id, "REJECTED")}
-                          isLoading={isActionLoading === `req-${req.id}`}
-                          className="text-red-600! border-red-200! hover:bg-red-50!"
-                        >
-                          Rechazar
-                        </Button>
-                        <Button
-                          variant="primary"
-                          onClick={() => handleReviewRequest(req.id, "APPROVED")}
-                          isLoading={isActionLoading === `req-${req.id}`}
-                        >
-                          Aceptar
-                        </Button>
-                      </div>
+                             {(() => {
+                        const candidateName = req.seller?.user?.fullName || req.seller?.user?.username || "";
+                        const isReqInVote = govProposals.some(p => 
+                          p.title.toLowerCase().includes(candidateName.toLowerCase())
+                        );
+
+                        if (isReqInVote) {
+                          const matchingProposal = govProposals.find(p => 
+                            p.title.toLowerCase().includes(candidateName.toLowerCase())
+                          );
+                          const proposalId = matchingProposal?.id;
+
+                          return (
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+                              <div className="flex items-center gap-2 bg-amber-50 text-amber-700 px-4 py-2.5 rounded-xl border border-amber-200 font-bold text-xs uppercase tracking-wider">
+                                <Icon icon="lucide:loader-2" className="w-4 h-4 animate-spin text-amber-600" />
+                                En Votación de Gobernanza
+                              </div>
+                              {proposalId && (
+                                <Button
+                                  variant="primary"
+                                  onClick={() => handleFinalizeVote(proposalId)}
+                                  isLoading={isActionLoading === `finalize-${proposalId}`}
+                                >
+                                  Finalizar Votación
+                                </Button>
+                              )}
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <div className="flex items-center gap-3 shrink-0">
+                            {isGovMember && (
+                              <Button
+                                variant="outline"
+                                onClick={() => handleInitiateVote(req)}
+                                isLoading={isActionLoading === `vote-${req.id}`}
+                                className="text-brand-primary! border-brand-primary/30! hover:bg-brand-primary/5!"
+                              >
+                                Llevar a Votación
+                              </Button>
+                            )}
+                            <Button
+                              variant="outline"
+                              onClick={() => handleReviewRequest(req.id, "REJECTED")}
+                              isLoading={isActionLoading === `req-${req.id}`}
+                              className="text-red-650! border-red-200! hover:bg-red-55!"
+                            >
+                              Rechazar
+                            </Button>
+                            <Button
+                              variant="primary"
+                              onClick={() => handleReviewRequest(req.id, "APPROVED")}
+                              isLoading={isActionLoading === `req-${req.id}`}
+                            >
+                              Aceptar
+                            </Button>
+                          </div>
+                        );
+                      })()}
                     </div>
                   ))}
                 </div>

@@ -38,6 +38,7 @@ export class GovernanceController {
       dto.contentHash,
       dto.proposerUserId,
       dto.deadlineMinutes,
+      dto.type,
     );
   }
 

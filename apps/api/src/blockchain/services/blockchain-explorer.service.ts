@@ -42,15 +42,46 @@ export class BlockchainExplorerService {
     });
     const userMap = new Map(users.map((u) => [u.id, u.fullName]));
 
-    return proposals.map((p) => ({
-      id: p.proposalId,
-      title: MISSING_METADATA,
-      proposerName: userMap.get(p.proposerUserId) ?? null,
-      status: p.status as ProposalStatus,
-      votesFor: p.votesFor,
-      votesAgainst: p.votesAgainst,
-      createdAt: p.createdAt.toISOString(),
-    }));
+    // Fetch product names for transaction proposals
+    const orderIds = proposals
+      .filter((p) => p.type === 'TRANSACTION_NOTARIZATION')
+      .map((p) => p.proposalId);
+
+    const orders = await this.prisma.productOrder.findMany({
+      where: { id: { in: orderIds } },
+      include: { product: true },
+    });
+    const orderMap = new Map(orders.map((o) => [o.id, o.product?.name]));
+
+    return proposals.map((p) => {
+      let title = 'Propuesta de Gobernanza';
+      if (p.type === 'TRANSACTION_NOTARIZATION') {
+        const productName = orderMap.get(p.proposalId);
+        title = productName ? `Certificación de: ${productName}` : `Aprobación de Pago`;
+      } else {
+        try {
+          const parsed = JSON.parse(p.contentHash);
+          if (p.type === 'TRIBE_ADMISSION') {
+            title = `Admisión de ${parsed.name}`;
+          } else if (p.type === 'TRIBE_EXPULSION') {
+            title = `Expulsión de ${parsed.name}`;
+          }
+        } catch {
+          title = `Propuesta ${p.type}`;
+        }
+      }
+
+      return {
+        id: p.proposalId,
+        title,
+        proposerName: userMap.get(p.proposerUserId) ?? null,
+        status: p.status as ProposalStatus,
+        votesFor: p.votesFor,
+        votesAgainst: p.votesAgainst,
+        createdAt: p.createdAt.toISOString(),
+        type: p.type as any,
+      };
+    });
   }
 
   async findProposal(id: string): Promise<ProposalDetailDto | null> {
@@ -78,18 +109,51 @@ export class BlockchainExplorerService {
       createdAt: v.createdAt.toISOString(),
     }));
 
+    let title = 'Propuesta de Gobernanza';
+    let description = 'Detalles de la propuesta';
+    let productId: string | null = null;
+
+    if (proposal.type === 'TRANSACTION_NOTARIZATION') {
+      const order = await this.prisma.productOrder.findUnique({
+        where: { id: proposal.proposalId },
+        include: { product: true },
+      });
+      if (order) {
+        title = `Certificación de: ${order.product?.name}`;
+        description = `Verificación de autenticidad y origen para la compra del producto artesanal ${order.product?.name}.`;
+        productId = order.productId;
+      } else {
+        title = `Notarización de Pago`;
+        description = `Propuesta para notarizar el pago de la orden ${proposal.proposalId}.`;
+      }
+    } else {
+      try {
+        const parsed = JSON.parse(proposal.contentHash);
+        if (proposal.type === 'TRIBE_ADMISSION') {
+          title = `Admisión de ${parsed.name}`;
+          description = `Votación del consejo para admitir a ${parsed.name} como vendedor oficial en la tribu.`;
+        } else if (proposal.type === 'TRIBE_EXPULSION') {
+          title = `Expulsión de ${parsed.name}`;
+          description = `Votación del consejo para revocar el rol de vendedor y expulsar a ${parsed.name} de la tribu.`;
+        }
+      } catch {
+        title = `Propuesta ${proposal.type}`;
+      }
+    }
+
     return {
       id: proposal.proposalId,
-      title: MISSING_METADATA,
+      title,
       proposerName: userMap.get(proposal.proposerUserId) ?? null,
       status: proposal.status as ProposalStatus,
       votesFor: proposal.votesFor,
       votesAgainst: proposal.votesAgainst,
       createdAt: proposal.createdAt.toISOString(),
-      description: MISSING_METADATA,
-      productId: MISSING_METADATA,
-      buyerAddress: MISSING_METADATA,
+      description,
+      productId,
+      buyerAddress: null,
       votes,
+      type: proposal.type as any,
     };
   }
 
