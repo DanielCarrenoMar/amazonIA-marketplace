@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AmazonIA - IoT Simulator Config</title>
+  <link rel="stylesheet" href="/output.css">
+</head>
+<body class="p-8 font-sans antialiased text-slate-200">
+  <div class="max-w-2xl mx-auto space-y-6">
+    <header class="mb-8">
+      <h1 class="text-3xl font-bold text-blue-400">Panel de Control: IoT Chaos Simulator</h1>
+      <p class="text-slate-400 mt-2">Configura y lanza simuladores bajo demanda en el ecosistema AmazonIA.</p>
+    </header>
+
+    <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-xl space-y-5">
+      
+      <!-- Selector de Tipo -->
+      <div>
+        <label class="block text-sm font-medium text-slate-300 mb-2">Tipo de Simulación</label>
+        <select id="simType" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-slate-100 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
+          <option value="climate">Estación de Clima (Caos de Datos)</option>
+          <option value="shipment">Rastreador de Envíos (Autónomo)</option>
+        </select>
+      </div>
+
+      <!-- Tiempo -->
+      <div>
+        <label class="block text-sm font-medium text-slate-300 mb-2">Duración (segundos)</label>
+        <input type="number" id="simDuration" value="60" min="10" max="3600" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-slate-100 focus:border-blue-500 outline-none">
+      </div>
+
+      <!-- Caos Red -->
+      <div>
+        <label class="block text-sm font-medium text-slate-300 mb-2">Probabilidad de Caída de Red (0 a 1)</label>
+        <div class="flex items-center gap-4">
+          <input type="range" id="networkDrop" min="0" max="1" step="0.1" value="0.2" class="w-full accent-blue-500">
+          <span id="networkDropVal" class="text-blue-400 font-mono font-bold w-12 text-right">0.2</span>
+        </div>
+        <p class="text-xs text-slate-500 mt-1">Acumulará mensajes en caché y los enviará de golpe cuando vuelva la red.</p>
+      </div>
+
+      <!-- Caos Datos -->
+      <div>
+        <label class="block text-sm font-medium text-slate-300 mb-2">Probabilidad de Corrupción de Datos (0 a 1)</label>
+        <div class="flex items-center gap-4">
+          <input type="range" id="corruptData" min="0" max="1" step="0.1" value="0.1" class="w-full accent-red-500">
+          <span id="corruptDataVal" class="text-red-400 font-mono font-bold w-12 text-right">0.1</span>
+        </div>
+        <p class="text-xs text-slate-500 mt-1">Inyectará datos malformados para estresar al backend NoSQL.</p>
+      </div>
+
+      <div class="pt-4 border-t border-slate-700">
+        <button id="startBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-lg transition-colors flex justify-center items-center gap-2">
+          ▶ Despertar Sensores
+        </button>
+      </div>
+    </div>
+
+    <!-- Status Panel -->
+    <div id="statusPanel" class="hidden bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-xl">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-bold text-green-400 flex items-center gap-2">
+          <span class="relative flex h-3 w-3">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+          </span>
+          Simulación en curso
+        </h2>
+      </div>
+      <div class="grid grid-cols-2 gap-4 text-sm mb-4">
+        <div class="bg-slate-900 p-3 rounded-lg">
+          <span class="text-slate-400 block text-xs">Tipo</span>
+          <span id="statType" class="font-mono text-white capitalize">--</span>
+        </div>
+        <div class="bg-slate-900 p-3 rounded-lg">
+          <span class="text-slate-400 block text-xs">Tiempo Restante</span>
+          <span id="statTime" class="font-mono text-blue-400 font-bold text-lg">--</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Sincronizar sliders
+    document.getElementById('networkDrop').addEventListener('input', (e) => {
+      document.getElementById('networkDropVal').textContent = e.target.value;
+    });
+    document.getElementById('corruptData').addEventListener('input', (e) => {
+      document.getElementById('corruptDataVal').textContent = e.target.value;
+    });
+
+    let pollInterval = null;
+
+    async function checkStatus() {
+      try {
+        const res = await fetch('/api/simulate/status');
+        const data = await res.json();
+        
+        const statusPanel = document.getElementById('statusPanel');
+        const startBtn = document.getElementById('startBtn');
+        
+        if (data.isRunning) {
+          statusPanel.classList.remove('hidden');
+          startBtn.disabled = true;
+          startBtn.classList.add('opacity-50', 'cursor-not-allowed');
+          
+          document.getElementById('statType').textContent = data.type;
+          document.getElementById('statTime').textContent = `${data.remainingSeconds}s`;
+        } else {
+          statusPanel.classList.add('hidden');
+          startBtn.disabled = false;
+          startBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+      } catch (err) {
+        console.error("Error al obtener estado:", err);
+      }
+    }
+
+    // Iniciar simulación
+    document.getElementById('startBtn').addEventListener('click', async () => {
+      const payload = {
+        type: document.getElementById('simType').value,
+        duration: document.getElementById('simDuration').value,
+        networkDropProb: document.getElementById('networkDrop').value,
+        corruptDataProb: document.getElementById('corruptData').value
+      };
+
+      try {
+        const res = await fetch('/api/simulate/start', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          checkStatus();
+        } else {
+          alert(data.error || "Error al iniciar");
+        }
+      } catch (err) {
+        alert("Falla de conexión al servidor");
+      }
+    });
+
+    // Polling cada segundo
+    setInterval(checkStatus, 1000);
+    checkStatus();
+  </script>
+</body>
+</html>

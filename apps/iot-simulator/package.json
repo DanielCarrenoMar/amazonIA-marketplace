@@ -1,28 +1,35 @@
 {
   "name": "prueba-iot-amazonia",
   "version": "1.0.0",
-  "description": "Simulador IoT para AmazonIA Marketplace – sensor MQTT con servicio systemd",
-  "main": "sensor.js",
+  "description": "Simulador IoT para AmazonIA Marketplace",
+  "main": "server.js",
   "scripts": {
-    "start": "node src/climate-sensor.js",
-    "start:climate": "node src/climate-sensor.js",
-    "start:shipment": "node src/shipment-sensor.js",
-    "start:all": "bash ./start-all.sh",
-    "setup:systemd": "bash ./install-systemd.sh",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.js",
+    "start:dev": "npm-run-all --parallel dev:server dev:css",
+    "dev:server": "nodemon server.js",
+    "dev:css": "tailwindcss -i ./src/input.css -o ./public/output.css --watch",
+    "build": "tailwindcss -i ./src/input.css -o ./public/output.css --minify",
+    "setup:systemd": "bash ./install-systemd.sh"
   },
   "keywords": [
     "iot",
     "mqtt",
     "amazonia",
-    "simulator",
-    "systemd"
+    "simulator"
   ],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "cors": "^2.8.5",
     "dotenv": "^17.4.2",
+    "express": "^4.21.0",
     "mqtt": "^5.15.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.3.3",
+    "nodemon": "^3.1.14",
+    "npm-run-all": "^4.1.5",
+    "tailwindcss": "^4.2.2"
   }
 }

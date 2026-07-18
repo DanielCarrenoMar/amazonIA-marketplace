@@ -103,4 +103,13 @@ async function stop() {
   await client.disconnect();
 }
 
-startSimulation(SENSOR_ID, start, stop);
+async function runShipmentSimulation(durationSec) {
+  return startSimulation(SENSOR_ID, start, stop, durationSec);
+}
+
+// Auto-ejecución si se lanza por CLI
+if (require.main === module) {
+  runShipmentSimulation();
+}
+
+module.exports = { runShipmentSimulation };

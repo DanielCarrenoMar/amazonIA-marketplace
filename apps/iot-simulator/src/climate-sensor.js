@@ -77,4 +77,13 @@ async function stop() {
   await chaosClient.disconnect();
 }
 
-startSimulation(SENSOR_ID, start, stop);
+async function runClimateSimulation(durationSec) {
+  return startSimulation(SENSOR_ID, start, stop, durationSec);
+}
+
+// Auto-ejecución si se lanza por CLI
+if (require.main === module) {
+  runClimateSimulation();
+}
+
+module.exports = { runClimateSimulation };

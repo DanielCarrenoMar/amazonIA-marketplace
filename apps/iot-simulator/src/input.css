@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+@theme {
+  --color-amazon-dark: #0f172a;
+  --color-amazon-card: #1e293b;
+  --color-amazon-accent: #3b82f6;
+  --color-amazon-danger: #ef4444;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--color-amazon-dark);
+  color: #f8fafc;
+}
