@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/Button";
 import dynamic from "next/dynamic";
 import logo from "@/public/logo.png";
 import amazoniaBg from "@/public/amazonia-register-1.jpg";
+import { isEmpty, isEmail, isNumbersLettersAndSymbolsValid, isPhone, isValidID } from "@/lib/utils";
 
 // Map needs to be loaded dynamically to avoid SSR issues with Leaflet
 const LocationPickerHybrid = dynamic(() => import("@/components/ui/LocationPickerHybrid"), {
@@ -57,15 +58,12 @@ export default function RegisterPage() {
     let isValid = true;
     const newErrors: Record<string, string> = {};
 
-    if (!formData.email) {
-      newErrors.email = "El correo electrónico es obligatorio";
-      isValid = false;
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "El formato de correo no es válido";
+    if (!isEmail(formData.email)) {
+      newErrors.email = "Ingrese un correo electrónico válido";
       isValid = false;
     }
 
-    if (!formData.password) {
+    if (isEmpty(formData.password)) {
       newErrors.password = "La contraseña es obligatoria";
       isValid = false;
     } else if (formData.password.length < 8) {
@@ -76,8 +74,8 @@ export default function RegisterPage() {
       isValid = false;
     }
 
-    if (!formData.nationalId.trim()) {
-      newErrors.nationalId = "El documento es obligatorio";
+    if (!isValidID(formData.nationalId)) {
+      newErrors.nationalId = "Ingrese un documento válido (Ej: V12345678)";
       isValid = false;
     }
 
@@ -89,13 +87,28 @@ export default function RegisterPage() {
     let isValid = true;
     const newErrors: Record<string, string> = {};
 
-    if (!formData.fullName.trim()) {
-      newErrors.fullName = "El nombre completo es obligatorio";
+    if (!isNumbersLettersAndSymbolsValid(formData.fullName)) {
+      newErrors.fullName = "El nombre completo es obligatorio y debe contener caracteres válidos";
+      isValid = false;
+    }
+    
+    if (!isEmpty(formData.phonePrimary) && !isPhone(formData.phonePrimary)) {
+      newErrors.phonePrimary = "Formato de teléfono inválido";
+      isValid = false;
+    }
+
+    if (!isEmpty(formData.phoneSecondary) && !isPhone(formData.phoneSecondary)) {
+      newErrors.phoneSecondary = "Formato de teléfono inválido";
       isValid = false;
     }
 
     setErrors(newErrors);
     return isValid;
+  };
+  
+  const validateStep3 = () => {
+    // La ubicación es opcional en este sistema, pero si se exige algo, podría validarse aquí
+    return true;
   };
 
   const handleNext = () => {
@@ -125,7 +138,15 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Si la persona le da a Enter y aún no está en el último paso, avanzar
+    if (step < 3) {
+      handleNext();
+      return;
+    }
+
     setApiError(null);
+    if (!validateStep3()) return;
     
     // Convert age to number if provided
     const payload = {
@@ -178,8 +199,8 @@ export default function RegisterPage() {
         </div>
       </div>
 
-      <div className="w-full md:w-[500px] lg:w-[600px] flex flex-col justify-center px-8 sm:px-12 py-6 md:py-8 relative overflow-y-auto">
-        <div className="w-full max-w-[450px] mx-auto pt-8 md:pt-0">
+      <div className="w-full md:w-[500px] lg:w-[600px] flex flex-col px-8 sm:px-12 py-6 md:py-8 relative overflow-y-auto">
+        <div className="w-full max-w-[450px] mx-auto my-auto pt-8 md:pt-0">
           <div className="flex items-center justify-center gap-2 mb-4">
             <img src={logo.src} alt="Amazonia IA Logo" className="h-16 w-16 rounded-full shadow-sm" />
           </div>
@@ -295,6 +316,7 @@ export default function RegisterPage() {
                     placeholder="+58 412..."
                     value={formData.phonePrimary}
                     onChange={handleChange}
+                    error={errors.phonePrimary}
                   />
                   <Input
                     label="Teléfono Secundario"
@@ -303,6 +325,7 @@ export default function RegisterPage() {
                     placeholder="Opcional"
                     value={formData.phoneSecondary}
                     onChange={handleChange}
+                    error={errors.phoneSecondary}
                   />
                 </div>
               </div>
@@ -342,7 +365,7 @@ export default function RegisterPage() {
                 <div>
                   <label className="text-sm font-semibold text-foreground mb-1.5 block">Fijar Ubicación Exacta (Opcional)</label>
                   <p className="text-xs text-gray-500 mb-3">Busca tu zona o usa tu ubicación actual en el mapa para autocompletar la dirección.</p>
-                  <LocationPickerHybrid onLocationSelect={handleLocationSelect} />
+                  {step === 3 && <LocationPickerHybrid onLocationSelect={handleLocationSelect} />}
                 </div>
               </div>
             </div>
