@@ -6,8 +6,6 @@
 # Para cada sensor define en .env:
 #   SENSOR_1_USERNAME=clima01
 #   SENSOR_1_PASSWORD=<password>
-#   SENSOR_2_USERNAME=clima02
-#   SENSOR_2_PASSWORD=<password>
 #   ...
 # ─────────────────────────────────────────────────────────────
 set -eu
@@ -16,7 +14,6 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ENV_FILE="${SCRIPT_DIR}/.env"
 
 # ── Cargar variables compartidas desde .env si existe ────────
-# En Docker las variables se inyectan como env vars; .env es opcional
 if [[ -f "${ENV_FILE}" ]]; then
   set -a
   # shellcheck source=/dev/null
@@ -30,14 +27,21 @@ if [[ -z "${HIVEMQ_HOST:-}" ]]; then
   exit 1
 fi
 
-# ── Validar que al menos hay un sensor configurado ──────────
 if [[ -z "${SENSOR_1_USERNAME:-}" ]]; then
   echo "❌ Debes definir al menos SENSOR_1_USERNAME y SENSOR_1_PASSWORD."
   exit 1
 fi
 
+# Pedir la duración de la simulación
+if [[ -z "${SIMULATION_DURATION_SECONDS:-}" ]]; then
+  echo -n "⏳ ¿Cuántos segundos debe durar la simulación? (ej. 60): "
+  read -r SIMULATION_DURATION_SECONDS
+fi
+export SIMULATION_DURATION_SECONDS
+
 echo "🚀 Iniciando simulación de múltiples sensores..."
 echo "   Broker: ${HIVEMQ_HOST}:${HIVEMQ_PORT}"
+echo "   Duración: ${SIMULATION_DURATION_SECONDS} segundos"
 echo "─────────────────────────────────────────────────"
 
 PIDS=()
@@ -49,7 +53,6 @@ while true; do
   USERNAME_VAR="SENSOR_${SENSOR_INDEX}_USERNAME"
   PASSWORD_VAR="SENSOR_${SENSOR_INDEX}_PASSWORD"
 
-  # Salir del bucle si ya no hay más sensores definidos
   USERNAME="${!USERNAME_VAR:-}"
   PASSWORD="${!PASSWORD_VAR:-}"
 
@@ -63,9 +66,16 @@ while true; do
     continue
   fi
 
-  # Lanzar el proceso del sensor con las credenciales inyectadas por entorno
+  # Determinar qué script lanzar
+  if [[ "${USERNAME,,}" == *"clima"* ]]; then
+    SENSOR_SCRIPT="${SCRIPT_DIR}/src/climate-sensor.js"
+  else
+    SENSOR_SCRIPT="${SCRIPT_DIR}/src/shipment-sensor.js"
+  fi
+
+  # Lanzar el proceso del sensor
   HIVEMQ_USERNAME="${USERNAME}" HIVEMQ_PASSWORD="${PASSWORD}" \
-    node "${SCRIPT_DIR}/sensor.js" &
+    node "${SENSOR_SCRIPT}" &
 
   PIDS+=($!)
   echo "   ✅ Sensor '${USERNAME}' iniciado → PID $!"
@@ -74,20 +84,14 @@ while true; do
   SENSOR_INDEX=$((SENSOR_INDEX + 1))
 done
 
-# ── Verificar que se encontró al menos un sensor ─────────────
 if [[ ${SENSOR_COUNT} -eq 0 ]]; then
-  echo ""
   echo "❌ No se encontró ningún sensor configurado en ${ENV_FILE}."
-  echo "   Define al menos:"
-  echo "     SENSOR_1_USERNAME=<usuario>"
-  echo "     SENSOR_1_PASSWORD=<contraseña>"
   exit 1
 fi
 
 echo "─────────────────────────────────────────────────"
 echo "🟢 ${SENSOR_COUNT} sensor(es) activos. Presiona Ctrl+C para detener todos."
 
-# ── Limpieza de procesos al recibir señal ────────────────────
 cleanup() {
   echo -e '\n🛑 Deteniendo sensores...'
   for pid in "${PIDS[@]}"; do
@@ -99,5 +103,4 @@ cleanup() {
 
 trap cleanup SIGINT SIGTERM
 
-# Esperar a que todos los procesos hijo terminen
 wait

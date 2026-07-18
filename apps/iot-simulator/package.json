@@ -4,8 +4,10 @@
   "description": "Simulador IoT para AmazonIA Marketplace – sensor MQTT con servicio systemd",
   "main": "sensor.js",
   "scripts": {
-    "start": "node sensor.js",
-    "start:all": "./start-all.sh",
+    "start": "node src/climate-sensor.js",
+    "start:climate": "node src/climate-sensor.js",
+    "start:shipment": "node src/shipment-sensor.js",
+    "start:all": "bash ./start-all.sh",
     "setup:systemd": "bash ./install-systemd.sh",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
