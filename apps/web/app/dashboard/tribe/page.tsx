@@ -361,7 +361,7 @@ export default function TribeManagementPage() {
                       </div>
                       
                       {/* Mostrar botón de eliminar SOLO si eres el líder y no te estás intentando borrar a ti mismo */}
-                      {isLeader && member.id !== tribe.primaryLeaderId && (
+                      {isLeader && member.id !== user?.id && member.id !== tribe.primaryLeaderId && member.id !== tribe.secondaryLeaderId && (
                         <button
                           onClick={() => handleRemoveMember(member.id)}
                           disabled={isActionLoading === `remove-${member.id}`}
@@ -400,7 +400,7 @@ export default function TribeManagementPage() {
                       price={`$${product.price.toString()}`}
                       description={product.description || ""}
                       image={product.imageUrl || "https://placehold.co/400x300/e2e8f0/64748b?text=Sin+Imagen"}
-                      category={product.category?.name || "General"}
+                      category={product.category?.categoryName || "General"}
                       rating={product.averageRating ? Number(product.averageRating) : 5}
                       href={`/store/product/${product.id}`}
                       stockAvailable={product.stockAvailable}

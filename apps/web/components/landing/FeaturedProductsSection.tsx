@@ -57,7 +57,7 @@ export function FeaturedProductsSection() {
               price={`$${Number(product.price).toFixed(2)}`}
               image={product.imageUrl || "/bolso-de-moriche.webp"}
               rating={product.averageRating ? Math.round(Number(product.averageRating)) : 0}
-              category={product.category?.name || "Categoría"}
+              category={product.category?.categoryName || "Categoría"}
               href={`/marketplace/${product.id}`}
             />
           ))

@@ -8,6 +8,9 @@ describe('ProductOrderService', () => {
       findUnique: jest.fn(),
       update: jest.fn(),
     },
+    userAccount: {
+      findUnique: jest.fn(),
+    },
     productOrder: {
       findUnique: jest.fn(),
       create: jest.fn(),
@@ -20,6 +23,7 @@ describe('ProductOrderService', () => {
     seller: {
       update: jest.fn(),
     },
+    $executeRaw: jest.fn(),
   } as any;
 
   const prismaMock = {
@@ -30,6 +34,13 @@ describe('ProductOrderService', () => {
     orderStatusHistory: {
       findMany: jest.fn(),
     },
+    product: {
+      findUnique: jest.fn(),
+    },
+    blockchainRecord: {
+      findUnique: jest.fn(),
+    },
+    $queryRaw: jest.fn().mockResolvedValue([]),
     $transaction: jest.fn(async (callback: any) => callback(txMock)),
   } as any;
 
@@ -50,7 +61,22 @@ describe('ProductOrderService', () => {
     }),
   } as any;
 
-  const service = new ProductOrderService(prismaMock, outboxMock, telemetryMock, configMock);
+  const notificationMock = {
+    createNotification: jest.fn().mockResolvedValue(undefined),
+  } as any;
+
+  const notaryMock = {
+    notarizeOrder: jest.fn().mockResolvedValue(undefined),
+  } as any;
+
+  const service = new ProductOrderService(
+    prismaMock,
+    outboxMock,
+    telemetryMock,
+    configMock,
+    notificationMock,
+    notaryMock,
+  );
   const allStatuses = [
     OrderStatus.PENDING,
     OrderStatus.PAID,
@@ -71,11 +97,35 @@ describe('ProductOrderService', () => {
   beforeEach(() => {
     jest.resetAllMocks();
     prismaMock.$transaction.mockImplementation(async (callback: any) => callback(txMock));
+    prismaMock.$queryRaw.mockResolvedValue([]);
   });
 
   it('creates order and decrements stock', async () => {
-    txMock.product.findUnique.mockResolvedValue({ stockAvailable: 10, price: 25, sellerId: 'seller-1' });
+    txMock.product.findUnique.mockResolvedValue({
+      stockAvailable: 10,
+      price: 25,
+      sellerId: 'seller-1',
+      locationMapboxId: null,
+      locationFormattedAddress: null,
+      locationCity: null,
+      locationRegion: null,
+      seller: {
+        user: {
+          locationMapboxId: null,
+          locationFormattedAddress: null,
+          locationCity: null,
+          locationRegion: null,
+        },
+      },
+    });
     txMock.product.update.mockResolvedValue({});
+    txMock.userAccount.findUnique.mockResolvedValue({
+      locationMapboxId: null,
+      locationFormattedAddress: null,
+      locationCity: null,
+      locationRegion: null,
+    });
+    txMock.$executeRaw.mockResolvedValue(undefined);
     txMock.productOrder.create.mockResolvedValue({
       id: 'order-1',
       buyerId: 'buyer-1',
@@ -99,13 +149,13 @@ describe('ProductOrderService', () => {
     });
 
     expect(txMock.productOrder.create).toHaveBeenCalledWith({
-      data: {
+      data: expect.objectContaining({
         productId: 'product-1',
         quantity: 2,
         buyerId: 'buyer-1',
         totalAmount: 50,
         currentStatus: OrderStatus.PENDING,
-      },
+      }),
     });
   });
 
@@ -183,6 +233,9 @@ describe('ProductOrderService', () => {
         if (nextStatus === OrderStatus.SHIPPED) {
           updatePayload.trackingNumber = 'TRK123';
           updatePayload.carrierId = 1;
+        }
+        if (nextStatus === OrderStatus.PAID) {
+          updatePayload.transactionHash = `0x${'a'.repeat(64)}`;
         }
 
         await expect(

@@ -260,7 +260,7 @@ export default function TribeDetailPage() {
                         image={product.imageUrl || "/placeholder.jpg"}
                         title={product.name}
                         rating={product.averageRating || 0}
-                        category={product.category?.name || "Otros"}
+                        category={product.category?.categoryName || "Otros"}
                         description={product.description || ""}
                         price={`$${product.price}`}
                         href={`/marketplace/${product.id}`}

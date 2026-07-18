@@ -2,7 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma } from '@prisma/client';
 import { UserAccountService } from '../../src/user-account/user-account.service';
 import { PrismaService } from '../../src/prisma/prisma.service';
-import { UserRole } from 'event-types';
+import { StorageService } from '../../src/storage/storage.service';
+import { SpatialService } from '../../src/spatial/spatial.service';
 import { ConflictException } from '@nestjs/common';
 
 describe('UserAccountService', () => {
@@ -15,11 +16,22 @@ describe('UserAccountService', () => {
     },
   };
 
+  const mockStorageService = {
+    deleteImage: jest.fn(),
+    uploadOptimizedImage: jest.fn(),
+  };
+
+  const mockSpatialService = {
+    updateUserLocation: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UserAccountService,
         { provide: PrismaService, useValue: mockPrismaService },
+        { provide: StorageService, useValue: mockStorageService },
+        { provide: SpatialService, useValue: mockSpatialService },
       ],
     }).compile();
 

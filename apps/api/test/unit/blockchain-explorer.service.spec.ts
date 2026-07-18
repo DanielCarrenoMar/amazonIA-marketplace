@@ -17,7 +17,8 @@ describe('BlockchainExplorerService', () => {
     {
       id: 'prop-1',
       proposalId: 'p-1',
-      contentHash: '0xhash1',
+      type: 'TRIBE_ADMISSION',
+      contentHash: JSON.stringify({ name: 'María Artesana' }),
       proposerUserId: proposerUser.id,
       status: 'PENDING',
       votesFor: 3,
@@ -34,7 +35,8 @@ describe('BlockchainExplorerService', () => {
     {
       id: 'prop-2',
       proposalId: 'p-2',
-      contentHash: '0xhash2',
+      type: 'TRIBE_ADMISSION',
+      contentHash: JSON.stringify({ name: 'Carlos Tejedor' }),
       proposerUserId: 'user-orphan',
       status: 'CONFIRMED',
       votesFor: 5,
@@ -113,12 +115,20 @@ describe('BlockchainExplorerService', () => {
     userAccount: {
       findMany: jest.fn(),
     },
+    productOrder: {
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+    },
   } as any;
 
   const service = new BlockchainExplorerService(prismaMock);
 
   beforeEach(() => {
     jest.clearAllMocks();
+    // Sensible defaults: most tests don't exercise TRANSACTION_NOTARIZATION
+    // proposals, so productOrder lookups should just resolve to "nothing found".
+    prismaMock.productOrder.findMany.mockResolvedValue([]);
+    prismaMock.productOrder.findUnique.mockResolvedValue(null);
   });
 
   // ── findProposals ────────────────────────────────────────────────────────
@@ -131,13 +141,14 @@ describe('BlockchainExplorerService', () => {
 
       expect(result).toEqual([
         {
-          id: 'prop-1',
-          title: null,
+          id: 'p-1',
+          title: 'Admisión de María Artesana',
           proposerName: 'Ana Proponente',
           status: 'PENDING',
           votesFor: 3,
           votesAgainst: 1,
           createdAt: FIXED_DATE.toISOString(),
+          type: 'TRIBE_ADMISSION',
         },
       ]);
     });
@@ -180,15 +191,16 @@ describe('BlockchainExplorerService', () => {
       const result = await service.findProposals();
 
       expect(result).toEqual([]);
-      // Short-circuit: should not hit userAccount when no proposals
+      // Short-circuit: should not hit userAccount or productOrder when no proposals
       expect(prismaMock.userAccount.findMany).not.toHaveBeenCalled();
+      expect(prismaMock.productOrder.findMany).not.toHaveBeenCalled();
     });
 
     it('preserves the proposal status enum (PENDING/CONFIRMED/VETOED) verbatim', async () => {
       const variants = [
-        { ...proposalRows[0], id: 'p-a', status: 'PENDING' as const },
-        { ...proposalRows[0], id: 'p-b', status: 'CONFIRMED' as const },
-        { ...proposalRows[0], id: 'p-c', status: 'VETOED' as const },
+        { ...proposalRows[0], proposalId: 'p-a', status: 'PENDING' as const },
+        { ...proposalRows[0], proposalId: 'p-b', status: 'CONFIRMED' as const },
+        { ...proposalRows[0], proposalId: 'p-c', status: 'VETOED' as const },
       ];
       prismaMock.proposal.findMany.mockResolvedValue(variants);
       prismaMock.userAccount.findMany.mockResolvedValue([proposerUser]);
@@ -212,18 +224,20 @@ describe('BlockchainExplorerService', () => {
         voterUser1,
       ]);
 
-      const result = await service.findProposal('prop-1');
+      const result = await service.findProposal('p-1');
 
       expect(result).toMatchObject({
-        id: 'prop-1',
-        title: null,
+        id: 'p-1',
+        title: 'Admisión de María Artesana',
         proposerName: 'Ana Proponente',
-        description: null,
+        description:
+          'Votación del consejo para admitir a María Artesana como vendedor oficial en la tribu.',
         productId: null,
         buyerAddress: null,
         status: 'PENDING',
         votesFor: 3,
         votesAgainst: 1,
+        type: 'TRIBE_ADMISSION',
         votes: [
           {
             id: 'vote-1',
@@ -245,7 +259,7 @@ describe('BlockchainExplorerService', () => {
       prismaMock.proposal.findUnique.mockResolvedValue(detailedProposal);
       prismaMock.userAccount.findMany.mockResolvedValue([proposerUser]);
 
-      const [vote] = (await service.findProposal('prop-1'))!.votes;
+      const [vote] = (await service.findProposal('p-1'))!.votes;
 
       expect(vote.memberName).toBeNull();
     });
@@ -258,7 +272,7 @@ describe('BlockchainExplorerService', () => {
       prismaMock.proposal.findUnique.mockResolvedValue(orphan);
       prismaMock.userAccount.findMany.mockResolvedValue([voterUser1]);
 
-      const result = await service.findProposal('prop-1');
+      const result = await service.findProposal('p-1');
 
       expect(result!.proposerName).toBeNull();
     });
@@ -270,7 +284,7 @@ describe('BlockchainExplorerService', () => {
         voterUser1,
       ]);
 
-      const result = await service.findProposal('prop-1');
+      const result = await service.findProposal('p-1');
 
       expect(result!.votes.map((v) => v.voteType)).toEqual([
         'FAVOR',
@@ -283,7 +297,7 @@ describe('BlockchainExplorerService', () => {
       prismaMock.proposal.findUnique.mockResolvedValue(noVotes);
       prismaMock.userAccount.findMany.mockResolvedValue([proposerUser]);
 
-      const result = await service.findProposal('prop-1');
+      const result = await service.findProposal('p-1');
 
       expect(result!.votes).toEqual([]);
     });
@@ -294,8 +308,9 @@ describe('BlockchainExplorerService', () => {
       const result = await service.findProposal('does-not-exist');
 
       expect(result).toBeNull();
-      // No user lookup should run
+      // No user or productOrder lookup should run
       expect(prismaMock.userAccount.findMany).not.toHaveBeenCalled();
+      expect(prismaMock.productOrder.findUnique).not.toHaveBeenCalled();
     });
   });
 

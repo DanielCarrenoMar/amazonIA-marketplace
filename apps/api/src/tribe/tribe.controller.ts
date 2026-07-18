@@ -147,8 +147,9 @@ export class TribeController {
   removeMember(
     @Param('id', ParseIntPipe) id: number,
     @Param('sellerId', ParseUUIDPipe) sellerId: string,
+    @Request() req: any,
   ): Promise<void> {
-    return this.tribeService.removeMember(id, sellerId);
+    return this.tribeService.removeMember(id, sellerId, req.user.id);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
