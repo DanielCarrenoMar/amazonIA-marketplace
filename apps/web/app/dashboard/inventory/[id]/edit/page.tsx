@@ -31,7 +31,7 @@ export default function EditProductPage() {
   const [categoryId, setCategoryId] = useState("");
   const [description, setDescription] = useState("");
   const [saving, setSaving] = useState(false);
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -76,8 +76,8 @@ export default function EditProductPage() {
         description
       });
 
-      if (imageFile) {
-        await uploadProductImage(id, imageFile);
+      if (imageFiles.length > 0) {
+        await uploadProductImage(id, imageFiles);
       }
 
       toast({ title: "Producto actualizado con éxito", variant: "success" });
@@ -169,28 +169,37 @@ export default function EditProductPage() {
         />
 
         <div className="space-y-4 pt-4 border-t border-border mt-6">
-          <h4 className="font-semibold text-foreground text-lg">Imagen del Producto</h4>
+          <h4 className="font-semibold text-foreground text-lg">Imágenes del Producto</h4>
           
-          {product.imageUrl ? (
-            <div className="flex items-start gap-6 bg-gray-50 p-4 rounded-xl border border-border">
-              <img src={product.imageUrl} alt={product.name} className="w-32 h-32 object-cover rounded-lg shadow-sm" />
-              <div className="space-y-3 flex-1">
-                <p className="text-sm text-muted">Esta es la foto principal de tu producto. Para cambiarla, sube una nueva imagen abajo o elimínala si no deseas tener imagen.</p>
-                <Button variant="danger" onClick={handleDeleteImage} disabled={saving} className="text-xs py-1.5 px-3">
-                  <Trash2 className="w-4 h-4 mr-2" /> Eliminar imagen actual
-                </Button>
+          {(() => {
+            const existingImages = product ? Array.from(new Set([product.imageUrl, ...(product.imageUrls || [])].filter(Boolean))) as string[] : [];
+            return existingImages.length > 0 ? (
+              <div className="flex flex-col gap-4 bg-gray-50 p-4 rounded-xl border border-border">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {existingImages.map((url, i) => (
+                    <img key={i} src={url} alt={`Imagen ${i+1}`} className="w-full aspect-square object-cover rounded-lg shadow-sm" />
+                  ))}
+                </div>
+                <div className="space-y-3">
+                  <p className="text-sm text-muted">Estas son las fotos de tu producto. Para cambiarlas, sube nuevas imágenes abajo (esto reemplazará todas las fotos anteriores) o elimínalas si no deseas tener imagen.</p>
+                  <Button variant="danger" onClick={handleDeleteImage} disabled={saving} className="text-xs py-1.5 px-3">
+                    <Trash2 className="w-4 h-4 mr-2" /> Eliminar todas las imágenes
+                  </Button>
+                </div>
               </div>
-            </div>
-          ) : (
-            <p className="text-sm text-muted">No hay imagen asignada a este producto.</p>
-          )}
+            ) : (
+              <p className="text-sm text-muted">No hay imágenes asignadas a este producto.</p>
+            );
+          })()}
 
           <div className="mt-4">
             <FileDrop 
-              label={product.imageUrl ? "Subir nueva imagen (reemplazará la actual)" : "Subir Foto Principal"} 
+              label={(product.imageUrl || (product.imageUrls && product.imageUrls.length > 0)) ? "Subir nuevas imágenes (reemplazarán las actuales, máx 4)" : "Subir Fotos de la Artesanía (Máx 4)"} 
               accept="image/*" 
               maxSizeMB={5}
-              onFilesChanged={files => setImageFile(files[0] || null)}
+              multiple={true}
+              maxFiles={4}
+              onFilesChanged={files => setImageFiles(files)}
             />
           </div>
         </div>

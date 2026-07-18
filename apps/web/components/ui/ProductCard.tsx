@@ -71,6 +71,8 @@ export function ProductCard({
   const ImageWrapper = href ? Link : 'div';
   const TitleWrapper = href ? Link : 'div';
 
+  const cleanDescription = description ? description.split('**Proceso de Elaboración:**')[0].trim() : '';
+
   return (
     <Card
       padding="none"
@@ -138,8 +140,8 @@ export function ProductCard({
           </Badge>
         </div>
 
-        <p className="text-muted text-xs leading-relaxed line-clamp-2">
-          {description}
+        <p className="text-muted text-xs leading-relaxed line-clamp-2" title={cleanDescription}>
+          {cleanDescription}
         </p>
         <div className="mt-auto flex justify-between items-center pt-2 gap-2">
           <div className="flex flex-col">

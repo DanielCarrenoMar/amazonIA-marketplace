@@ -313,6 +313,23 @@ export default function ProductDetailPage() {
               </Button>
             </div>
 
+            {(() => {
+              const allImages = product ? Array.from(new Set([product.imageUrl, ...(product.imageUrls || [])].filter(Boolean))) as string[] : [];
+              if (allImages.length <= 1) return null;
+              return (
+                <div className="grid grid-cols-4 gap-3">
+                  {allImages.map((url, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setActiveImage(url)}
+                      className={`relative w-full aspect-square rounded-xl overflow-hidden border-2 transition-all ${activeImage === url ? 'border-brand-primary shadow-sm' : 'border-transparent opacity-70 hover:opacity-100'}`}
+                    >
+                      <Image src={url} alt={`Vista ${i + 1}`} fill className="object-cover" />
+                    </button>
+                  ))}
+                </div>
+              );
+            })()}
 
           </div>
 
@@ -325,7 +342,7 @@ export default function ProductDetailPage() {
             <div className="flex items-center gap-3 mb-4">
               {product.category && (
                 <Badge variant="secondary" className="px-4 py-1.5 text-sm">
-                  {product.category.name || 'Categoría'}
+                  {(product.category as any).categoryName || 'Categoría'}
                 </Badge>
               )}
             </div>
@@ -501,7 +518,7 @@ export default function ProductDetailPage() {
                   <tbody className="text-gray-700">
                     <tr className="border-b border-gray-100 hover:bg-gray-50">
                       <td className="py-4 px-6 font-medium text-slate-900">Categoría</td>
-                      <td className="py-4 px-6">{product.category?.name || "No especificada"}</td>
+                      <td className="py-4 px-6">{(product.category as any)?.categoryName || "No especificada"}</td>
                     </tr>
                     <tr className="border-b border-gray-100 hover:bg-gray-50">
                       <td className="py-4 px-6 font-medium text-slate-900">Stock Disponible</td>

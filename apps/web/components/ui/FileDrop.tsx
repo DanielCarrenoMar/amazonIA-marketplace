@@ -79,7 +79,7 @@ export const FileDrop = forwardRef<HTMLInputElement, FileDropProps>(
           filesArray = filesArray.slice(0, 1);
         } else if (maxFiles && filesArray.length > maxFiles) {
           filesArray = filesArray.slice(0, maxFiles);
-          setInternalError(`El límite por carga es de hasta ${maxFiles} archivos.`);
+          setInternalError(`Solo se pueden subir hasta ${maxFiles} archivos.`);
         }
 
         setSelectedFiles(filesArray);

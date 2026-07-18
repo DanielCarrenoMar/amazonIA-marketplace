@@ -38,7 +38,7 @@ export default function NewProductPage() {
   const [description, setDescription] = useState("");
   const [elaborationSteps, setElaborationSteps] = useState("");
   const [elaborationImages, setElaborationImages] = useState<File[]>([]);
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
 
   // Logistics State
   const [isFragile, setIsFragile] = useState(false);
@@ -76,8 +76,8 @@ export default function NewProductPage() {
 
       const prod = await createProduct(payload);
 
-      if (imageFile) {
-        await uploadProductImage(prod.id, imageFile);
+      if (imageFiles.length > 0) {
+        await uploadProductImage(prod.id, imageFiles);
       }
 
       if (elaborationImages.length > 0) {
@@ -175,10 +175,12 @@ export default function NewProductPage() {
               required
             />
             <FileDrop
-              label="Foto Principal"
+              label="Fotos de la Artesanía (Máximo 4)"
               accept="image/*"
               maxSizeMB={5}
-              onFilesChanged={files => setImageFile(files[0] || null)}
+              multiple={true}
+              maxFiles={4}
+              onFilesChanged={files => setImageFiles(files)}
             />
 
             <h3 className="text-xl font-outfit font-bold mt-8">Logística y Cuidados</h3>
@@ -237,7 +239,7 @@ export default function NewProductPage() {
               accept="image/*"
               maxSizeMB={5}
               multiple={true}
-              maxFiles={4}
+              maxFiles={20}
               onFilesChanged={files => setElaborationImages(files)}
             />
           </div>
@@ -254,11 +256,13 @@ export default function NewProductPage() {
                   <p><strong>Stock:</strong> {stock}</p>
                   <p><strong>Frágil:</strong> {isFragile ? 'Sí' : 'No'}</p>
                   <p><strong>Cadena de Frío:</strong> {requiresColdChain ? 'Sí' : 'No'} {requiresColdChain && maxTemperatureCelsius ? `(Máx. ${maxTemperatureCelsius}°C)` : ''}</p>
-                  {!imageFile && <p><strong>Foto:</strong> No hay foto</p>}
+                  {!imageFiles.length && <p><strong>Foto:</strong> No hay foto</p>}
                 </div>
-                {imageFile && (
-                  <div className="w-full md:w-1/3">
-                    <img src={URL.createObjectURL(imageFile)} alt="Preview" className="w-full h-48 md:h-full max-h-64 rounded-lg object-cover border shadow-sm" />
+                {imageFiles.length > 0 && (
+                  <div className="w-full md:w-1/3 grid grid-cols-2 gap-2">
+                    {imageFiles.map((file, i) => (
+                      <img key={i} src={URL.createObjectURL(file)} alt={`Preview ${i + 1}`} className="w-full h-32 rounded-lg object-cover border shadow-sm" />
+                    ))}
                   </div>
                 )}
               </div>

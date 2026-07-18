@@ -33,9 +33,9 @@ export function deleteProduct(id: string): Promise<any> {
   return authFetch(`/product/${id}`, { method: "DELETE" });
 }
 
-export function uploadProductImage(id: string, file: File): Promise<ProductResponseDto> {
+export function uploadProductImage(id: string, files: File[]): Promise<ProductResponseDto> {
   const formData = new FormData();
-  formData.append("file", file);
+  files.forEach(file => formData.append("files", file));
 
   const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
   const headers = new Headers();
