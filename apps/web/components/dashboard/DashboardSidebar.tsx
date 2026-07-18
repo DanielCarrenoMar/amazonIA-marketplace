@@ -37,7 +37,7 @@ export function DashboardSidebar({ isOpen = true, setIsOpen }: DashboardSidebarP
     ...(isAdmin || hasTribe ? [{ name: "Dashboard", href: "/dashboard", icon: LayoutDashboard }] : []),
     ...(isAdmin || hasTribe ? [{ name: "Inventario", href: "/dashboard/inventory", icon: Package }] : []),
     { name: "Pedidos", href: "/dashboard/orders", icon: ShoppingBag },
-    ...(isAdmin || hasTribe ? [{ name: "IA Logística", href: "/dashboard/logistics-ai", icon: BrainCircuit }] : []),
+    { name: "IA Logística", href: "/dashboard/logistics-ai", icon: BrainCircuit },
     { name: "Mi Tribu", href: "/dashboard/tribe", icon: Users },
     { name: "Mi Billetera", href: "/dashboard/wallet", icon: Wallet },
   ];
