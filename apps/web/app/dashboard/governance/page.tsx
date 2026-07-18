@@ -31,7 +31,7 @@ import {
 } from 'lucide-react';
 
 function GovernanceContent() {
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading, isLeader } = useAuth();
   const router = useRouter();
   
   const [proposals, setProposals] = useState<ProposalSummary[]>([]);
@@ -119,9 +119,14 @@ function GovernanceContent() {
       
       if (user) {
         const found = membersData.find(m => m.userId === user.id);
-        setIsAuthorized(!!found);
-        if (found) {
-          setUserRole(found.role as 'MEMBER' | 'ELDER');
+        const hasAccess = !!found || isLeader;
+        setIsAuthorized(hasAccess);
+        if (hasAccess) {
+          if (found) {
+            setUserRole(found.role as 'MEMBER' | 'ELDER');
+          } else if (isLeader) {
+            setUserRole('MEMBER');
+          }
           const propsData = await getExplorerProposals();
           setProposals(propsData);
         }
