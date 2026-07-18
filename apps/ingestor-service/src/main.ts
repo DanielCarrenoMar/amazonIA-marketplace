@@ -1,4 +1,4 @@
-try { require('dotenv/config'); } catch {}
+try { require('dotenv/config'); } catch { }
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { Transport, MicroserviceOptions } from '@nestjs/microservices';
@@ -21,8 +21,11 @@ async function bootstrap() {
     }
   }
 
-  // 1. Crear el microservicio de MQTT (HiveMQ Cloud con TLS)
-  const app = await NestFactory.createMicroservice<MicroserviceOptions>(AppModule, {
+  // 1. Crear la app HTTP (necesaria para que Render detecte un puerto abierto)
+  const app = await NestFactory.create(AppModule);
+
+  // 1.5 Añadir el microservicio de MQTT (HiveMQ Cloud con TLS)
+  app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.MQTT,
     options: {
       host: process.env.HIVEMQ_HOST,
@@ -30,6 +33,7 @@ async function bootstrap() {
       protocol: 'mqtts', // Obligatorio TLS en HiveMQ Cloud
       username: process.env.HIVEMQ_USERNAME,
       password: process.env.HIVEMQ_PASSWORD,
+      clean: true,
     },
   });
 
@@ -44,8 +48,11 @@ async function bootstrap() {
 
   app.useGlobalFilters(new LogRpcExceptionFilter());
 
-  // 2. Iniciar el microservicio (MQTT listener)
-  await app.listen();
+  // 2. Iniciar el microservicio y el servidor HTTP
+  await app.startAllMicroservices();
+  const port = process.env.PORT || 3002;
+  await app.listen(port, '0.0.0.0');
+  logger.log(`🚀 HTTP Server running on port ${port} (Render healthcheck)`);
   logger.log('📡 MQTT Microservice listener started successfully');
 }
 bootstrap();

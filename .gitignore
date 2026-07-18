@@ -19,3 +19,9 @@ apps/backend/AmazonIA-Marketplace.postman_collection.json
 
 # Claude Code
 CLAUDE.md
+
+# Graphify (knowledge graph, regenerable)
+graphify-out/
+
+# Informe (entregable local, no va al repo)
+Entregable2_Informe/

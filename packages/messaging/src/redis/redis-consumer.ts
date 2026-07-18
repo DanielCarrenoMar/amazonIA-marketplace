@@ -3,12 +3,13 @@ import { ConsumedMessage, IMessageConsumer } from '../interfaces';
 import { StreamTopic } from '../streams';
 import { createRedisClient } from './redis.config';
 
+
 export class RedisConsumerService implements IMessageConsumer {
-  private redis: Redis;
+  private redis: Redis | null;
   private initialized: Set<string> = new Set();
 
-  constructor(redis?: Redis) {
-    this.redis = redis ?? createRedisClient();
+  constructor(redis?: Redis | null) {
+    this.redis = redis !== undefined ? redis : createRedisClient();
   }
 
   private async ensureGroup(
@@ -17,6 +18,8 @@ export class RedisConsumerService implements IMessageConsumer {
   ): Promise<void> {
     const cacheKey = `${topic}:${groupId}`;
     if (this.initialized.has(cacheKey)) return;
+
+    if (!this.redis) return;
 
     try {
       await this.redis.xgroup(topic, {
@@ -40,6 +43,8 @@ export class RedisConsumerService implements IMessageConsumer {
     instanceId: string,
     topic: StreamTopic,
   ): Promise<ConsumedMessage<T>[]> {
+    if (!this.redis) return [];
+
     await this.ensureGroup(topic, groupId);
 
     const result = await this.redis.xreadgroup(
@@ -128,6 +133,8 @@ export class RedisConsumerService implements IMessageConsumer {
     topic: StreamTopic,
     messageIds: string[],
   ): Promise<void> {
+    if (!this.redis) return;
+
     if (messageIds.length > 0) {
       await this.redis.xack(topic, groupId, messageIds);
     }

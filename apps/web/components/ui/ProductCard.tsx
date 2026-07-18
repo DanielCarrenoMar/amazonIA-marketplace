@@ -1,3 +1,5 @@
+"use client";
+
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -5,6 +7,10 @@ import { Icon } from "@iconify/react";
 import { Badge } from './Badge';
 import { Button } from './Button';
 import { Card } from './Card';
+import { useFavorites } from '@/lib/favoriteContext';
+import { useAuth } from '@/lib/useAuth';
+import { useToast } from '@/components/ui/Toast';
+import { useCart } from '@/lib/cartContext';
 
 export interface ProductCardProps {
   id?: string;
@@ -17,9 +23,12 @@ export interface ProductCardProps {
   price: string;
   originalPrice?: string;
   href?: string;
+  hideFavorite?: boolean;
+  onAddToCart?: (id: string) => void;
 }
 
 export function ProductCard({
+  id,
   image,
   discount,
   title,
@@ -29,7 +38,36 @@ export function ProductCard({
   price,
   originalPrice,
   href,
+  hideFavorite = false,
+  onAddToCart,
 }: ProductCardProps) {
+  const { favoriteIds, toggleFavorite } = useFavorites();
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  const productId = id;
+  const isFavorite = productId ? favoriteIds.has(productId) : false;
+
+  const handleFavoriteClick = async (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevenir que el click se vaya al link del producto
+    if (!user) {
+      toast({ title: 'Inicia sesión para guardar favoritos', variant: 'error' });
+      return;
+    }
+    if (productId) {
+      await toggleFavorite(productId);
+    }
+  };
+
+  const handleAddClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (onAddToCart && productId) {
+      onAddToCart(productId);
+    } else {
+      toast({ title: "Acción no disponible", description: "No se puede añadir este producto a la cesta.", variant: "warning" });
+    }
+  };
+
   const ImageWrapper = href ? Link : 'div';
   const TitleWrapper = href ? Link : 'div';
 
@@ -54,13 +92,19 @@ export function ProductCard({
           </div>
         )}
 
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute top-3 right-3 bg-white/80! backdrop-blur-md hover:bg-white! hover:scale-110 z-10 shadow-sm"
-        >
-          <Icon icon="lucide:heart" className="w-5 h-5 text-red-500 fill-red-500" />
-        </Button>
+        {!hideFavorite && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleFavoriteClick}
+            className="absolute top-3 right-3 bg-white/80! backdrop-blur-md hover:bg-white! hover:scale-110 z-10 shadow-sm"
+          >
+            <Icon
+              icon={isFavorite ? "mdi:heart" : "mdi:heart-outline"}
+              className={`w-5 h-5 ${isFavorite ? 'text-red-500' : 'text-gray-500'}`}
+            />
+          </Button>
+        )}
       </ImageWrapper>
 
       <div className="p-5 flex flex-col gap-3 grow">
@@ -74,11 +118,11 @@ export function ProductCard({
           )}
           <div className="flex gap-0.5 shrink-0 pt-1">
             {[...Array(5)].map((_, i) => (
-              <Icon icon="lucide:star"
+              <Icon icon="mdi:star"
                 key={i}
                 className={`w-4 h-4 ${i < rating
-                  ? 'text-amber-400 fill-amber-400'
-                  : 'text-gray-300 fill-gray-300'
+                  ? 'text-amber-400'
+                  : 'text-gray-300'
                   }`}
               />
             ))}
@@ -113,7 +157,8 @@ export function ProductCard({
             variant="primary"
             size="sm"
             className="font-medium!"
-            rightIcon={<Icon icon="lucide:shopping-cart" className="w-4 h-4" />}
+            rightIcon={<Icon icon="lucide:shopping-basket" className="w-4 h-4" />}
+            onClick={handleAddClick}
           >
             Agregar
           </Button>

@@ -1,12 +1,14 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import { Icon } from "@iconify/react";
 import { 
   getMyTribe, 
   getTribeMembershipRequests, 
   reviewTribeMembership, 
-  removeTribeMember 
+  removeTribeMember,
+  getMyMembershipRequests
 } from "@/lib/api/tribe.api";
 import { findSellers } from "@/lib/api/seller.api";
 import { getProducts } from "@/lib/api/product.api";
@@ -15,6 +17,7 @@ import type { TribeResponseDto, SellerResponseDto, TribeMembershipRequestRespons
 import { ProductCard } from "@/components/ui/ProductCard";
 import { Button } from "@/components/ui/Button";
 import { toast } from "sonner";
+import { createProposalProxy, getExplorerMembers, getExplorerProposals, finalizeProposal } from "@/lib/explorer-api";
 
 export default function TribeManagementPage() {
   const { user, isLeader } = useAuth();
@@ -24,14 +27,81 @@ export default function TribeManagementPage() {
   const [members, setMembers] = useState<SellerResponseDto[]>([]);
   const [requests, setRequests] = useState<TribeMembershipRequestResponseDto[]>([]);
   const [products, setProducts] = useState<ProductResponseDto[]>([]);
+  const [myPendingRequest, setMyPendingRequest] = useState<TribeMembershipRequestResponseDto | null>(null);
   
   const [isLoading, setIsLoading] = useState(true);
   const [isActionLoading, setIsActionLoading] = useState<number | string | null>(null);
+  const [isGovMember, setIsGovMember] = useState(false);
+  const [govProposals, setGovProposals] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (user) {
+      getExplorerMembers()
+        .then((members) => {
+          const found = members.some((m) => m.userId === user.id);
+          setIsGovMember(found);
+        })
+        .catch(() => setIsGovMember(false));
+    }
+  }, [user]);
+
+  const handleInitiateVote = async (req: TribeMembershipRequestResponseDto) => {
+    try {
+      setIsActionLoading(`vote-${req.id}`);
+      
+      const randomPart = Math.random().toString(36).substring(2, 6);
+      const proposalId = `gov-tribe_admission-${Date.now().toString().slice(-6)}-${randomPart}`;
+      
+      const candidateName = req.seller?.user?.fullName || req.seller?.user?.username || "Candidato";
+      const candidateUserId = req.sellerId;
+      const targetTribeId = req.tribeId;
+
+      const contentHashObj = {
+        userId: candidateUserId,
+        name: candidateName,
+        tribeId: targetTribeId,
+      };
+
+      await createProposalProxy(
+        proposalId,
+        JSON.stringify(contentHashObj),
+        60,
+        "TRIBE_ADMISSION"
+      );
+
+      toast.success("Votación iniciada en blockchain para admitir al miembro");
+      await loadTribeData();
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Error al iniciar la votación");
+    } finally {
+      setIsActionLoading(null);
+    }
+  };
+
+  const handleFinalizeVote = async (proposalId: string) => {
+    try {
+      setIsActionLoading(`finalize-${proposalId}`);
+      await finalizeProposal(proposalId);
+      toast.success("Votación finalizada con éxito");
+      await loadTribeData();
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Error al finalizar la votación");
+    } finally {
+      setIsActionLoading(null);
+    }
+  };
 
   const loadTribeData = async () => {
     try {
       setIsLoading(true);
-      const myTribe = await getMyTribe();
+      let myTribe = null;
+      try {
+        myTribe = await getMyTribe();
+      } catch (err) {
+        console.warn("User has no active tribe", err);
+      }
       setTribe(myTribe);
       
       if (myTribe) {
@@ -40,13 +110,37 @@ export default function TribeManagementPage() {
         setMembers(sellersRes.data);
         
         // Fetch Tribe Products
-        const productsRes = await getProducts({ tribeId: myTribe.id });
+        const productsRes = await getProducts({ tribeIds: myTribe.id.toString() });
         setProducts(productsRes.data);
         
-        // Fetch pending requests (only if leader)
-        if (isLeader) {
-          const requestsRes = await getTribeMembershipRequests(myTribe.id, new URLSearchParams({ status: "PENDING" }));
-          setRequests(requestsRes.data);
+        // Fetch pending requests — compute leadership from fresh tribe data
+        // instead of relying on `isLeader` from useAuth (which may be stale)
+        const amILeader = user && (
+          myTribe.primaryLeaderId === user.id || 
+          myTribe.secondaryLeaderId === user.id
+        );
+        
+        if (amILeader) {
+          try {
+            const [requestsRes, proposalsRes] = await Promise.all([
+              getTribeMembershipRequests(myTribe.id, new URLSearchParams({ status: "PENDING" })),
+              getExplorerProposals(),
+            ]);
+            setRequests(requestsRes.data);
+            // Filter only pending proposals that match admission type
+            setGovProposals(proposalsRes.filter(p => p.status === "PENDING" && p.type === "TRIBE_ADMISSION"));
+          } catch (err) {
+            console.error("Error loading membership requests / proposals:", err);
+          }
+        }
+      } else {
+        // Fetch if the seller has a pending request to join a tribe
+        try {
+          const myReqs = await getMyMembershipRequests();
+          const pending = myReqs.find(req => req.status === "PENDING");
+          setMyPendingRequest(pending || null);
+        } catch (e) {
+          console.error("No se pudieron cargar las solicitudes pendientes");
         }
       }
     } catch (error) {
@@ -104,15 +198,44 @@ export default function TribeManagementPage() {
   }
 
   if (!tribe) {
+    if (myPendingRequest && myPendingRequest.tribe) {
+      return (
+        <div className="bg-white rounded-3xl p-10 border border-yellow-200 shadow-sm text-center max-w-2xl mx-auto mt-10">
+          <div className="w-20 h-20 bg-yellow-50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Icon icon="lucide:clock" className="w-10 h-10 text-yellow-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Solicitud en Proceso</h2>
+          <p className="text-gray-500 max-w-md mx-auto mb-8">
+            Has solicitado unirte a la tribu <span className="font-bold text-gray-900">{myPendingRequest.tribe.name}</span>. Por favor, espera a que el líder apruebe tu solicitud.
+          </p>
+          <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 inline-block text-left mb-6">
+            <p className="text-sm font-medium text-gray-500 mb-1">Tu mensaje:</p>
+            <p className="text-sm text-gray-800 italic">"{myPendingRequest.message}"</p>
+          </div>
+          <br/>
+          <Link href="/tribes" className="inline-flex items-center text-brand-primary font-medium hover:underline">
+            ← Volver a explorar tribus
+          </Link>
+        </div>
+      );
+    }
+
     return (
-      <div className="bg-white rounded-3xl p-10 border border-gray-100 shadow-sm text-center">
+      <div className="bg-white rounded-3xl p-10 border border-gray-100 shadow-sm text-center max-w-2xl mx-auto mt-10">
         <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
           <Icon icon="lucide:tent" className="w-10 h-10 text-gray-400" />
         </div>
         <h2 className="text-2xl font-bold text-gray-900 mb-2">No perteneces a una tribu</h2>
-        <p className="text-gray-500 max-w-md mx-auto">
-          Explora las tribus activas y solicita unirte a una para ver esta información.
+        <p className="text-gray-500 max-w-md mx-auto mb-8">
+          Explora las tribus activas y solicita unirte a una para ver esta información y colaborar con otros vendedores locales.
         </p>
+        <Link 
+          href="/tribes"
+          className="bg-brand-primary text-white px-8 py-3 rounded-xl font-bold hover:bg-brand-secondary transition-colors inline-flex items-center"
+        >
+          <Icon icon="lucide:compass" className="w-5 h-5 mr-2" />
+          Explorar Tribus
+        </Link>
       </div>
     );
   }
@@ -124,10 +247,26 @@ export default function TribeManagementPage() {
           <h1 className="text-3xl font-bold font-poppins text-gray-900 mb-2">
             {isLeader ? "Gestión de la Tribu" : "Mi Tribu"}
           </h1>
-          <p className="text-gray-500">
-            {isLeader ? "Administra los vendedores de " : "Perteneces a "}
-            <span className="font-semibold text-brand-primary">{tribe.name}</span>
+          <p className="text-xl font-semibold text-brand-primary mb-2">
+            {tribe.name}
           </p>
+          {tribe.description && (
+            <p className="text-gray-600 max-w-3xl mb-3 leading-relaxed">
+              {tribe.description}
+            </p>
+          )}
+          <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 font-medium">
+            {tribe.locationFormattedAddress && (
+              <span className="flex items-center">
+                <Icon icon="lucide:map-pin" className="w-4 h-4 mr-1.5" />
+                {tribe.locationFormattedAddress}
+              </span>
+            )}
+            <span className="flex items-center">
+              <Icon icon="lucide:calendar" className="w-4 h-4 mr-1.5" />
+              Creada el {new Date(tribe.createdAt).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}
+            </span>
+          </div>
         </div>
         <div className="flex items-center gap-3">
           <div className="px-4 py-2 bg-brand-primary/10 text-brand-primary rounded-xl font-medium border border-brand-primary/20 flex items-center">
@@ -143,9 +282,9 @@ export default function TribeManagementPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="overflow-hidden mt-6">
         {/* Tabs */}
-        <div className="flex border-b border-gray-100">
+        <div className="flex border-b border-gray-200">
           <button
             onClick={() => setActiveTab("members")}
             className={`flex-1 flex items-center justify-center py-4 font-medium transition-colors ${
@@ -191,7 +330,7 @@ export default function TribeManagementPage() {
         </div>
 
         {/* Tab Content */}
-        <div className="p-6 md:p-8 min-h-[400px]">
+        <div className="py-8 min-h-[400px]">
           
           {/* MEMBERS TAB */}
           {activeTab === "members" && (
@@ -330,24 +469,67 @@ export default function TribeManagementPage() {
                           "{req.message || "Quiero unirme a la tribu."}"
                         </p>
                       </div>
-                      
-                      <div className="flex items-center gap-3 shrink-0">
-                        <Button
-                          variant="outline"
-                          onClick={() => handleReviewRequest(req.id, "REJECTED")}
-                          isLoading={isActionLoading === `req-${req.id}`}
-                          className="text-red-600! border-red-200! hover:bg-red-50!"
-                        >
-                          Rechazar
-                        </Button>
-                        <Button
-                          variant="primary"
-                          onClick={() => handleReviewRequest(req.id, "APPROVED")}
-                          isLoading={isActionLoading === `req-${req.id}`}
-                        >
-                          Aceptar
-                        </Button>
-                      </div>
+                             {(() => {
+                        const candidateName = req.seller?.user?.fullName || req.seller?.user?.username || "";
+                        const isReqInVote = govProposals.some(p => 
+                          p.title.toLowerCase().includes(candidateName.toLowerCase())
+                        );
+
+                        if (isReqInVote) {
+                          const matchingProposal = govProposals.find(p => 
+                            p.title.toLowerCase().includes(candidateName.toLowerCase())
+                          );
+                          const proposalId = matchingProposal?.id;
+
+                          return (
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+                              <div className="flex items-center gap-2 bg-amber-50 text-amber-700 px-4 py-2.5 rounded-xl border border-amber-200 font-bold text-xs uppercase tracking-wider">
+                                <Icon icon="lucide:loader-2" className="w-4 h-4 animate-spin text-amber-600" />
+                                En Votación de Gobernanza
+                              </div>
+                              {proposalId && (
+                                <Button
+                                  variant="primary"
+                                  onClick={() => handleFinalizeVote(proposalId)}
+                                  isLoading={isActionLoading === `finalize-${proposalId}`}
+                                >
+                                  Finalizar Votación
+                                </Button>
+                              )}
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <div className="flex items-center gap-3 shrink-0">
+                            {isGovMember && (
+                              <Button
+                                variant="outline"
+                                onClick={() => handleInitiateVote(req)}
+                                isLoading={isActionLoading === `vote-${req.id}`}
+                                className="text-brand-primary! border-brand-primary/30! hover:bg-brand-primary/5!"
+                              >
+                                Llevar a Votación
+                              </Button>
+                            )}
+                            <Button
+                              variant="outline"
+                              onClick={() => handleReviewRequest(req.id, "REJECTED")}
+                              isLoading={isActionLoading === `req-${req.id}`}
+                              className="text-red-650! border-red-200! hover:bg-red-55!"
+                            >
+                              Rechazar
+                            </Button>
+                            <Button
+                              variant="primary"
+                              onClick={() => handleReviewRequest(req.id, "APPROVED")}
+                              isLoading={isActionLoading === `req-${req.id}`}
+                            >
+                              Aceptar
+                            </Button>
+                          </div>
+                        );
+                      })()}
                     </div>
                   ))}
                 </div>

@@ -51,11 +51,13 @@ class ModelService:
           try:
               import pandas as pd
               # Ensure DataFrame matches exactly the features and categorical types of the trained model
+              # Model features — tipo_transporte is intentionally excluded.
+              # Transport type is a post-hoc multiplier applied in risk.py so that
+              # SHAP values only explain actionable environmental risk factors.
               model_features = [
                   "max_temperatura_c",
                   "precipitacion_acum_mm",
                   "max_viento_ms",
-                  "tipo_transporte",
                   "tipo_producto",
                   "nivel_rio_m",
                   "regimen_hidrologico",
@@ -67,7 +69,7 @@ class ModelService:
               df = pd.DataFrame([filtered_features])
               
               # Set categorical dtypes for XGBoost 2.x enable_categorical=True
-              categorias = ['tipo_transporte', 'tipo_producto', 'regimen_hidrologico']
+              categorias = ['tipo_producto', 'regimen_hidrologico']
               for col in categorias:
                   if col in df.columns:
                       df[col] = df[col].astype('category')
@@ -88,7 +90,7 @@ class ModelService:
               else:
                   shap_values_dict = self._get_fallback_shap_values(features)
 
-              top_reasons = self.get_top_risk_reasons(shap_values_dict)
+              top_reasons = self.get_top_risk_reasons(shap_values_dict, top_n=6)
 
               return {
                   "risk_score": prob,
@@ -174,12 +176,23 @@ class ModelService:
           """
           Generates a horizontal bar chart of SHAP values and returns it as a base64 string.
           """
+          feature_translations = {
+              "max_temperatura_c": "Temperatura Máxima (°C)",
+              "precipitacion_acum_mm": "Precipitación Acumulada (mm)",
+              "max_viento_ms": "Velocidad del Viento (m/s)",
+              "tipo_transporte": "Tipo de Transporte",
+              "tipo_producto": "Tipo de Producto",
+              "nivel_rio_m": "Nivel del Río (m)",
+              "regimen_hidrologico": "Régimen Hidrológico",
+              "velocidad_corriente_rio_ms": "Velocidad de la Corriente (m/s)"
+          }
+          
           features = list(shap_values.keys())
           impacts = list(shap_values.values())
           
           # Sort by absolute impact
           sorted_indices = sorted(range(len(impacts)), key=lambda k: abs(impacts[k]))
-          sorted_features = [features[i] for i in sorted_indices]
+          sorted_features = [feature_translations.get(features[i], features[i]) for i in sorted_indices]
           sorted_impacts = [impacts[i] for i in sorted_indices]
           
           # Colors: Red for pushing risk up, Blue for pushing risk down
@@ -187,8 +200,8 @@ class ModelService:
           
           plt.figure(figsize=(8, 5))
           plt.barh(sorted_features, sorted_impacts, color=colors)
-          plt.xlabel('Impact on Logistics Risk (SHAP Value)')
-          plt.title('Explainable AI: Why did the model make this prediction?')
+          plt.xlabel('Impacto en el Riesgo Logístico (Valor SHAP)')
+          plt.title('Explicabilidad IA: Factores clave en este pedido')
           plt.tight_layout()
           
           buf = io.BytesIO()
@@ -204,9 +217,15 @@ class ModelService:
           Returns a list of dicts: [{"feature": "...", "impact": 0.8}, ...]
           """
           positive_reasons = []
-          for feature, impact in shap_values.items():
-              if impact > 0.001:
-                  positive_reasons.append({"feature": feature, "impact": float(impact)})
+          total_positive_impact = sum(impact for impact in shap_values.values() if impact > 0)
+          
+          if total_positive_impact > 0:
+              for feature, impact in shap_values.items():
+                  if impact > 0:
+                      relative_impact = float(impact) / total_positive_impact
+                      # Only include if it contributes at least 1% to the risk
+                      if relative_impact >= 0.01:
+                          positive_reasons.append({"feature": feature, "impact": relative_impact})
                   
           positive_reasons = sorted(positive_reasons, key=lambda x: x["impact"], reverse=True)
           return positive_reasons[:top_n]

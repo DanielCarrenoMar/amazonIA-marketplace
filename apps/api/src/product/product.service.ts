@@ -15,12 +15,26 @@ export class ProductService {
   async create(createProductDto: CreateProductDto, sellerId: string): Promise<ProductResponseDto> {
     const { coords, elaborationSteps, ...rest } = createProductDto;
 
+    const sellerUser = await this.prisma.userAccount.findUnique({
+      where: { id: sellerId },
+      select: { locationMapboxId: true, locationFormattedAddress: true, locationCity: true, locationRegion: true }
+    });
+
+    const locationMapboxId = rest.locationMapboxId || sellerUser?.locationMapboxId;
+    const locationFormattedAddress = rest.locationFormattedAddress || sellerUser?.locationFormattedAddress;
+    const locationCity = rest.locationCity || sellerUser?.locationCity;
+    const locationRegion = rest.locationRegion || sellerUser?.locationRegion;
+
     // Use $transaction so we don't end up with orphaned rows if the spatial query fails
     return this.prisma.$transaction(async (tx) => {
       // 1. Create the standard product record
       const product = await tx.product.create({
         data: {
           ...rest,
+          locationMapboxId,
+          locationFormattedAddress,
+          locationCity,
+          locationRegion,
           sellerId,
           ...(elaborationSteps && elaborationSteps.length > 0 ? {
             elaborationSteps: {
@@ -34,7 +48,14 @@ export class ProductService {
       if (coords && coords.latitude != null && coords.longitude != null) {
         await tx.$executeRaw`
           UPDATE product 
-          SET "locationCoords" = ST_SetSRID(ST_MakePoint(${coords.longitude}, ${coords.latitude}), 4326)
+          SET "location_coords" = ST_SetSRID(ST_MakePoint(${coords.longitude}, ${coords.latitude}), 4326)
+          WHERE id = ${product.id}::uuid;
+        `;
+      } else {
+        // Fallback: inherit coordinates from the seller's user account
+        await tx.$executeRaw`
+          UPDATE product 
+          SET "location_coords" = (SELECT "location_coords" FROM "user_account" WHERE id = ${sellerId}::uuid)
           WHERE id = ${product.id}::uuid;
         `;
       }
@@ -44,26 +65,27 @@ export class ProductService {
   }
 
   async findAll(query: FindProductsDto): Promise<PaginatedResponseDto<ProductResponseDto>> {
-    const { search, categoryId, categoryName, sellerId, tribeId, minPrice, maxPrice, minRating } = query;
+    const { search, categoryId, categoryName, sellerId, tribeIds, minPrice, maxPrice, minRating } = query;
     const page = Number(query.page) || 1;
     const limit = Number(query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    // Prisma Where conditions
+    const parsedCategoryId = categoryId ? Number(categoryId) : undefined;
+    
     const where: import('@prisma/client').Prisma.ProductWhereInput = {
       isActive: true, // Only show active products to buyers
-      ...(categoryId ? { categoryId: Number(categoryId) } : {}),
+      ...(parsedCategoryId !== undefined && !isNaN(parsedCategoryId) ? { categoryId: parsedCategoryId } : {}),
       ...(categoryName ? { category: { categoryName } } : {}),
       ...(sellerId ? { sellerId } : {}),
-      ...(tribeId ? { seller: { tribeId: Number(tribeId) } } : {}),
+      ...(tribeIds ? { seller: { tribeId: { in: tribeIds.split(',').map(Number).filter(n => !isNaN(n)) } } } : {}),
       ...(search ? { name: { contains: search, mode: 'insensitive' } } : {}),
       ...((minPrice !== undefined || maxPrice !== undefined) ? {
         price: {
-          ...(minPrice !== undefined ? { gte: minPrice } : {}),
-          ...(maxPrice !== undefined ? { lte: maxPrice } : {}),
+          ...(minPrice !== undefined && !isNaN(minPrice) ? { gte: minPrice } : {}),
+          ...(maxPrice !== undefined && !isNaN(maxPrice) ? { lte: maxPrice } : {}),
         }
       } : {}),
-      ...(minRating !== undefined ? { averageRating: { gte: minRating } } : {}),
+      ...(minRating !== undefined && !isNaN(minRating) ? { averageRating: { gte: minRating } } : {}),
     };
 
     // Run count and findMany in parallel (no transaction needed for reads)
@@ -294,6 +316,37 @@ export class ProductService {
     }
   }
 
+  async uploadElaborationImages(id: string, files: Express.Multer.File[], user: any): Promise<ProductResponseDto> {
+    const product = await this.findOne(id);
+
+    // Security check: Only the owner or an ADMIN can update
+    if (user.role !== UserRole.ADMIN && product.sellerId !== user.id) {
+      throw new ForbiddenException('No tienes permiso para actualizar las imágenes de este producto');
+    }
+
+    try {
+      // 1. Upload all files concurrently
+      const uploadPromises = files.map(file => this.storageService.uploadOptimizedImage(file));
+      const urls = await Promise.all(uploadPromises);
+
+      // 2. Append to existing elaborationMediaUrls
+      const currentUrls = product.elaborationMediaUrls || [];
+      const updatedUrls = [...currentUrls, ...urls];
+
+      // 3. Update the product record in the database
+      const updatedProduct = await this.prisma.product.update({
+        where: { id },
+        data: { elaborationMediaUrls: updatedUrls },
+      });
+
+      return updatedProduct;
+    } catch (error: any) {
+      throw new InternalServerErrorException(
+        `No se pudieron subir las imágenes de elaboración: ${error.message}`
+      );
+    }
+  }
+
   async getMetrics(id: string, user: any): Promise<ProductMetricsDto> {
     const product = await this.findOne(id);
     if (user.role !== UserRole.ADMIN && product.sellerId !== user.id) {
@@ -358,5 +411,33 @@ export class ProductService {
 
     // Emit event for seller update
     this.eventEmitter.emit('product-rating.product-updated', { sellerId: updatedProduct.sellerId });
+  }
+
+  async getNftMetadata(id: string) {
+    const product = await this.prisma.product.findUnique({
+      where: { id },
+      include: {
+        seller: {
+          include: { user: true }
+        },
+        category: true,
+      },
+    });
+
+    if (!product) {
+      throw new NotFoundException(`Product with ID ${id} not found`);
+    }
+
+    return {
+      name: product.name,
+      description: product.description,
+      image: product.imageUrl,
+      attributes: [
+        { trait_type: "Precio", value: `${product.price} USD` },
+        { trait_type: "Categoría", value: product.category?.categoryName || "Sin Categoría" },
+        { trait_type: "Vendedor", value: product.seller?.user?.fullName || "AmazonIA" },
+        { trait_type: "Origen", value: product.seller?.user?.locationCity || "Amazonas" }
+      ],
+    };
   }
 }

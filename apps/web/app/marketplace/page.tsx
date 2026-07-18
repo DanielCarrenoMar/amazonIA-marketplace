@@ -11,21 +11,35 @@ import { MarketplaceNavbar } from '@/components/layout/MarketplaceNavbar';
 import { BannerCarousel } from '@/components/ui/BannerCarousel';
 import { Footer } from '@/components/layout/Footer';
 
-import { getProducts, getCategories } from '@/lib/api';
+import { getProducts, getCategories, getActiveTribes } from '@/lib/api';
 import { mockProductDtos } from '@/lib/mock-data';
-import type { ProductResponseDto, ProductCategoryResponseDto } from 'event-types';
+import type { ProductResponseDto, ProductCategoryResponseDto, TribeResponseDto } from 'event-types';
+import { useCart } from '@/lib/cartContext';
+import { useToast } from '@/components/ui/Toast';
 
 function MarketplaceContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { addItem } = useCart();
+  const { toast } = useToast();
 
   const categoryParam = searchParams.get('category');
   const qParam = searchParams.get('q');
+  const tribeIdParam = searchParams.get('tribeId');
+  
   const [activeCategory, setActiveCategory] = useState<string | null>(categoryParam || null);
 
   const [products, setProducts] = useState<ProductResponseDto[]>([]);
   const [categories, setCategories] = useState<ProductCategoryResponseDto[]>([]);
+  const [tribes, setTribes] = useState<TribeResponseDto[]>([]);
+  const [activeTribeIds, setActiveTribeIds] = useState<number[]>(
+    tribeIdParam ? [parseInt(tribeIdParam, 10)] : []
+  );
   const [loading, setLoading] = useState(true);
+
+  const [page, setPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [lastFiltersKey, setLastFiltersKey] = useState<string>('');
 
   const [minRating, setMinRating] = useState<number>(0);
   const [hoverRating, setHoverRating] = useState<number>(0);
@@ -51,7 +65,7 @@ function MarketplaceContent() {
     }
   }, [categoryParam]);
 
-  // Fetch categories on mount
+  // Fetch categories and tribes on mount
   useEffect(() => {
     getCategories()
       .then(res => {
@@ -65,6 +79,10 @@ function MarketplaceContent() {
         setCategories(flatCategories);
       })
       .catch(console.error);
+
+    getActiveTribes()
+      .then(res => setTribes(res.data || []))
+      .catch(console.error);
   }, []);
 
   // Fetch products when activeCategory or categories change
@@ -72,15 +90,31 @@ function MarketplaceContent() {
     async function loadProducts() {
       setLoading(true);
       try {
+        const currentFiltersKey = `${activeCategory}|${qParam}|${debouncedMinPrice}|${debouncedMaxPrice}|${minRating}|${activeTribeIds.join(',')}`;
+        let currentPage = page;
+        
+        if (currentFiltersKey !== lastFiltersKey) {
+          currentPage = 1;
+          setPage(1);
+          setLastFiltersKey(currentFiltersKey);
+        }
+
         const params: any = {};
         if (activeCategory) params.categoryName = activeCategory;
         if (qParam) params.search = qParam;
         if (debouncedMinPrice) params.minPrice = Number(debouncedMinPrice);
         if (debouncedMaxPrice) params.maxPrice = Number(debouncedMaxPrice);
         if (minRating > 0) params.minRating = minRating;
+        if (activeTribeIds.length > 0) params.tribeIds = activeTribeIds.join(',');
+        
+        params.page = currentPage;
+        params.limit = 12;
 
         const res = await getProducts(params);
         setProducts(res.data || []);
+        if (res.meta) {
+          setTotalPages(res.meta.totalPages || 1);
+        }
       } catch (err) {
         console.error("Error loading products", err);
       } finally {
@@ -92,7 +126,7 @@ function MarketplaceContent() {
     if (!activeCategory || categories.length > 0) {
       loadProducts();
     }
-  }, [activeCategory, categories, qParam, debouncedMinPrice, debouncedMaxPrice, minRating]);
+  }, [activeCategory, categories, qParam, debouncedMinPrice, debouncedMaxPrice, minRating, activeTribeIds, page, lastFiltersKey]);
 
   const handleCategoryClick = (cat: string) => {
     if (activeCategory === cat) {
@@ -165,14 +199,12 @@ function MarketplaceContent() {
             <div>
               <div className="flex justify-between items-center mb-4">
                 <h3 className="font-bold text-slate-900 text-lg">Rango de Precio</h3>
-                {(minPrice || maxPrice) && (
-                  <button 
-                    onClick={() => { setMinPrice(''); setMaxPrice(''); }}
-                    className="text-xs text-muted hover:text-brand-primary transition-colors cursor-pointer"
-                  >
-                    Limpiar
-                  </button>
-                )}
+                <button 
+                  onClick={() => { setMinPrice(''); setMaxPrice(''); }}
+                  className="text-xs text-muted hover:text-brand-primary transition-colors cursor-pointer"
+                >
+                  Limpiar
+                </button>
               </div>
               <p className="text-xs text-muted mb-4 font-medium">El precio promedio es $30.00</p>
               <div className="flex items-center gap-2">
@@ -202,14 +234,12 @@ function MarketplaceContent() {
             <div>
               <div className="flex justify-between items-center mb-4">
                 <h3 className="font-bold text-slate-900 text-lg">Calificación</h3>
-                {minRating > 0 && (
-                  <button
-                    onClick={() => setMinRating(0)}
-                    className="text-xs text-muted hover:text-brand-primary transition-colors cursor-pointer"
-                  >
-                    Limpiar
-                  </button>
-                )}
+                <button
+                  onClick={() => setMinRating(0)}
+                  className="text-xs text-muted hover:text-brand-primary transition-colors cursor-pointer"
+                >
+                  Limpiar
+                </button>
               </div>
               <div className="flex items-center justify-between group">
                 <div
@@ -221,10 +251,10 @@ function MarketplaceContent() {
                     return (
                       <Icon
                         key={star}
-                        icon="lucide:star"
+                        icon="mdi:star"
                         onMouseEnter={() => setHoverRating(star)}
                         onClick={() => setMinRating(star)}
-                        className={`w-6 h-6 cursor-pointer transition-colors ${isFilled ? "fill-amber-400 text-amber-400 hover:scale-110" : "fill-gray-300 text-gray-300 hover:scale-110 hover:fill-amber-200 hover:text-amber-200"
+                        className={`w-6 h-6 cursor-pointer transition-colors ${isFilled ? "text-amber-400 hover:scale-110" : "text-gray-300 hover:scale-110 hover:text-amber-200"
                           }`}
                       />
                     );
@@ -236,7 +266,44 @@ function MarketplaceContent() {
               </div>
             </div>
 
-
+            {/* Comunidad de Origen */}
+            <div>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-bold text-slate-900 text-lg">Comunidad de Origen</h3>
+                {activeTribeIds.length > 0 && (
+                  <button
+                    onClick={() => setActiveTribeIds([])}
+                    className="text-xs text-muted hover:text-brand-primary transition-colors cursor-pointer"
+                  >
+                    Limpiar
+                  </button>
+                )}
+              </div>
+              <div className="flex flex-col gap-3 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
+                {tribes.length === 0 ? (
+                  <p className="text-sm text-gray-500">No hay comunidades disponibles</p>
+                ) : (
+                  tribes.map(tribe => (
+                    <label key={tribe.id} className="flex items-center gap-3 cursor-pointer group">
+                      <Checkbox
+                        checked={activeTribeIds.includes(tribe.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setActiveTribeIds(prev => [...prev, tribe.id]);
+                          } else {
+                            setActiveTribeIds(prev => prev.filter(id => id !== tribe.id));
+                          }
+                        }}
+                        className="border-gray-200 peer-checked:bg-brand-primary peer-checked:border-brand-primary"
+                      />
+                      <span className="text-sm font-medium text-slate-700 group-hover:text-brand-primary transition-colors">
+                        {tribe.name}
+                      </span>
+                    </label>
+                  ))
+                )}
+              </div>
+            </div>
 
           </aside>
 
@@ -266,6 +333,13 @@ function MarketplaceContent() {
                         rating={product.averageRating ? Math.round(Number(product.averageRating)) : 0}
                         category={mappedCategory}
                         href={`/marketplace/${product.id}`}
+                        onAddToCart={(id) => {
+                          const productToAdd = products.find(p => p.id === id);
+                          if (productToAdd) {
+                            addItem(productToAdd, 1);
+                            toast({ title: "¡Añadido a la cesta!", description: `¡Añadiste ${productToAdd.name} a la cesta!`, variant: "success" });
+                          }
+                        }}
                       />
                     );
                   })
@@ -277,6 +351,29 @@ function MarketplaceContent() {
                     )}
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* PAGINATION */}
+            {!loading && totalPages > 1 && (
+              <div className="flex justify-center items-center gap-4 mt-12">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                >
+                  Anterior
+                </Button>
+                <span className="text-sm font-medium text-slate-600">
+                  Página {page} de {totalPages}
+                </span>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                >
+                  Siguiente
+                </Button>
               </div>
             )}
           </div>

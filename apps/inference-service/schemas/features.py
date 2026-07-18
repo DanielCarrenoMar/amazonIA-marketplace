@@ -51,12 +51,17 @@ class XGBoostFeatures(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     
     route_precip_mm: float = Field(..., alias="precipitacion_ruta_mm")
-    max_temp_c: float = Field(..., alias="temperatura_max_c")
+    # NOTE: max_temp_c/wind_speed_ms/precip_7d_accum aliases MUST match the exact
+    # column names the trained XGBoost model expects (see model_service.py's
+    # model_features and scripts/train_model.py's feature_cols). A prior mismatch
+    # here (temperatura_max_c/velocidad_viento_ms/precipitacion_7d_acum) caused
+    # these three columns to silently arrive as None on every prediction.
+    max_temp_c: float = Field(..., alias="max_temperatura_c")
     min_temp_c: float = Field(..., alias="temperatura_min_c")
     relative_humidity_pct: float = Field(..., alias="humedad_relativa_pct")
-    wind_speed_ms: float = Field(..., alias="velocidad_viento_ms")
+    wind_speed_ms: float = Field(..., alias="max_viento_ms")
     longwave_radiation: float = Field(..., alias="radiacion_onda_larga")
-    precip_7d_accum: float = Field(..., alias="precipitacion_7d_acum")
+    precip_7d_accum: float = Field(..., alias="precipitacion_acum_mm")
     transport_type: str = Field(..., alias="tipo_transporte")
     product_type: str = Field(..., alias="tipo_producto")
     distance_km: float = Field(..., alias="distancia_km")

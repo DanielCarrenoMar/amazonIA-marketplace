@@ -18,7 +18,8 @@ class ClimateService:
             "start_date": start_date.isoformat(),
             "end_date": end_date.isoformat(),
             "daily": ["temperature_2m_max", "temperature_2m_min", "precipitation_sum", "wind_speed_10m_max"],
-            "timezone": "auto"
+            "timezone": "auto",
+            "wind_speed_unit": "ms"
         }
         
         async with httpx.AsyncClient() as client:
@@ -26,6 +27,13 @@ class ClimateService:
                 response = await client.get(self.archive_url, params=params, timeout=10.0)
                 response.raise_for_status()
                 data = response.json()
+                
+                if "daily" not in data:
+                    raise ValueError(f"Open-Meteo returned invalid historical data: {data}")
+                
+                precip = data.get("daily", {}).get("precipitation_sum", [])
+                if not precip or all(p is None for p in precip):
+                    raise ValueError("Open-Meteo returned null arrays for historical precipitation")
                 
                 return {
                     "fuente": "open-meteo-archive",
@@ -47,7 +55,8 @@ class ClimateService:
             "longitude": lon,
             "daily": ["temperature_2m_max", "temperature_2m_min", "precipitation_sum", "wind_speed_10m_max"],
             "timezone": "auto",
-            "forecast_days": days
+            "forecast_days": days,
+            "wind_speed_unit": "ms"
         }
         
         async with httpx.AsyncClient() as client:
@@ -55,6 +64,13 @@ class ClimateService:
                 response = await client.get(self.forecast_url, params=params, timeout=10.0)
                 response.raise_for_status()
                 data = response.json()
+                
+                if "daily" not in data:
+                    raise ValueError(f"Open-Meteo returned invalid forecast data: {data}")
+                
+                precip = data.get("daily", {}).get("precipitation_sum", [])
+                if not precip or all(p is None for p in precip):
+                    raise ValueError("Open-Meteo returned null arrays for forecast precipitation")
                 
                 return {
                     "fuente": "open-meteo-forecast",

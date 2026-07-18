@@ -35,6 +35,9 @@ export interface WebhookCallbackPayload {
   gasUsed: string | null;
   errorMessage: string | null;
   timestamp: string;
+  // Nuevos campos para NFT (infraestructura)
+  nftTokenId?: string | null;
+  nftTxHash?: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -59,3 +62,22 @@ export interface HealthCheckResponse {
   networkName: string;
   timestamp: string;
 }
+
+// ---------------------------------------------------------------------------
+// Enums de Gobernanza
+// ---------------------------------------------------------------------------
+
+export enum GovernanceRoleEnum {
+  NONE = 'NONE',
+  MEMBER = 'MEMBER',
+  ELDER = 'ELDER',
+}
+
+export enum ProposalStatusEnum {
+  PENDING = 'PENDING',
+  APPROVED = 'APPROVED',
+  VETOED = 'VETOED',
+  CONFIRMED = 'CONFIRMED',
+  FAILED = 'FAILED',
+}
+

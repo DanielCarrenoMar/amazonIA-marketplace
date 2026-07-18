@@ -48,6 +48,21 @@ export function uploadProductImage(id: string, file: File): Promise<ProductRespo
   });
 }
 
+export function uploadElaborationImages(id: string, files: File[]): Promise<ProductResponseDto> {
+  const formData = new FormData();
+  files.forEach(file => formData.append("files", file));
+
+  const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+  const headers = new Headers();
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+
+  return apiFetch<ProductResponseDto>(`/product/${id}/elaboration-images`, {
+    method: "POST",
+    headers,
+    body: formData,
+  });
+}
+
 export function getProductMetrics(id: string): Promise<ProductMetricsDto> {
   return authFetch<ProductMetricsDto>(`/product/${id}/metrics`);
 }

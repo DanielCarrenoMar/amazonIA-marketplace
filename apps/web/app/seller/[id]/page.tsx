@@ -104,7 +104,7 @@ export default function SellerProfilePage() {
             <div className="flex items-center gap-6 mb-6">
               <div className="flex flex-col items-center md:items-start">
                 <span className="text-2xl font-bold text-slate-900 flex items-center gap-1">
-                  <Icon icon="lucide:star" className="w-6 h-6 fill-amber-400 text-amber-400" />
+                  <Icon icon="mdi:star" className="w-6 h-6 text-amber-400" />
                   {Number(seller.avgProductRating || 0).toFixed(1).replace('.0', '')}
                 </span>
                 <span className="text-sm text-gray-500 font-medium">Calificación Media</span>

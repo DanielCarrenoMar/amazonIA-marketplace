@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Icon } from "@iconify/react";
@@ -8,16 +8,34 @@ import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
 import { CartDrawer } from '../ui/CartDrawer';
 import { useAuth } from '@/lib/useAuth';
+import { useFavorites } from '@/lib/favoriteContext';
+import { useCart } from '@/lib/cartContext';
 import logo from '@/public/logo.png';
+import { getExplorerMembers } from '@/lib/explorer-api';
 
-export function MarketplaceNavbar() {
+
+function MarketplaceNavbarContent() {
   const { user, logout, isBuyer } = useAuth();
+  const { favoriteIds } = useFavorites();
+  const { totalItems } = useCart();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const userMenuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [isGovMember, setIsGovMember] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      getExplorerMembers().then(members => {
+        const found = members.some(m => m.userId === user.id);
+        setIsGovMember(found);
+      }).catch(() => setIsGovMember(false));
+    } else {
+      setIsGovMember(false);
+    }
+  }, [user]);
 
   // Initialize search query from URL if present
   useEffect(() => {
@@ -88,6 +106,7 @@ export function MarketplaceNavbar() {
                 {userMenuOpen && (
                   <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-gray-100 rounded-2xl shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2">
                     <Link href="/dashboard" className="block px-4 py-2 text-sm font-medium text-slate-700 hover:bg-brand-nature-bg hover:text-brand-primary transition-colors">Mi Cuenta</Link>
+                    <Link href="/dashboard/orders" className="block px-4 py-2 text-sm font-medium text-slate-700 hover:bg-brand-nature-bg hover:text-brand-primary transition-colors">Mis Compras</Link>
                     <div className="border-t border-gray-100 my-1" />
                     <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm font-medium text-red-500 hover:bg-red-50 transition-colors">Cerrar sesión</button>
                   </div>
@@ -113,20 +132,31 @@ export function MarketplaceNavbar() {
             {/* Favorites */}
             <Link href="/marketplace/favorites" className="relative p-2.5 text-slate-600 hover:text-red-500 transition-colors cursor-pointer flex items-center justify-center">
               <Icon icon="lucide:heart" className="w-[22px] h-[22px]" />
-              <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm">
-                3
-              </span>
+              {favoriteIds.size > 0 && (
+                <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm">
+                  {favoriteIds.size}
+                </span>
+              )}
             </Link>
+
+            {/* Gobernanza (Solo para miembros del Consejo o Elder) */}
+            {isGovMember && (
+              <Link href="/marketplace/governance" title="Gobernanza del Consejo" className="relative p-2.5 text-slate-600 hover:text-brand-primary transition-colors cursor-pointer flex items-center justify-center">
+                <Icon icon="lucide:gavel" className="w-[22px] h-[22px]" />
+              </Link>
+            )}
 
             {/* Cart */}
             <button 
               onClick={() => setIsCartOpen(true)} 
               className="relative p-2.5 text-slate-600 hover:text-brand-primary transition-colors cursor-pointer"
             >
-              <Icon icon="lucide:shopping-cart" className="w-[22px] h-[22px]" />
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-brand-primary text-white text-[11px] font-bold rounded-full flex items-center justify-center border-2 border-white shadow-sm">
-                3
-              </span>
+              <Icon icon="lucide:shopping-basket" className="w-[22px] h-[22px]" />
+              {totalItems > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 bg-brand-primary text-white text-[11px] font-bold rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+                  {totalItems}
+                </span>
+              )}
             </button>
           </div>
         </div>
@@ -150,5 +180,13 @@ export function MarketplaceNavbar() {
       {/* Cart Drawer Instance */}
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </>
+  );
+}
+
+export function MarketplaceNavbar() {
+  return (
+    <Suspense fallback={<nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-lg border-b border-gray-100 shadow-[0_4px_30px_rgba(0,0,0,0.03)] h-20" />}>
+      <MarketplaceNavbarContent />
+    </Suspense>
   );
 }

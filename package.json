@@ -8,7 +8,7 @@
     "build": "turbo build",
     "build:events": "turbo build --filter=event-types",
     "build:ingestor": "turbo build --filter=ingestor-service",
-    "build:worker": "turbo build --filter=telemetry-worker",
+    "build:worker": "pnpm turbo build --filter=telemetry-worker",
     "build:iot": "turbo build --filter=iot-simulator",
     "dev": "turbo dev --ui=tui --filter=web... --filter=api...",
     "dev:api": "turbo dev --filter=api...",
@@ -30,6 +30,7 @@
     "turbo": "^2.9.6"
   },
   "devDependencies": {
+    "dotenv-cli": "^11.0.0",
     "mongodb": "^7.4.0"
   }
 }

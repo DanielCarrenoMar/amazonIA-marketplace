@@ -103,6 +103,23 @@ export class TribeController {
     return this.tribeService.reviewMembership(requestId, req.user.id, dto);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @Get('all-membership-requests')
+  findAllMembershipRequests(@Query() query: PaginationDto & { status?: string }): Promise<PaginatedResponseDto<TribeMembershipRequestResponseDto>> {
+    return this.tribeService.findAllMembershipRequests(query);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @Patch('membership/:requestId/review-admin')
+  reviewMembershipAsAdmin(
+    @Param('requestId', ParseIntPipe) requestId: number,
+    @Body() dto: ReviewTribeMembershipDto,
+  ): Promise<TribeMembershipRequestResponseDto> {
+    return this.tribeService.reviewMembershipAsAdmin(requestId, dto);
+  }
+
   // ===========================================================================
   // Tribe Management Flow
   // ===========================================================================
@@ -153,7 +170,14 @@ export class TribeController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.SELLER)
+  @Roles(UserRole.SELLER, UserRole.BUYER, UserRole.ADMIN)
+  @Get('my-membership-requests')
+  getMyMembershipRequests(@Request() req: any): Promise<TribeMembershipRequestResponseDto[]> {
+    return this.tribeService.getMyMembershipRequests(req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SELLER, UserRole.BUYER, UserRole.ADMIN)
   @Get('my-tribe')
   getMyTribe(@Request() req: any): Promise<TribeResponseDto> {
     return this.tribeService.getMyTribe(req.user.id);

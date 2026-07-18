@@ -47,17 +47,27 @@ let IngestService = IngestService_1 = class IngestService {
         return events;
     }
     enrichClimateEvent(dto) {
+        const { latitude, longitude, ...rest } = dto;
+        const location = latitude != null && longitude != null
+            ? { type: 'Point', coordinates: [longitude, latitude] }
+            : undefined;
         return {
-            ...dto,
+            ...rest,
             event_id: dto.event_id ?? `env_${(0, uuid_1.v4)().replace(/-/g, '').slice(0, 8)}`,
             ingested_at: new Date().toISOString(),
+            ...(location ? { location } : {}),
         };
     }
     enrichShipmentEvent(dto) {
+        const { latitude, longitude, ...rest } = dto;
+        const location = latitude != null && longitude != null
+            ? { type: 'Point', coordinates: [longitude, latitude] }
+            : undefined;
         return {
-            ...dto,
+            ...rest,
             event_id: dto.event_id ?? `pkg_evt_${(0, uuid_1.v4)().replace(/-/g, '').slice(0, 7)}`,
             ingested_at: new Date().toISOString(),
+            ...(location ? { location } : {}),
         };
     }
 };

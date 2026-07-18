@@ -41,11 +41,11 @@ export function RatingModal({ isOpen, onClose, onSubmit, isLoading }: RatingModa
                 onClick={() => setRating(star)}
               >
                 <Icon 
-                  icon="lucide:star" 
+                  icon="mdi:star" 
                   className={`w-10 h-10 ${
                     star <= (hoveredRating || rating)
-                      ? "fill-amber-400 text-amber-400"
-                      : "text-gray-300 stroke-2"
+                      ? "text-amber-400"
+                      : "text-gray-300"
                   }`} 
                 />
               </button>

@@ -319,7 +319,7 @@ export class WorkerService implements OnModuleInit {
   private calculateAvgLatency(documents: any[]): number {
     if (documents.length === 0) return 0;
     const totalLatency = documents.reduce((sum, doc) => {
-      return sum + (doc.ingested_at.getTime() - doc.recorded_at.getTime());
+      return sum + (new Date(doc.ingested_at).getTime() - new Date(doc.recorded_at).getTime());
     }, 0);
     return Math.round(totalLatency / documents.length);
   }

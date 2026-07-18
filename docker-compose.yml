@@ -14,6 +14,33 @@
 services:
 
   # ══════════════════════════════════════════════════════════════════════════
+  # Hardhat Node — Blockchain Local (levanta red + despliega contratos)
+  # ══════════════════════════════════════════════════════════════════════════
+  hardhat-node:
+    build:
+      context: .
+      dockerfile: apps/blockchain-notary/Dockerfile.hardhat
+    image: amazonia/hardhat-node:latest
+    container_name: amazonia-hardhat-node
+    restart: unless-stopped
+    ports:
+      - "8545:8545"                          # Expuesto al host para herramientas externas
+    networks:
+      - amazonia-internal
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "8545"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+
+  # ══════════════════════════════════════════════════════════════════════════
   # IoT Simulator — Sensor MQTT (cliente saliente a HiveMQ Cloud)
   # ══════════════════════════════════════════════════════════════════════════
   iot-simulator:
@@ -26,8 +53,13 @@ services:
     environment:
       - HIVEMQ_HOST=${HIVEMQ_HOST}
       - HIVEMQ_PORT=${HIVEMQ_PORT:-8883}
-      - HIVEMQ_USERNAME=${HIVEMQ_USERNAME}
-      - HIVEMQ_PASSWORD=${HIVEMQ_PASSWORD}
+      # Credenciales para start-all.sh (3 sensores en paralelo)
+      - SENSOR_1_USERNAME=${SENSOR_1_USERNAME}
+      - SENSOR_1_PASSWORD=${SENSOR_1_PASSWORD}
+      - SENSOR_2_USERNAME=${SENSOR_2_USERNAME}
+      - SENSOR_2_PASSWORD=${SENSOR_2_PASSWORD}
+      - SENSOR_3_USERNAME=${SENSOR_3_USERNAME}
+      - SENSOR_3_PASSWORD=${SENSOR_3_PASSWORD}
     networks:
       - amazonia-internal
     # Sin puertos expuestos: el sensor solo PUBLICA hacia HiveMQ Cloud
@@ -38,19 +70,35 @@ services:
         max-size: "10m"
         max-file: "3"
 
+
   # ══════════════════════════════════════════════════════════════════════════
-  # MongoDB - Base de datos local para Telemetría y Envíos
+  # Redis Local
+  # ══════════════════════════════════════════════════════════════════════════
+  redis:
+    image: redis:7-alpine
+    container_name: amazonia-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - amazonia-internal
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ══════════════════════════════════════════════════════════════════════════
+  # MongoDB Local
   # ══════════════════════════════════════════════════════════════════════════
   mongodb:
-    image: mongo:6.0
+    image: mongo:6
     container_name: amazonia-mongodb
     restart: unless-stopped
     ports:
       - "27017:27017"
     networks:
       - amazonia-internal
-    volumes:
-      - mongodb_data:/data/db
     logging:
       driver: "json-file"
       options:
@@ -148,6 +196,9 @@ services:
       - MONGODB_URL=${MONGODB_URI}
       - DATABASE_URL=${DATABASE_URL}
       - JWT_SECRET_KEY=${JWT_SECRET}
+    volumes:
+      - ./apps/inference-service:/app
+    command: sh -c "mkdir -p /app/vendor && pip install --target=/app/vendor upstash-redis && PYTHONPATH=/app/vendor python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
     ports:
       - "8000:8000"
     networks:
@@ -219,15 +270,20 @@ services:
     image: amazonia/blockchain-notary:latest
     container_name: amazonia-blockchain-notary
     restart: unless-stopped
+    depends_on:
+      hardhat-node:
+        condition: service_healthy
     environment:
       - NODE_ENV=production
       - PORT=3004
       - DATABASE_URL=${NOTARY_DATABASE_URL}
-      - RPC_URL=${RPC_URL}
+      - RPC_URL=http://hardhat-node:8545
       - PRIVATE_KEY=${PRIVATE_KEY}
       - CONTRACT_ADDRESS=${CONTRACT_ADDRESS}
+      - GOVERNANCE_CONTRACT_ADDRESS=${GOVERNANCE_CONTRACT_ADDRESS}
+      - NFT_FACTORY_ADDRESS=${NFT_FACTORY_ADDRESS}
       - API_KEY=${NOTARY_API_KEY}
-      - NETWORK_NAME=${NETWORK_NAME:-arbitrum}
+      - NETWORK_NAME=localhost
       - WEBHOOK_BASE_URL=http://api:3001/api
     ports:
       - "3004:3004"
@@ -253,6 +309,3 @@ networks:
     driver: bridge
     name: amazonia-network
 
-volumes:
-  mongodb_data:
-    name: amazonia-mongodb-data
