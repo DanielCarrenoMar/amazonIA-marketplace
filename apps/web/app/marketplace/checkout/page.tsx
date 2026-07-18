@@ -94,7 +94,7 @@ function CheckoutContent() {
             </div>
 
             <Button variant="primary" className="w-full py-3 mt-4" onClick={() => router.push(`/dashboard/orders/${successOrder.id}`)}>
-              Seguir mi Pedido y Certificado NFT 📦
+              Seguir mi Pedido y Certificado NFT
             </Button>
 
             <Button variant="outline" className="w-full py-3 mt-2" onClick={() => router.push('/marketplace')}>

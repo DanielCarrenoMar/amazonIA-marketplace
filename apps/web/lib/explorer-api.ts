@@ -15,6 +15,7 @@ export async function getExplorerProposals(): Promise<ProposalSummary[]> {
       votesFor: p.votesFor,
       votesAgainst: p.votesAgainst,
       createdAt: p.createdAt,
+      type: p.type, // Map type
     }));
   } catch {
     return [];
@@ -43,6 +44,7 @@ export async function getExplorerProposalById(id: string): Promise<ProposalDetai
         voteType: v.voteType,
         createdAt: v.createdAt,
       })),
+      type: p.type, // Map type
     };
   } catch {
     return null;
@@ -86,5 +88,17 @@ export async function vetoProposal(id: string, reason: string): Promise<any> {
   return authFetch(`${EXPLORER_BASE}/proposals/${id}/veto`, {
     method: 'POST',
     body: JSON.stringify({ reason }),
+  });
+}
+
+export async function createProposalProxy(
+  proposalId: string,
+  contentHash: string,
+  deadlineMinutes: number,
+  type: string,
+): Promise<any> {
+  return authFetch(`${EXPLORER_BASE}/proposals`, {
+    method: 'POST',
+    body: JSON.stringify({ proposalId, contentHash, deadlineMinutes, type }),
   });
 }

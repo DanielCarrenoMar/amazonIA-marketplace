@@ -1,4 +1,5 @@
-import { IsString, IsNotEmpty, IsNumber, Min } from 'class-validator';
+import { IsString, IsNotEmpty, IsNumber, Min, IsEnum, IsOptional } from 'class-validator';
+import { ProposalType } from '@prisma/client';
 
 export class CreateProposalDto {
   @IsString()
@@ -16,4 +17,8 @@ export class CreateProposalDto {
   @IsNumber()
   @Min(1)
   deadlineMinutes: number;
+
+  @IsEnum(ProposalType)
+  @IsOptional()
+  type?: ProposalType;
 }

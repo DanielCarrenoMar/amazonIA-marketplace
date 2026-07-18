@@ -695,6 +695,36 @@ export class ProductOrderService {
       });
     }
 
+    if (result.currentStatus === OrderStatus.PAID && result.transactionHash) {
+      this.prisma.blockchainRecord.findUnique({
+        where: { orderId: result.id }
+      }).then(async (exists) => {
+        if (!exists) {
+          const product = await this.prisma.product.findUnique({
+            where: { id: result.productId },
+            select: { id: true, sellerId: true }
+          });
+          if (product) {
+            const productHash = crypto
+              .createHash('sha256')
+              .update(`${result.productId}-${product.sellerId}-${result.createdAt.getTime()}`)
+              .digest('hex');
+
+            this.logger.log(`Firing asynchronous notarization proposal creation for order ${result.id} from update`);
+            await this.notaryClient.notarizeOrder({
+              orderId: result.id,
+              amount: Number(result.totalAmount),
+              paymentMethod: result.paymentMethod ?? 'CRYPTO',
+              productHash,
+              buyerId: result.buyerId,
+              sellerId: product.sellerId,
+              webhookUrl: '',
+            });
+          }
+        }
+      }).catch(err => this.logger.error(`Notarization trigger from update failed for order ${result.id}: ${err.message}`));
+    }
+
     return result as unknown as ProductOrderResponseDto;
   }
 

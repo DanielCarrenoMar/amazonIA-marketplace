@@ -16,10 +16,12 @@ import {
   LogOut,
   ChevronDown,
   User,
-  BrainCircuit,
+  Gavel,
+  FileText,
   PanelLeftClose,
   X
 } from "lucide-react";
+import { getExplorerMembers } from "@/lib/explorer-api";
 
 interface DashboardSidebarProps {
   isOpen?: boolean;
@@ -29,6 +31,18 @@ interface DashboardSidebarProps {
 export function DashboardSidebar({ isOpen = true, setIsOpen }: DashboardSidebarProps) {
   const pathname = usePathname();
   const { user, logout, isAdmin, isLeader, hasTribe } = useAuth();
+  const [isGovMember, setIsGovMember] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      getExplorerMembers()
+        .then((members) => {
+          const found = members.some((m) => m.userId === user.id);
+          setIsGovMember(found);
+        })
+        .catch(() => setIsGovMember(false));
+    }
+  }, [user]);
 
   const isBuyer = user?.role === "BUYER";
 
@@ -37,9 +51,11 @@ export function DashboardSidebar({ isOpen = true, setIsOpen }: DashboardSidebarP
     ...(isAdmin || hasTribe ? [{ name: "Dashboard", href: "/dashboard", icon: LayoutDashboard }] : []),
     ...(isAdmin || hasTribe ? [{ name: "Inventario", href: "/dashboard/inventory", icon: Package }] : []),
     { name: "Pedidos", href: "/dashboard/orders", icon: ShoppingBag },
-    { name: "IA Logística", href: "/dashboard/logistics-ai", icon: BrainCircuit },
-    { name: "Mi Tribu", href: "/dashboard/tribe", icon: Users },
-    { name: "Mi Billetera", href: "/dashboard/wallet", icon: Wallet },
+    ...(isBuyer ? [] : [{ name: "IA Logística", href: "/dashboard/logistics-ai", icon: BrainCircuit }]),
+    ...(isBuyer ? [] : [{ name: "Mi Tribu", href: "/dashboard/tribe", icon: Users }]),
+    ...(isBuyer ? [] : [{ name: "Mi Billetera", href: "/dashboard/wallet", icon: Wallet }]),
+    { name: "Historial de Pagos", href: "/dashboard/transactions", icon: FileText },
+    ...(isGovMember ? [{ name: "Votaciones", href: "/dashboard/governance", icon: Gavel }] : []),
   ];
 
   const bottomLinks = [

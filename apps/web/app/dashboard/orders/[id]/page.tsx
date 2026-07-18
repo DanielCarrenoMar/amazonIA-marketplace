@@ -289,7 +289,7 @@ export default function OrderDetailPage() {
           </Card>
 
           {/* Certificado de Autenticidad NFT */}
-          {(order as any).blockchainRecord && (
+          {((order as any).blockchainRecord) ? (
             <Card padding="md" className="border-emerald-200 bg-emerald-50/20">
               <h3 className="font-bold mb-4 font-outfit text-slate-900 flex items-center gap-2">
                 🎨 Certificado de Autenticidad NFT
@@ -310,15 +310,10 @@ export default function OrderDetailPage() {
                     </div>
                     {(order as any).blockchainRecord.nftTxHash && (
                       <div className="flex flex-col gap-1">
-                        <span className="text-muted">TX Hash NFT:</span>
-                        <a 
-                          href={`http://localhost:3000/marketplace/explorer/proposals/${order.id}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-brand-primary hover:underline font-semibold break-all"
-                        >
+                        <span className="text-muted">Hash NFT:</span>
+                        <span className="font-semibold text-slate-700 break-all text-[11px]">
                           {(order as any).blockchainRecord.nftTxHash}
-                        </a>
+                        </span>
                       </div>
                     )}
                   </div>
@@ -326,27 +321,32 @@ export default function OrderDetailPage() {
                     Este producto artesanal ha sido certificado mediante un token no fungible ERC-721 en la red descentralizada de AmazonIA.
                   </p>
                 </div>
-              ) : (order as any).blockchainRecord.status === 'PENDING' ? (
+              ) : (
                 <div className="space-y-3 text-sm text-slate-800">
                   <div className="flex items-center gap-2 text-amber-800 bg-amber-100 px-3 py-1.5 rounded-full text-xs font-bold w-fit">
                     <span className="w-2 h-2 rounded-full bg-amber-600 animate-ping"></span>
-                    Pendiente de Consejo
+                    El NFT aún no se ha aprobado
                   </div>
                   <p className="text-xs text-muted leading-relaxed">
-                    La notarización está siendo revisada democráticamente por el Consejo de Gobernanza. Una vez aprobada, se acuñará el NFT.
+                    La certificación está siendo revisada democráticamente por el Consejo de Gobernanza. Una vez aprobada por el consejo, el NFT se mostrará aquí automáticamente.
                   </p>
-                  <Link 
-                    href={`/marketplace/explorer/${order.id}`} 
-                    className="inline-block text-xs font-bold text-brand-primary hover:underline animate-pulse"
-                  >
-                    Ver Propuesta en el Explorer →
-                  </Link>
-                </div>
-              ) : (
-                <div className="text-sm text-muted">
-                  La certificación falló o fue rechazada por el consejo.
                 </div>
               )}
+            </Card>
+          ) : (
+            <Card padding="md" className="border-amber-200 bg-amber-50/10">
+              <h3 className="font-bold mb-4 font-outfit text-slate-900 flex items-center gap-2">
+                🎨 Certificado de Autenticidad NFT
+              </h3>
+              <div className="space-y-3 text-sm text-slate-800">
+                <div className="flex items-center gap-2 text-amber-800 bg-amber-100 px-3 py-1.5 rounded-full text-xs font-bold w-fit">
+                  <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
+                  El NFT aún no se ha aprobado
+                </div>
+                <p className="text-xs text-muted leading-relaxed">
+                  La certificación se iniciará cuando el pago sea procesado y notificado en la blockchain.
+                </p>
+              </div>
             </Card>
           )}
 

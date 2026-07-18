@@ -352,6 +352,7 @@ model Proposal {
   deadline        DateTime       @map("deadline") @db.Timestamptz(6)
   createdAt       DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
   confirmedAt     DateTime?      @map("confirmed_at") @db.Timestamptz(6)
+  type            ProposalType   @default(TRANSACTION_NOTARIZATION)
   votes           Vote[]
 
   @@index([status])
@@ -478,3 +479,12 @@ enum ProposalStatus {
 
   @@map("proposal_status_enum")
 }
+
+enum ProposalType {
+  TRANSACTION_NOTARIZATION
+  TRIBE_ADMISSION
+  TRIBE_EXPULSION
+
+  @@map("proposal_type_enum")
+}
+

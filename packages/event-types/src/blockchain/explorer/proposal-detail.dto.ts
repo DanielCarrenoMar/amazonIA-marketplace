@@ -19,6 +19,7 @@ export interface ProposalSummaryDto {
   votesFor: number;
   votesAgainst: number;
   createdAt: string; // ISO
+  type?: 'TRANSACTION_NOTARIZATION' | 'TRIBE_ADMISSION' | 'TRIBE_EXPULSION';
 }
 
 export interface VoteDto {
