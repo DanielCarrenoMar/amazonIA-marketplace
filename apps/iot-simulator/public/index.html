@@ -184,8 +184,6 @@
     }
 
     simTypeSelect.addEventListener('change', updateVisibility);
-    // Llamar al inicio para fijar el estado inicial
-    updateVisibility();
 
     let pollInterval = null;
 
@@ -201,6 +199,9 @@
       document.getElementById('loginOverlay').classList.add('hidden');
       document.getElementById('mainContent').classList.remove('hidden');
     }
+
+    // Llamar al inicio para fijar el estado inicial
+    updateVisibility();
 
     document.getElementById('loginBtn').addEventListener('click', async () => {
       const user = document.getElementById('loginUser').value;
