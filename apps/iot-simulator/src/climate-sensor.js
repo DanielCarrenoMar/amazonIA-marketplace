@@ -58,23 +58,25 @@ class ClimateSensor {
 
     const payload = {
       event_type: 'environment_reading',
-      sensor_id: this.sensorId,
-      sensor_type: this.type,
       recorded_at: new Date().toISOString(),
+      metadata: {
+        sensor_id: this.sensorId,
+        sensor_type: this.type,
+      },
       location: {
         type: "Point",
         coordinates: [parseFloat(lng.toFixed(6)), parseFloat(lat.toFixed(6))]
       },
-      metrics: metrics
+      telemetry: metrics
     };
 
     // Caos de Formato (Corrupción de datos)
     const corruptProb = parseFloat(process.env.CHAOS_CORRUPT_DATA_PROBABILITY || "0.0");
     if (corruptProb > 0 && Math.random() < corruptProb) {
       console.log(`🐛 [CAOS] Inyectando datos corruptos al JSON en ${this.sensorId}...`);
-      payload.metrics.temperature_celsius = "muy caliente"; 
-      payload.metrics.unplanned_field = "esto no estaba en el esquema";
-      delete payload.metrics.humidity_percent; 
+      payload.telemetry.temperature_celsius = "muy caliente"; 
+      payload.telemetry.unplanned_field = "esto no estaba en el esquema";
+      delete payload.telemetry.humidity_percent; 
     }
 
     return payload;
@@ -89,7 +91,7 @@ class ClimateSensor {
       this.chaosClient.publish(payload);
       
       if (!this.chaosClient.isNetworkDown && process.env.DRY_RUN !== 'true') {
-        console.log(`📡 [CLIMA] ${this.sensorId} (${this.type}) en ${this.station.name} | Temp: ${payload.metrics.temperature_celsius}`);
+        console.log(`📡 [CLIMA] ${this.sensorId} (${this.type}) en ${this.station.name} | Temp: ${payload.telemetry.temperature_celsius}`);
       }
     }, interval);
   }

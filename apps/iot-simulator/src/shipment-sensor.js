@@ -115,22 +115,25 @@ class ShipmentSensor {
     const gpsNoise = parseFloat(process.env.GPS_NOISE_DEGREES || 0.005);
     const lat = checkpoint.lat + randomBetween(-gpsNoise, gpsNoise);
     const lng = checkpoint.lng + randomBetween(-gpsNoise, gpsNoise);
+    const telemetry = this._buildTelemetry();
 
     const payload = {
       sensor_id: this.sensorId,
       recorded_at: new Date().toISOString(),
       lat: parseFloat(lat.toFixed(6)),
       lng: parseFloat(lng.toFixed(6)),
-      telemetry: this._buildTelemetry()
+      telemetry: telemetry
     };
 
     // Caos de Formato
     const corruptProb = parseFloat(process.env.CHAOS_CORRUPT_DATA_PROBABILITY || "0.0");
     if (corruptProb > 0 && Math.random() < corruptProb) {
       console.log(`🐛 [CAOS] Inyectando datos corruptos al JSON en ${this.sensorId}...`);
-      payload.lat = "coordenada rota";
+      payload.telemetry.battery_level_pct = "batería vacía";
+      payload.unplanned_field = "esto no estaba en el esquema";
+      delete payload.lat; 
     }
-
+    
     this.chaosClient.publish(payload);
 
     if (!this.chaosClient.isNetworkDown && process.env.DRY_RUN !== 'true') {
