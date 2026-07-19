@@ -46,7 +46,10 @@ async function bootstrap() {
     }),
   );
 
-  app.useGlobalFilters(new LogRpcExceptionFilter());
+  app.useGlobalFilters(
+    new HttpExceptionFilter(),
+    new LogRpcExceptionFilter()
+  );
 
   // 2. Iniciar el microservicio y el servidor HTTP
   await app.startAllMicroservices();
