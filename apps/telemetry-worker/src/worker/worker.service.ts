@@ -134,6 +134,10 @@ export class WorkerService implements OnModuleInit {
         try {
           this.validatePayload(msg.value);
           const document = mapper(msg);
+          // DEBUG: log first doc sample
+          if (metrics.persisted === 0) {
+            this.logger.debug(`[DEBUG] Sample document for ${topic}: ${JSON.stringify(document).slice(0, 300)}`);
+          }
           await this.insertWithRetry(model, [document]);
 
           await this.ackMessage(topic, msg.offset);
@@ -282,7 +286,10 @@ export class WorkerService implements OnModuleInit {
 
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
-        await model.insertMany(documents, { ordered: false });
+        const result = await model.insertMany(documents, { ordered: false });
+        if (result.length === 0) {
+          this.logger.warn(`[DEBUG] insertMany returned 0 inserted docs! Document sample: ${JSON.stringify(documents[0]).slice(0, 300)}`);
+        }
         return;
       } catch (error) {
         lastError = error;
