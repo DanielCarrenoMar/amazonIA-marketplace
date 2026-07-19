@@ -104,15 +104,28 @@ export class IngestService {
   // -------------------------------------------------------------------------
 
   private enrichClimateEvent(dto: CreateClimateEventDto): IClimateEvent {
-    const { latitude, longitude, ...rest } = dto as any;
-    const location = latitude != null && longitude != null
-      ? { type: 'Point' as const, coordinates: [longitude, latitude] as [number, number] }
-      : undefined;
+    const rawDto = dto as any;
+    
+    // Soporta tanto formato estructurado (CreateClimateEventDto) como plano (Simulator)
+    const metadata = rawDto.metadata || {
+      sensor_id: rawDto.sensor_id,
+      sensor_type: rawDto.sensor_type,
+      facility_id: rawDto.facility_id,
+    };
+
+    const telemetry = rawDto.telemetry || rawDto.metrics || {};
+
+    const location = rawDto.location || (rawDto.latitude != null && rawDto.longitude != null
+      ? { type: 'Point' as const, coordinates: [rawDto.longitude, rawDto.latitude] as [number, number] }
+      : undefined);
 
     return {
-      ...rest,
-      event_id: dto.event_id ?? `env_${uuidv4().replace(/-/g, '').slice(0, 8)}`,
+      event_id: rawDto.event_id ?? `env_${uuidv4().replace(/-/g, '').slice(0, 8)}`,
+      event_type: rawDto.event_type || 'environment_reading',
+      recorded_at: rawDto.recorded_at,
       ingested_at: new Date().toISOString(),
+      metadata,
+      telemetry,
       ...(location ? { location } : {}),
     } as IClimateEvent;
   }

@@ -7,7 +7,27 @@
   <link rel="stylesheet" href="/output.css">
 </head>
 <body class="p-8 font-sans antialiased text-slate-200">
-  <div class="max-w-2xl mx-auto space-y-6">
+  <!-- Login Overlay -->
+  <div id="loginOverlay" class="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center">
+    <div class="bg-slate-800 p-8 rounded-xl border border-slate-700 shadow-2xl w-full max-w-sm space-y-6">
+      <h2 class="text-2xl font-bold text-blue-400 text-center">AmazonIA IoT</h2>
+      <p class="text-slate-400 text-center text-sm">Acceso al Panel de Control</p>
+      <div>
+        <label class="block text-sm font-medium text-slate-300 mb-1">Usuario</label>
+        <input type="text" id="loginUser" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-slate-100 focus:border-blue-500 outline-none">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-300 mb-1">Contraseña</label>
+        <input type="password" id="loginPass" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-slate-100 focus:border-blue-500 outline-none">
+      </div>
+      <button id="loginBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-lg transition-colors">
+        Ingresar
+      </button>
+      <p id="loginError" class="text-red-400 text-sm text-center hidden">Credenciales incorrectas</p>
+    </div>
+  </div>
+
+  <div id="mainContent" class="hidden max-w-2xl mx-auto space-y-6">
     <header class="mb-8">
       <h1 class="text-3xl font-bold text-blue-400">Panel de Control: IoT Chaos Simulator</h1>
       <p class="text-slate-400 mt-2">Configura y lanza simuladores bajo demanda en el ecosistema AmazonIA.</p>
@@ -110,9 +130,52 @@
 
     let pollInterval = null;
 
-    async function checkStatus() {
+    // Auth Utils
+    const getToken = () => localStorage.getItem('iot_token');
+    const logout = () => {
+      localStorage.removeItem('iot_token');
+      document.getElementById('loginOverlay').classList.remove('hidden');
+      document.getElementById('mainContent').classList.add('hidden');
+    };
+
+    if (getToken()) {
+      document.getElementById('loginOverlay').classList.add('hidden');
+      document.getElementById('mainContent').classList.remove('hidden');
+    }
+
+    document.getElementById('loginBtn').addEventListener('click', async () => {
+      const user = document.getElementById('loginUser').value;
+      const pass = document.getElementById('loginPass').value;
       try {
-        const res = await fetch('/api/simulate/status');
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: user, password: pass })
+        });
+        const data = await res.json();
+        if (data.success) {
+          localStorage.setItem('iot_token', data.token);
+          document.getElementById('loginError').classList.add('hidden');
+          document.getElementById('loginOverlay').classList.add('hidden');
+          document.getElementById('mainContent').classList.remove('hidden');
+          checkStatus();
+        } else {
+          document.getElementById('loginError').classList.remove('hidden');
+        }
+      } catch (err) {
+        alert("Error de conexión");
+      }
+    });
+
+    async function checkStatus() {
+      if (!getToken()) return;
+      try {
+        const res = await fetch('/api/simulate/status', {
+          headers: { 'Authorization': `Bearer ${getToken()}` }
+        });
+        
+        if (res.status === 401) return logout();
+        
         const data = await res.json();
         
         const statusPanel = document.getElementById('statusPanel');
@@ -149,9 +212,15 @@
       try {
         const res = await fetch('/api/simulate/start', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${getToken()}`
+          },
           body: JSON.stringify(payload)
         });
+        
+        if (res.status === 401) return logout();
+        
         const data = await res.json();
         
         if (data.success) {

@@ -9,7 +9,36 @@ const PORT = process.env.PORT || 4000;
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, '../public')));
+
+const SIMULATOR_USERNAME = process.env.SIMULATOR_USERNAME;
+const SIMULATOR_PASSWORD = process.env.SIMULATOR_PASSWORD;
+
+if (!SIMULATOR_USERNAME || !SIMULATOR_PASSWORD) {
+  console.error("❌ ERROR CRÍTICO: Las credenciales SIMULATOR_USERNAME y SIMULATOR_PASSWORD deben estar definidas en el .env por motivos de seguridad.");
+  process.exit(1);
+}
+
+app.post('/api/login', (req, res) => {
+  const { username, password } = req.body;
+  if (username === SIMULATOR_USERNAME && password === SIMULATOR_PASSWORD) {
+    const token = Buffer.from(`${username}:${password}`).toString('base64');
+    res.json({ success: true, token });
+  } else {
+    res.status(401).json({ error: 'Credenciales incorrectas' });
+  }
+});
+
+app.use('/api/simulate', (req, res, next) => {
+  const auth = req.headers.authorization;
+  const expectedToken = `Bearer ${Buffer.from(`${SIMULATOR_USERNAME}:${SIMULATOR_PASSWORD}`).toString('base64')}`;
+  
+  if (auth === expectedToken) {
+    next();
+  } else {
+    res.status(401).json({ error: 'No autorizado' });
+  }
+});
 
 let isSimulationRunning = false;
 let currentSimulationType = null;
@@ -44,14 +73,15 @@ app.post('/api/simulate/start', async (req, res) => {
     try {
       const fleetPromises = [];
       
+      const { ClimateSensorFactory } = require('./climate-sensor');
+      const { ShipmentSensor } = require('./shipment-sensor');
+
       for (let i = 0; i < numFleet; i++) {
         if (type === 'climate') {
-          const { ClimateSensor } = require('./src/climate-sensor');
           const sensorId = `CLM-${(i + 1).toString().padStart(3, '0')}`;
-          const sensor = new ClimateSensor(sensorId, i); // i se usa para distribuir las estaciones
+          const sensor = ClimateSensorFactory.createSensor(sensorId, i); // i se usa para distribuir las estaciones
           fleetPromises.push(sensor.runSimulation(currentSimulationDuration));
         } else {
-          const { ShipmentSensor } = require('./src/shipment-sensor');
           const sensorId = `ORD-${(i + 1).toString().padStart(3, '0')}`;
           const sensor = new ShipmentSensor(sensorId, i);
           fleetPromises.push(sensor.runSimulation(currentSimulationDuration));

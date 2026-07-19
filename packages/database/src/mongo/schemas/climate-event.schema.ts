@@ -69,6 +69,14 @@ export class ClimateEventDocument {
     raw({
       temperature_celsius: { type: Number },
       humidity_percent: { type: Number },
+      pressure_hpa: { type: Number },
+      uv_index: { type: Number },
+      wind_speed_kmh: { type: Number },
+      wind_direction_deg: { type: Number },
+      rainfall_mm: { type: Number },
+      air_quality_index: { type: Number },
+      co2_ppm: { type: Number },
+      solar_radiation_wm2: { type: Number },
     }),
   )
   telemetry: IClimateTelemetry;

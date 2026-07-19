@@ -69,4 +69,7 @@ export enum SensorType {
   MOBILE_TRUCK = 'mobile_truck',
   MOBILE_DRONE = 'mobile_drone',
   WEARABLE = 'wearable',
+  CLIMATE_BASIC = 'climate_basic',
+  CLIMATE_STANDARD = 'climate_standard',
+  CLIMATE_ADVANCED = 'climate_advanced',
 }

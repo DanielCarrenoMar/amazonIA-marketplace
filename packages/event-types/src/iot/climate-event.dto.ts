@@ -23,7 +23,7 @@ export interface IGeoPoint {
 
 export interface IClimateMetadata {
   sensor_id: string;
-  facility_id: string;
+  facility_id?: string;
   sensor_type: SensorType;
 }
 
@@ -34,6 +34,9 @@ export interface IClimateTelemetry {
   wind_speed_kmh?: number;
   uv_index?: number;
   rainfall_mm?: number;
+  air_quality_index?: number;
+  co2_ppm?: number;
+  solar_radiation_wm2?: number;
   [key: string]: unknown;
 }
 
@@ -66,8 +69,9 @@ export class ClimateMetadataDto implements IClimateMetadata {
   @IsString()
   sensor_id: string;
 
+  @IsOptional()
   @IsString()
-  facility_id: string;
+  facility_id?: string;
 
   @IsEnum(SensorType)
   sensor_type: SensorType;
@@ -98,6 +102,18 @@ export class ClimateTelemetryDto implements IClimateTelemetry {
   @IsOptional()
   @IsNumber()
   rainfall_mm?: number;
+
+  @IsOptional()
+  @IsNumber()
+  air_quality_index?: number;
+
+  @IsOptional()
+  @IsNumber()
+  co2_ppm?: number;
+
+  @IsOptional()
+  @IsNumber()
+  solar_radiation_wm2?: number;
 
   [key: string]: unknown;
 }
