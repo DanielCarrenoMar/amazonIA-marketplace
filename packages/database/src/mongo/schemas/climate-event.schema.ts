@@ -51,7 +51,7 @@ export class ClimateEventDocument {
   @Prop(
     raw({
       sensor_id: { type: String, required: true },
-      facility_id: { type: String, required: true },
+      facility_id: { type: String, required: false },
       sensor_type: { type: String, required: true },
     }),
   )
