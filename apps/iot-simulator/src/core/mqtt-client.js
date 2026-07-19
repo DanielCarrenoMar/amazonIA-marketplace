@@ -12,7 +12,18 @@ class ChaosMqttClient {
   }
 
   connect(username, password) {
-    const hivemqHost = process.env.HIVEMQ_HOST.trim();
+    if (process.env.DRY_RUN === 'true') {
+      console.log(`✅ [MQTT - DRY RUN] Conexión simulada (Tópico: ${this.topic})`);
+      this.isConnected = true;
+      return;
+    }
+
+    const hivemqHost = process.env.HIVEMQ_HOST ? process.env.HIVEMQ_HOST.trim() : null;
+    if (!hivemqHost) {
+      console.error("❌ [MQTT] Error: 'HIVEMQ_HOST' no está definido en el archivo .env");
+      return;
+    }
+    
     const hivemqPort = Number.parseInt(process.env.HIVEMQ_PORT, 10);
     
     this.client = mqtt.connect({
@@ -60,10 +71,13 @@ class ChaosMqttClient {
   _flushQueue() {
     if (this.messageQueue.length > 0 && this.isConnected && !this.isNetworkDown) {
       console.log(`🚀 [MQTT] Enviando ráfaga de ${this.messageQueue.length} mensajes atrasados...`);
-      // Iteramos rápido pero uno a uno para respetar el contrato del backend
       while (this.messageQueue.length > 0) {
         const msg = this.messageQueue.shift();
-        this.client.publish(this.topic, JSON.stringify(msg), { qos: 1 });
+        if (process.env.DRY_RUN === 'true') {
+          console.log(`[DRY RUN PUBLISH BATCH]:`, msg);
+        } else {
+          this.client.publish(this.topic, JSON.stringify(msg), { qos: 1 });
+        }
       }
     }
   }
@@ -74,14 +88,24 @@ class ChaosMqttClient {
     if (this.isNetworkDown || !this.isConnected) {
       this.messageQueue.push(payload);
     } else {
-      this.client.publish(this.topic, JSON.stringify(payload), { qos: 1 });
+      if (process.env.DRY_RUN === 'true') {
+        console.log(`[DRY RUN PUBLISH]:`, payload);
+      } else {
+        this.client.publish(this.topic, JSON.stringify(payload), { qos: 1 });
+      }
     }
   }
 
   async disconnect() {
+    this.isNetworkDown = false; // Forzar que no haya red caída para intentar vaciar
+    this._flushQueue();
+    
+    if (process.env.DRY_RUN === 'true') {
+      console.log("🔌 [MQTT - DRY RUN] Conexión cerrada limpiamente.");
+      return;
+    }
+
     if (this.client) {
-      this.isNetworkDown = false; // Forzar que no haya red caída para intentar vaciar
-      this._flushQueue();
       return new Promise((resolve) => {
         this.client.end(false, {}, () => {
           console.log("🔌 [MQTT] Conexión cerrada limpiamente.");

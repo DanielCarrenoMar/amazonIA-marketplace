@@ -21,13 +21,16 @@ app.post('/api/simulate/start', async (req, res) => {
     return res.status(400).json({ error: 'Ya hay una simulación en curso.' });
   }
 
-  const { type, duration, networkDropProb, corruptDataProb } = req.body;
+  const { type, duration, fleetSize, dryRun, networkDropProb, corruptDataProb } = req.body;
   
   if (!['climate', 'shipment'].includes(type) || !duration) {
     return res.status(400).json({ error: 'Parámetros inválidos' });
   }
 
+  const numFleet = Math.min(Math.max(parseInt(fleetSize, 10) || 1, 1), 20); // Hardcoded limit 20
+
   // Set environment variables for the current simulation context
+  process.env.DRY_RUN = dryRun ? 'true' : 'false';
   process.env.CHAOS_NETWORK_DROP_PROBABILITY = networkDropProb || '0.0';
   process.env.CHAOS_CORRUPT_DATA_PROBABILITY = corruptDataProb || '0.0';
 
@@ -36,16 +39,31 @@ app.post('/api/simulate/start', async (req, res) => {
   currentSimulationStartTime = Date.now();
   currentSimulationDuration = parseInt(duration, 10);
 
-  // Iniciar asíncronamente
+  // Iniciar asíncronamente la flota
   (async () => {
     try {
-      if (type === 'climate') {
-        await runClimateSimulation(currentSimulationDuration);
-      } else {
-        await runShipmentSimulation(currentSimulationDuration);
+      const fleetPromises = [];
+      
+      for (let i = 0; i < numFleet; i++) {
+        if (type === 'climate') {
+          const { ClimateSensor } = require('./src/climate-sensor');
+          const sensorId = `CLM-${(i + 1).toString().padStart(3, '0')}`;
+          const sensor = new ClimateSensor(sensorId, i); // i se usa para distribuir las estaciones
+          fleetPromises.push(sensor.runSimulation(currentSimulationDuration));
+        } else {
+          const { ShipmentSensor } = require('./src/shipment-sensor');
+          const sensorId = `ORD-${(i + 1).toString().padStart(3, '0')}`;
+          const sensor = new ShipmentSensor(sensorId, i);
+          fleetPromises.push(sensor.runSimulation(currentSimulationDuration));
+        }
       }
+      
+      console.log(`\n🚀 [FLOTA] Iniciando ${numFleet} sensores de tipo ${type}...`);
+      await Promise.all(fleetPromises);
+      console.log(`✅ [FLOTA] Simulación de ${numFleet} sensores finalizada.\n`);
+
     } catch (err) {
-      console.error("❌ Error en la simulación:", err);
+      console.error("❌ Error en la simulación de flota:", err);
     } finally {
       isSimulationRunning = false;
       currentSimulationType = null;
@@ -54,7 +72,7 @@ app.post('/api/simulate/start', async (req, res) => {
     }
   })();
 
-  res.json({ success: true, message: `Simulación de ${type} iniciada por ${duration}s.` });
+  res.json({ success: true, message: `Simulación de flota (${numFleet} sensores) de ${type} iniciada por ${duration}s.` });
 });
 
 app.get('/api/simulate/status', (req, res) => {

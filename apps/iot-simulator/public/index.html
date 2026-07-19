@@ -30,6 +30,24 @@
         <input type="number" id="simDuration" value="60" min="10" max="3600" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-slate-100 focus:border-blue-500 outline-none">
       </div>
 
+      <!-- Tamaño de Flota -->
+      <div>
+        <label class="block text-sm font-medium text-slate-300 mb-2">Tamaño de la Flota (Sensores simultáneos)</label>
+        <input type="number" id="fleetSize" value="5" min="1" max="20" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-slate-100 focus:border-blue-500 outline-none">
+        <p class="text-xs text-slate-500 mt-1">Límite duro de 20 para no saturar el broker MQTT gratuito.</p>
+      </div>
+
+      <!-- Modo Dry Run -->
+      <div>
+        <label class="flex items-center gap-3 p-3 bg-slate-900 border border-slate-600 rounded-lg cursor-pointer hover:border-blue-500 transition-colors">
+          <input type="checkbox" id="dryRun" checked class="w-5 h-5 accent-blue-500">
+          <div>
+            <span class="block text-sm font-medium text-slate-200">Modo Dry Run (Solo Consola)</span>
+            <span class="block text-xs text-slate-400">Genera los JSON completos en la terminal sin conectarse ni enviar datos a HiveMQ.</span>
+          </div>
+        </label>
+      </div>
+
       <!-- Caos Red -->
       <div>
         <label class="block text-sm font-medium text-slate-300 mb-2">Probabilidad de Caída de Red (0 a 1)</label>
@@ -122,6 +140,8 @@
       const payload = {
         type: document.getElementById('simType').value,
         duration: document.getElementById('simDuration').value,
+        fleetSize: document.getElementById('fleetSize').value,
+        dryRun: document.getElementById('dryRun').checked,
         networkDropProb: document.getElementById('networkDrop').value,
         corruptDataProb: document.getElementById('corruptData').value
       };
