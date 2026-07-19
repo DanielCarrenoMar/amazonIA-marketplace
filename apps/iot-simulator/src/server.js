@@ -87,14 +87,14 @@ app.post('/api/simulate/start', async (req, res) => {
         for (let i = 0; i < numFleet; i++) {
           const sensorId = `CLM-${(i + 1).toString().padStart(3, '0')}`;
           const sensor = ClimateSensorFactory.createSensor(sensorId, i);
-          fleetPromises.push(sensor.runSimulation(currentSimulationDuration));
+          fleetPromises.push(sensor.runSimulation(state.duration));
         }
         
         console.log(`\n🚀 [FLOTA] Iniciando ${numFleet} sensores de clima...`);
         await Promise.all(fleetPromises);
         console.log(`✅ [FLOTA] Simulación de clima finalizada.\n`);
       } else if (type === 'shipment') {
-        console.log(`\n🚀 [FLOTA] Iniciando Fleet Manager de envíos por ${currentSimulationDuration}s...`);
+        console.log(`\n🚀 [FLOTA] Iniciando Fleet Manager de envíos por ${state.duration}s...`);
         
         const activeSensors = new Map();
         
