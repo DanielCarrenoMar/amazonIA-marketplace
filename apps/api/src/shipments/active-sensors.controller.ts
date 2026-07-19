@@ -53,7 +53,7 @@ export class ActiveSensorsController {
         FROM product_order o
         JOIN product p ON o.product_id = p.id
         JOIN user_account u ON o.buyer_id = u.id
-        WHERE o.current_status = 'SHIPPED'::"OrderStatus"
+        WHERE o.current_status = 'SHIPPED'
           AND o.sensor_id IS NOT NULL;
       `;
 
