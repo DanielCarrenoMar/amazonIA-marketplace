@@ -49,7 +49,7 @@ export class ShipmentEventDocument {
   @Prop(
     raw({
       tracking_number: { type: String, required: true },
-      container_id: { type: String, required: true },
+      container_id: { type: String },
       sensor_id: { type: String },
     }),
   )
@@ -75,6 +75,8 @@ export class ShipmentEventDocument {
     raw({
       temperature_celsius: { type: Number },
       shock_g_force: { type: Number },
+      humidity_percent: { type: Number },
+      battery_level_pct: { type: Number },
     }),
   )
   telemetry: IShipmentTelemetry;

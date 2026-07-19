@@ -76,22 +76,79 @@ app.post('/api/simulate/start', async (req, res) => {
       const { ClimateSensorFactory } = require('./climate-sensor');
       const { ShipmentSensor } = require('./shipment-sensor');
 
-      for (let i = 0; i < numFleet; i++) {
-        if (type === 'climate') {
+      if (type === 'climate') {
+        for (let i = 0; i < numFleet; i++) {
           const sensorId = `CLM-${(i + 1).toString().padStart(3, '0')}`;
-          const sensor = ClimateSensorFactory.createSensor(sensorId, i); // i se usa para distribuir las estaciones
-          fleetPromises.push(sensor.runSimulation(currentSimulationDuration));
-        } else {
-          const sensorId = `ORD-${(i + 1).toString().padStart(3, '0')}`;
-          const sensor = new ShipmentSensor(sensorId, i);
+          const sensor = ClimateSensorFactory.createSensor(sensorId, i);
           fleetPromises.push(sensor.runSimulation(currentSimulationDuration));
         }
-      }
-      
-      console.log(`\n🚀 [FLOTA] Iniciando ${numFleet} sensores de tipo ${type}...`);
-      await Promise.all(fleetPromises);
-      console.log(`✅ [FLOTA] Simulación de ${numFleet} sensores finalizada.\n`);
+        
+        console.log(`\n🚀 [FLOTA] Iniciando ${numFleet} sensores de clima...`);
+        await Promise.all(fleetPromises);
+        console.log(`✅ [FLOTA] Simulación de clima finalizada.\n`);
+      } else if (type === 'shipment') {
+        console.log(`\n🚀 [FLOTA] Iniciando Fleet Manager de envíos por ${currentSimulationDuration}s...`);
+        
+        const activeSensors = new Map();
+        
+        const pollActiveOrders = async () => {
+          const API_URL = process.env.AMAZONIA_API_URL || 'http://localhost:3000/api';
+          const token = process.env.SIMULATOR_API_TOKEN;
+          if (!token) {
+            console.error('❌ SIMULATOR_API_TOKEN no configurado.');
+            return;
+          }
+          
+          try {
+            const res = await fetch(`${API_URL}/shipments/active-sensors`, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            if (!res.ok) throw new Error(`Status ${res.status}`);
+            const orders = await res.json();
+            const activeIds = new Set(orders.map(o => o.sensorId));
 
+            // Arrancar nuevos
+            for (const order of orders) {
+              if (!activeSensors.has(order.sensorId)) {
+                const sensor = new ShipmentSensor({
+                  sensorId: order.sensorId,
+                  trackingNumber: order.trackingNumber,
+                  origin: order.originCoords,
+                  destination: order.destinationCoords
+                });
+                sensor.start();
+                activeSensors.set(order.sensorId, sensor);
+                console.log(`🟢 [FLEET] Nuevo sensor arrancado: ${order.sensorId} (${order.trackingNumber})`);
+              }
+            }
+
+            // Detener cerrados
+            for (const [sensorId, sensor] of activeSensors.entries()) {
+              if (!activeIds.has(sensorId)) {
+                await sensor.stop();
+                activeSensors.delete(sensorId);
+                console.log(`🔴 [FLEET] Sensor detenido (orden cerrada): ${sensorId}`);
+              }
+            }
+          } catch (err) {
+            console.warn(`⚠️ [FLEET] No se pudo contactar la API: ${err.message}`);
+          }
+        };
+
+        await pollActiveOrders();
+        const pollInterval = parseInt(process.env.FLEET_POLL_INTERVAL_SECONDS || 30, 10) * 1000;
+        const fleetPollInterval = setInterval(pollActiveOrders, pollInterval);
+
+        // Esperar que transcurra la duración
+        await new Promise(resolve => setTimeout(resolve, currentSimulationDuration * 1000));
+        
+        clearInterval(fleetPollInterval);
+        for (const [_, sensor] of activeSensors.entries()) {
+          await sensor.stop();
+        }
+        activeSensors.clear();
+        console.log(`✅ [FLOTA] Simulación de envíos finalizada.\n`);
+      }
     } catch (err) {
       console.error("❌ Error en la simulación de flota:", err);
     } finally {

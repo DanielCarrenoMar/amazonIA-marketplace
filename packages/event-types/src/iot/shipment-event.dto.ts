@@ -5,6 +5,8 @@ import {
   IsOptional,
   IsNumber,
   ValidateNested,
+  Min,
+  Max,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { IoTEventType, ShipmentStatus, ScanType } from '../enums';
@@ -16,7 +18,7 @@ import { GeoPointDto, IGeoPoint } from './climate-event.dto';
 
 export interface IShipmentMetadata {
   tracking_number: string;
-  container_id: string;
+  container_id?: string;
   sensor_id?: string;
 }
 
@@ -29,6 +31,8 @@ export interface IBusinessContext {
 export interface IShipmentTelemetry {
   temperature_celsius?: number;
   shock_g_force?: number;
+  humidity_percent?: number;
+  battery_level_pct?: number;
   [key: string]: unknown;
 }
 
@@ -51,8 +55,9 @@ export class ShipmentMetadataDto implements IShipmentMetadata {
   @IsString()
   tracking_number: string;
 
+  @IsOptional()
   @IsString()
-  container_id: string;
+  container_id?: string;
 
   @IsOptional()
   @IsString()
@@ -77,6 +82,16 @@ export class ShipmentTelemetryDto implements IShipmentTelemetry {
   @IsOptional()
   @IsNumber()
   shock_g_force?: number;
+
+  @IsOptional()
+  @IsNumber()
+  humidity_percent?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  battery_level_pct?: number;
 
   [key: string]: unknown;
 }
