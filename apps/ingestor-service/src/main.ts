@@ -38,10 +38,12 @@ async function bootstrap() {
   });
 
   // Validar incoming DTOs globalmente en los mensajes del microservicio
+  // NOTA: whitelist/forbidNonWhitelisted desactivados intencionalmente para que
+  // los payloads MQTT del simulador (que pueden tener campos extra) no sean rechazados.
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
+      whitelist: false,
+      forbidNonWhitelisted: false,
       transform: true,
     }),
   );
