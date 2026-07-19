@@ -8,10 +8,8 @@ const profiles = ['GPS_BASIC', 'COLD_CHAIN', 'IMPACT_GUARD', 'AMBIENT_MONITOR', 
 const sensors = profiles.map((profile, index) => {
   return new ShipmentSensor({
     sensorId: `TEST-${profile}`,
-    trackingNumber: `TRK-TEST-${index}`,
     origin: { lat: 40.4168 + index * 0.01, lng: -3.7038 }, // Ligeramente desplazados
-    destination: { lat: 41.3851 + index * 0.01, lng: 2.1734 },
-    profile: profile
+    destination: { lat: 41.3851 + index * 0.01, lng: 2.1734 }
   });
 });
 

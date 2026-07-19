@@ -4,7 +4,7 @@ import {
 } from '@nestjs/common';
 import { EventPattern, Payload } from '@nestjs/microservices';
 import { IngestService } from './ingest.service';
-import { CreateClimateEventDto, CreateShipmentEventDto } from 'event-types';
+import { CreateClimateEventDto, RawSensorPayloadDto } from 'event-types';
 
 /**
  * Ingestion endpoints for IoT telemetry data via MQTT microservice.
@@ -28,8 +28,8 @@ export class IngestController {
   }
 
   @EventPattern('amazonia/iot/shipment')
-  async handleMqttShipmentEvent(@Payload() dto: CreateShipmentEventDto) {
-    this.logger.log(`📥 Recibido evento de envío vía MQTT para tracking ${dto.metadata.tracking_number}`);
+  async handleMqttShipmentEvent(@Payload() dto: RawSensorPayloadDto) {
+    this.logger.log(`📥 Recibido evento de envío vía MQTT para sensor ${dto.sensor_id}`);
     try {
       await this.ingestService.publishShipmentEvent(dto);
     } catch (err) {
@@ -38,7 +38,7 @@ export class IngestController {
   }
 
   @EventPattern('amazonia/iot/batch/shipment')
-  async handleMqttShipmentBatchEvent(@Payload() dtos: CreateShipmentEventDto[]) {
+  async handleMqttShipmentBatchEvent(@Payload() dtos: RawSensorPayloadDto[]) {
     this.logger.log(`📥 Recibido lote de ${dtos.length} eventos de envío vía MQTT`);
     try {
       await this.ingestService.publishShipmentEventBatch(dtos);

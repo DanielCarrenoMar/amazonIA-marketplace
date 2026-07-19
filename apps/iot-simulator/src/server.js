@@ -112,10 +112,8 @@ app.post('/api/simulate/start', async (req, res) => {
               if (!activeSensors.has(order.sensorId)) {
                 const sensor = new ShipmentSensor({
                   sensorId: order.sensorId,
-                  trackingNumber: order.trackingNumber,
                   origin: order.originCoords,
                   destination: order.destinationCoords,
-                  profile: order.sensorProfile,
                 });
                 sensor.start();
                 activeSensors.set(order.sensorId, sensor);

@@ -18,17 +18,12 @@ import { GeoPointDto, IGeoPoint } from './climate-event.dto';
 // ---------------------------------------------------------------------------
 
 export interface IShipmentMetadata {
-  tracking_number: string;
+  tracking_number?: string;
   container_id?: string;
   sensor_id?: string;
   sensor_profile?: ShipmentSensorProfile;
 }
 
-export interface IBusinessContext {
-  status: ShipmentStatus;
-  scan_type: ScanType;
-  [key: string]: unknown;
-}
 
 export interface IShipmentTelemetry {
   latitude?: number;
@@ -54,7 +49,6 @@ export interface IShipmentEvent {
   ingested_at: string;
   metadata: IShipmentMetadata;
   location: IGeoPoint;
-  business_context: IBusinessContext;
   telemetry: IShipmentTelemetry;
 }
 
@@ -63,8 +57,9 @@ export interface IShipmentEvent {
 // ---------------------------------------------------------------------------
 
 export class ShipmentMetadataDto implements IShipmentMetadata {
+  @IsOptional()
   @IsString()
-  tracking_number: string;
+  tracking_number?: string;
 
   @IsOptional()
   @IsString()
@@ -79,15 +74,6 @@ export class ShipmentMetadataDto implements IShipmentMetadata {
   sensor_profile?: ShipmentSensorProfile;
 }
 
-export class BusinessContextDto implements IBusinessContext {
-  @IsEnum(ShipmentStatus)
-  status: ShipmentStatus;
-
-  @IsEnum(ScanType)
-  scan_type: ScanType;
-
-  [key: string]: unknown;
-}
 
 export class ShipmentTelemetryDto implements IShipmentTelemetry {
   @IsOptional()
@@ -175,8 +161,24 @@ export class CreateShipmentEventDto {
   location: GeoPointDto;
 
   @ValidateNested()
-  @Type(() => BusinessContextDto)
-  business_context: BusinessContextDto;
+  @Type(() => ShipmentTelemetryDto)
+  telemetry: ShipmentTelemetryDto;
+}
+
+export class RawSensorPayloadDto {
+  @IsString()
+  sensor_id: string;
+
+  @IsDateString()
+  recorded_at: string;
+
+  @IsOptional()
+  @IsNumber()
+  lat?: number;
+
+  @IsOptional()
+  @IsNumber()
+  lng?: number;
 
   @ValidateNested()
   @Type(() => ShipmentTelemetryDto)

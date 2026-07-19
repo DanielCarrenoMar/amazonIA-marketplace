@@ -5,10 +5,8 @@ function randomBetween(min, max) {
 }
 
 class ShipmentSensor {
-  constructor({ sensorId, trackingNumber, origin, destination, profile = 'FULL_TELEMETRY' }) {
+  constructor({ sensorId, origin, destination }) {
     this.sensorId = sensorId;
-    this.trackingNumber = trackingNumber;
-    this.profile = profile;
     this.origin = origin || { lat: 0, lng: 0 };
     this.destination = destination || { lat: 0, lng: 0 };
     
@@ -21,7 +19,7 @@ class ShipmentSensor {
   }
 
   _generateRoute(orig, dest) {
-    const steps = 5;
+    const steps = 50;
     const checkpoints = [];
     for (let i = 0; i <= steps; i++) {
       const ratio = i / steps;
@@ -47,7 +45,14 @@ class ShipmentSensor {
     return Math.random() < 0.1 ? randomBetween(2.0, 5.0) : randomBetween(0.1, 0.8);
   }
 
-  _buildTelemetry(profile) {
+  _buildTelemetry() {
+    // Para simplificar, hardcodeamos el perfil según un sufijo del sensor_id si existe
+    // o por defecto FULL_TELEMETRY
+    let profile = 'FULL_TELEMETRY';
+    if (this.sensorId.includes('GPS_BASIC')) profile = 'GPS_BASIC';
+    else if (this.sensorId.includes('COLD_CHAIN')) profile = 'COLD_CHAIN';
+    else if (this.sensorId.includes('IMPACT_GUARD')) profile = 'IMPACT_GUARD';
+    else if (this.sensorId.includes('AMBIENT_MONITOR')) profile = 'AMBIENT_MONITOR';
     const telemetry = {
       battery_level_pct: randomBetween(80, 100),
     };
@@ -101,28 +106,18 @@ class ShipmentSensor {
     const lng = checkpoint.lng + randomBetween(-0.005, 0.005);
 
     const payload = {
-      event_type: "shipment_telemetry",
+      sensor_id: this.sensorId,
       recorded_at: new Date().toISOString(),
-      latitude: parseFloat(lat.toFixed(6)),
-      longitude: parseFloat(lng.toFixed(6)),
-      metadata: {
-        tracking_number: this.trackingNumber,
-        sensor_id: this.sensorId,
-        sensor_profile: this.profile,
-      },
-      business_context: {
-        status: checkpoint.status,
-        scan_type: "gps",
-      },
-      telemetry: this._buildTelemetry(this.profile)
+      lat: parseFloat(lat.toFixed(6)),
+      lng: parseFloat(lng.toFixed(6)),
+      telemetry: this._buildTelemetry()
     };
 
     // Caos de Formato
     const corruptProb = parseFloat(process.env.CHAOS_CORRUPT_DATA_PROBABILITY || "0.0");
     if (corruptProb > 0 && Math.random() < corruptProb) {
       console.log(`🐛 [CAOS] Inyectando datos corruptos al JSON en ${this.sensorId}...`);
-      payload.latitude = "coordenada rota";
-      if (payload.business_context) delete payload.business_context.status;
+      payload.lat = "coordenada rota";
     }
 
     this.chaosClient.publish(payload);
@@ -143,20 +138,11 @@ class ShipmentSensor {
 
   publishHeartbeat() {
     const payload = {
-      event_type: 'shipment_telemetry',
+      sensor_id: this.sensorId,
       recorded_at: new Date().toISOString(),
-      latitude: parseFloat(this.destination.lat.toFixed(6)),
-      longitude: parseFloat(this.destination.lng.toFixed(6)),
-      metadata: {
-        tracking_number: this.trackingNumber,
-        sensor_id: this.sensorId,
-        sensor_profile: this.profile,
-      },
-      business_context: {
-        status: 'delivered',
-        scan_type: 'gps',
-      },
-      telemetry: this._buildTelemetry(this.profile)
+      lat: parseFloat(this.destination.lat.toFixed(6)),
+      lng: parseFloat(this.destination.lng.toFixed(6)),
+      telemetry: this._buildTelemetry()
     };
     
     // DRY_RUN checks

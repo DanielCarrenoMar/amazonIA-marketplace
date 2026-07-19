@@ -56,7 +56,7 @@ export class ShipmentsService {
     const offset = (page - 1) * limit;
 
     return {
-      data: result.data as IShipmentEvent[],
+      data: result.data as unknown as IShipmentEvent[],
       meta: {
         total: result.total,
         limit,
@@ -111,7 +111,7 @@ export class ShipmentsService {
     const offset = (page - 1) * limit;
 
     return {
-      data: result.data as IShipmentEvent[],
+      data: result.data as unknown as IShipmentEvent[],
       meta: {
         total: result.total,
         limit,

@@ -4,10 +4,12 @@ import { IMessageProducer, MESSAGE_PRODUCER, STREAM_TOPICS } from 'messaging';
 import { Inject } from '@nestjs/common';
 import {
   CreateClimateEventDto,
-  CreateShipmentEventDto,
+  RawSensorPayloadDto,
   IClimateEvent,
   IShipmentEvent,
+  IoTEventType,
 } from 'event-types';
+import { DbService } from './db.service';
 
 /**
  * Service responsible for enriching IoT event payloads and publishing
@@ -23,8 +25,13 @@ import {
 @Injectable()
 export class IngestService {
   private readonly logger = new Logger(IngestService.name);
+  
+  // Cache para contexto de sensores (evitar N queries a Postgres por segundo)
+  private sensorCache = new Map<string, { tracking_number: string; sensor_profile: any; expires_at: number }>();
+
   constructor(
     @Inject(MESSAGE_PRODUCER) private readonly producer: IMessageProducer,
+    private readonly db: DbService,
   ) {}
 
   // -------------------------------------------------------------------------
@@ -68,9 +75,10 @@ export class IngestService {
   // -------------------------------------------------------------------------
 
   async publishShipmentEvent(
-    dto: CreateShipmentEventDto,
-  ): Promise<IShipmentEvent> {
-    const event = this.enrichShipmentEvent(dto);
+    dto: RawSensorPayloadDto,
+  ): Promise<IShipmentEvent | null> {
+    const event = await this.enrichShipmentEvent(dto);
+    if (!event) return null; // Ignorado por ser huérfano
 
     await this.producer.produce(
       STREAM_TOPICS.SHIPMENT_EVENTS,
@@ -86,15 +94,19 @@ export class IngestService {
   }
 
   async publishShipmentEventBatch(
-    dtos: CreateShipmentEventDto[],
+    dtos: RawSensorPayloadDto[],
   ): Promise<IShipmentEvent[]> {
-    const events = dtos.map((dto) => this.enrichShipmentEvent(dto));
+    const eventsPromise = dtos.map((dto) => this.enrichShipmentEvent(dto));
+    const maybeEvents = await Promise.all(eventsPromise);
+    const events = maybeEvents.filter(e => e !== null) as IShipmentEvent[];
 
-    await this.producer.produceBatch(
-      STREAM_TOPICS.SHIPMENT_EVENTS,
-      events as unknown as Record<string, unknown>[],
-      (evt: any) => (evt as unknown as IShipmentEvent).metadata.tracking_number,
-    );
+    if (events.length > 0) {
+      await this.producer.produceBatch(
+        STREAM_TOPICS.SHIPMENT_EVENTS,
+        events as unknown as Record<string, unknown>[],
+        (evt: any) => (evt as unknown as IShipmentEvent).metadata.tracking_number ?? 'UNKNOWN',
+      );
+    }
 
     return events;
   }
@@ -130,17 +142,56 @@ export class IngestService {
     } as IClimateEvent;
   }
 
-  private enrichShipmentEvent(dto: CreateShipmentEventDto): IShipmentEvent {
-    const { latitude, longitude, ...rest } = dto as any;
-    const location = latitude != null && longitude != null
-      ? { type: 'Point' as const, coordinates: [longitude, latitude] as [number, number] }
+  private async resolveShipmentContext(sensorId: string) {
+    const cached = this.sensorCache.get(sensorId);
+    if (cached && cached.expires_at > Date.now()) return cached;
+
+    const orderCtx = await this.db.getShipmentContextBySensorId(sensorId);
+
+    if (!orderCtx || !orderCtx.trackingNumber) {
+      if (process.env.ALLOW_ORPHAN_EVENTS === 'true') {
+        return {
+          tracking_number: `ORPHAN-${sensorId}`,
+          sensor_profile: 'FULL_TELEMETRY',
+          expires_at: Date.now() + 60_000,
+        };
+      }
+      return null;
+    }
+
+    const ctx = {
+      tracking_number: orderCtx.trackingNumber,
+      sensor_profile: orderCtx.sensorProfile,
+      expires_at: Date.now() + 60_000, // TTL: 60s
+    };
+
+    this.sensorCache.set(sensorId, ctx);
+    return ctx;
+  }
+
+  private async enrichShipmentEvent(dto: RawSensorPayloadDto): Promise<IShipmentEvent | null> {
+    const ctx = await this.resolveShipmentContext(dto.sensor_id);
+    if (!ctx) {
+      this.logger.warn(`Descartando evento: No se encontró orden activa para sensor ${dto.sensor_id}`);
+      return null;
+    }
+
+    const { lat, lng, ...rest } = dto as any;
+    const location = lat != null && lng != null
+      ? { type: 'Point' as const, coordinates: [lng, lat] as [number, number] }
       : undefined;
 
     return {
-      ...rest,
-      event_id:
-        dto.event_id ?? `pkg_evt_${uuidv4().replace(/-/g, '').slice(0, 7)}`,
+      event_id: `pkg_evt_${uuidv4().replace(/-/g, '').slice(0, 7)}`,
+      event_type: IoTEventType.SHIPMENT_TELEMETRY,
+      recorded_at: dto.recorded_at,
       ingested_at: new Date().toISOString(),
+      metadata: {
+        sensor_id: dto.sensor_id,
+        tracking_number: ctx.tracking_number,
+        sensor_profile: ctx.sensor_profile as any,
+      },
+      telemetry: dto.telemetry,
       ...(location ? { location } : {}),
     } as IShipmentEvent;
   }

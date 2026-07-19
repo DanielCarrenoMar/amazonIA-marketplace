@@ -1,13 +1,17 @@
 import { IMessageProducer } from 'messaging';
-import { CreateClimateEventDto, CreateShipmentEventDto, IClimateEvent, IShipmentEvent } from 'event-types';
+import { CreateClimateEventDto, RawSensorPayloadDto, IClimateEvent, IShipmentEvent } from 'event-types';
+import { DbService } from './db.service';
 export declare class IngestService {
     private readonly producer;
+    private readonly db;
     private readonly logger;
-    constructor(producer: IMessageProducer);
+    private sensorCache;
+    constructor(producer: IMessageProducer, db: DbService);
     publishClimateEvent(dto: CreateClimateEventDto): Promise<IClimateEvent>;
     publishClimateEventBatch(dtos: CreateClimateEventDto[]): Promise<IClimateEvent[]>;
-    publishShipmentEvent(dto: CreateShipmentEventDto): Promise<IShipmentEvent>;
-    publishShipmentEventBatch(dtos: CreateShipmentEventDto[]): Promise<IShipmentEvent[]>;
+    publishShipmentEvent(dto: RawSensorPayloadDto): Promise<IShipmentEvent | null>;
+    publishShipmentEventBatch(dtos: RawSensorPayloadDto[]): Promise<IShipmentEvent[]>;
     private enrichClimateEvent;
+    private resolveShipmentContext;
     private enrichShipmentEvent;
 }

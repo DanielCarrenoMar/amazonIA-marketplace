@@ -207,9 +207,12 @@ export class WorkerService implements OnModuleInit {
       event_type: msg.value.event_type,
       recorded_at: new Date(msg.value.recorded_at),
       ingested_at: new Date(msg.value.ingested_at),
-      metadata: msg.value.metadata,
+      metadata: {
+        sensor_id: msg.value.metadata.sensor_id,
+        tracking_number: msg.value.metadata.tracking_number,
+        sensor_profile: msg.value.metadata.sensor_profile,
+      },
       location: msg.value.location,
-      business_context: msg.value.business_context,
       telemetry: msg.value.telemetry,
     });
   }
