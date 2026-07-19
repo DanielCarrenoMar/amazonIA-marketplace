@@ -19,7 +19,9 @@ export class IngestController {
 
   @EventPattern('amazonia/iot/climate')
   async handleMqttClimateEvent(@Payload() dto: CreateClimateEventDto) {
-    this.logger.log(`📥 Recibido evento climático vía MQTT desde sensor ${dto.metadata.sensor_id}`);
+    const raw = dto as any;
+    const sensorId = raw?.metadata?.sensor_id ?? raw?.sensor_id ?? 'unknown';
+    this.logger.log(`📥 Recibido evento climático vía MQTT desde sensor ${sensorId}`);
     try {
       await this.ingestService.publishClimateEvent(dto);
     } catch (err) {
@@ -29,7 +31,9 @@ export class IngestController {
 
   @EventPattern('amazonia/iot/shipment')
   async handleMqttShipmentEvent(@Payload() dto: RawSensorPayloadDto) {
-    this.logger.log(`📥 Recibido evento de envío vía MQTT para sensor ${dto.sensor_id}`);
+    const raw = dto as any;
+    const sensorId = raw?.sensor_id ?? 'unknown';
+    this.logger.log(`📥 Recibido evento de envío vía MQTT para sensor ${sensorId}`);
     try {
       await this.ingestService.publishShipmentEvent(dto);
     } catch (err) {
