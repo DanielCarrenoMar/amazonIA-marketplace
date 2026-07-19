@@ -7,6 +7,11 @@ export class LogRpcExceptionFilter implements RpcExceptionFilter<any> {
   private readonly logger = new Logger('RpcExceptionFilter');
 
   catch(exception: any, host: ArgumentsHost): Observable<any> {
+    // Ignore harmless browser favicon requests to avoid log spam
+    if (exception.response?.message === 'Cannot GET /favicon.ico') {
+      return throwError(() => exception);
+    }
+
     this.logger.error(`❌ RPC/Microservice Error caught:`);
     if (exception.response) {
       this.logger.error(JSON.stringify(exception.response, null, 2));

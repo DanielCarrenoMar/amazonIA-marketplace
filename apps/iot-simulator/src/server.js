@@ -99,7 +99,7 @@ app.post('/api/simulate/start', async (req, res) => {
         const activeSensors = new Map();
         
         const pollActiveOrders = async () => {
-          const API_URL = process.env.AMAZONIA_API_URL || 'http://localhost:3000/api';
+          const API_URL = process.env.AMAZONIA_API_URL || 'http://localhost:3001';
           const token = process.env.SIMULATOR_API_TOKEN;
           if (!token) {
             console.error('❌ SIMULATOR_API_TOKEN no configurado.');
