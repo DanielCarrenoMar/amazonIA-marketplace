@@ -57,6 +57,29 @@
         <p class="text-xs text-slate-500 mt-1">Límite duro de 20 para no saturar el broker MQTT gratuito.</p>
       </div>
 
+      <!-- Frecuencia de Telemetría -->
+      <div>
+        <label class="block text-sm font-medium text-slate-300 mb-2">Frecuencia de Telemetría (ms)</label>
+        <input type="number" id="telemetryInterval" value="5000" min="500" step="500" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-slate-100 focus:border-blue-500 outline-none">
+        <p class="text-xs text-slate-500 mt-1">Intervalo de tiempo entre cada envío (ej. 5000 = 5s).</p>
+      </div>
+
+      <!-- Parámetros de Ruta -->
+      <div id="route-settings" class="hidden">
+        <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-slate-300 mb-2">Pasos en la Ruta</label>
+          <input type="number" id="routeSteps" value="50" min="5" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-slate-100 focus:border-blue-500 outline-none">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-300 mb-2">Pasos por Tick</label>
+          <input type="number" id="stepsPerTick" value="1" min="1" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-slate-100 focus:border-blue-500 outline-none">
+        </div>
+      </div>
+        </div>
+        <p class="text-xs text-slate-500 mt-1">Modifica esto para acelerar el viaje. Ej: 50 pasos a 5 pasos por tick = 10 ticks para llegar a destino.</p>
+      </div>
+
       <!-- Modo Dry Run -->
       <div>
         <label class="flex items-center gap-3 p-3 bg-slate-900 border border-slate-600 rounded-lg cursor-pointer hover:border-blue-500 transition-colors">
@@ -88,6 +111,24 @@
         <p class="text-xs text-slate-500 mt-1">Inyectará datos malformados para estresar al backend NoSQL.</p>
       </div>
 
+      <!-- Caos Físico -->
+      <div id="physical-chaos" class="hidden">
+        <div>
+        <label class="block text-sm font-medium text-slate-300 mb-2">Probabilidad de Impacto / Golpe Fuerte (0 a 1)</label>
+        <div class="flex items-center gap-4">
+          <input type="range" id="chaosShock" min="0" max="1" step="0.1" value="0.1" class="w-full accent-orange-500">
+          <span id="chaosShockVal" class="text-orange-400 font-mono font-bold w-12 text-right">0.1</span>
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-300 mb-2">Probabilidad de Apertura de Puerta en Cadena de Frío (0 a 1)</label>
+        <div class="flex items-center gap-4">
+          <input type="range" id="chaosDoor" min="0" max="1" step="0.05" value="0.05" class="w-full accent-yellow-500">
+          <span id="chaosDoorVal" class="text-yellow-400 font-mono font-bold w-12 text-right">0.05</span>
+        </div>
+        </div>
+      </div>
+
       <div class="pt-4 border-t border-slate-700">
         <button id="startBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-lg transition-colors flex justify-center items-center gap-2">
           ▶ Despertar Sensores
@@ -103,18 +144,10 @@
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
             <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
           </span>
-          Simulación en curso
+          Simulaciones en curso
         </h2>
       </div>
-      <div class="grid grid-cols-2 gap-4 text-sm mb-4">
-        <div class="bg-slate-900 p-3 rounded-lg">
-          <span class="text-slate-400 block text-xs">Tipo</span>
-          <span id="statType" class="font-mono text-white capitalize">--</span>
-        </div>
-        <div class="bg-slate-900 p-3 rounded-lg">
-          <span class="text-slate-400 block text-xs">Tiempo Restante</span>
-          <span id="statTime" class="font-mono text-blue-400 font-bold text-lg">--</span>
-        </div>
+      <div id="activeSimulationsContainer" class="flex flex-col gap-2 text-sm mb-4">
       </div>
     </div>
   </div>
@@ -127,6 +160,32 @@
     document.getElementById('corruptData').addEventListener('input', (e) => {
       document.getElementById('corruptDataVal').textContent = e.target.value;
     });
+    document.getElementById('chaosShock').addEventListener('input', (e) => {
+      document.getElementById('chaosShockVal').textContent = e.target.value;
+    });
+    document.getElementById('chaosDoor').addEventListener('input', (e) => {
+      document.getElementById('chaosDoorVal').textContent = e.target.value;
+    });
+
+    // Lógica para mostrar/ocultar secciones dependiendo del tipo de simulación
+    const simTypeSelect = document.getElementById('simType');
+    const routeSettingsDiv = document.getElementById('route-settings');
+    const physicalChaosDiv = document.getElementById('physical-chaos');
+
+    function updateVisibility() {
+      if (simTypeSelect.value === 'shipment') {
+        routeSettingsDiv.classList.remove('hidden');
+        physicalChaosDiv.classList.remove('hidden');
+      } else {
+        routeSettingsDiv.classList.add('hidden');
+        physicalChaosDiv.classList.add('hidden');
+      }
+      checkStatus();
+    }
+
+    simTypeSelect.addEventListener('change', updateVisibility);
+    // Llamar al inicio para fijar el estado inicial
+    updateVisibility();
 
     let pollInterval = null;
 
@@ -183,15 +242,35 @@
         
         if (data.isRunning) {
           statusPanel.classList.remove('hidden');
-          startBtn.disabled = true;
-          startBtn.classList.add('opacity-50', 'cursor-not-allowed');
           
-          document.getElementById('statType').textContent = data.type;
-          document.getElementById('statTime').textContent = `${data.remainingSeconds}s`;
+          let containerHtml = '';
+          const currentType = document.getElementById('simType').value;
+          let currentIsRunning = false;
+          
+          if (data.simulations.climate.isRunning) {
+             containerHtml += `<div class="bg-slate-900 p-3 rounded-lg flex justify-between items-center"><span class="text-slate-400">Estación de Clima</span><span class="font-mono text-blue-400 font-bold">${data.simulations.climate.remainingSeconds}s</span></div>`;
+             if (currentType === 'climate') currentIsRunning = true;
+          }
+          if (data.simulations.shipment.isRunning) {
+             containerHtml += `<div class="bg-slate-900 p-3 rounded-lg flex justify-between items-center"><span class="text-slate-400">Rastreador de Envíos</span><span class="font-mono text-orange-400 font-bold">${data.simulations.shipment.remainingSeconds}s</span></div>`;
+             if (currentType === 'shipment') currentIsRunning = true;
+          }
+          document.getElementById('activeSimulationsContainer').innerHTML = containerHtml;
+          
+          if (currentIsRunning) {
+             startBtn.disabled = true;
+             startBtn.classList.add('opacity-50', 'cursor-not-allowed');
+             startBtn.innerHTML = '⏳ Simulación de este tipo en curso...';
+          } else {
+             startBtn.disabled = false;
+             startBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+             startBtn.innerHTML = '▶ Despertar Sensores';
+          }
         } else {
           statusPanel.classList.add('hidden');
           startBtn.disabled = false;
           startBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+          startBtn.innerHTML = '▶ Despertar Sensores';
         }
       } catch (err) {
         console.error("Error al obtener estado:", err);
@@ -206,7 +285,12 @@
         fleetSize: document.getElementById('fleetSize').value,
         dryRun: document.getElementById('dryRun').checked,
         networkDropProb: document.getElementById('networkDrop').value,
-        corruptDataProb: document.getElementById('corruptData').value
+        corruptDataProb: document.getElementById('corruptData').value,
+        telemetryInterval: document.getElementById('telemetryInterval').value,
+        routeSteps: document.getElementById('routeSteps').value,
+        stepsPerTick: document.getElementById('stepsPerTick').value,
+        chaosShockProb: document.getElementById('chaosShock').value,
+        chaosDoorOpenProb: document.getElementById('chaosDoor').value
       };
 
       try {

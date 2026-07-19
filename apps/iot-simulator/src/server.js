@@ -1,8 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const { runClimateSimulation } = require('./src/climate-sensor');
-const { runShipmentSimulation } = require('./src/shipment-sensor');
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -40,20 +39,24 @@ app.use('/api/simulate', (req, res, next) => {
   }
 });
 
-let isSimulationRunning = false;
-let currentSimulationType = null;
-let currentSimulationStartTime = null;
-let currentSimulationDuration = 0;
+const simState = {
+  climate: { isRunning: false, startTime: null, duration: 0 },
+  shipment: { isRunning: false, startTime: null, duration: 0 }
+};
 
 app.post('/api/simulate/start', async (req, res) => {
-  if (isSimulationRunning) {
-    return res.status(400).json({ error: 'Ya hay una simulación en curso.' });
-  }
-
-  const { type, duration, fleetSize, dryRun, networkDropProb, corruptDataProb } = req.body;
+  const { 
+    type, duration, fleetSize, dryRun, networkDropProb, corruptDataProb,
+    telemetryInterval, routeSteps, stepsPerTick, chaosShockProb, chaosDoorOpenProb 
+  } = req.body;
   
   if (!['climate', 'shipment'].includes(type) || !duration) {
     return res.status(400).json({ error: 'Parámetros inválidos' });
+  }
+
+  const state = simState[type];
+  if (state.isRunning) {
+    return res.status(400).json({ error: `Ya hay una simulación de ${type} en curso.` });
   }
 
   const numFleet = Math.min(Math.max(parseInt(fleetSize, 10) || 1, 1), 20); // Hardcoded limit 20
@@ -62,11 +65,15 @@ app.post('/api/simulate/start', async (req, res) => {
   process.env.DRY_RUN = dryRun ? 'true' : 'false';
   process.env.CHAOS_NETWORK_DROP_PROBABILITY = networkDropProb || '0.0';
   process.env.CHAOS_CORRUPT_DATA_PROBABILITY = corruptDataProb || '0.0';
+  process.env.TELEMETRY_INTERVAL_MS = telemetryInterval || process.env.TELEMETRY_INTERVAL_MS || '5000';
+  process.env.ROUTE_STEPS = routeSteps || process.env.ROUTE_STEPS || '50';
+  process.env.STEPS_PER_TICK = stepsPerTick || process.env.STEPS_PER_TICK || '1';
+  process.env.CHAOS_SHOCK_PROBABILITY = chaosShockProb || process.env.CHAOS_SHOCK_PROBABILITY || '0.1';
+  process.env.CHAOS_DOOR_OPEN_PROBABILITY = chaosDoorOpenProb || process.env.CHAOS_DOOR_OPEN_PROBABILITY || '0.05';
 
-  isSimulationRunning = true;
-  currentSimulationType = type;
-  currentSimulationStartTime = Date.now();
-  currentSimulationDuration = parseInt(duration, 10);
+  state.isRunning = true;
+  state.startTime = Date.now();
+  state.duration = parseInt(duration, 10);
 
   // Iniciar asíncronamente la flota
   (async () => {
@@ -139,7 +146,7 @@ app.post('/api/simulate/start', async (req, res) => {
         const fleetPollInterval = setInterval(pollActiveOrders, pollInterval);
 
         // Esperar que transcurra la duración
-        await new Promise(resolve => setTimeout(resolve, currentSimulationDuration * 1000));
+        await new Promise(resolve => setTimeout(resolve, state.duration * 1000));
         
         clearInterval(fleetPollInterval);
         for (const [_, sensor] of activeSensors.entries()) {
@@ -149,12 +156,11 @@ app.post('/api/simulate/start', async (req, res) => {
         console.log(`✅ [FLOTA] Simulación de envíos finalizada.\n`);
       }
     } catch (err) {
-      console.error("❌ Error en la simulación de flota:", err);
+      console.error(`❌ Error en la simulación de flota (${type}):`, err);
     } finally {
-      isSimulationRunning = false;
-      currentSimulationType = null;
-      currentSimulationStartTime = null;
-      currentSimulationDuration = 0;
+      state.isRunning = false;
+      state.startTime = null;
+      state.duration = 0;
     }
   })();
 
@@ -162,19 +168,30 @@ app.post('/api/simulate/start', async (req, res) => {
 });
 
 app.get('/api/simulate/status', (req, res) => {
-  if (!isSimulationRunning) {
-    return res.json({ isRunning: false });
-  }
+  const status = { 
+    climate: { isRunning: false }, 
+    shipment: { isRunning: false } 
+  };
   
-  const elapsedSeconds = Math.floor((Date.now() - currentSimulationStartTime) / 1000);
-  const remainingSeconds = Math.max(0, currentSimulationDuration - elapsedSeconds);
+  let anyRunning = false;
+  
+  for (const type of ['climate', 'shipment']) {
+    const state = simState[type];
+    if (state.isRunning) {
+      anyRunning = true;
+      const elapsedSeconds = Math.floor((Date.now() - state.startTime) / 1000);
+      const remainingSeconds = Math.max(0, state.duration - elapsedSeconds);
+      status[type] = {
+        isRunning: true,
+        remainingSeconds,
+        elapsedSeconds
+      };
+    }
+  }
 
   res.json({
-    isRunning: true,
-    type: currentSimulationType,
-    elapsedSeconds,
-    remainingSeconds,
-    duration: currentSimulationDuration
+    isRunning: anyRunning,
+    simulations: status
   });
 });
 

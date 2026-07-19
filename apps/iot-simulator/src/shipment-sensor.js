@@ -19,7 +19,7 @@ class ShipmentSensor {
   }
 
   _generateRoute(orig, dest) {
-    const steps = 50;
+    const steps = parseInt(process.env.ROUTE_STEPS || 50, 10);
     const checkpoints = [];
     for (let i = 0; i <= steps; i++) {
       const ratio = i / steps;
@@ -42,7 +42,9 @@ class ShipmentSensor {
   }
 
   simulateShock() {
-    return Math.random() < 0.1 ? randomBetween(2.0, 5.0) : randomBetween(0.1, 0.8);
+    const shockProb = parseFloat(process.env.CHAOS_SHOCK_PROBABILITY || 0.1);
+    const shockG = parseFloat(process.env.SHOCK_THRESHOLD_G || 2.0);
+    return Math.random() < shockProb ? randomBetween(shockG, 5.0) : randomBetween(0.1, 0.8);
   }
 
   _buildTelemetry() {
@@ -57,15 +59,23 @@ class ShipmentSensor {
       battery_level_pct: randomBetween(80, 100),
     };
 
+    const coldTempMin = parseFloat(process.env.COLD_CHAIN_TEMP_MIN || 2);
+    const coldTempMax = parseFloat(process.env.COLD_CHAIN_TEMP_MAX || 8);
+    const ambTempMin = parseFloat(process.env.AMBIENT_TEMP_MIN || 20);
+    const ambTempMax = parseFloat(process.env.AMBIENT_TEMP_MAX || 25);
+    const humMin = parseFloat(process.env.HUMIDITY_MIN || 40);
+    const humMax = parseFloat(process.env.HUMIDITY_MAX || 70);
+    const doorProb = parseFloat(process.env.CHAOS_DOOR_OPEN_PROBABILITY || 0.05);
+
     switch (profile) {
       case 'GPS_BASIC':
         // Solo ubicación y señal
         telemetry.signal_strength_dbm = randomBetween(-90, -40);
         break;
       case 'COLD_CHAIN':
-        telemetry.temperature_celsius = randomBetween(2, 8);
-        telemetry.humidity_percent = randomBetween(40, 60);
-        telemetry.door_open_count = Math.random() < 0.05 ? 1 : 0;
+        telemetry.temperature_celsius = randomBetween(coldTempMin, coldTempMax);
+        telemetry.humidity_percent = randomBetween(humMin, humMax);
+        telemetry.door_open_count = Math.random() < doorProb ? 1 : 0;
         break;
       case 'IMPACT_GUARD':
         telemetry.shock_g_force = this.simulateShock();
@@ -73,8 +83,8 @@ class ShipmentSensor {
         telemetry.vibration_hz = randomBetween(10, 50);
         break;
       case 'AMBIENT_MONITOR':
-        telemetry.temperature_celsius = randomBetween(20, 25);
-        telemetry.humidity_percent = randomBetween(45, 55);
+        telemetry.temperature_celsius = randomBetween(ambTempMin, ambTempMax);
+        telemetry.humidity_percent = randomBetween(humMin, humMax);
         telemetry.pressure_hpa = randomBetween(1000, 1020);
         telemetry.air_quality_index = randomBetween(10, 50);
         break;
@@ -82,7 +92,7 @@ class ShipmentSensor {
       default:
         telemetry.signal_strength_dbm = randomBetween(-90, -40);
         telemetry.temperature_celsius = randomBetween(24, 38);
-        telemetry.humidity_percent = randomBetween(40, 70);
+        telemetry.humidity_percent = randomBetween(humMin, humMax);
         telemetry.shock_g_force = this.simulateShock();
         telemetry.tilt_angle_deg = randomBetween(0, 15);
         telemetry.vibration_hz = randomBetween(10, 50);
@@ -102,8 +112,9 @@ class ShipmentSensor {
     }
 
     const checkpoint = this.routeCheckpoints[this.currentCheckpoint];
-    const lat = checkpoint.lat + randomBetween(-0.005, 0.005);
-    const lng = checkpoint.lng + randomBetween(-0.005, 0.005);
+    const gpsNoise = parseFloat(process.env.GPS_NOISE_DEGREES || 0.005);
+    const lat = checkpoint.lat + randomBetween(-gpsNoise, gpsNoise);
+    const lng = checkpoint.lng + randomBetween(-gpsNoise, gpsNoise);
 
     const payload = {
       sensor_id: this.sensorId,
@@ -126,13 +137,15 @@ class ShipmentSensor {
       console.log(`📦 [ENVÍO] ${this.sensorId} en ${checkpoint.name} | Estado: ${checkpoint.status}`);
     }
 
+    const stepsPerTick = parseInt(process.env.STEPS_PER_TICK || 1, 10);
     if (this.currentCheckpoint < this.routeCheckpoints.length - 1) {
-      this.currentCheckpoint++;
+      this.currentCheckpoint = Math.min(this.routeCheckpoints.length - 1, this.currentCheckpoint + stepsPerTick);
     } else {
       this.state = 'AT_DESTINATION';
       console.log(`📦 [ENTREGA] ${this.sensorId} llegó a destino. Entrando en modo heartbeat.`);
       clearInterval(this.publishInterval);
-      this.publishInterval = setInterval(() => this.publishHeartbeat(), 30000);
+      const hbInterval = parseInt(process.env.HEARTBEAT_INTERVAL_MS || 30000, 10);
+      this.publishInterval = setInterval(() => this.publishHeartbeat(), hbInterval);
     }
   }
 
@@ -155,7 +168,8 @@ class ShipmentSensor {
 
   start() {
     this.chaosClient.connect(); 
-    this.publishInterval = setInterval(() => this.publishTelemetry(), 5000);
+    const interval = parseInt(process.env.TELEMETRY_INTERVAL_MS || 5000, 10);
+    this.publishInterval = setInterval(() => this.publishTelemetry(), interval);
   }
 
   async stop() {

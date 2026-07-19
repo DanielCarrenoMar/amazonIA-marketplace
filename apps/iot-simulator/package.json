@@ -5,7 +5,7 @@
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
-    "start:dev": "npm-run-all --parallel dev:server dev:css",
+    "dev": "npm-run-all --parallel dev:server dev:css",
     "dev:server": "nodemon src/server.js",
     "dev:css": "tailwindcss -i ./src/input.css -o ./public/output.css --watch",
     "build": "tailwindcss -i ./src/input.css -o ./public/output.css --minify",

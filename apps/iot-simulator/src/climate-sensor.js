@@ -83,6 +83,7 @@ class ClimateSensor {
   start() {
     this.chaosClient.connect(); // User/Pass read from .env in mqtt-client.js
     
+    const interval = parseInt(process.env.TELEMETRY_INTERVAL_MS || 5000, 10);
     this.publishInterval = setInterval(() => {
       const payload = this.generateClimatePayload();
       this.chaosClient.publish(payload);
@@ -90,7 +91,7 @@ class ClimateSensor {
       if (!this.chaosClient.isNetworkDown && process.env.DRY_RUN !== 'true') {
         console.log(`📡 [CLIMA] ${this.sensorId} (${this.type}) en ${this.station.name} | Temp: ${payload.metrics.temperature_celsius}`);
       }
-    }, 5000);
+    }, interval);
   }
 
   async stop() {
