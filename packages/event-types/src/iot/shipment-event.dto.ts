@@ -7,9 +7,10 @@ import {
   ValidateNested,
   Min,
   Max,
+  IsBoolean,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { IoTEventType, ShipmentStatus, ScanType } from '../enums';
+import { IoTEventType, ShipmentStatus, ScanType, ShipmentSensorProfile } from '../enums';
 import { GeoPointDto, IGeoPoint } from './climate-event.dto';
 
 // ---------------------------------------------------------------------------
@@ -20,6 +21,7 @@ export interface IShipmentMetadata {
   tracking_number: string;
   container_id?: string;
   sensor_id?: string;
+  sensor_profile?: ShipmentSensorProfile;
 }
 
 export interface IBusinessContext {
@@ -29,9 +31,18 @@ export interface IBusinessContext {
 }
 
 export interface IShipmentTelemetry {
+  latitude?: number;
+  longitude?: number;
+  signal_strength_dbm?: number;
   temperature_celsius?: number;
-  shock_g_force?: number;
   humidity_percent?: number;
+  shock_g_force?: number;
+  tilt_angle_deg?: number;
+  vibration_hz?: number;
+  door_open_count?: number;
+  tamper_detected?: boolean;
+  pressure_hpa?: number;
+  air_quality_index?: number;
   battery_level_pct?: number;
   [key: string]: unknown;
 }
@@ -62,6 +73,10 @@ export class ShipmentMetadataDto implements IShipmentMetadata {
   @IsOptional()
   @IsString()
   sensor_id?: string;
+
+  @IsOptional()
+  @IsEnum(ShipmentSensorProfile)
+  sensor_profile?: ShipmentSensorProfile;
 }
 
 export class BusinessContextDto implements IBusinessContext {
@@ -77,7 +92,23 @@ export class BusinessContextDto implements IBusinessContext {
 export class ShipmentTelemetryDto implements IShipmentTelemetry {
   @IsOptional()
   @IsNumber()
+  latitude?: number;
+
+  @IsOptional()
+  @IsNumber()
+  longitude?: number;
+
+  @IsOptional()
+  @IsNumber()
+  signal_strength_dbm?: number;
+
+  @IsOptional()
+  @IsNumber()
   temperature_celsius?: number;
+
+  @IsOptional()
+  @IsNumber()
+  humidity_percent?: number;
 
   @IsOptional()
   @IsNumber()
@@ -85,7 +116,27 @@ export class ShipmentTelemetryDto implements IShipmentTelemetry {
 
   @IsOptional()
   @IsNumber()
-  humidity_percent?: number;
+  tilt_angle_deg?: number;
+
+  @IsOptional()
+  @IsNumber()
+  vibration_hz?: number;
+
+  @IsOptional()
+  @IsNumber()
+  door_open_count?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  tamper_detected?: boolean;
+
+  @IsOptional()
+  @IsNumber()
+  pressure_hpa?: number;
+
+  @IsOptional()
+  @IsNumber()
+  air_quality_index?: number;
 
   @IsOptional()
   @IsNumber()

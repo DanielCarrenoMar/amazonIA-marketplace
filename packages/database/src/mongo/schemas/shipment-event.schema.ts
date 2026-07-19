@@ -51,6 +51,7 @@ export class ShipmentEventDocument {
       tracking_number: { type: String, required: true },
       container_id: { type: String },
       sensor_id: { type: String },
+      sensor_profile: { type: String },
     }),
   )
   metadata: IShipmentMetadata;
@@ -73,9 +74,18 @@ export class ShipmentEventDocument {
 
   @Prop(
     raw({
+      latitude: { type: Number },
+      longitude: { type: Number },
+      signal_strength_dbm: { type: Number },
       temperature_celsius: { type: Number },
       shock_g_force: { type: Number },
       humidity_percent: { type: Number },
+      tilt_angle_deg: { type: Number },
+      vibration_hz: { type: Number },
+      door_open_count: { type: Number },
+      tamper_detected: { type: Boolean },
+      pressure_hpa: { type: Number },
+      air_quality_index: { type: Number },
       battery_level_pct: { type: Number },
     }),
   )

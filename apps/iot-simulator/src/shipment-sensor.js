@@ -5,9 +5,10 @@ function randomBetween(min, max) {
 }
 
 class ShipmentSensor {
-  constructor({ sensorId, trackingNumber, origin, destination }) {
+  constructor({ sensorId, trackingNumber, origin, destination, profile = 'FULL_TELEMETRY' }) {
     this.sensorId = sensorId;
     this.trackingNumber = trackingNumber;
+    this.profile = profile;
     this.origin = origin || { lat: 0, lng: 0 };
     this.destination = destination || { lat: 0, lng: 0 };
     
@@ -46,6 +47,50 @@ class ShipmentSensor {
     return Math.random() < 0.1 ? randomBetween(2.0, 5.0) : randomBetween(0.1, 0.8);
   }
 
+  _buildTelemetry(profile) {
+    const telemetry = {
+      battery_level_pct: randomBetween(80, 100),
+    };
+
+    switch (profile) {
+      case 'GPS_BASIC':
+        // Solo ubicación y señal
+        telemetry.signal_strength_dbm = randomBetween(-90, -40);
+        break;
+      case 'COLD_CHAIN':
+        telemetry.temperature_celsius = randomBetween(2, 8);
+        telemetry.humidity_percent = randomBetween(40, 60);
+        telemetry.door_open_count = Math.random() < 0.05 ? 1 : 0;
+        break;
+      case 'IMPACT_GUARD':
+        telemetry.shock_g_force = this.simulateShock();
+        telemetry.tilt_angle_deg = randomBetween(0, 15);
+        telemetry.vibration_hz = randomBetween(10, 50);
+        break;
+      case 'AMBIENT_MONITOR':
+        telemetry.temperature_celsius = randomBetween(20, 25);
+        telemetry.humidity_percent = randomBetween(45, 55);
+        telemetry.pressure_hpa = randomBetween(1000, 1020);
+        telemetry.air_quality_index = randomBetween(10, 50);
+        break;
+      case 'FULL_TELEMETRY':
+      default:
+        telemetry.signal_strength_dbm = randomBetween(-90, -40);
+        telemetry.temperature_celsius = randomBetween(24, 38);
+        telemetry.humidity_percent = randomBetween(40, 70);
+        telemetry.shock_g_force = this.simulateShock();
+        telemetry.tilt_angle_deg = randomBetween(0, 15);
+        telemetry.vibration_hz = randomBetween(10, 50);
+        telemetry.door_open_count = 0;
+        telemetry.tamper_detected = false;
+        telemetry.pressure_hpa = randomBetween(1000, 1020);
+        telemetry.air_quality_index = randomBetween(10, 50);
+        break;
+    }
+
+    return telemetry;
+  }
+
   publishTelemetry() {
     if (this.state === 'AT_DESTINATION') {
       return; // El intervalo de heartbeat se encarga ahora
@@ -63,16 +108,13 @@ class ShipmentSensor {
       metadata: {
         tracking_number: this.trackingNumber,
         sensor_id: this.sensorId,
+        sensor_profile: this.profile,
       },
       business_context: {
         status: checkpoint.status,
         scan_type: "gps",
       },
-      telemetry: {
-        temperature_celsius: randomBetween(24, 38),
-        shock_g_force: this.simulateShock(),
-        battery_level_pct: randomBetween(80, 100),
-      }
+      telemetry: this._buildTelemetry(this.profile)
     };
 
     // Caos de Formato
@@ -108,15 +150,13 @@ class ShipmentSensor {
       metadata: {
         tracking_number: this.trackingNumber,
         sensor_id: this.sensorId,
+        sensor_profile: this.profile,
       },
       business_context: {
         status: 'delivered',
         scan_type: 'gps',
       },
-      telemetry: {
-        temperature_celsius: randomBetween(24, 32),
-        battery_level_pct: randomBetween(70, 95),
-      }
+      telemetry: this._buildTelemetry(this.profile)
     };
     
     // DRY_RUN checks

@@ -218,6 +218,7 @@ model ProductOrder {
   carrierId                   Int?                      @map("carrier_id")
   trackingNumber              String?                   @map("tracking_number") @db.VarChar(100)
   sensorId                    String?                   @map("sensor_id") @db.VarChar(100)
+  sensorProfile               ShipmentSensorProfile?    @map("sensor_profile")
   destinationCity             String?                   @map("destination_city") @db.VarChar(100)
   destinationCoords           Unsupported("geography")? @map("destination_coords")
   destinationFormattedAddress String?                   @map("destination_formatted_address")
@@ -488,3 +489,12 @@ enum ProposalType {
   @@map("proposal_type_enum")
 }
 
+enum ShipmentSensorProfile {
+  GPS_BASIC
+  COLD_CHAIN
+  IMPACT_GUARD
+  AMBIENT_MONITOR
+  FULL_TELEMETRY
+
+  @@map("shipment_sensor_profile_enum")
+}

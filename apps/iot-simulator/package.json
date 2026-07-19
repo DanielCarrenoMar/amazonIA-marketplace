@@ -1,5 +1,5 @@
 {
-  "name": "prueba-iot-amazonia",
+  "name": "iot-simulator",
   "version": "1.0.0",
   "description": "Simulador IoT para AmazonIA Marketplace",
   "main": "src/server.js",
@@ -9,7 +9,8 @@
     "dev:server": "nodemon src/server.js",
     "dev:css": "tailwindcss -i ./src/input.css -o ./public/output.css --watch",
     "build": "tailwindcss -i ./src/input.css -o ./public/output.css --minify",
-    "setup:systemd": "bash ./install-systemd.sh"
+    "setup:systemd": "bash ./install-systemd.sh",
+    "simulate:shipment": "node scripts/test-shipments.js"
   },
   "keywords": [
     "iot",

@@ -114,7 +114,8 @@ app.post('/api/simulate/start', async (req, res) => {
                   sensorId: order.sensorId,
                   trackingNumber: order.trackingNumber,
                   origin: order.originCoords,
-                  destination: order.destinationCoords
+                  destination: order.destinationCoords,
+                  profile: order.sensorProfile,
                 });
                 sensor.start();
                 activeSensors.set(order.sensorId, sensor);

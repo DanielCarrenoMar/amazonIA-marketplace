@@ -63,6 +63,14 @@ export enum ScanType {
   MANUAL = 'manual',
 }
 
+export enum ShipmentSensorProfile {
+  GPS_BASIC = 'gps_basic',
+  COLD_CHAIN = 'cold_chain',
+  IMPACT_GUARD = 'impact_guard',
+  AMBIENT_MONITOR = 'ambient_monitor',
+  FULL_TELEMETRY = 'full_telemetry',
+}
+
 export enum SensorType {
   FIXED_HVAC = 'fixed_hvac',
   FIXED_COLD_STORAGE = 'fixed_cold_storage',

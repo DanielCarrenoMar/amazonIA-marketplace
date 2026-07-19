@@ -36,10 +36,12 @@ export class ActiveSensorsController {
       originLng: number | null;
       destLat: number | null;
       destLng: number | null;
+      sensorProfile: string | null;
     }>>`
       SELECT 
         o.id as "orderId",
         o.sensor_id as "sensorId",
+        o.sensor_profile as "sensorProfile",
         o.tracking_number as "trackingNumber",
         ST_Y(p.location_coords::geometry) as "originLat",
         ST_X(p.location_coords::geometry) as "originLng",
@@ -55,6 +57,7 @@ export class ActiveSensorsController {
     return rawOrders.map(row => ({
       orderId: row.orderId,
       sensorId: row.sensorId,
+      sensorProfile: row.sensorProfile as any,
       trackingNumber: row.trackingNumber,
       originCoords: row.originLat !== null && row.originLng !== null 
         ? { lat: row.originLat, lng: row.originLng } 
