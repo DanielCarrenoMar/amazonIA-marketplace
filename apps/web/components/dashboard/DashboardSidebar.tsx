@@ -56,7 +56,7 @@ export function DashboardSidebar({ isOpen = true, setIsOpen }: DashboardSidebarP
     ...(isBuyer ? [] : [{ name: "Mi Tribu", href: "/dashboard/tribe", icon: Users }]),
     ...(isBuyer ? [] : [{ name: "Mi Billetera", href: "/dashboard/wallet", icon: Wallet }]),
     { name: "Historial de Pagos", href: "/dashboard/transactions", icon: FileText },
-    ...(isGovMember ? [{ name: "Votaciones", href: "/dashboard/governance", icon: Gavel }] : []),
+    ...(isGovMember || isLeader ? [{ name: "Votaciones", href: "/dashboard/governance", icon: Gavel }] : []),
   ];
 
   const bottomLinks = [

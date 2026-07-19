@@ -65,7 +65,7 @@ export class BlockchainExplorerController {
       throw new ForbiddenException('You are not a registered member of the governance council.');
     }
 
-    const notaryUrl = process.env.NOTARY_SERVICE_URL || 'http://localhost:3004/api/v1';
+    const notaryUrl = this.getNotaryUrl();
     const apiKey = process.env.NOTARY_API_KEY || 'apikeyBlockchain';
 
     try {
@@ -113,7 +113,7 @@ export class BlockchainExplorerController {
     }
 
     // Hacer proxy de la petición al Notario
-    const notaryUrl = process.env.NOTARY_SERVICE_URL || 'http://localhost:3004/api/v1';
+    const notaryUrl = this.getNotaryUrl();
     const apiKey = process.env.NOTARY_API_KEY || 'apikeyBlockchain';
 
     try {
@@ -198,7 +198,7 @@ export class BlockchainExplorerController {
     }
 
     // Hacer proxy al Notario
-    const notaryUrl = process.env.NOTARY_SERVICE_URL || 'http://localhost:3004/api/v1';
+    const notaryUrl = this.getNotaryUrl();
     const apiKey = process.env.NOTARY_API_KEY || 'apikeyBlockchain';
 
     try {
@@ -242,7 +242,7 @@ export class BlockchainExplorerController {
     }
 
     // Hacer proxy al Notario
-    const notaryUrl = process.env.NOTARY_SERVICE_URL || 'http://localhost:3004/api/v1';
+    const notaryUrl = this.getNotaryUrl();
     const apiKey = process.env.NOTARY_API_KEY || 'apikeyBlockchain';
 
     try {
@@ -268,6 +268,14 @@ export class BlockchainExplorerController {
     } catch (error: any) {
       throw new BadRequestException(error.message);
     }
+  }
+
+  private getNotaryUrl(): string {
+    let baseUrl = process.env.NOTARY_SERVICE_URL || 'http://localhost:3002/api/v1';
+    if (baseUrl && !baseUrl.endsWith('/api/v1')) {
+      baseUrl = baseUrl.replace(/\/$/, '') + '/api/v1';
+    }
+    return baseUrl;
   }
 }
 

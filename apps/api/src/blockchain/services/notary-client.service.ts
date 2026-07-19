@@ -18,7 +18,11 @@ export class NotaryClientService {
   constructor(
     private readonly prisma: PrismaService,
   ) {
-    this.notaryBaseUrl = process.env.NOTARY_SERVICE_URL || 'http://localhost:3001/api/v1';
+    let baseUrl = process.env.NOTARY_SERVICE_URL || 'http://localhost:3002/api/v1';
+    if (baseUrl && !baseUrl.endsWith('/api/v1')) {
+      baseUrl = baseUrl.replace(/\/$/, '') + '/api/v1';
+    }
+    this.notaryBaseUrl = baseUrl;
     this.notaryApiKey = process.env.NOTARY_API_KEY || '';
     this.webhookBaseUrl = process.env.WEBHOOK_BASE_URL || 'http://localhost:3000/api';
   }
@@ -71,7 +75,7 @@ export class NotaryClientService {
           'x-api-key': this.notaryApiKey,
         },
         body: JSON.stringify(payload),
-        signal: AbortSignal.timeout(10000),
+        signal: AbortSignal.timeout(60000),
       });
 
       if (!response.ok) {
