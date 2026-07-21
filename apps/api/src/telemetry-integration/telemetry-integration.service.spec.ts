@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getModelToken } from '@nestjs/mongoose';
 import { ConfigService } from '@nestjs/config';
-import { ShipmentEventDocument } from 'database';
+import { ShipmentEventDocument, ClimateEventDocument } from 'database';
 import { TelemetryIntegrationService } from './telemetry-integration.service';
 import { CircuitState } from './circuit-breaker';
 
@@ -65,6 +65,7 @@ function buildFullModelMock(count: number, docs: unknown[], error?: Error) {
 async function createService(
   modelMock: Record<string, jest.Mock>,
   env: Record<string, string> = {},
+  climateModelMock: Record<string, jest.Mock> = {},
 ): Promise<TelemetryIntegrationService> {
   const module: TestingModule = await Test.createTestingModule({
     providers: [
@@ -72,6 +73,10 @@ async function createService(
       {
         provide: getModelToken(ShipmentEventDocument.name),
         useValue: modelMock,
+      },
+      {
+        provide: getModelToken(ClimateEventDocument.name),
+        useValue: climateModelMock,
       },
       {
         provide: ConfigService,
