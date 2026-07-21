@@ -2,8 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { ConfigService } from '@nestjs/config';
 import { Model } from 'mongoose';
-import { ShipmentEventDocument, ShipmentEventDocumentType } from 'database';
-import { IoTEventType } from 'event-types';
+import { ShipmentEventDocument, ShipmentEventDocumentType, ClimateEventDocument, ClimateEventDocumentType } from 'database';
+import { IoTEventType, IClimateEvent } from 'event-types';
 import { CircuitBreaker, CircuitState } from './circuit-breaker';
 import { ShipmentEventDto } from '../product-order/dto/order-detail-with-telemetry.dto';
 
@@ -21,6 +21,8 @@ export class TelemetryIntegrationService {
   constructor(
     @InjectModel(ShipmentEventDocument.name)
     private readonly shipmentModel: Model<ShipmentEventDocumentType>,
+    @InjectModel(ClimateEventDocument.name)
+    private readonly climateModel: Model<ClimateEventDocumentType>,
     private readonly config: ConfigService,
   ) {
     const failureThreshold = Number(config.get('CB_FAILURE_THRESHOLD', '3'));
@@ -149,6 +151,38 @@ export class TelemetryIntegrationService {
     );
   }
 
+  /**
+   * Fetch the most recent reading per weather station within a time window.
+   * Used for the regional climate heatmap — dedupes to one reading per
+   * sensor_id (the latest), since stations report repeatedly over time.
+   * Default window is 7 days: the climate simulator isn't expected to run
+   * continuously, so the latest reading per station can legitimately be
+   * several days old.
+   */
+  async getLatestClimateReadings(maxAgeMinutes = 10_080): Promise<IClimateEvent[] | null> {
+    const since = new Date(Date.now() - maxAgeMinutes * 60_000);
+
+    return this.circuitBreaker.execute(() =>
+      this.withTimeout(async () => {
+        const docs = await this.climateModel
+          .find({ recorded_at: { $gte: since } })
+          .sort({ recorded_at: -1 })
+          .limit(500)
+          .lean()
+          .exec();
+
+        const latestBySensor = new Map<string, IClimateEvent>();
+        for (const doc of docs) {
+          const sensorId = doc.metadata?.sensor_id;
+          if (sensorId && !latestBySensor.has(sensorId)) {
+            latestBySensor.set(sensorId, this.mapClimateDocToDto(doc));
+          }
+        }
+        return Array.from(latestBySensor.values());
+      }),
+    );
+  }
+
   get circuitState(): CircuitState {
     return this.circuitBreaker.currentState;
   }
@@ -178,6 +212,18 @@ export class TelemetryIntegrationService {
       metadata: doc.metadata,
       location: doc.location,
       business_context: doc.business_context,
+      telemetry: doc.telemetry,
+    };
+  }
+
+  private mapClimateDocToDto(doc: Record<string, any>): IClimateEvent {
+    return {
+      event_id: doc.event_id,
+      event_type: doc.event_type as IClimateEvent['event_type'],
+      recorded_at: (doc.recorded_at as Date).toISOString(),
+      ingested_at: (doc.ingested_at as Date).toISOString(),
+      metadata: doc.metadata,
+      location: doc.location,
       telemetry: doc.telemetry,
     };
   }

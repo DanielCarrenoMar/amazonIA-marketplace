@@ -20,6 +20,7 @@ import {
   Gavel,
   FileText,
   PanelLeftClose,
+  Thermometer,
   X
 } from "lucide-react";
 import { getExplorerMembers } from "@/lib/explorer-api";
@@ -53,6 +54,7 @@ export function DashboardSidebar({ isOpen = true, setIsOpen }: DashboardSidebarP
     ...(isAdmin || hasTribe ? [{ name: "Inventario", href: "/dashboard/inventory", icon: Package }] : []),
     { name: "Pedidos", href: "/dashboard/orders", icon: ShoppingBag },
     ...(isBuyer ? [] : [{ name: "IA Logística", href: "/dashboard/logistics-ai", icon: BrainCircuit }]),
+    { name: "Clima Regional", href: "/dashboard/climate-map", icon: Thermometer },
     ...(isBuyer ? [] : [{ name: "Mi Tribu", href: "/dashboard/tribe", icon: Users }]),
     ...(isBuyer ? [] : [{ name: "Mi Billetera", href: "/dashboard/wallet", icon: Wallet }]),
     { name: "Historial de Pagos", href: "/dashboard/transactions", icon: FileText },

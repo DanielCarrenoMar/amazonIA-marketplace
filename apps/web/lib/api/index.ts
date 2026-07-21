@@ -11,3 +11,4 @@ export * from './notification.api';
 export * from './wallet.api';
 export * from './chat.api';
 export * from './user.api';
+export * from './telemetry.api';
