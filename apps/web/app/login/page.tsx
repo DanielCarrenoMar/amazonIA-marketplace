@@ -57,7 +57,10 @@ export default function LoginPage() {
       await login(data);
       router.push("/");
     } catch (err: any) {
-      if (err.status === 401) {
+      if (err.status === 401 && err.message?.includes("desactivada")) {
+        // Cuenta bloqueada por un admin — distinto de credenciales inválidas, no lo ocultes
+        setApiError(err.message);
+      } else if (err.status === 401) {
         setApiError("Correo o contraseña incorrectos.");
       } else if (err.status === 429) {
         setApiError("Demasiados intentos. Por favor espera un momento.");

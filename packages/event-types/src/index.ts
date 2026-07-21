@@ -49,6 +49,7 @@ export * from './tribe/assign-tribe-leader.dto';
 export * from './tribe/tribe-membership-request-response.dto';
 export * from './user-account/create-user-account.dto';
 export * from './user-account/update-user-account.dto';
+export * from './user-account/update-user-status.dto';
 export * from './user-account/change-password.dto';
 export * from './user-account/user-account-response.dto';
 

@@ -1,4 +1,4 @@
-export type ProposalStatus = 'PENDING' | 'CONFIRMED' | 'VETOED';
+export type ProposalStatus = 'PENDING' | 'APPROVED' | 'CONFIRMED' | 'VETOED' | 'FAILED';
 export type VoteType = 'FAVOR' | 'AGAINST';
 
 // Endpoint 1: GET /api/v1/blockchain/explorer/proposals

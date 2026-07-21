@@ -15,6 +15,6 @@ export class OrderChatController {
 
   @Get(':orderId')
   findByOrder(@Param('orderId') orderId: string, @Req() req: any): Promise<OrderChatResponseDto[]> {
-    return this.orderChatService.findByOrder(orderId, req.user.id);
+    return this.orderChatService.findByOrder(orderId, req.user.id, req.user.role);
   }
 }

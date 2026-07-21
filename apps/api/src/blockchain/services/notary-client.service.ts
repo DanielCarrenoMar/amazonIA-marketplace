@@ -7,6 +7,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { BlockchainStatus } from '@prisma/client';
 import type { NotarizeOrderPayload } from 'event-types';
+import { getNotaryBaseUrl } from '../utils/notary-url.util';
 
 @Injectable()
 export class NotaryClientService {
@@ -18,11 +19,7 @@ export class NotaryClientService {
   constructor(
     private readonly prisma: PrismaService,
   ) {
-    let baseUrl = process.env.NOTARY_SERVICE_URL || 'http://localhost:3002/api/v1';
-    if (baseUrl && !baseUrl.endsWith('/api/v1')) {
-      baseUrl = baseUrl.replace(/\/$/, '') + '/api/v1';
-    }
-    this.notaryBaseUrl = baseUrl;
+    this.notaryBaseUrl = getNotaryBaseUrl();
     this.notaryApiKey = process.env.NOTARY_API_KEY || '';
     this.webhookBaseUrl = process.env.WEBHOOK_BASE_URL || 'http://localhost:3000/api';
   }
@@ -30,8 +27,13 @@ export class NotaryClientService {
   /**
    * Envía una solicitud de notarización al microservicio notario.
    *
+   * El BlockchainRecord (status PENDING) ya existe de antemano — fue creado
+   * atómicamente junto con la orden por ProductOrderService, o ya existía de
+   * un intento previo. Este método solo se invoca desde BlockchainReconciliationService,
+   * así que cada llamada representa un intento real y cuenta para retryCount.
+   *
    * Flujo:
-   * 1. Crea un BlockchainRecord con status PENDING
+   * 1. Marca el intento (submittedAt, retryCount++)
    * 2. Envía POST al notario con webhook_url
    * 3. El notario procesa async y notifica via webhook
    */
@@ -39,16 +41,13 @@ export class NotaryClientService {
     const { orderId } = params;
 
     try {
-      // 1. Crear registro de seguimiento en la DB
-      await this.prisma.blockchainRecord.upsert({
+      await this.prisma.blockchainRecord.update({
         where: { orderId },
-        update: {
+        data: {
           status: BlockchainStatus.PENDING,
           errorMessage: null,
-        },
-        create: {
-          orderId,
-          status: BlockchainStatus.PENDING,
+          submittedAt: new Date(),
+          retryCount: { increment: 1 },
         },
       });
 

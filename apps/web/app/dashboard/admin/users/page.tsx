@@ -1,14 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getAllUsers } from "@/lib/api/user.api";
+import { getAllUsers, setUserActiveStatus } from "@/lib/api/user.api";
 import type { UserAccountResponseDto } from "event-types";
 import { Card } from "@/components/ui/Card";
-import { User, Mail, Calendar, MapPin, Shield } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { User, Mail, Calendar, MapPin, Shield, Lock, Unlock } from "lucide-react";
+import { useAuth } from "@/lib/useAuth";
+import { toast } from "sonner";
 
 export default function AdminUsersPage() {
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<UserAccountResponseDto[]>([]);
   const [loading, setLoading] = useState(true);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   const loadUsers = async () => {
     setLoading(true);
@@ -26,6 +31,27 @@ export default function AdminUsersPage() {
   useEffect(() => {
     loadUsers();
   }, []);
+
+  const handleToggleActive = async (targetUser: UserAccountResponseDto) => {
+    const nextIsActive = !targetUser.isActive;
+    const confirmed = window.confirm(
+      nextIsActive
+        ? `¿Desbloquear a ${targetUser.fullName}? Podrá volver a iniciar sesión.`
+        : `¿Bloquear a ${targetUser.fullName}? No podrá iniciar sesión hasta que lo desbloquees. Sus datos y órdenes no se eliminan.`
+    );
+    if (!confirmed) return;
+
+    setUpdatingId(targetUser.id);
+    try {
+      const updated = await setUserActiveStatus(targetUser.id, nextIsActive);
+      setUsers(prev => prev.map(u => (u.id === updated.id ? updated : u)));
+      toast.success(nextIsActive ? "Usuario desbloqueado" : "Usuario bloqueado");
+    } catch (err: any) {
+      toast.error(err.message || "Error al actualizar el estado del usuario");
+    } finally {
+      setUpdatingId(null);
+    }
+  };
 
   if (loading) {
     return <div className="animate-pulse">Cargando usuarios...</div>;
@@ -52,6 +78,8 @@ export default function AdminUsersPage() {
                     <th className="px-6 py-4 font-semibold">Rol</th>
                     <th className="px-6 py-4 font-semibold">Ubicación</th>
                     <th className="px-6 py-4 font-semibold">Registro</th>
+                    <th className="px-6 py-4 font-semibold">Estado</th>
+                    <th className="px-6 py-4 font-semibold text-right">Acciones</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -95,6 +123,32 @@ export default function AdminUsersPage() {
                           <Calendar className="w-4 h-4" />
                           {new Date(u.createdAt).toLocaleDateString()}
                         </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
+                          u.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+                        }`}>
+                          {u.isActive ? <Unlock className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
+                          {u.isActive ? 'Activo' : 'Bloqueado'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={u.id === currentUser?.id || updatingId === u.id}
+                          className={u.isActive
+                            ? "text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-200 border-gray-200"
+                            : "text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 border-gray-200"}
+                          onClick={() => handleToggleActive(u)}
+                          title={u.id === currentUser?.id ? "No puedes bloquear tu propia cuenta" : undefined}
+                        >
+                          {u.isActive ? (
+                            <><Lock className="w-3.5 h-3.5 mr-1.5" /> Bloquear</>
+                          ) : (
+                            <><Unlock className="w-3.5 h-3.5 mr-1.5" /> Desbloquear</>
+                          )}
+                        </Button>
                       </td>
                     </tr>
                   ))}

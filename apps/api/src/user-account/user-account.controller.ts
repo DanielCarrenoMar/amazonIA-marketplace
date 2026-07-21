@@ -15,7 +15,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UserAccountService } from './user-account.service';
-import { CreateUserAccountDto, UpdateUserAccountDto, ChangePasswordDto, UserRole, PaginationDto, UserAccountResponseDto, PaginatedResponseDto } from 'event-types';
+import { CreateUserAccountDto, UpdateUserAccountDto, UpdateUserStatusDto, ChangePasswordDto, UserRole, PaginationDto, UserAccountResponseDto, PaginatedResponseDto } from 'event-types';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -68,6 +68,17 @@ export class UserAccountController {
     @Request() req: any,
   ): Promise<UserAccountResponseDto> {
     return this.userAccountService.remove(id, req.user);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @Patch(':id/status')
+  setStatus(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Request() req: any,
+    @Body() dto: UpdateUserStatusDto,
+  ): Promise<UserAccountResponseDto> {
+    return this.userAccountService.setActiveStatus(id, dto.isActive, req.user);
   }
 
   @UseGuards(JwtAuthGuard)

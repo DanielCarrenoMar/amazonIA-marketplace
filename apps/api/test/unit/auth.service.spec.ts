@@ -60,7 +60,7 @@ describe('AuthService', () => {
     });
 
     it('returns tokens if password matches', async () => {
-      const user = { id: 'u1', email: 'test@test.com', passwordHash: 'hash', role: UserRole.BUYER };
+      const user = { id: 'u1', email: 'test@test.com', passwordHash: 'hash', role: UserRole.BUYER, isActive: true };
       mockPrismaService.userAccount.findUnique.mockResolvedValue(user);
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
       (bcrypt.hash as jest.Mock).mockResolvedValue('tokenHash');

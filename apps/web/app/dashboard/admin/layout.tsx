@@ -31,6 +31,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: 'Membresías', href: '/dashboard/admin/memberships' },
     { name: 'Usuarios', href: '/dashboard/admin/users' },
     { name: 'Órdenes', href: '/dashboard/admin/orders' },
+    { name: 'Categorías', href: '/dashboard/admin/categories' },
   ];
 
   return (

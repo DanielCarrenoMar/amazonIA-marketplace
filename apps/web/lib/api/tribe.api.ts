@@ -1,13 +1,32 @@
-import type { 
-  TribeResponseDto, 
-  TribeMembershipRequestResponseDto, 
-  RequestTribeCreationDto, 
-  ReviewTribeCreationDto, 
-  RequestTribeMembershipDto, 
+import type {
+  TribeResponseDto,
+  TribeMembershipRequestResponseDto,
+  RequestTribeCreationDto,
+  ReviewTribeCreationDto,
+  RequestTribeMembershipDto,
   ReviewTribeMembershipDto,
-  PaginatedResponseDto 
+  PaginatedResponseDto
 } from 'event-types';
 import { apiFetch, authFetch } from './client';
+
+export interface TribeCrudPayload {
+  name?: string;
+  description?: string;
+  locationMapboxId?: string;
+  locationFormattedAddress?: string;
+}
+
+export function createTribeDirect(payload: TribeCrudPayload): Promise<TribeResponseDto> {
+  return authFetch<TribeResponseDto>("/tribe", { method: "POST", body: JSON.stringify(payload) });
+}
+
+export function updateTribeDirect(id: number, payload: TribeCrudPayload): Promise<TribeResponseDto> {
+  return authFetch<TribeResponseDto>(`/tribe/${id}`, { method: "PATCH", body: JSON.stringify(payload) });
+}
+
+export function deleteTribeDirect(id: number): Promise<TribeResponseDto> {
+  return authFetch<TribeResponseDto>(`/tribe/${id}`, { method: "DELETE" });
+}
 
 export function requestTribeCreation(payload: RequestTribeCreationDto): Promise<TribeResponseDto> {
   return authFetch<TribeResponseDto>("/tribe/request-creation", { method: "POST", body: JSON.stringify(payload) });

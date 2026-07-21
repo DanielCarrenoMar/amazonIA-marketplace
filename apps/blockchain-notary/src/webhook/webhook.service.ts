@@ -4,6 +4,7 @@
 // =============================================================================
 
 import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { BlockchainStatusEnum, WebhookCallbackPayload } from 'event-types';
 
 const MAX_WEBHOOK_RETRIES = 3;
@@ -12,6 +13,8 @@ const WEBHOOK_RETRY_DELAY_MS = 2000;
 @Injectable()
 export class WebhookService {
   private readonly logger = new Logger(WebhookService.name);
+
+  constructor(private readonly configService: ConfigService) {}
 
   /**
    * Notifica al backend el resultado de la notarización.
@@ -26,7 +29,10 @@ export class WebhookService {
 
         const response = await fetch(webhookUrl, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': this.configService.get<string>('API_KEY') ?? '',
+          },
           body: JSON.stringify(payload),
           signal: AbortSignal.timeout(10000), // 10s timeout
         });

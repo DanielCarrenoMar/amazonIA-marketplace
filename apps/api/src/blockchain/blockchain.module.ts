@@ -4,6 +4,7 @@ import { BlockchainExplorerController } from './blockchain-explorer.controller';
 import { NotaryClientService } from './services/notary-client.service';
 import { BlockchainRecordService } from './services/blockchain-record.service';
 import { BlockchainExplorerService } from './services/blockchain-explorer.service';
+import { BlockchainReconciliationService } from './services/blockchain-reconciliation.service';
 
 @Module({
   controllers: [BlockchainWebhookController, BlockchainExplorerController],
@@ -11,6 +12,7 @@ import { BlockchainExplorerService } from './services/blockchain-explorer.servic
     NotaryClientService,
     BlockchainRecordService,
     BlockchainExplorerService,
+    BlockchainReconciliationService,
   ],
   exports: [
     NotaryClientService,

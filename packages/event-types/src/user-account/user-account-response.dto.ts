@@ -18,4 +18,5 @@ export class UserAccountResponseDto {
   locationCity: string | null;
   locationRegion: string | null;
   createdAt: Date;
+  isActive: boolean;
 }

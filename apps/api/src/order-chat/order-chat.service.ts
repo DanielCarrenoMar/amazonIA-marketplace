@@ -66,7 +66,7 @@ export class OrderChatService {
     };
   }
 
-  async findByOrder(orderId: string, userId: string): Promise<OrderChatResponseDto[]> {
+  async findByOrder(orderId: string, userId: string, role?: UserRole): Promise<OrderChatResponseDto[]> {
     // Opcional: Validar que el usuario tenga acceso a ver este chat
     const order = await this.prisma.productOrder.findUnique({
       where: { id: orderId },
@@ -85,7 +85,11 @@ export class OrderChatService {
       throw new NotFoundException('El pedido no existe');
     }
 
-    if (order.buyerId !== userId && order.product.seller.user.id !== userId) {
+    if (
+      role !== UserRole.ADMIN &&
+      order.buyerId !== userId &&
+      order.product.seller.user.id !== userId
+    ) {
       console.error(`AUTH FAIL GET: buyerId=${order.buyerId}, sellerUserId=${order.product.seller.user.id}, requestUserId=${userId}`);
       throw new ForbiddenException('No tienes permiso para ver este chat');
     }

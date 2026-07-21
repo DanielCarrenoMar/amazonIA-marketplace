@@ -10,6 +10,7 @@ describe('ProductOrderService', () => {
     },
     userAccount: {
       findUnique: jest.fn(),
+      update: jest.fn(),
     },
     productOrder: {
       findUnique: jest.fn(),
@@ -22,6 +23,10 @@ describe('ProductOrderService', () => {
     },
     seller: {
       update: jest.fn(),
+    },
+    blockchainRecord: {
+      create: jest.fn(),
+      upsert: jest.fn(),
     },
     $executeRaw: jest.fn(),
   } as any;
@@ -65,17 +70,12 @@ describe('ProductOrderService', () => {
     createNotification: jest.fn().mockResolvedValue(undefined),
   } as any;
 
-  const notaryMock = {
-    notarizeOrder: jest.fn().mockResolvedValue(undefined),
-  } as any;
-
   const service = new ProductOrderService(
     prismaMock,
     outboxMock,
     telemetryMock,
     configMock,
     notificationMock,
-    notaryMock,
   );
   const allStatuses = [
     OrderStatus.PENDING,

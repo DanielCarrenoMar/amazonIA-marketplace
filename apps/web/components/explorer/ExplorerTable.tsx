@@ -11,8 +11,10 @@ export function ExplorerTable({ proposals, mode = 'explorer' }: { proposals: Pro
   const getStatusColor = (status: ProposalStatus) => {
     switch(status) {
       case 'PENDING': return 'text-yellow-700 bg-yellow-100';
+      case 'APPROVED': return 'text-blue-700 bg-blue-100';
       case 'CONFIRMED': return 'text-green-700 bg-green-100';
       case 'VETOED': return 'text-red-700 bg-red-100';
+      case 'FAILED': return 'text-orange-700 bg-orange-100';
       default: return 'text-gray-700 bg-gray-100';
     }
   };
@@ -20,13 +22,13 @@ export function ExplorerTable({ proposals, mode = 'explorer' }: { proposals: Pro
   return (
     <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
       <div className="flex gap-3 mb-6 border-b border-gray-100 pb-4 overflow-x-auto scrollbar-hide">
-        {['ALL', 'PENDING', 'CONFIRMED', 'VETOED'].map(f => (
+        {['ALL', 'PENDING', 'APPROVED', 'CONFIRMED', 'VETOED', 'FAILED'].map(f => (
           <button
             key={f}
             onClick={() => setFilter(f as any)}
             className={`px-5 py-2 rounded-full text-sm font-semibold transition-colors whitespace-nowrap ${filter === f ? 'bg-brand-primary text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
           >
-            {f === 'ALL' ? 'Todas' : f === 'PENDING' ? 'Pendientes' : f === 'CONFIRMED' ? 'Confirmadas' : 'Vetadas'}
+            {f === 'ALL' ? 'Todas' : f === 'PENDING' ? 'Pendientes' : f === 'APPROVED' ? 'Aprobadas' : f === 'CONFIRMED' ? 'Confirmadas' : f === 'VETOED' ? 'Vetadas' : 'Fallidas'}
           </button>
         ))}
       </div>
