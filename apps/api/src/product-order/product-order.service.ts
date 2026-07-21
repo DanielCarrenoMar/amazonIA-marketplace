@@ -9,8 +9,6 @@ import * as mqtt from 'mqtt';
 import { PrismaService } from '../prisma/prisma.service';
 import { OutboxService } from '../outbox/outbox.service';
 import { TelemetryIntegrationService } from '../telemetry-integration/telemetry-integration.service';
-import { NotaryClientService } from '../blockchain/services/notary-client.service';
-import * as crypto from 'crypto';
 
 const TX_HASH_REGEX = /^0x[0-9a-fA-F]{64}$/;
 
@@ -35,7 +33,6 @@ export class ProductOrderService {
     private readonly telemetryIntegration: TelemetryIntegrationService,
     private readonly configService: ConfigService,
     private readonly notificationService: NotificationService,
-    private readonly notaryClient: NotaryClientService,
   ) {}
 
 
@@ -216,36 +213,21 @@ export class ProductOrderService {
             topic: STREAM_TOPICS.SHIPMENT_EVENTS,
           },
         );
+
+        // Marca atómicamente la intención de notarizar — BlockchainReconciliationService
+        // es quien realmente envía el POST al notario en su siguiente tick. Si el proceso
+        // se cae justo después del commit, este registro ya quedó persistido y el trabajo
+        // no se pierde (a diferencia de disparar una promesa flotante fuera de la transacción).
+        await tx.blockchainRecord.create({
+          data: {
+            orderId: order.id,
+            status: 'PENDING',
+          },
+        });
       }
 
       return order;
     });
-
-    // Disparar notarización si se creó directamente como PAID
-    if (result.currentStatus === OrderStatus.PAID && result.transactionHash) {
-      this.prisma.product.findUnique({
-        where: { id: result.productId },
-        select: { id: true, sellerId: true },
-      }).then(async (product) => {
-        if (product) {
-          const productHash = crypto
-            .createHash('sha256')
-            .update(`${result.productId}-${product.sellerId}-${result.createdAt.getTime()}`)
-            .digest('hex');
-
-          this.logger.log(`Firing asynchronous notarization proposal creation for order ${result.id} from creation`);
-          await this.notaryClient.notarizeOrder({
-            orderId: result.id,
-            amount: Number(result.totalAmount),
-            paymentMethod: result.paymentMethod ?? 'CRYPTO',
-            productHash,
-            buyerId: result.buyerId,
-            sellerId: product.sellerId,
-            webhookUrl: '',
-          });
-        }
-      }).catch(err => this.logger.error(`Notarization trigger failed for order ${result.id}: ${err.message}`));
-    }
 
     return result as unknown as ProductOrderResponseDto;
   }
@@ -497,11 +479,11 @@ export class ProductOrderService {
       source: 'mongodb' as const,
       event_id: e.event_id,
       event_type: e.event_type,
-      temperature_celsius: e.telemetry.temperature_celsius,
-      shock_g_force: e.telemetry.shock_g_force,
+      temperature_celsius: e.telemetry?.temperature_celsius,
+      shock_g_force: e.telemetry?.shock_g_force,
       location: e.location,
-      shipment_status: e.business_context.status,
-      scan_type: e.business_context.scan_type,
+      shipment_status: e.business_context?.status,
+      scan_type: e.business_context?.scan_type,
     }));
 
     const items = [...orderEvents, ...telemetryEvents].sort(
@@ -591,10 +573,6 @@ export class ProductOrderService {
         }
       }
 
-      if (statusChanged && nextStatus === OrderStatus.PAID && !orderData.transactionHash && !currentOrder.transactionHash) {
-        orderData.transactionHash = '0x' + crypto.randomBytes(32).toString('hex');
-      }
-
       if (statusChanged && nextStatus === OrderStatus.SHIPPED) {
         const finalTrackingNumber = orderData.trackingNumber || currentOrder.trackingNumber;
         const finalCarrierId = orderData.carrierId || currentOrder.carrierId;
@@ -672,6 +650,19 @@ export class ProductOrderService {
           },
         );
 
+        // 1.65 Marca atómicamente la intención de notarizar (ver comentario equivalente en create()) —
+        // BlockchainReconciliationService envía el POST real al notario en su siguiente tick.
+        if (nextStatus === OrderStatus.PAID) {
+          await tx.blockchainRecord.upsert({
+            where: { orderId: id },
+            update: {},
+            create: {
+              orderId: id,
+              status: 'PENDING',
+            },
+          });
+        }
+
         // 1.7 Create Notifications
         const buyerMessage = `Tu orden ${id} ha cambiado de estado a ${nextStatus}.`;
         const sellerMessage = `La orden ${id} de tu producto ha cambiado de estado a ${nextStatus}.`;
@@ -708,40 +699,33 @@ export class ProductOrderService {
         }
       }
 
+      // 3. Buyer Rating: If the seller (or admin) left a rating for the buyer, recalculate the buyer's global rating
+      if (orderData.buyerRatingValue !== undefined) {
+        const buyerId = currentOrder.buyerId;
+
+        // Find the mathematical average of all completed ratings for this buyer
+        const buyerAggregate = await tx.productOrder.aggregate({
+          where: {
+            buyerId,
+            buyerRatingValue: { not: null }
+          },
+          _avg: { buyerRatingValue: true },
+        });
+
+        const newBuyerAverageRaw = buyerAggregate._avg.buyerRatingValue;
+
+        // Mirrors seller.rating: an INTEGER between 1 and 5
+        if (newBuyerAverageRaw !== null) {
+          const roundedBuyerRating = Math.round(newBuyerAverageRaw);
+          await tx.userAccount.update({
+            where: { id: buyerId },
+            data: { buyerRating: roundedBuyerRating },
+          });
+        }
+      }
+
       return updatedOrder;
     });
-
-
-
-    if (result.currentStatus === OrderStatus.PAID && result.transactionHash) {
-      this.prisma.blockchainRecord.findUnique({
-        where: { orderId: result.id }
-      }).then(async (exists) => {
-        if (!exists) {
-          const product = await this.prisma.product.findUnique({
-            where: { id: result.productId },
-            select: { id: true, sellerId: true }
-          });
-          if (product) {
-            const productHash = crypto
-              .createHash('sha256')
-              .update(`${result.productId}-${product.sellerId}-${result.createdAt.getTime()}`)
-              .digest('hex');
-
-            this.logger.log(`Firing asynchronous notarization proposal creation for order ${result.id} from update`);
-            await this.notaryClient.notarizeOrder({
-              orderId: result.id,
-              amount: Number(result.totalAmount),
-              paymentMethod: result.paymentMethod ?? 'CRYPTO',
-              productHash,
-              buyerId: result.buyerId,
-              sellerId: product.sellerId,
-              webhookUrl: '',
-            });
-          }
-        }
-      }).catch(err => this.logger.error(`Notarization trigger from update failed for order ${result.id}: ${err.message}`));
-    }
 
     return result as unknown as ProductOrderResponseDto;
   }

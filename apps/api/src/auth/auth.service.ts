@@ -73,7 +73,12 @@ export class AuthService {
     const passwordMatch = await bcrypt.compare(password, user.passwordHash);
     if (!passwordMatch) throw new UnauthorizedException('Invalid credentials');
 
-    // 3. Sign and return both tokens
+    // 3. Bloqueado por un admin — no puede iniciar sesión aunque la contraseña sea correcta
+    if (!user.isActive) {
+      throw new UnauthorizedException('Tu cuenta ha sido desactivada. Contacta a un administrador.');
+    }
+
+    // 4. Sign and return both tokens
     const payload: JwtPayload = { sub: user.id, email: user.email, role: (user as any).role };
     const tokens = await this.generateTokens(payload);
 
@@ -111,6 +116,15 @@ export class AuthService {
       // Verify that the token exists in DB and is not revoked
       if (!foundToken) {
         throw new UnauthorizedException('Invalid or revoked refresh token');
+      }
+
+      // Bloqueado por un admin después de haber emitido este refresh token — no puede renovarlo
+      const user = await this.prisma.userAccount.findUnique({
+        where: { id: payload.sub },
+        select: { isActive: true },
+      });
+      if (!user || !user.isActive) {
+        throw new UnauthorizedException('Tu cuenta ha sido desactivada.');
       }
 
       // Revoke the old token (rotation)

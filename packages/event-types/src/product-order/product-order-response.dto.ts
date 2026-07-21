@@ -1,4 +1,5 @@
 import { OrderStatus, TransportType } from '../enums';
+import { BlockchainStatusEnum } from '../blockchain/blockchain.dto';
 
 export class OrderStatusHistoryResponseDto {
   id: number;
@@ -9,6 +10,24 @@ export class OrderStatusHistoryResponseDto {
   statusNote: string | null;
   createdAt: Date;
   changedByUser?: any; // AuthUserDto
+}
+
+export class BlockchainRecordResponseDto {
+  id: string;
+  orderId: string;
+  transactionHash: string | null;
+  blockNumber: number | null;
+  networkName: string;
+  status: BlockchainStatusEnum;
+  retryCount: number;
+  errorMessage: string | null;
+  gasUsed: string | null;
+  submittedAt: Date | null;
+  confirmedAt: Date | null;
+  createdAt: Date;
+  nftMintedAt: Date | null;
+  nftTokenId: string | null;
+  nftTxHash: string | null;
 }
 
 export class ProductOrderResponseDto {
@@ -45,6 +64,7 @@ export class ProductOrderResponseDto {
   product?: any; // ProductResponseDto
   buyer?: any; // AuthUserDto
   statusHistory?: OrderStatusHistoryResponseDto[];
+  blockchainRecord?: BlockchainRecordResponseDto | null;
   telemetry?: any;
 }
 

@@ -1,10 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { useParams, useRouter } from "next/navigation";
 import { getOrder, getOrderTimeline, updateOrder } from "@/lib/api";
 import type { OrderTimelineResponseDto, ProductOrderResponseDto, OrderTimelineItemDto } from "event-types";
 import { DashboardHeader, ShipmentModal, OrderChat } from "@/components/dashboard";
+
+// El mapa depende de Leaflet (usa `window`), así que se carga solo en el cliente
+const ShipmentRouteHeatmap = dynamic(() => import("@/components/dashboard/ShipmentRouteHeatmap"), {
+  ssr: false,
+  loading: () => <div className="h-[320px] bg-gray-100 animate-pulse rounded-2xl" />,
+});
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { MapPin, Truck, CheckCircle2, ChevronLeft, AlertTriangle, User, Phone, Navigation, BrainCircuit, ArrowRight, XCircle } from "lucide-react";
@@ -22,13 +29,18 @@ export default function OrderDetailPage() {
 
   const [order, setOrder] = useState<ProductOrderResponseDto | null>(null);
   const [timeline, setTimeline] = useState<OrderTimelineResponseDto | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
   const [isUpdating, setIsUpdating] = useState(false);
   const [shipModalOpen, setShipModalOpen] = useState(false);
 
   const fetchOrderDetails = () => {
-    getOrder(id).then(setOrder).catch(console.error);
+    setLoadError(null);
+    getOrder(id).then(setOrder).catch((err: any) => {
+      console.error(err);
+      setLoadError(err.message || "No se pudo cargar el pedido");
+    });
     getOrderTimeline(id).then(setTimeline).catch(console.error);
   };
 
@@ -68,6 +80,7 @@ export default function OrderDetailPage() {
     }
   };
 
+  if (loadError) return <div className="p-8 text-center text-brand-urgency">{loadError}</div>;
   if (!order) return <div className="p-8 text-center text-muted">Cargando...</div>;
 
   const isSeller = user?.id === order.product.seller?.user?.id;
@@ -151,7 +164,14 @@ export default function OrderDetailPage() {
              {!timeline?.items?.length && <p className="text-muted text-center py-4">No hay eventos registrados aún.</p>}
           </Card>
 
-          <OrderChat 
+          {timeline?.items?.some((ev) => ev.type === 'telemetry' && (ev.location as any)?.coordinates) && (
+            <Card padding="lg">
+              <h3 className="text-xl font-bold font-outfit mb-4">Mapa de Temperatura de la Ruta</h3>
+              <ShipmentRouteHeatmap items={timeline.items} />
+            </Card>
+          )}
+
+          <OrderChat
             orderId={order.id} 
             currentStatus={order.currentStatus} 
             currentUserId={user?.id}
@@ -289,13 +309,13 @@ export default function OrderDetailPage() {
           </Card>
 
           {/* Certificado de Autenticidad NFT */}
-          {((order as any).blockchainRecord) ? (
+          {(order.blockchainRecord) ? (
             <Card padding="md" className="border-emerald-200 bg-emerald-50/20">
               <h3 className="font-bold mb-4 font-outfit text-slate-900 flex items-center gap-2">
                 🎨 Certificado de Autenticidad NFT
               </h3>
               
-              {(order as any).blockchainRecord.status === 'CONFIRMED' ? (
+              {order.blockchainRecord.status === 'CONFIRMED' ? (
                 <div className="space-y-4 text-sm text-slate-800">
                   <div className="flex items-center gap-2 text-emerald-800 bg-emerald-100/70 px-3 py-1.5 rounded-full text-xs font-bold w-fit">
                     <CheckCircle2 className="w-4 h-4" /> Certificado Activo
@@ -305,14 +325,14 @@ export default function OrderDetailPage() {
                     <div className="flex justify-between">
                       <span className="text-muted">Token ID:</span>
                       <span className="font-bold text-slate-900 break-all">
-                        {(order as any).blockchainRecord.nftTokenId ? (order as any).blockchainRecord.nftTokenId.slice(0, 15) + '...' : 'Generando...'}
+                        {order.blockchainRecord.nftTokenId ? order.blockchainRecord.nftTokenId.slice(0, 15) + '...' : 'Generando...'}
                       </span>
                     </div>
-                    {(order as any).blockchainRecord.nftTxHash && (
+                    {order.blockchainRecord.nftTxHash && (
                       <div className="flex flex-col gap-1">
                         <span className="text-muted">Hash NFT:</span>
                         <span className="font-semibold text-slate-700 break-all text-[11px]">
-                          {(order as any).blockchainRecord.nftTxHash}
+                          {order.blockchainRecord.nftTxHash}
                         </span>
                       </div>
                     )}
@@ -321,14 +341,14 @@ export default function OrderDetailPage() {
                     Este producto artesanal ha sido certificado mediante un token no fungible ERC-721 en la red descentralizada de AmazonIA.
                   </p>
                 </div>
-              ) : (order as any).blockchainRecord.status === 'FAILED' ? (
+              ) : order.blockchainRecord.status === 'FAILED' ? (
                 <div className="space-y-3 text-sm text-slate-800">
                   <div className="flex items-center gap-2 text-rose-800 bg-rose-100 px-3 py-1.5 rounded-full text-xs font-bold w-fit">
                     <XCircle className="w-4 h-4 text-rose-600" />
                     Certificación Rechazada
                   </div>
                   <p className="text-xs text-rose-600/90 font-medium">
-                    Motivo: {(order as any).blockchainRecord.errorMessage || 'Rechazado por el Consejo Comunitario de la Blockchain.'}
+                    Motivo: {order.blockchainRecord.errorMessage || 'Rechazado por el Consejo Comunitario de la Blockchain.'}
                   </p>
                   <p className="text-xs text-muted leading-relaxed">
                     Esta orden fue revisada y rechazada por votación de la gobernanza comunitaria descentralizada.

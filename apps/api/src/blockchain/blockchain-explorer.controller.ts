@@ -16,10 +16,12 @@ import type {
 import { BlockchainExplorerService } from './services/blockchain-explorer.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PrismaService } from '../prisma/prisma.service';
+import { getNotaryBaseUrl } from './utils/notary-url.util';
 
 // Bounds how long a proxied request to blockchain-notary can hang — without this,
 // a stuck notary (e.g. waiting on the Hardhat node) blocks the caller indefinitely.
-const NOTARY_TIMEOUT_MS = 10_000;
+// 60s to tolerate Render cold starts, matching notary-client.service.ts.
+const NOTARY_TIMEOUT_MS = 60_000;
 
 @Controller('api/v1/blockchain/explorer')
 export class BlockchainExplorerController {
@@ -271,11 +273,7 @@ export class BlockchainExplorerController {
   }
 
   private getNotaryUrl(): string {
-    let baseUrl = process.env.NOTARY_SERVICE_URL || 'http://localhost:3002/api/v1';
-    if (baseUrl && !baseUrl.endsWith('/api/v1')) {
-      baseUrl = baseUrl.replace(/\/$/, '') + '/api/v1';
-    }
-    return baseUrl;
+    return getNotaryBaseUrl();
   }
 }
 

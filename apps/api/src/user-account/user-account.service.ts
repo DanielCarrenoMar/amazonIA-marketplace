@@ -162,6 +162,31 @@ export class UserAccountService {
     }) as unknown as UserAccountResponseDto;
   }
 
+  // Bloquea/desbloquea el acceso de una cuenta sin borrar sus datos — el usuario
+  // conserva su historial de órdenes, ratings, etc., pero no puede iniciar sesión
+  // ni usar tokens ya emitidos (ver JwtStrategy.validate y AuthService.login/refresh).
+  async setActiveStatus(
+    id: string,
+    isActive: boolean,
+    reqUser: { id: string; role: UserRole },
+  ): Promise<UserAccountResponseDto> {
+    if (reqUser.role !== UserRole.ADMIN) {
+      throw new ForbiddenException('Solo un administrador puede bloquear o desbloquear cuentas');
+    }
+
+    if (reqUser.id === id) {
+      throw new BadRequestException('No puedes bloquear tu propia cuenta');
+    }
+
+    const user = await this.prisma.userAccount.findUnique({ where: { id } });
+    if (!user) throw new NotFoundException(`UserAccount with ID ${id} not found`);
+
+    return this.prisma.userAccount.update({
+      where: { id },
+      data: { isActive },
+    }) as unknown as UserAccountResponseDto;
+  }
+
   async uploadAvatar(id: string, file: Express.Multer.File, requestingUser: any): Promise<UserAccountResponseDto> {
     if (requestingUser.role !== UserRole.ADMIN && requestingUser.id !== id) {
       throw new ForbiddenException('No tienes permiso para actualizar este perfil');

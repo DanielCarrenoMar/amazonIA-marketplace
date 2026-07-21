@@ -87,8 +87,10 @@ export function ProposalDetail({ proposal, readOnly = false, memberRole = 'NONE'
   const getStatusColor = (status: string) => {
     switch(status) {
       case 'PENDING': return 'text-yellow-700 bg-yellow-100';
+      case 'APPROVED': return 'text-blue-700 bg-blue-100';
       case 'CONFIRMED': return 'text-green-700 bg-green-100';
       case 'VETOED': return 'text-red-700 bg-red-100';
+      case 'FAILED': return 'text-orange-700 bg-orange-100';
       default: return 'text-gray-700 bg-gray-100';
     }
   };

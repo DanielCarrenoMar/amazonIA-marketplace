@@ -2,8 +2,9 @@
 // BlockchainWebhookController — Recibe callbacks del Microservicio Notario
 // =============================================================================
 
-import { Controller, Post, Body, Logger, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, Logger, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
 import { BlockchainRecordService } from './services/blockchain-record.service';
+import { NotaryWebhookGuard } from './guards/notary-webhook.guard';
 import type { WebhookCallbackPayload } from 'event-types';
 import { BlockchainStatus } from '@prisma/client';
 
@@ -21,6 +22,7 @@ export class BlockchainWebhookController {
    */
   @Post('webhook')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(NotaryWebhookGuard)
   async handleWebhook(@Body() payload: WebhookCallbackPayload) {
     this.logger.log(
       `Webhook received for order ${payload.orderId}: status=${payload.status}`,

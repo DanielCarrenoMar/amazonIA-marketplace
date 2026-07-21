@@ -16,6 +16,8 @@ model UserAccount {
   passwordHash             String                    @map("password_hash") @db.VarChar(255)
   email                    String                    @unique @db.VarChar(255)
   role                     UserRole                  @default(BUYER)
+  buyerRating              Int?                      @map("buyer_rating")
+  isActive                 Boolean                   @default(true) @map("is_active")
   phonePrimary             String?                   @map("phone_primary") @db.VarChar(50)
   phoneSecondary           String?                   @map("phone_secondary") @db.VarChar(50)
   walletHash               String?                   @map("wallet_hash") @db.VarChar(255)
