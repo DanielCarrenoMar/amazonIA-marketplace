@@ -363,18 +363,19 @@ async def evaluate_risk(request: EvaluationRequest, user_payload: dict = Depends
     # The XGBoost model predicts pure environmental risk. Transport type amplifies it:
     # fluvial rivers have unpredictable currents and flooding, maritime has coastal storms,
     # terrestre and aereo are less sensitive to hydrological variables.
-    TRANSPORT_MULTIPLIERS = {
-        "terrestre": 1.00,
-        "aereo":     1.05,
-        "maritimo":  1.25,
-        "fluvial":   1.50,
+    TRANSPORT_BASE_RISK = {
+        "terrestre": 0.02,
+        "aereo":     0.03,
+        "maritimo":  0.08,
+        "fluvial":   0.15,
     }
-    transport_mult = TRANSPORT_MULTIPLIERS.get(shipment_transport_type, 1.0)
+    base_transport_risk = TRANSPORT_BASE_RISK.get(shipment_transport_type, 0.02)
     
     # 8. Apply data-confidence penalization (capped at +20% to avoid inflating nulls into 100% alerts)
-    penalizacion = min(0.20, (1.0 - confianza_clima) * 0.3 + (1.0 - confianza_iot) * 0.2)
+    # Additive penalty for missing data
+    penalizacion = min(0.20, (1.0 - confianza_clima) * 0.15 + (1.0 - confianza_iot) * 0.15)
     
-    final_score = base_score * transport_mult * (1.0 + penalizacion)
+    final_score = base_score + base_transport_risk + penalizacion
     # Hard cap at 95 — reserve "100%" as a truly exceptional value, not a math artifact
     composite_score_pct = min(95.0, final_score * 100.0)
     

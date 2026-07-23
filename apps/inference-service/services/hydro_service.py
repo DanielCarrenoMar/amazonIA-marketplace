@@ -33,8 +33,8 @@ class HydroService:
                 
                 # Transformamos la descarga volumétrica en nuestra métrica proxy de corriente
                 # Asumimos un nivel base correlacionado para la API de inferencia
-                nivel_base = max(10.0, discharge * 2.0)
-                velocidad_corriente = discharge
+                nivel_base = max(18.0, 18.0 + (discharge * 0.005))
+                velocidad_corriente = discharge * 0.1
                 
                 return {
                     "river_level_m": round(nivel_base, 2),
